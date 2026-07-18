@@ -208,11 +208,11 @@ List<SettingsModel> get playSettings => [
     onTap: _showSeekPreviewScaleDialog,
   ),
   NormalModel(
-    title: '进度预览窗垂直位置',
+    title: '进度预览窗与进度条间距',
     getSubtitle: () =>
-        '距播放器顶部：${Pref.seekPreviewVerticalPosition.toStringAsFixed(0)}%',
+        '当前：${Pref.seekPreviewProgressBarGap.toStringAsFixed(0)}dp',
     leading: const Icon(Icons.vertical_align_center_outlined),
-    onTap: _showSeekPreviewVerticalPositionDialog,
+    onTap: _showSeekPreviewProgressBarGapDialog,
   ),
   const SwitchModel(
     title: '非全屏拖动进度条显示预览窗',
@@ -446,25 +446,25 @@ Future<void> _showSeekPreviewScaleDialog(
   }
 }
 
-Future<void> _showSeekPreviewVerticalPositionDialog(
+Future<void> _showSeekPreviewProgressBarGapDialog(
   BuildContext context,
   VoidCallback setState,
 ) async {
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('进度预览窗垂直位置'),
-      value: Pref.seekPreviewVerticalPosition,
-      min: 10,
-      max: 90,
-      divisions: 80,
+      title: const Text('进度预览窗与进度条间距'),
+      value: Pref.seekPreviewProgressBarGap,
+      min: 0,
+      max: 160,
+      divisions: 32,
       precise: 0,
-      suffix: '%',
+      suffix: 'dp',
     ),
   );
   if (res != null) {
     await GStorage.setting.put(
-      SettingBoxKey.seekPreviewVerticalPosition,
+      SettingBoxKey.seekPreviewProgressBarGap,
       res,
     );
     setState();

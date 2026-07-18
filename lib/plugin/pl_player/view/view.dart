@@ -137,6 +137,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
 
   final _playerKey = GlobalKey();
   final _videoKey = GlobalKey();
+  final _progressBarKey = GlobalKey();
 
   final RxDouble _brightnessValue = 0.0.obs;
   final RxBool _brightnessIndicator = false.obs;
@@ -1659,6 +1660,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                           isFullScreen: isFullScreen,
                           controller: plPlayerController,
                           videoDetailController: videoDetailController,
+                          progressBarKey: _progressBarKey,
                           buildBottomControl: () => buildBottomControl(
                             videoDetailController,
                             maxWidth > maxHeight,
@@ -1841,6 +1843,23 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               return renderBox
                   ?.globalToLocal(Offset(globalX, 0))
                   .dx;
+            },
+            () {
+              if (!plPlayerController.showControls.value) {
+                return null;
+              }
+              final progressBarBox =
+                  _progressBarKey.currentContext?.findRenderObject()
+                      as RenderBox?;
+              final playerBox =
+                  _playerKey.currentContext?.findRenderObject() as RenderBox?;
+              if (progressBarBox == null || playerBox == null) {
+                return null;
+              }
+              final globalCenter = progressBarBox.localToGlobal(
+                Offset(0, progressBarBox.size.height / 2),
+              );
+              return playerBox.globalToLocal(globalCenter).dy;
             },
           ),
 

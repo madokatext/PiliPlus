@@ -57,6 +57,7 @@ Widget buildSeekPreviewWidget(
   double maxHeight,
   ValueGetter<bool> isMounted,
   double? Function(double globalX) globalToLocalX,
+  ValueGetter<double?> progressBarCenterY,
 ) {
   return Obx(
     () {
@@ -108,10 +109,9 @@ Widget buildSeekPreviewWidget(
           return CustomSingleChildLayout(
             delegate: _SeekPreviewLayoutDelegate(
               centerX: centerX,
-              centerY:
-                  maxHeight *
-                  plPlayerController.seekPreviewVerticalPosition /
-                  100,
+              bottomY:
+                  (progressBarCenterY() ?? maxHeight - 48) -
+                  plPlayerController.seekPreviewProgressBarGap,
               margin: horizontalMargin,
             ),
             child: preview,
@@ -211,12 +211,12 @@ Widget buildSeekPreviewWidget(
 class _SeekPreviewLayoutDelegate extends SingleChildLayoutDelegate {
   const _SeekPreviewLayoutDelegate({
     required this.centerX,
-    required this.centerY,
+    required this.bottomY,
     required this.margin,
   });
 
   final double centerX;
-  final double centerY;
+  final double bottomY;
   final double margin;
 
   @override
@@ -243,7 +243,7 @@ class _SeekPreviewLayoutDelegate extends SingleChildLayoutDelegate {
     final verticalSpace = math.max(0.0, size.height - childSize.height);
     final minTop = math.min(margin, verticalSpace / 2);
     final maxTop = math.max(minTop, verticalSpace - minTop);
-    final top = (centerY - childSize.height / 2)
+    final top = (bottomY - childSize.height)
         .clamp(minTop, maxTop)
         .toDouble();
     return Offset(left, top);
@@ -252,7 +252,7 @@ class _SeekPreviewLayoutDelegate extends SingleChildLayoutDelegate {
   @override
   bool shouldRelayout(_SeekPreviewLayoutDelegate oldDelegate) =>
       centerX != oldDelegate.centerX ||
-      centerY != oldDelegate.centerY ||
+      bottomY != oldDelegate.bottomY ||
       margin != oldDelegate.margin;
 }
 

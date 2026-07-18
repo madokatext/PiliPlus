@@ -648,11 +648,11 @@ abstract final class Pref {
     2.0,
   );
 
-  static double get seekPreviewVerticalPosition => _getClampedDouble(
-    SettingBoxKey.seekPreviewVerticalPosition,
-    60.0,
-    10.0,
-    90.0,
+  static double get seekPreviewProgressBarGap => _getClampedDouble(
+    SettingBoxKey.seekPreviewProgressBarGap,
+    20.0,
+    0.0,
+    160.0,
   );
 
   static bool get showSeekPreviewInNonFullscreen => _setting.get(

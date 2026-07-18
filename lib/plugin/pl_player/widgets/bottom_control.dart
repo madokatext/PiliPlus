@@ -19,6 +19,7 @@ class BottomControl extends StatelessWidget {
     required this.controller,
     required this.buildBottomControl,
     required this.videoDetailController,
+    required this.progressBarKey,
   });
 
   final double maxWidth;
@@ -26,6 +27,7 @@ class BottomControl extends StatelessWidget {
   final PlPlayerController controller;
   final ValueGetter<Widget> buildBottomControl;
   final VideoDetailController videoDetailController;
+  final GlobalKey progressBarKey;
 
   bool get _canShowPreview =>
       !controller.isFileSource &&
@@ -135,6 +137,7 @@ class BottomControl extends StatelessWidget {
       children: [
         Obx(
           () => ProgressBar(
+            key: progressBarKey,
             progress: controller.position.value,
             buffered: controller.buffered.value,
             total: controller.duration.value,

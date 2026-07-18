@@ -1754,7 +1754,7 @@ class PlPlayerController with BlockConfigMixin {
       showSeekPreviewOnSlider || showSeekPreviewOnGesture;
   late final seekPreviewFollowSlider = Pref.seekPreviewFollowSlider;
   late final seekPreviewScale = Pref.seekPreviewScale;
-  late final seekPreviewVerticalPosition = Pref.seekPreviewVerticalPosition;
+  late final seekPreviewProgressBarGap = Pref.seekPreviewProgressBarGap;
   late final showSeekPreviewInNonFullscreen =
       Pref.showSeekPreviewInNonFullscreen;
   late final previewIndex = RxnInt();
