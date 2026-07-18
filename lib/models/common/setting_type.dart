@@ -1,4 +1,5 @@
 import 'package:PiliPlus/pages/setting/models/extra_settings.dart';
+import 'package:PiliPlus/pages/setting/models/home_card_layout_settings.dart';
 import 'package:PiliPlus/pages/setting/models/model.dart';
 import 'package:PiliPlus/pages/setting/models/play_settings.dart';
 import 'package:PiliPlus/pages/setting/models/privacy_settings.dart';
@@ -25,8 +26,20 @@ enum SettingType {
     .recommendSetting => recommendSettings,
     .videoSetting => videoSettings,
     .playSetting => playSettings,
-    .styleSetting => styleSettings,
+    .styleSetting => _styleSettingsWithHomeCardLayout,
     .extraSetting => extraSettings,
     _ => throw UnimplementedError(),
   };
+}
+
+List<SettingsModel> get _styleSettingsWithHomeCardLayout {
+  final settings = <SettingsModel>[...styleSettings];
+  final cardRadiusIndex = settings.indexWhere(
+    (item) => item.title == '卡片圆角半径',
+  );
+  settings.insertAll(
+    cardRadiusIndex < 0 ? settings.length : cardRadiusIndex + 1,
+    homeCardLayoutSettings,
+  );
+  return settings;
 }
