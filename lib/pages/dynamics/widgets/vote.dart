@@ -317,9 +317,6 @@ class _VotePanelState extends State<VotePanel> {
     );
     return Card(
       clipBehavior: Clip.hardEdge,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(6)),
-      ),
       child: Builder(
         builder: (context) {
           final opt = _voteInfo.options[index];

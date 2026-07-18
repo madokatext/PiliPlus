@@ -31,6 +31,7 @@ abstract final class ThemeUtils {
     required bool isDynamic,
     bool isDark = false,
   }) {
+    Style.updateCardRadius(Pref.cardRadius);
     final appFontWeight = Pref.appFontWeight.clamp(
       -1,
       FontWeight.values.length - 1,
@@ -92,6 +93,7 @@ abstract final class ThemeUtils {
       cardTheme: CardThemeData(
         elevation: 1,
         margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(borderRadius: Style.cardRadius),
         surfaceTintColor: isDynamic
             ? colorScheme.onSurfaceVariant
             : isDark

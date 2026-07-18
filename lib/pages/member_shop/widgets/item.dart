@@ -20,9 +20,6 @@ class MemberShopItem extends StatelessWidget {
     final belowLabels = item.belowLabels?.map((e) => e.title).join('|');
     return Card(
       clipBehavior: Clip.hardEdge,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(6)),
-      ),
       child: InkWell(
         onTap: () {
           if (item.cardUrl case final cardUrl?) {

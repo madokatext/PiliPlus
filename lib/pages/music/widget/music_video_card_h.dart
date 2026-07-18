@@ -75,6 +75,7 @@ class MusicVideoCardH extends StatelessWidget {
                           src: videoItem.cover,
                           width: maxWidth,
                           height: maxHeight,
+                          borderRadius: Style.cardRadius,
                         ),
                         PBadge(
                           text: DurationUtils.formatDuration(

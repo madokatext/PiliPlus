@@ -189,6 +189,16 @@ abstract final class Pref {
   static double get recommendCardWidth =>
       _setting.get(SettingBoxKey.recommendCardWidth, defaultValue: 240.0);
 
+  static double get cardRadius {
+    final value = _setting.get(
+      SettingBoxKey.cardRadius,
+      defaultValue: 10.0,
+    );
+    return value is num
+        ? value.toDouble().clamp(0.0, 32.0).toDouble()
+        : 10.0;
+  }
+
   static UpPanelPosition get upPanelPosition =>
       UpPanelPosition.values[_setting.get(
         SettingBoxKey.upPanelPosition,

@@ -26,106 +26,83 @@ class AiConclusionPanel extends CommonSlidePage {
     Key? key,
     bool tap = true,
   }) {
+    final subtitleParts = res.webSubtitleParts.toList(growable: false);
+    final fallbackSubtitle = res.fallbackSubtitle?.trim();
+    final bottomPadding =
+        !tap ? 0.0 : MediaQuery.viewPaddingOf(context).bottom + 100;
+
     return CustomScrollView(
       key: key,
       shrinkWrap: !tap,
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
-        if (res.summary?.isNotEmpty == true) ...[
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              child: selectableText(
-                res.summary!,
-                style: const TextStyle(
-                  fontSize: 15,
-                  height: 1.5,
-                ),
-              ),
-            ),
-          ),
-          if (res.outline?.isNotEmpty == true)
-            SliverToBoxAdapter(
-              child: Divider(
-                height: 20,
-                color: theme.dividerColor.withValues(alpha: 0.1),
-                thickness: 6,
-              ),
-            ),
-        ],
-        if (res.outline?.isNotEmpty == true)
+        if (subtitleParts.isNotEmpty)
           SliverPadding(
             padding: EdgeInsets.only(
               left: 14,
               right: 14,
-              bottom: !tap ? 0 : MediaQuery.viewPaddingOf(context).bottom + 100,
+              bottom: bottomPadding,
             ),
             sliver: SliverList.builder(
-              itemCount: res.outline!.length,
+              itemCount: subtitleParts.length,
               itemBuilder: (context, index) {
-                final item = res.outline![index];
-                return SelectionArea(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (index != 0) const SizedBox(height: 10),
-                      Text(
-                        item.title!,
-                        style: const TextStyle(
+                final item = subtitleParts[index];
+                final startTimestamp = item.startTimestamp;
+                return Padding(
+                  padding: EdgeInsets.only(top: index == 0 ? 0 : 8),
+                  child: SelectionArea(
+                    child: Text.rich(
+                      TextSpan(
+                        style: TextStyle(
                           fontSize: 14,
-                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
                           height: 1.5,
                         ),
+                        children: [
+                          TextSpan(
+                            text: DurationUtils.formatDuration(startTimestamp),
+                            style: tap && startTimestamp != null
+                                ? TextStyle(color: theme.colorScheme.primary)
+                                : null,
+                            recognizer: tap && startTimestamp != null
+                                ? (NoDeadlineTapGestureRecognizer()
+                                    ..onTap = () {
+                                      try {
+                                        Get.find<VideoDetailController>(
+                                          tag: Get.arguments['heroTag'],
+                                        ).plPlayerController.seekTo(
+                                          Duration(
+                                            milliseconds:
+                                                (startTimestamp * 1000).round(),
+                                          ),
+                                          isSeek: false,
+                                        );
+                                      } catch (_) {}
+                                    })
+                                : null,
+                          ),
+                          const TextSpan(text: ' '),
+                          TextSpan(text: item.content?.trim() ?? ''),
+                        ],
                       ),
-                      const SizedBox(height: 6),
-                      ...?item.partOutline?.map(
-                        (item) => Wrap(
-                          children: [
-                            Text.rich(
-                              TextSpan(
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: theme.colorScheme.onSurface,
-                                  height: 1.5,
-                                ),
-                                children: [
-                                  TextSpan(
-                                    text: DurationUtils.formatDuration(
-                                      item.timestamp,
-                                    ),
-                                    style: tap
-                                        ? TextStyle(
-                                            color: theme.colorScheme.primary,
-                                          )
-                                        : null,
-                                    recognizer: tap
-                                        ? (NoDeadlineTapGestureRecognizer()
-                                            ..onTap = () {
-                                              try {
-                                                Get.find<VideoDetailController>(
-                                                  tag: Get.arguments['heroTag'],
-                                                ).plPlayerController.seekTo(
-                                                  Duration(
-                                                    seconds: item.timestamp!,
-                                                  ),
-                                                  isSeek: false,
-                                                );
-                                              } catch (_) {}
-                                            })
-                                        : null,
-                                  ),
-                                  const TextSpan(text: ' '),
-                                  TextSpan(text: item.content!),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 );
               },
+            ),
+          ),
+        if (subtitleParts.isEmpty && fallbackSubtitle?.isNotEmpty == true)
+          SliverPadding(
+            padding: EdgeInsets.only(
+              left: 14,
+              right: 14,
+              bottom: bottomPadding,
+            ),
+            sliver: SliverToBoxAdapter(
+              child: selectableText(
+                fallbackSubtitle!,
+                style: const TextStyle(fontSize: 15, height: 1.5),
+              ),
             ),
           ),
       ],

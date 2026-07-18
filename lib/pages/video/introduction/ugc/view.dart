@@ -13,7 +13,6 @@ import 'package:PiliPlus/common/widgets/selectable_text.dart';
 import 'package:PiliPlus/common/widgets/stat/stat.dart';
 import 'package:PiliPlus/common/widgets/translucent_column.dart';
 import 'package:PiliPlus/http/sponsor_block.dart';
-import 'package:PiliPlus/models_new/video/video_ai_conclusion/model_result.dart';
 import 'package:PiliPlus/models_new/video/video_detail/data.dart';
 import 'package:PiliPlus/models_new/video/video_detail/desc_v2.dart';
 import 'package:PiliPlus/models_new/video/video_detail/staff.dart';
@@ -973,14 +972,11 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
           if (introController.aiConclusionResult == null) {
             await introController.aiConclusion();
           }
-          if (introController.aiConclusionResult case AiConclusionResult(
-            :final summary,
-            :final outline,
-          )) {
-            if (summary?.isNotEmpty == true || outline?.isNotEmpty == true) {
+          if (introController.aiConclusionResult case final result?) {
+            if (result.hasSubtitle) {
               widget.showAiBottomSheet();
             } else {
-              SmartDialog.showToast("当前视频不支持AI视频总结");
+              SmartDialog.showToast('当前视频没有可显示的字幕');
             }
           }
         },

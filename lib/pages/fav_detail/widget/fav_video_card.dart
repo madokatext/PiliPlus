@@ -109,6 +109,7 @@ class FavVideoCardH extends StatelessWidget {
                           src: item.cover,
                           width: maxWidth,
                           height: maxHeight,
+                          borderRadius: Style.cardRadius,
                         ),
                         PBadge(
                           text: DurationUtils.formatDuration(item.duration),
@@ -136,6 +137,7 @@ class FavVideoCardH extends StatelessWidget {
                             child: selectMask(
                               colorScheme,
                               item.checked,
+                              borderRadius: Style.cardRadius,
                             ),
                           ),
                       ],

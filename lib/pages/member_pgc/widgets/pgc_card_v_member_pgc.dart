@@ -22,9 +22,9 @@ class PgcCardVMemberPgc extends StatelessWidget {
       cover: item.cover,
     );
     return Card(
-      shape: const RoundedRectangleBorder(borderRadius: Style.mdRadius),
+      clipBehavior: Clip.hardEdge,
       child: InkWell(
-        borderRadius: Style.mdRadius,
+        borderRadius: Style.cardRadius,
         onTap: () => PageUtils.viewPgc(seasonId: item.param),
         onLongPress: onLongPress,
         onSecondaryTap: PlatformUtils.isMobile ? null : onLongPress,
@@ -39,6 +39,7 @@ class PgcCardVMemberPgc extends StatelessWidget {
                     src: item.cover,
                     width: boxConstraints.maxWidth,
                     height: boxConstraints.maxHeight,
+                    borderRadius: Style.cardRadius,
                   );
                 },
               ),

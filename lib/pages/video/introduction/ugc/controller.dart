@@ -746,16 +746,16 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
     return false;
   }
 
-  // ai总结
+  // AI小助手字幕；接口字幕不可用时回退到播放器字幕。
   static Future<AiConclusionResult?> getAiConclusion(
     String bvid,
     int cid,
     int? mid, {
     List<Subtitle>? subtitles,
   }) async {
-    String aiError = '当前视频无可用AI总结';
+    String subtitleError = '当前视频无可用AI小助手字幕';
     if (Accounts.heartbeat.isLogin) {
-      SmartDialog.showLoading(msg: '正在获取AI总结');
+      SmartDialog.showLoading(msg: '正在获取AI小助手字幕');
       try {
         final res = await VideoHttp.aiConclusion(
           bvid: bvid,
@@ -764,29 +764,32 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
         );
         if (res case Success(:final response)) {
           final result = response.modelResult;
-          if (result?.summary?.isNotEmpty == true ||
-              result?.outline?.isNotEmpty == true) {
+          if (result?.webSubtitleParts.isNotEmpty == true) {
             return result;
           }
+          if (result?.summary?.trim().isNotEmpty == true ||
+              result?.outline?.isNotEmpty == true) {
+            subtitleError = '网页版AI小助手仅返回总结，未返回字幕';
+          }
         } else if (res case Error(code: 1)) {
-          aiError = 'AI总结仍在处理中';
+          subtitleError = 'AI小助手字幕仍在处理中';
         } else if (res case Error(:final errMsg)
             when errMsg?.isNotEmpty == true) {
-          aiError = 'AI总结获取失败：$errMsg';
+          subtitleError = 'AI小助手字幕获取失败：$errMsg';
         }
       } catch (e) {
         if (kDebugMode) debugPrint('get ai conclusion: $e');
-        aiError = 'AI总结获取失败';
+        subtitleError = 'AI小助手字幕获取失败';
       } finally {
         SmartDialog.dismiss();
       }
     } else {
-      aiError = '账号未登录，无法获取AI总结';
+      subtitleError = '账号未登录，无法获取AI小助手字幕';
     }
 
-    SmartDialog.showLoading(msg: 'AI总结不可用，正在获取字幕');
+    SmartDialog.showLoading(msg: '正在获取播放器字幕');
     try {
-      final subtitleResult = await _getSubtitleConclusion(
+      final subtitleResult = await _getPlayerSubtitle(
         bvid,
         cid,
         subtitles,
@@ -795,16 +798,16 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
         return subtitleResult;
       }
     } catch (e) {
-      if (kDebugMode) debugPrint('get subtitle conclusion: $e');
+      if (kDebugMode) debugPrint('get player subtitle: $e');
     } finally {
       SmartDialog.dismiss();
     }
 
-    SmartDialog.showToast('$aiError，且未获取到可用字幕');
+    SmartDialog.showToast('$subtitleError，且未获取到播放器字幕');
     return null;
   }
 
-  static Future<AiConclusionResult?> _getSubtitleConclusion(
+  static Future<AiConclusionResult?> _getPlayerSubtitle(
     String bvid,
     int cid,
     List<Subtitle>? cachedSubtitles,
@@ -847,9 +850,15 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
       }
     }
 
-    // Subtitle.compareTo: 中文优先；同为中文时人工字幕优先于AI字幕。
+    // 中文优先；同一语言范围内AI字幕优先于人工字幕。
     subtitles.sort();
-    for (final subtitle in subtitles) {
+    final candidates = [
+      ...subtitles.where((item) => item.lan.contains('zh') && item.isAi),
+      ...subtitles.where((item) => item.lan.contains('zh') && !item.isAi),
+      ...subtitles.where((item) => !item.lan.contains('zh') && item.isAi),
+      ...subtitles.where((item) => !item.lan.contains('zh') && !item.isAi),
+    ];
+    for (final subtitle in candidates) {
       final url = subtitle.subtitleUrl;
       if (url == null || url.isEmpty) continue;
       try {
@@ -859,8 +868,7 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
         );
         if (content?.trim().isNotEmpty == true) {
           return AiConclusionResult(
-            summary:
-                'AI总结不可用，以下为${subtitle.lanDoc ?? subtitle.lan}字幕：\n\n$content',
+            fallbackSubtitle: content,
           );
         }
       } catch (e) {

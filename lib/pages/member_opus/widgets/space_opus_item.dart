@@ -19,12 +19,8 @@ class SpaceOpusItem extends StatelessWidget {
     final hasPic = item.cover?.url?.isNotEmpty == true;
     return Card(
       clipBehavior: Clip.hardEdge,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(6)),
-      ),
       child: InkWell(
         onTap: () => PageUtils.pushDynFromId(id: item.opusId!),
-        borderRadius: const BorderRadius.all(Radius.circular(6)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

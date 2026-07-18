@@ -133,6 +133,7 @@ class HistoryItem extends StatelessWidget {
                                   : item.covers?.firstOrNull ?? '',
                               width: maxWidth,
                               height: maxHeight,
+                              borderRadius: Style.cardRadius,
                             ),
                             if (hasDuration)
                               PBadge(
@@ -179,6 +180,7 @@ class HistoryItem extends StatelessWidget {
                               child: selectMask(
                                 theme.colorScheme,
                                 item.checked,
+                                borderRadius: Style.cardRadius,
                               ),
                             ),
                           ],

@@ -49,6 +49,7 @@ class SeasonSeriesCard extends StatelessWidget {
                           src: item.meta!.cover,
                           width: maxWidth,
                           height: maxHeight,
+                          borderRadius: Style.cardRadius,
                         ),
                         PBadge(
                           text:

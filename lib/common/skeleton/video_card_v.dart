@@ -17,7 +17,7 @@ class VideoCardVSkeleton extends StatelessWidget {
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: color,
-                borderRadius: Style.mdRadius,
+                borderRadius: Style.cardRadius,
               ),
             ),
           ),

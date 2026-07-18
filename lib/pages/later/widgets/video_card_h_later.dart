@@ -97,6 +97,7 @@ class VideoCardHLater extends StatelessWidget {
                           src: videoItem.pic,
                           width: maxWidth,
                           height: maxHeight,
+                          borderRadius: Style.cardRadius,
                           cacheWidth: videoItem.dimension?.cacheWidth,
                         ),
                         if (videoItem.isCharging == true)
@@ -159,6 +160,7 @@ class VideoCardHLater extends StatelessWidget {
                           child: selectMask(
                             theme.colorScheme,
                             videoItem.checked,
+                            borderRadius: Style.cardRadius,
                           ),
                         ),
                       ],

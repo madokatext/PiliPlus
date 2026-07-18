@@ -136,6 +136,13 @@ List<SettingsModel> get styleSettings => [
         '当前: 主页${Pref.recommendCardWidth.toInt()}dp 其他${Pref.smallCardWidth.toInt()}dp，屏幕宽度:${MediaQuery.widthOf(Get.context!).toPrecision(2)}dp。宽度越小列数越多。',
     onTap: _showCardWidthDialog,
   ),
+  NormalModel(
+    leading: const Icon(Icons.rounded_corner),
+    title: '卡片圆角半径',
+    getSubtitle: () =>
+        '当前：${Pref.cardRadius.toStringAsFixed(0)}dp（0为直角）',
+    onTap: _showCardRadiusDialog,
+  ),
   const SwitchModel(
     title: '播放页移除安全边距',
     leading: Icon(Icons.fit_screen_outlined),
@@ -691,6 +698,29 @@ Future<void> _showCardWidthDialog(
       SettingBoxKey.smallCardWidth: res.$2,
     });
     SmartDialog.showToast('重启生效');
+    setState();
+  }
+}
+
+Future<void> _showCardRadiusDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final res = await showDialog<double>(
+    context: context,
+    builder: (context) => SliderDialog(
+      title: const Text('卡片圆角半径（默认10dp）'),
+      value: Pref.cardRadius,
+      min: 0,
+      max: 32,
+      divisions: 32,
+      suffix: 'dp',
+      precise: 0,
+    ),
+  );
+  if (res != null) {
+    await GStorage.setting.put(SettingBoxKey.cardRadius, res);
+    Get.updateMyAppTheme();
     setState();
   }
 }

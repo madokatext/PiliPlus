@@ -21,7 +21,7 @@ Widget? addWidget(
   late final Color bgColor = floor == 1
       ? theme.dividerColor.withValues(alpha: 0.08)
       : theme.colorScheme.surface;
-  late final borderRadius = floor == 1 ? null : Style.mdRadius;
+  late final borderRadius = floor == 1 ? null : Style.cardRadius;
   Widget? child;
   try {
     switch (type) {

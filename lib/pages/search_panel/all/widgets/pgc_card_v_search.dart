@@ -23,9 +23,9 @@ class PgcCardVSearch extends StatelessWidget {
       cover: item.cover,
     );
     return Card(
-      shape: const RoundedRectangleBorder(borderRadius: Style.mdRadius),
+      clipBehavior: Clip.hardEdge,
       child: InkWell(
-        borderRadius: Style.mdRadius,
+        borderRadius: Style.cardRadius,
         onLongPress: onLongPress,
         onSecondaryTap: PlatformUtils.isMobile ? null : onLongPress,
         onTap: () => PageUtils.viewPgc(seasonId: item.seasonId),
@@ -45,6 +45,7 @@ class PgcCardVSearch extends StatelessWidget {
                         src: item.cover,
                         width: maxWidth,
                         height: maxHeight,
+                        borderRadius: Style.cardRadius,
                       ),
                       PBadge(
                         text: item.seasonTypeName,
