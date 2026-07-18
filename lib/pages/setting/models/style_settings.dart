@@ -143,6 +143,21 @@ List<SettingsModel> get styleSettings => [
         '当前：${Pref.cardRadius.toStringAsFixed(0)}dp（0为直角）',
     onTap: _showCardRadiusDialog,
   ),
+  SwitchModel(
+    title: '首页推荐卡片时长与统计同行',
+    subtitle: '时长显示在播放量、弹幕数同一行的最右侧',
+    leading: const Icon(Icons.timer_outlined),
+    setKey: SettingBoxKey.recommendDurationInStatRow,
+    defaultVal: false,
+    onChanged: (_) => Get.appUpdate(),
+  ),
+  NormalModel(
+    title: '首页卡片播放量与弹幕数间距',
+    getSubtitle: () =>
+        '当前：${Pref.recommendStatSpacing.toStringAsFixed(0)}dp',
+    leading: const Icon(Icons.space_bar),
+    onTap: _showRecommendStatSpacingDialog,
+  ),
   const SwitchModel(
     title: '播放页移除安全边距',
     leading: Icon(Icons.fit_screen_outlined),
@@ -722,6 +737,29 @@ Future<void> _showCardRadiusDialog(
     await GStorage.setting.put(SettingBoxKey.cardRadius, res);
     Get.updateMyAppTheme();
     setState();
+  }
+}
+
+Future<void> _showRecommendStatSpacingDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final res = await showDialog<double>(
+    context: context,
+    builder: (context) => SliderDialog(
+      title: const Text('播放量与弹幕数间距'),
+      value: Pref.recommendStatSpacing,
+      min: 0,
+      max: 24,
+      divisions: 24,
+      suffix: 'dp',
+      precise: 0,
+    ),
+  );
+  if (res != null) {
+    await GStorage.setting.put(SettingBoxKey.recommendStatSpacing, res);
+    setState();
+    Get.appUpdate();
   }
 }
 

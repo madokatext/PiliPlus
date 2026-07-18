@@ -332,6 +332,8 @@ class PlPlayerController with BlockConfigMixin {
   late final enableShrinkVideoSize = Pref.enableShrinkVideoSize;
   late final darkVideoPage = Pref.darkVideoPage;
   late final enableSlideVolumeBrightness = Pref.enableSlideVolumeBrightness;
+  late final volumeGestureProgressBar = Pref.volumeGestureProgressBar;
+  late final biliProgressTimeStyle = Pref.biliProgressTimeStyle;
   double get volumeGestureAngleThreshold =>
       Pref.volumeGestureAngleThreshold;
   double get brightnessGestureAngleThreshold =>
@@ -1213,6 +1215,7 @@ class PlPlayerController with BlockConfigMixin {
     }
     if (showSeekPreview) {
       showPreview.value = false;
+      previewGlobalX.value = null;
     }
     hasToasted = false;
     isSeeking.value = false;
@@ -1666,9 +1669,15 @@ class PlPlayerController with BlockConfigMixin {
   LoadingState<VideoShotData>? videoShot;
   late final RxBool showPreview = false.obs;
   late final showSeekPreview = Pref.showSeekPreview;
+  late final seekPreviewFollowSlider = Pref.seekPreviewFollowSlider;
+  late final seekPreviewScale = Pref.seekPreviewScale;
+  late final showSeekPreviewInNonFullscreen =
+      Pref.showSeekPreviewInNonFullscreen;
   late final previewIndex = RxnInt();
+  late final previewGlobalX = RxnDouble();
 
-  void updatePreviewIndex(int seconds) {
+  void updatePreviewIndex(int seconds, {double? globalX}) {
+    previewGlobalX.value = globalX;
     if (videoShot == null) {
       videoShot = LoadingState.loading();
       getVideoShot();
@@ -1686,6 +1695,7 @@ class PlPlayerController with BlockConfigMixin {
   void _clearPreview() {
     showPreview.value = false;
     previewIndex.value = null;
+    previewGlobalX.value = null;
     videoShot = null;
     for (final i in previewCache.values) {
       i?.dispose();

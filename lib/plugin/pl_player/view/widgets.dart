@@ -56,6 +56,7 @@ Widget buildSeekPreviewWidget(
   double maxWidth,
   double maxHeight,
   ValueGetter<bool> isMounted,
+  double? Function(double globalX) globalToLocalX,
 ) {
   return Obx(
     () {
@@ -66,15 +67,21 @@ Widget buildSeekPreviewWidget(
       try {
         final data = plPlayerController.videoShot!.data;
 
-        final double scale =
+        final double baseScale =
             plPlayerController.isFullScreen.value &&
                 (PlatformUtils.isDesktop || !plPlayerController.isVertical)
             ? 4
             : 3;
-        double height = 27 * scale;
+        double height =
+            27 * baseScale * plPlayerController.seekPreviewScale;
         final compatHeight = maxHeight - 140;
         if (compatHeight > 50) {
           height = math.min(height, compatHeight);
+        }
+        const verticalMargin = 8.0;
+        final maxPreviewHeight = maxHeight - verticalMargin * 2;
+        if (maxPreviewHeight > 0) {
+          height = math.min(height, maxPreviewHeight);
         }
 
         final int imgXLen = data.imgXLen;
@@ -83,38 +90,57 @@ Widget buildSeekPreviewWidget(
         double imgXSize = data.imgXSize;
         double imgYSize = data.imgYSize;
 
-        return Align(
-          alignment: Alignment.center,
-          child: Obx(
-            () {
-              final index = plPlayerController.previewIndex.value!;
-              int pageIndex = (index ~/ totalPerImage).clamp(
-                0,
-                data.image.length - 1,
-              );
-              int align = index % totalPerImage;
-              int x = align % imgXLen;
-              int y = align ~/ imgYLen;
-              final url = data.image[pageIndex];
+        final aspectRatio = imgXSize > 0 && imgYSize > 0
+            ? imgXSize / imgYSize
+            : Style.aspectRatio;
+        const horizontalMargin = 8.0;
+        final maxPreviewWidth = maxWidth - horizontalMargin * 2;
+        if (maxPreviewWidth > 0 && aspectRatio > 0) {
+          height = math.min(height, maxPreviewWidth / aspectRatio);
+        }
 
-              return ClipRRect(
-                borderRadius: Style.mdRadius,
-                child: VideoShotImage(
-                  url: url,
-                  x: x,
-                  y: y,
-                  imgXSize: imgXSize,
-                  imgYSize: imgYSize,
-                  height: height,
-                  imageCache: plPlayerController.previewCache,
-                  onSetSize: (xSize, ySize) => data
-                    ..imgXSize = imgXSize = xSize
-                    ..imgYSize = imgYSize = ySize,
-                  isMounted: isMounted,
-                ),
-              );
-            },
+        final index = plPlayerController.previewIndex.value!;
+        int pageIndex = (index ~/ totalPerImage).clamp(
+          0,
+          data.image.length - 1,
+        );
+        int align = index % totalPerImage;
+        int x = align % imgXLen;
+        int y = align ~/ imgYLen;
+        final url = data.image[pageIndex];
+
+        final preview = ClipRRect(
+          borderRadius: Style.mdRadius,
+          child: VideoShotImage(
+            url: url,
+            x: x,
+            y: y,
+            imgXSize: imgXSize,
+            imgYSize: imgYSize,
+            height: height,
+            imageCache: plPlayerController.previewCache,
+            onSetSize: (xSize, ySize) => data
+              ..imgXSize = imgXSize = xSize
+              ..imgYSize = imgYSize = ySize,
+            isMounted: isMounted,
           ),
+        );
+
+        final globalX = plPlayerController.previewGlobalX.value;
+        if (!plPlayerController.seekPreviewFollowSlider || globalX == null) {
+          return Align(alignment: Alignment.center, child: preview);
+        }
+
+        final localX = globalToLocalX(globalX);
+        if (localX == null) {
+          return Align(alignment: Alignment.center, child: preview);
+        }
+        return CustomSingleChildLayout(
+          delegate: _SeekPreviewLayoutDelegate(
+            centerX: localX,
+            margin: horizontalMargin,
+          ),
+          child: preview,
         );
       } catch (e) {
         if (kDebugMode) rethrow;
@@ -122,6 +148,45 @@ Widget buildSeekPreviewWidget(
       }
     },
   );
+}
+
+class _SeekPreviewLayoutDelegate extends SingleChildLayoutDelegate {
+  const _SeekPreviewLayoutDelegate({
+    required this.centerX,
+    required this.margin,
+  });
+
+  final double centerX;
+  final double margin;
+
+  @override
+  Size getSize(BoxConstraints constraints) => constraints.biggest;
+
+  @override
+  BoxConstraints getConstraintsForChild(BoxConstraints constraints) {
+    return BoxConstraints.loose(
+      Size(
+        math.max(0.0, constraints.maxWidth - margin * 2),
+        math.max(0.0, constraints.maxHeight - margin * 2),
+      ),
+    );
+  }
+
+  @override
+  Offset getPositionForChild(Size size, Size childSize) {
+    final horizontalSpace = math.max(0.0, size.width - childSize.width);
+    final minLeft = math.min(margin, horizontalSpace / 2);
+    final maxLeft = math.max(minLeft, horizontalSpace - minLeft);
+    final left = (centerX - childSize.width / 2)
+        .clamp(minLeft, maxLeft)
+        .toDouble();
+    final top = math.max(0.0, (size.height - childSize.height) / 2);
+    return Offset(left, top);
+  }
+
+  @override
+  bool shouldRelayout(_SeekPreviewLayoutDelegate oldDelegate) =>
+      centerX != oldDelegate.centerX || margin != oldDelegate.margin;
 }
 
 class VideoShotImage extends StatefulWidget {

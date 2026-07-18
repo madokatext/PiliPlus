@@ -10,7 +10,14 @@ class PlayOrPauseButton extends StatefulWidget {
   const PlayOrPauseButton({
     super.key,
     required this.plPlayerController,
+    this.width = 42,
+    this.height = 34,
+    this.iconSize = 20,
   });
+
+  final double width;
+  final double height;
+  final double iconSize;
 
   @override
   PlayOrPauseButtonState createState() => PlayOrPauseButtonState();
@@ -50,8 +57,8 @@ class PlayOrPauseButtonState extends State<PlayOrPauseButton>
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 42,
-      height: 34,
+      width: widget.width,
+      height: widget.height,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: widget.plPlayerController.onDoubleTapCenter,
@@ -61,7 +68,7 @@ class PlayOrPauseButtonState extends State<PlayOrPauseButton>
             progress: controller,
             icon: AnimatedIcons.play_pause,
             color: Colors.white,
-            size: 20,
+            size: widget.iconSize,
           ),
         ),
       ),

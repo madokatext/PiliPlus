@@ -139,6 +139,39 @@ List<SettingsModel> get playSettings => [
     defaultValue: 90,
     isFilter: false,
   ),
+  const SwitchModel(
+    title: '使用B站官方进度时间样式',
+    subtitle: '当前时间和总时长显示在进度条两侧，并压缩底栏与渐变阴影高度',
+    leading: Icon(Icons.video_label_outlined),
+    setKey: SettingBoxKey.biliProgressTimeStyle,
+    defaultVal: false,
+  ),
+  const SwitchModel(
+    title: '滑动跳转预览视频缩略图',
+    leading: Icon(Icons.preview_outlined),
+    setKey: SettingBoxKey.showSeekPreview,
+    defaultVal: true,
+  ),
+  const SwitchModel(
+    title: '预览窗跟随进度条滑块',
+    subtitle: '只影响拖动底部进度条；屏幕横滑快进仍居中显示',
+    leading: Icon(Icons.swipe),
+    setKey: SettingBoxKey.seekPreviewFollowSlider,
+    defaultVal: false,
+  ),
+  NormalModel(
+    title: '进度预览窗大小',
+    getSubtitle: () => '当前：${Pref.seekPreviewScale.toStringAsFixed(1)}×',
+    leading: const Icon(Icons.photo_size_select_large),
+    onTap: _showSeekPreviewScaleDialog,
+  ),
+  const SwitchModel(
+    title: '非全屏拖动进度条显示预览窗',
+    subtitle: '关闭后，全屏拖动进度条仍显示预览窗',
+    leading: Icon(Icons.fullscreen_exit_outlined),
+    setKey: SettingBoxKey.showSeekPreviewInNonFullscreen,
+    defaultVal: true,
+  ),
   NormalModel(
     title: '自动启用字幕',
     leading: const Icon(Icons.closed_caption_outlined),
@@ -291,6 +324,28 @@ List<SettingsModel> get playSettings => [
     defaultVal: false,
   ),
 ];
+
+Future<void> _showSeekPreviewScaleDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final res = await showDialog<double>(
+    context: context,
+    builder: (context) => SliderDialog(
+      title: const Text('进度预览窗大小'),
+      value: Pref.seekPreviewScale,
+      min: 0.5,
+      max: 2.0,
+      divisions: 15,
+      precise: 1,
+      suffix: '×',
+    ),
+  );
+  if (res != null) {
+    await GStorage.setting.put(SettingBoxKey.seekPreviewScale, res);
+    setState();
+  }
+}
 
 Future<void> _showSubtitleDialog(
   BuildContext context,

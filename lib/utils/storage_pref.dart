@@ -201,6 +201,18 @@ abstract final class Pref {
   static double get recommendCardWidth =>
       _setting.get(SettingBoxKey.recommendCardWidth, defaultValue: 240.0);
 
+  static bool get recommendDurationInStatRow => _setting.get(
+    SettingBoxKey.recommendDurationInStatRow,
+    defaultValue: false,
+  );
+
+  static double get recommendStatSpacing => _getClampedDouble(
+    SettingBoxKey.recommendStatSpacing,
+    4.0,
+    0.0,
+    24.0,
+  );
+
   static double get cardRadius {
     final value = _setting.get(
       SettingBoxKey.cardRadius,
@@ -559,6 +571,28 @@ abstract final class Pref {
   static bool get showSeekPreview =>
       _setting.get(SettingBoxKey.showSeekPreview, defaultValue: true);
 
+  static bool get biliProgressTimeStyle => _setting.get(
+    SettingBoxKey.biliProgressTimeStyle,
+    defaultValue: false,
+  );
+
+  static bool get seekPreviewFollowSlider => _setting.get(
+    SettingBoxKey.seekPreviewFollowSlider,
+    defaultValue: false,
+  );
+
+  static double get seekPreviewScale => _getClampedDouble(
+    SettingBoxKey.seekPreviewScale,
+    1.0,
+    0.5,
+    2.0,
+  );
+
+  static bool get showSeekPreviewInNonFullscreen => _setting.get(
+    SettingBoxKey.showSeekPreviewInNonFullscreen,
+    defaultValue: true,
+  );
+
   static bool get showDmChart =>
       _setting.get(SettingBoxKey.showDmChart, defaultValue: false);
 
@@ -636,6 +670,11 @@ abstract final class Pref {
     1.0,
     0.25,
     4.0,
+  );
+
+  static bool get volumeGestureProgressBar => _setting.get(
+    SettingBoxKey.volumeGestureProgressBar,
+    defaultValue: false,
   );
 
   static bool get enableSlideFS =>

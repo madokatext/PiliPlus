@@ -242,6 +242,13 @@ List<SettingsModel> get extraSettings => [
     onTap: _showTouchSlopDialog,
     leading: const Icon(Icons.pan_tool_alt_outlined),
   ),
+  const SwitchModel(
+    title: '音量手势使用图形进度条',
+    subtitle: '关闭时显示当前音量百分比；开启后按最高音量显示图形进度',
+    leading: Icon(Icons.graphic_eq),
+    setKey: SettingBoxKey.volumeGestureProgressBar,
+    defaultVal: false,
+  ),
   NormalModel(
     title: '音量手势识别角度',
     getSubtitle: () =>
@@ -420,12 +427,6 @@ List<SettingsModel> get extraSettings => [
     setKey: SettingBoxKey.enableLivePhoto,
     defaultVal: true,
     onChanged: (value) => ImageModel.enableLivePhoto = value,
-  ),
-  const SwitchModel(
-    title: '滑动跳转预览视频缩略图',
-    leading: Icon(Icons.preview_outlined),
-    setKey: SettingBoxKey.showSeekPreview,
-    defaultVal: true,
   ),
   const SwitchModel(
     title: '显示高能进度条',

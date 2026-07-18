@@ -402,7 +402,17 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     final isPlayAll = videoDetailController.isPlayAll;
     final anySeason = isSeason || isPart || isPgc || isPlayAll;
     final isFullScreen = this.isFullScreen;
-    final double widgetWidth = isLandscape && isFullScreen ? 42 : 35;
+    final officialTimeStyle = plPlayerController.biliProgressTimeStyle;
+    final compactBottomBar = officialTimeStyle && !isFullScreen;
+    final controlHeight = compactBottomBar ? 26.0 : 30.0;
+    final playButtonHeight = officialTimeStyle ? controlHeight : 34.0;
+    final playButtonWidth = compactBottomBar ? 34.0 : 42.0;
+    final playIconSize = compactBottomBar ? 18.0 : 20.0;
+    final double widgetWidth = compactBottomBar
+        ? 32
+        : isLandscape && isFullScreen
+        ? 42
+        : 35;
 
     Widget progressWidget(
       BottomControlType bottomControl,
@@ -410,12 +420,15 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       /// 播放暂停
       BottomControlType.playOrPause => PlayOrPauseButton(
         plPlayerController: plPlayerController,
+        width: playButtonWidth,
+        height: playButtonHeight,
+        iconSize: playIconSize,
       ),
 
       /// 上一集
       BottomControlType.pre => ComBtn(
         width: widgetWidth,
-        height: 30,
+        height: controlHeight,
         tooltip: '上一集',
         icon: const Icon(
           Icons.skip_previous,
@@ -432,7 +445,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       /// 下一集
       BottomControlType.next => ComBtn(
         width: widgetWidth,
-        height: 30,
+        height: controlHeight,
         tooltip: '下一集',
         icon: const Icon(
           Icons.skip_next,
@@ -447,16 +460,18 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       ),
 
       /// 时间进度
-      BottomControlType.time => Obx(
-        () => _VideoTime(
-          position: DurationUtils.formatDuration(
-            plPlayerController.position.value,
-          ),
-          duration: DurationUtils.formatDuration(
-            plPlayerController.duration.value,
-          ),
-        ),
-      ),
+      BottomControlType.time => officialTimeStyle
+          ? const SizedBox.shrink()
+          : Obx(
+              () => _VideoTime(
+                position: DurationUtils.formatDuration(
+                  plPlayerController.position.value,
+                ),
+                duration: DurationUtils.formatDuration(
+                  plPlayerController.duration.value,
+                ),
+              ),
+            ),
 
       /// 高能进度条
       BottomControlType.dmChart => Obx(
@@ -466,7 +481,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             final show = videoDetailController.showDmTrendChart.value;
             return ComBtn(
               width: widgetWidth,
-              height: 30,
+              height: controlHeight,
               tooltip: '高能进度条',
               icon: DisabledIcon(
                 disable: !show,
@@ -529,7 +544,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             final show = videoDetailController.showVP.value;
             return ComBtn(
               width: widgetWidth,
-              height: 30,
+              height: controlHeight,
               tooltip: '分段信息',
               icon: DisabledIcon(
                 iconSize: 22,
@@ -558,7 +573,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       /// 选集
       BottomControlType.episode => ComBtn(
         width: widgetWidth,
-        height: 30,
+        height: controlHeight,
         tooltip: '选集',
         icon: const Icon(
           Icons.list,
@@ -690,7 +705,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               },
               child: SizedBox(
                 width: widgetWidth,
-                height: 30,
+                height: controlHeight,
                 child: const Icon(
                   Icons.translate,
                   size: 18,
@@ -744,7 +759,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               },
               child: SizedBox(
                 width: widgetWidth,
-                height: 30,
+                height: controlHeight,
                 child: val == 0
                     ? const Icon(
                         Icons.closed_caption_off_outlined,
@@ -881,7 +896,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       /// 全屏
       BottomControlType.fullscreen => ComBtn(
         width: widgetWidth,
-        height: 30,
+        height: controlHeight,
         tooltip: isFullScreen ? '退出全屏' : '全屏',
         icon: isFullScreen
             ? const Icon(Icons.fullscreen_exit, size: 24, color: Colors.white)
@@ -899,7 +914,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
 
     List<BottomControlType> userSpecifyItemLeft = [
       .playOrPause,
-      .time,
+      if (!officialTimeStyle) .time,
       if (!isNotFileSource || anySeason) ...[.pre, .next],
     ];
 
@@ -1547,13 +1562,38 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                           size: 20.0,
                         ),
                         const SizedBox(width: 2.0),
-                        Text(
-                          '${(volume * 100.0).round()}%',
-                          style: const TextStyle(
-                            fontSize: 13.0,
-                            color: Colors.white,
+                        if (plPlayerController.volumeGestureProgressBar)
+                          Semantics(
+                            label: '音量',
+                            value: '${(volume * 100.0).round()}%',
+                            child: ExcludeSemantics(
+                              child: SizedBox(
+                                width: 72,
+                                child: ClipRRect(
+                                  borderRadius: const BorderRadius.all(
+                                    Radius.circular(2),
+                                  ),
+                                  child: LinearProgressIndicator(
+                                    value: (volume /
+                                            plPlayerController.maxVolume)
+                                        .clamp(0.0, 1.0)
+                                        .toDouble(),
+                                    minHeight: 4,
+                                    color: Colors.white,
+                                    backgroundColor: Colors.white30,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                        else
+                          Text(
+                            '${(volume * 100.0).round()}%',
+                            style: const TextStyle(
+                              fontSize: 13.0,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),
@@ -1817,6 +1857,13 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             maxWidth,
             maxHeight,
             () => mounted,
+            (globalX) {
+              final renderBox =
+                  _playerKey.currentContext?.findRenderObject() as RenderBox?;
+              return renderBox
+                  ?.globalToLocal(Offset(globalX, 0))
+                  .dx;
+            },
           ),
 
         if (isFullScreen || plPlayerController.isDesktopPip) ...[

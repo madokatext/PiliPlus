@@ -16,6 +16,7 @@ import 'package:PiliPlus/utils/extension/dimension_ext.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:intl/intl.dart';
@@ -114,7 +115,8 @@ class VideoCardV extends StatelessWidget {
                             height: maxHeight,
                             type: .emote,
                           ),
-                          if (videoItem.duration > 0)
+                          if (!Pref.recommendDurationInStatRow &&
+                              videoItem.duration > 0)
                             PBadge(
                               bottom: 6,
                               right: 7,
@@ -229,6 +231,12 @@ class VideoCardV extends StatelessWidget {
   static final longFormat = DateFormat('yy-M-d');
 
   Widget videoStat(BuildContext context, ThemeData theme) {
+    final durationInStatRow =
+        Pref.recommendDurationInStatRow && videoItem.duration > 0;
+    final trailingStyle = TextStyle(
+      fontSize: theme.textTheme.labelSmall!.fontSize,
+      color: theme.colorScheme.outline.withValues(alpha: 0.8),
+    );
     return Row(
       children: [
         StatWidget(
@@ -236,21 +244,26 @@ class VideoCardV extends StatelessWidget {
           value: videoItem.stat.view,
         ),
         if (videoItem.goto != 'picture') ...[
-          const SizedBox(width: 4),
+          SizedBox(width: Pref.recommendStatSpacing),
           StatWidget(
             type: StatType.danmaku,
             value: videoItem.stat.danmu,
           ),
         ],
-        if (videoItem is RcmdVideoItemModel) ...[
+        if (durationInStatRow) ...[
+          const Spacer(),
+          Text(
+            DurationUtils.formatDuration(videoItem.duration),
+            maxLines: 1,
+            style: trailingStyle,
+          ),
+          const SizedBox(width: 2),
+        ] else if (videoItem is RcmdVideoItemModel) ...[
           const Spacer(),
           Text.rich(
             maxLines: 1,
             TextSpan(
-              style: TextStyle(
-                fontSize: theme.textTheme.labelSmall!.fontSize,
-                color: theme.colorScheme.outline.withValues(alpha: 0.8),
-              ),
+              style: trailingStyle,
               text: DateFormatUtils.dateFormat(
                 videoItem.pubdate,
                 short: shortFormat,
