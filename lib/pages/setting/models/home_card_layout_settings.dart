@@ -8,25 +8,25 @@ import 'package:get/get.dart';
 List<SettingsModel> get homeCardLayoutSettings => [
   NormalModel(
     title: '主页卡片左右间隔',
-    subtitle: '调节同一行相邻卡片之间的距离',
     getSubtitle: () =>
-        '当前：${HomeCardLayoutPrefs.horizontalSpacing.toStringAsFixed(0)}dp',
+        '调节同一行相邻卡片之间的距离；当前：'
+        '${HomeCardLayoutPrefs.horizontalSpacing.toStringAsFixed(0)}dp',
     leading: const Icon(Icons.space_bar),
     onTap: _showHorizontalSpacingDialog,
   ),
   NormalModel(
     title: '主页卡片上下间隔',
-    subtitle: '调节相邻两行卡片之间的距离',
     getSubtitle: () =>
-        '当前：${HomeCardLayoutPrefs.verticalSpacing.toStringAsFixed(0)}dp',
+        '调节相邻两行卡片之间的距离；当前：'
+        '${HomeCardLayoutPrefs.verticalSpacing.toStringAsFixed(0)}dp',
     leading: const Icon(Icons.height),
     onTap: _showVerticalSpacingDialog,
   ),
   NormalModel(
     title: '主页卡片左右边距',
-    subtitle: '调节推荐卡片区域与屏幕左右边缘的距离',
     getSubtitle: () =>
-        '当前：${HomeCardLayoutPrefs.horizontalPadding.toStringAsFixed(0)}dp',
+        '调节推荐卡片区域与屏幕左右边缘的距离；当前：'
+        '${HomeCardLayoutPrefs.horizontalPadding.toStringAsFixed(0)}dp',
     leading: const Icon(Icons.horizontal_distribute),
     onTap: _showHorizontalPaddingDialog,
   ),
