@@ -25,6 +25,7 @@ class RcmdController
 
   int? lastRefreshAt;
   late bool savedRcmdTip = Pref.savedRcmdTip;
+  Future<void>? _activeQuery;
 
   @override
   bool get isEnd => false;
@@ -46,10 +47,21 @@ class RcmdController
   }
 
   @override
-  Future<void> queryData([bool isRefresh = true]) async {
-    await super.queryData(isRefresh);
-    if (enableSaveLastData) {
-      await _saveCache();
+  Future<void> queryData([bool isRefresh = true]) {
+    return _activeQuery ??= _queryData(isRefresh).whenComplete(() {
+      _activeQuery = null;
+    });
+  }
+
+  Future<void> _queryData(bool isRefresh) async {
+    try {
+      await super.queryData(isRefresh);
+      if (enableSaveLastData) {
+        await _saveCache();
+      }
+    } finally {
+      // CommonListController does not reset this flag if customGetData throws.
+      isLoading = false;
     }
   }
 
@@ -77,10 +89,18 @@ class RcmdController
   }
 
   @override
-  Future<void> onRefresh() {
+  Future<void> onRefresh() async {
+    // Restored cache can immediately trigger onLoadMore during the first frame.
+    // Wait for that request instead of letting the refresh be dropped by the
+    // isLoading guard in CommonListController.queryData.
+    if (_activeQuery case final activeQuery?) {
+      try {
+        await activeQuery;
+      } catch (_) {}
+    }
     page = 0;
     isEnd = false;
-    return queryData();
+    await queryData();
   }
 
   void removeAt(int index) {
