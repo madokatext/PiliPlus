@@ -22,6 +22,7 @@ import 'package:PiliPlus/utils/mobile_observer.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -320,23 +321,41 @@ class _MainAppState extends PopScopeState<MainApp>
         );
       } else {
         bottomNav = Obx(
-          () => BottomNavigationBar(
-            currentIndex: _mainController.selectedIndex.value,
-            onTap: _mainController.setIndex,
-            iconSize: 16,
-            selectedFontSize: 12,
-            unselectedFontSize: 12,
-            type: .fixed,
-            items: _mainController.navigationBars
-                .map(
-                  (e) => BottomNavigationBarItem(
-                    label: e.label,
-                    icon: _buildIcon(type: e),
-                    activeIcon: _buildIcon(type: e, selected: true),
-                  ),
-                )
-                .toList(),
-          ),
+          () {
+            final mediaQuery = MediaQuery.of(context);
+            final customBottomPadding = Pref.legacyBottomBarBottomPadding;
+            final child = BottomNavigationBar(
+              currentIndex: _mainController.selectedIndex.value,
+              onTap: _mainController.setIndex,
+              iconSize: 16,
+              selectedFontSize: 12,
+              unselectedFontSize: 12,
+              type: .fixed,
+              items: _mainController.navigationBars
+                  .map(
+                    (e) => BottomNavigationBarItem(
+                      label: e.label,
+                      icon: _buildIcon(type: e),
+                      activeIcon: _buildIcon(type: e, selected: true),
+                    ),
+                  )
+                  .toList(),
+            );
+            if (customBottomPadding == null) {
+              return child;
+            }
+            return MediaQuery(
+              data: mediaQuery.copyWith(
+                padding: mediaQuery.padding.copyWith(
+                  bottom: customBottomPadding,
+                ),
+                viewPadding: mediaQuery.viewPadding.copyWith(
+                  bottom: customBottomPadding,
+                ),
+              ),
+              child: child,
+            );
+          },
         );
       }
 

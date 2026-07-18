@@ -224,6 +224,18 @@ abstract final class Pref {
         : 10.0;
   }
 
+  static double get homeTabBarHeight => _getClampedDouble(
+    SettingBoxKey.homeTabBarHeight,
+    42.0,
+    28.0,
+    72.0,
+  );
+
+  static double? get legacyBottomBarBottomPadding {
+    final value = _setting.get(SettingBoxKey.legacyBottomBarBottomPadding);
+    return value is num ? value.toDouble().clamp(0.0, 48.0).toDouble() : null;
+  }
+
   static UpPanelPosition get upPanelPosition =>
       UpPanelPosition.values[_setting.get(
         SettingBoxKey.upPanelPosition,
@@ -1036,6 +1048,12 @@ abstract final class Pref {
 
   static bool get enableAutoLongPressSpeed =>
       _setting.get(SettingBoxKey.enableAutoLongPressSpeed, defaultValue: false);
+
+  static int get longPressSpeedTriggerDelay {
+    final defaultValue = PlatformUtils.isMobile && enableTapDm ? 300 : 500;
+    final value = _setting.get(SettingBoxKey.longPressSpeedTriggerDelay);
+    return (value is num ? value.toInt() : defaultValue).clamp(100, 1000);
+  }
 
   static double get playSpeedDefault =>
       _video.get(VideoBoxKey.playSpeedDefault, defaultValue: 1.0);

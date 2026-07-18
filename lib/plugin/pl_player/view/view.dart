@@ -883,7 +883,6 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       // PlayerBar 会把这一组整体贴右；第一项就是右侧组最左侧按钮。
       if (isFullScreen) .danmakuToggle,
       if (isNotFileSource && plPlayerController.showDmChart) .dmChart,
-      if (plPlayerController.isAnim) .superResolution,
       if (isNotFileSource && plPlayerController.showViewPoints) .viewPoints,
       if (isNotFileSource && anySeason) .episode,
       if (!isFullScreen && flag) .fit,
@@ -1202,9 +1201,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
   LongPressGestureRecognizer? _longPressRecognizer;
   LongPressGestureRecognizer get longPressRecognizer => _longPressRecognizer ??=
       LongPressGestureRecognizer(
-          duration: plPlayerController.enableTapDm
-              ? const Duration(milliseconds: 300)
-              : null,
+          duration: plPlayerController.longPressSpeedTriggerDelay,
         )
         ..onLongPressStart = ((_) =>
             plPlayerController.setLongPressStatus(true))

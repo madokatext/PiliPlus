@@ -44,6 +44,12 @@ List<SettingsModel> get playSettings => [
     title: '倍速设置',
     subtitle: '设置视频播放速度',
   ),
+  NormalModel(
+    title: '长按倍速触发延迟',
+    getSubtitle: () => '当前：${Pref.longPressSpeedTriggerDelay}ms',
+    leading: const Icon(Icons.timer_outlined),
+    onTap: _showLongPressSpeedTriggerDelayDialog,
+  ),
   if (Platform.isAndroid)
     NormalModel(
       onTap: _showAngleDegreesDialog,
@@ -331,6 +337,31 @@ List<SettingsModel> get playSettings => [
     defaultVal: false,
   ),
 ];
+
+Future<void> _showLongPressSpeedTriggerDelayDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final res = await showDialog<double>(
+    context: context,
+    builder: (context) => SliderDialog(
+      title: const Text('长按倍速触发延迟'),
+      value: Pref.longPressSpeedTriggerDelay.toDouble(),
+      min: 100,
+      max: 1000,
+      divisions: 18,
+      precise: 0,
+      suffix: 'ms',
+    ),
+  );
+  if (res != null) {
+    await GStorage.setting.put(
+      SettingBoxKey.longPressSpeedTriggerDelay,
+      res.toInt(),
+    );
+    setState();
+  }
+}
 
 Future<void> _showSeekPreviewScaleDialog(
   BuildContext context,

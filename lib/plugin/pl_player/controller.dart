@@ -314,6 +314,8 @@ class PlPlayerController with BlockConfigMixin {
 
   late List<double> speedList = Pref.speedList;
   late bool enableAutoLongPressSpeed = Pref.enableAutoLongPressSpeed;
+  Duration get longPressSpeedTriggerDelay =>
+      Duration(milliseconds: Pref.longPressSpeedTriggerDelay);
   late final showControlDuration = Pref.enableLongShowControl
       ? const Duration(seconds: 30)
       : const Duration(seconds: 3);

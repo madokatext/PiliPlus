@@ -130,6 +130,24 @@ List<SettingsModel> get styleSettings => [
     needReboot: true,
   ),
   NormalModel(
+    title: '首页顶部分类栏高度',
+    getSubtitle: () => '当前：${Pref.homeTabBarHeight.toStringAsFixed(0)}dp',
+    leading: const Icon(Icons.height),
+    onTap: _showHomeTabBarHeightDialog,
+  ),
+  NormalModel(
+    title: '首页传统底栏底部留白',
+    getSubtitle: () {
+      final value = Pref.legacyBottomBarBottomPadding;
+      final current = value == null
+          ? '跟随系统安全区'
+          : '${value.toStringAsFixed(0)}dp';
+      return '当前：$current；仅影响未启用悬浮底栏和MD3样式底栏时的传统底栏';
+    },
+    leading: const Icon(Icons.vertical_align_bottom_outlined),
+    onTap: _showLegacyBottomBarBottomPaddingDialog,
+  ),
+  NormalModel(
     leading: const Icon(Icons.calendar_view_week_outlined),
     title: '列表宽度（dp）限制',
     getSubtitle: () =>
@@ -703,6 +721,91 @@ Future<void> _showCardWidthDialog(
       SettingBoxKey.smallCardWidth: res.$2,
     });
     SmartDialog.showToast('重启生效');
+    setState();
+  }
+}
+
+Future<void> _showHomeTabBarHeightDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final res = await showDialog<double>(
+    context: context,
+    builder: (context) => SliderDialog(
+      title: const Text('首页顶部分类栏高度'),
+      value: Pref.homeTabBarHeight,
+      min: 28,
+      max: 72,
+      divisions: 22,
+      suffix: 'dp',
+      precise: 0,
+    ),
+  );
+  if (res != null) {
+    await GStorage.setting.put(SettingBoxKey.homeTabBarHeight, res);
+    Get.appUpdate();
+    setState();
+  }
+}
+
+Future<void> _showLegacyBottomBarBottomPaddingDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final systemPadding = MediaQuery.viewPaddingOf(context).bottom
+      .clamp(0.0, 48.0)
+      .toDouble();
+  double value = Pref.legacyBottomBarBottomPadding ?? systemPadding;
+  final res = await showDialog<double>(
+    context: context,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setDialogState) => AlertDialog(
+        title: const Text('首页传统底栏底部留白'),
+        contentPadding: const .only(top: 20, left: 8, right: 8, bottom: 8),
+        content: SizedBox(
+          height: 40,
+          child: Slider(
+            value: value,
+            min: 0,
+            max: 48,
+            divisions: 48,
+            label: '${value.toStringAsFixed(0)}dp',
+            onChanged: (newValue) =>
+                setDialogState(() => value = newValue),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, -1.0),
+            child: const Text('跟随系统'),
+          ),
+          TextButton(
+            onPressed: Navigator.of(context).pop,
+            child: Text(
+              '取消',
+              style: TextStyle(color: ColorScheme.of(context).outline),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, value),
+            child: const Text('确定'),
+          ),
+        ],
+      ),
+    ),
+  );
+  if (res != null) {
+    if (res < 0) {
+      await GStorage.setting.delete(
+        SettingBoxKey.legacyBottomBarBottomPadding,
+      );
+    } else {
+      await GStorage.setting.put(
+        SettingBoxKey.legacyBottomBarBottomPadding,
+        res,
+      );
+    }
+    Get.appUpdate();
     setState();
   }
 }

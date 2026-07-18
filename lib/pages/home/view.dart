@@ -9,6 +9,7 @@ import 'package:PiliPlus/pages/mine/controller.dart';
 import 'package:PiliPlus/utils/extension/get_ext.dart';
 import 'package:PiliPlus/utils/extension/size_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -40,7 +41,7 @@ class _HomePageState extends CommonPageState<HomePage>
       tabBar = Padding(
         padding: const EdgeInsets.only(top: 4),
         child: SizedBox(
-          height: 42,
+          height: Pref.homeTabBarHeight,
           width: double.infinity,
           child: TabBar(
             controller: _homeController.tabController,
