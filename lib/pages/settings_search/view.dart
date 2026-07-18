@@ -66,7 +66,7 @@ class _SettingsSearchPageState
       return;
     }
     _history
-      ..remove(keyword)
+      ..removeWhere((item) => item == keyword)
       ..insert(0, keyword);
     if (_history.length > _maxHistoryLength) {
       _history.removeRange(_maxHistoryLength, _history.length);
@@ -134,8 +134,10 @@ class _SettingsSearchPageState
           autofocus: true,
           controller: _textEditingController,
           textAlignVertical: TextAlignVertical.center,
-          onChanged: ctr!.add,
-          onSubmitted: _recordSearch,
+          onChanged: (value) {
+            _recordSearch(value);
+            ctr!.add(value);
+          },
           decoration: const InputDecoration(
             isDense: true,
             hintText: '搜索',
@@ -158,10 +160,7 @@ class _SettingsSearchPageState
                             maxCrossAxisExtent: Grid.smallCardWidth * 2,
                           ),
                       delegate: SliverChildBuilderDelegate(
-                        (_, index) => _SearchResultItem(
-                          onSelected: _recordSearch,
-                          child: _list[index].widget,
-                        ),
+                        (_, index) => _list[index].widget,
                         childCount: _list.length,
                       ),
                     ),
@@ -212,54 +211,5 @@ class _SettingsSearchPageState
         ),
       ),
     );
-  }
-}
-
-class _SearchResultItem extends StatefulWidget {
-  const _SearchResultItem({required this.onSelected, required this.child});
-
-  final VoidCallback onSelected;
-  final Widget child;
-
-  @override
-  State<_SearchResultItem> createState() => _SearchResultItemState();
-}
-
-class _SearchResultItemState extends State<_SearchResultItem> {
-  static const _maxTapDistanceSquared = 18.0 * 18.0;
-
-  int? _pointer;
-  Offset? _downPosition;
-
-  @override
-  Widget build(BuildContext context) {
-    return Listener(
-      behavior: HitTestBehavior.translucent,
-      onPointerDown: (event) {
-        _pointer = event.pointer;
-        _downPosition = event.position;
-      },
-      onPointerMove: (event) {
-        if (event.pointer == _pointer &&
-            _downPosition != null &&
-            (event.position - _downPosition!).distanceSquared >
-                _maxTapDistanceSquared) {
-          _resetPointer();
-        }
-      },
-      onPointerUp: (event) {
-        if (event.pointer == _pointer && _downPosition != null) {
-          widget.onSelected();
-        }
-        _resetPointer();
-      },
-      onPointerCancel: (_) => _resetPointer(),
-      child: widget.child,
-    );
-  }
-
-  void _resetPointer() {
-    _pointer = null;
-    _downPosition = null;
   }
 }
