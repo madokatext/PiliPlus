@@ -91,6 +91,13 @@ List<SettingsModel> get videoSettings => [
     onTap: _showVideoQaDialog,
   ),
   NormalModel(
+  title: '半屏默认画质',
+  leading: const Icon(Icons.picture_in_picture_alt_outlined),
+  getSubtitle: () =>
+      '当前画质：${VideoQuality.fromCode(Pref.defaultVideoQaHalfScreen).desc}',
+  onTap: _showHalfScreenVideoQaDialog,
+  ),
+  NormalModel(
     title: '蜂窝网络画质',
     leading: const Icon(Icons.video_settings_outlined),
     getSubtitle: () =>
@@ -242,6 +249,28 @@ Future<void> _showVideoQaDialog(
   );
   if (res != null) {
     await GStorage.setting.put(SettingBoxKey.defaultVideoQa, res);
+    setState();
+  }
+}
+
+Future<void> _showHalfScreenVideoQaDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final res = await showDialog<int>(
+    context: context,
+    builder: (context) => SelectDialog<int>(
+      title: '半屏默认画质',
+      value: Pref.defaultVideoQaHalfScreen,
+      values: VideoQuality.values.map((e) => (e.code, e.desc)).toList(),
+    ),
+  );
+
+  if (res != null) {
+    await GStorage.setting.put(
+      SettingBoxKey.defaultVideoQaHalfScreen,
+      res,
+    );
     setState();
   }
 }
