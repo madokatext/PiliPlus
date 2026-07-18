@@ -10,7 +10,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # Both the version and the builder number may be overridden in flutter
 # build by specifying --build-name and --build-number, respectively.
 # In Android, build-name is used as versionName while build-number used as versionCode.
-# Read more about Android versioning at https://developer.android.com/studio/publish-versioning
+# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
 # In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
@@ -144,7 +144,7 @@ dependencies:
   pretty_qr_code: ^3.3.0
   protobuf: ^6.0.0
   re_highlight: ^0.0.3
-  saver_gallery: ^5.2.0
+  saver_gallery: ^5.0.2
   screen_brightness_platform_interface: ^2.1.0
   screen_retriever: ^0.2.0
   share_plus: ^13.1.0
