@@ -3,7 +3,7 @@ import 'package:PiliPlus/utils/bili_colors.dart';
 import 'package:flex_seed_scheme/flex_seed_scheme.dart';
 import 'package:flutter/material.dart'
     show ThemeData, Color, ColorScheme, Brightness, Colors;
-import 'package:material_color_utilities/hct/hct.dart';
+import 'package:material_color_utilities/hct/hct.dart' as mcu;
 
 extension ThemeDataExt on ThemeData {
   bool get isLight => brightness.isLight;
@@ -72,7 +72,7 @@ extension ThemeToneExt on ColorScheme {
     Color tone(Color color, ThemeToneRole role) {
       final offset = offsets[role] ?? 0;
       if (offset == 0) return color;
-      final hct = Hct.fromInt(color.toARGB32());
+      final hct = mcu.Hct.fromInt(color.toARGB32());
       hct.tone = (hct.tone + offset).clamp(0.0, 100.0).toDouble();
       return Color(hct.toInt());
     }
