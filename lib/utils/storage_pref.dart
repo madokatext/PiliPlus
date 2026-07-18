@@ -235,6 +235,11 @@ abstract final class Pref {
     defaultValue: VideoQuality.high1080.code,
   );
 
+  static int get defaultVideoQaHalfScreen => _setting.get(
+    SettingBoxKey.defaultVideoQaHalfScreen,
+    defaultValue: defaultVideoQa,
+  );
+
   static int get defaultAudioQa => _setting.get(
     SettingBoxKey.defaultAudioQa,
     defaultValue: AudioQuality.hiRes.code,
