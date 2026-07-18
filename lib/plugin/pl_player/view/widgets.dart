@@ -65,8 +65,6 @@ Widget buildSeekPreviewWidget(
       }
 
       try {
-        final data = plPlayerController.videoShot!.data;
-
         final double baseScale =
             plPlayerController.isFullScreen.value &&
                 (PlatformUtils.isDesktop || !plPlayerController.isVertical)
@@ -84,64 +82,124 @@ Widget buildSeekPreviewWidget(
           height = math.min(height, maxPreviewHeight);
         }
 
-        final int imgXLen = data.imgXLen;
-        final int imgYLen = data.imgYLen;
-        final int totalPerImage = data.totalPerImage;
-        double imgXSize = data.imgXSize;
-        double imgYSize = data.imgYSize;
-
-        final aspectRatio = imgXSize > 0 && imgYSize > 0
-            ? imgXSize / imgYSize
-            : Style.aspectRatio;
         const horizontalMargin = 8.0;
         final maxPreviewWidth = maxWidth - horizontalMargin * 2;
-        if (maxPreviewWidth > 0 && aspectRatio > 0) {
-          height = math.min(height, maxPreviewWidth / aspectRatio);
+        final videoWidth = plPlayerController.width ?? 0;
+        final videoHeight = plPlayerController.height ?? 0;
+        final fallbackAspectRatio = videoWidth > 0 && videoHeight > 0
+            ? videoWidth / videoHeight
+            : Style.aspectRatio;
+
+        double fitHeight(double value, double aspectRatio) {
+          if (maxPreviewWidth > 0 &&
+              aspectRatio.isFinite &&
+              aspectRatio > 0) {
+            return math.min(value, maxPreviewWidth / aspectRatio);
+          }
+          return value;
         }
 
-        final index = plPlayerController.previewIndex.value!;
-        int pageIndex = (index ~/ totalPerImage).clamp(
+        Widget positionPreview(Widget preview) {
+          var centerX = maxWidth / 2;
+          final globalX = plPlayerController.previewGlobalX.value;
+          if (plPlayerController.seekPreviewFollowSlider && globalX != null) {
+            centerX = globalToLocalX(globalX) ?? centerX;
+          }
+          return CustomSingleChildLayout(
+            delegate: _SeekPreviewLayoutDelegate(
+              centerX: centerX,
+              centerY:
+                  maxHeight *
+                  plPlayerController.seekPreviewVerticalPosition /
+                  100,
+              margin: horizontalMargin,
+            ),
+            child: preview,
+          );
+        }
+
+        Widget loadingPreview(double aspectRatio) {
+          final previewHeight = fitHeight(height, aspectRatio);
+          return positionPreview(
+            ClipRRect(
+              borderRadius: Style.mdRadius,
+              child: SizedBox(
+                width: previewHeight * aspectRatio,
+                height: previewHeight,
+                child: const ColoredBox(
+                  color: Color(0xB3000000),
+                  child: Center(
+                    child: SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        final data = plPlayerController.videoShot?.dataOrNull;
+        final index = plPlayerController.previewIndex.value;
+        if (data == null ||
+            index == null ||
+            data.image.isEmpty ||
+            data.imgXLen <= 0 ||
+            data.imgYLen <= 0) {
+          return loadingPreview(fallbackAspectRatio);
+        }
+
+        final imgXLen = data.imgXLen;
+        final imgYLen = data.imgYLen;
+        final totalPerImage = data.totalPerImage;
+        var imgXSize = data.imgXSize;
+        var imgYSize = data.imgYSize;
+        final hasValidCellSize = imgXSize.isFinite &&
+            imgYSize.isFinite &&
+            imgXSize > 0 &&
+            imgYSize > 0;
+        final aspectRatio = hasValidCellSize
+            ? imgXSize / imgYSize
+            : fallbackAspectRatio;
+        height = fitHeight(height, aspectRatio);
+
+        final pageIndex = (index ~/ totalPerImage).clamp(
           0,
           data.image.length - 1,
         );
-        int align = index % totalPerImage;
-        int x = align % imgXLen;
-        int y = align ~/ imgYLen;
+        final align = index % totalPerImage;
+        final x = align % imgXLen;
+        final y = align ~/ imgXLen;
         final url = data.image[pageIndex];
 
         final preview = ClipRRect(
           borderRadius: Style.mdRadius,
           child: VideoShotImage(
+            key: ValueKey('${plPlayerController.previewGeneration}:$url'),
             url: url,
             x: x,
             y: y,
             imgXSize: imgXSize,
             imgYSize: imgYSize,
+            imgXLen: imgXLen,
+            imgYLen: imgYLen,
             height: height,
+            maxWidth: maxPreviewWidth,
+            fallbackAspectRatio: fallbackAspectRatio,
+            generation: plPlayerController.previewGeneration,
             imageCache: plPlayerController.previewCache,
+            imageLoadTasks: plPlayerController.previewLoadTasks,
             onSetSize: (xSize, ySize) => data
               ..imgXSize = imgXSize = xSize
               ..imgYSize = imgYSize = ySize,
             isMounted: isMounted,
           ),
         );
-
-        var centerX = maxWidth / 2;
-        final globalX = plPlayerController.previewGlobalX.value;
-        if (plPlayerController.seekPreviewFollowSlider && globalX != null) {
-          centerX = globalToLocalX(globalX) ?? centerX;
-        }
-        return CustomSingleChildLayout(
-          delegate: _SeekPreviewLayoutDelegate(
-            centerX: centerX,
-            centerY:
-                maxHeight *
-                plPlayerController.seekPreviewVerticalPosition /
-                100,
-            margin: horizontalMargin,
-          ),
-          child: preview,
-        );
+        return positionPreview(preview);
       } catch (e) {
         if (kDebugMode) rethrow;
         return const SizedBox.shrink();
@@ -207,18 +265,30 @@ class VideoShotImage extends StatefulWidget {
     required this.y,
     required this.imgXSize,
     required this.imgYSize,
+    required this.imgXLen,
+    required this.imgYLen,
     required this.height,
+    required this.maxWidth,
+    required this.fallbackAspectRatio,
+    required this.generation,
+    required this.imageLoadTasks,
     required this.onSetSize,
     required this.isMounted,
   });
 
-  final Map<String, ui.Image?> imageCache;
+  final Map<String, ui.Image> imageCache;
+  final Map<String, Future<ui.Image?>> imageLoadTasks;
   final String url;
   final int x;
   final int y;
   final double imgXSize;
   final double imgYSize;
+  final int imgXLen;
+  final int imgYLen;
   final double height;
+  final double maxWidth;
+  final double fallbackAspectRatio;
+  final int generation;
   final Function(double imgXSize, double imgYSize) onSetSize;
   final ValueGetter<bool> isMounted;
 
@@ -263,31 +333,52 @@ class _VideoShotImageState extends State<VideoShotImage> {
     _loadImg();
   }
 
-  void _initSizeIfNeeded() {
-    if (_size.width.isNaN) {
-      _initSize();
+  bool get _hasValidMetadata =>
+      widget.imgXSize.isFinite &&
+      widget.imgYSize.isFinite &&
+      widget.imgXSize > 0 &&
+      widget.imgYSize > 0;
+
+  double get _fallbackAspectRatio =>
+      widget.fallbackAspectRatio.isFinite && widget.fallbackAspectRatio > 0
+      ? widget.fallbackAspectRatio
+      : Style.aspectRatio;
+
+  Size? get _cellSize {
+    if (_hasValidMetadata) {
+      return Size(widget.imgXSize, widget.imgYSize);
     }
+    if (_image != null && widget.imgXLen > 0 && widget.imgYLen > 0) {
+      return Size(
+        _image!.width / widget.imgXLen,
+        _image!.height / widget.imgYLen,
+      );
+    }
+    return null;
   }
 
   void _initSize() {
-    if (widget.imgXSize == 0) {
-      if (_image != null) {
-        final imgXSize = _image!.width / 10;
-        final imgYSize = _image!.height / 10;
-        final height = widget.height;
-        final width = height * imgXSize / imgYSize;
-        _setRect(width, height);
-        _setSrcRect(imgXSize, imgYSize);
-        widget.onSetSize(imgXSize, imgYSize);
-      } else {
-        _setRect(double.nan, double.nan);
-        _setSrcRect(widget.imgXSize, widget.imgYSize);
+    final cellSize = _cellSize;
+    final aspectRatio = cellSize == null
+        ? _fallbackAspectRatio
+        : cellSize.width / cellSize.height;
+    var height = widget.height.isFinite && widget.height > 0
+        ? widget.height
+        : 0.0;
+    if (widget.maxWidth.isFinite &&
+        widget.maxWidth > 0 &&
+        aspectRatio > 0) {
+      height = math.min(height, widget.maxWidth / aspectRatio);
+    }
+    _setRect(height * aspectRatio, height);
+
+    if (cellSize != null) {
+      _setSrcRect(cellSize.width, cellSize.height);
+      if (!_hasValidMetadata) {
+        widget.onSetSize(cellSize.width, cellSize.height);
       }
     } else {
-      final height = widget.height;
-      final width = height * widget.imgXSize / widget.imgYSize;
-      _setRect(width, height);
-      _setSrcRect(widget.imgXSize, widget.imgYSize);
+      _setSrcRect(0, 0);
     }
   }
 
@@ -308,36 +399,68 @@ class _VideoShotImageState extends State<VideoShotImage> {
 
   void _loadImg() {
     final url = widget.url;
+    final generation = widget.generation;
     _image = widget.imageCache[url];
     if (_image != null) {
-      _initSizeIfNeeded();
-    } else if (!widget.imageCache.containsKey(url)) {
-      widget.imageCache[url] = null;
-      _getImg(url).then((image) {
-        if (image != null) {
-          if (widget.isMounted()) {
-            widget.imageCache[url] = image;
-          }
-          if (mounted) {
-            _image = image;
-            _initSizeIfNeeded();
-            setState(() {});
-          }
-        } else {
-          widget.imageCache.remove(url);
-        }
-      });
+      _initSize();
+      return;
     }
+
+    _initSize();
+    final task = widget.imageLoadTasks.putIfAbsent(url, () => _getImg(url));
+    task.then((image) {
+      final isActiveTask = identical(widget.imageLoadTasks[url], task);
+      if (image == null) {
+        if (isActiveTask) {
+          widget.imageLoadTasks.remove(url);
+        }
+        return;
+      }
+
+      if (isActiveTask) {
+        widget.imageLoadTasks.remove(url);
+        if (widget.isMounted() && widget.generation == generation) {
+          widget.imageCache[url] = image;
+        } else {
+          image.dispose();
+          return;
+        }
+      }
+
+      final resolvedImage = widget.imageCache[url];
+      if (resolvedImage != null &&
+          mounted &&
+          widget.url == url &&
+          widget.generation == generation) {
+        _image = resolvedImage;
+        _initSize();
+        setState(() {});
+      }
+    });
   }
 
   @override
   void didUpdateWidget(VideoShotImage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.url != widget.url) {
+    if (oldWidget.url != widget.url ||
+        oldWidget.generation != widget.generation) {
+      _image = null;
       _loadImg();
+      return;
     }
-    if (oldWidget.x != widget.x || oldWidget.y != widget.y) {
-      _setSrcRect(widget.imgXSize, widget.imgYSize);
+    if (oldWidget.x != widget.x ||
+        oldWidget.y != widget.y ||
+        oldWidget.imgXSize != widget.imgXSize ||
+        oldWidget.imgYSize != widget.imgYSize ||
+        oldWidget.imgXLen != widget.imgXLen ||
+        oldWidget.imgYLen != widget.imgYLen ||
+        oldWidget.height != widget.height ||
+        oldWidget.maxWidth != widget.maxWidth ||
+        oldWidget.fallbackAspectRatio != widget.fallbackAspectRatio) {
+      _initSize();
+    }
+    if (_image == null) {
+      _loadImg();
     }
   }
 
@@ -349,7 +472,7 @@ class _VideoShotImageState extends State<VideoShotImage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_image != null) {
+    if (_image != null && _srcRect.width > 0 && _srcRect.height > 0) {
       return CroppedImage(
         size: _size,
         image: _image!,
@@ -360,7 +483,21 @@ class _VideoShotImageState extends State<VideoShotImage> {
         borderPaint: _borderPaint,
       );
     }
-    return const SizedBox.shrink();
+    return SizedBox.fromSize(
+      size: _size,
+      child: const ColoredBox(
+        color: Color(0xB3000000),
+        child: Center(
+          child: SizedBox.square(
+            dimension: 18,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

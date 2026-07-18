@@ -648,6 +648,12 @@ class PlPlayerController with BlockConfigMixin {
 
       if (showAnySeekPreview) {
         _clearPreview();
+        if (!this.isLive &&
+            !isFileSource &&
+            _bvid?.isNotEmpty == true &&
+            this.cid != null) {
+          _loadVideoShot();
+        }
       }
       cancelLongPressTimer();
       if (_videoPlayerController != null &&
@@ -1225,6 +1231,7 @@ class PlPlayerController with BlockConfigMixin {
     if (showAnySeekPreview) {
       showPreview.value = false;
       previewGlobalX.value = null;
+      _pendingPreviewSeconds = null;
     }
     hasToasted = false;
     isSeeking.value = false;
@@ -1678,8 +1685,13 @@ class PlPlayerController with BlockConfigMixin {
     );
   }
 
-  late final Map<String, ui.Image?> previewCache = {};
+  late final Map<String, ui.Image> previewCache = {};
+  late final Map<String, Future<ui.Image?>> previewLoadTasks = {};
   LoadingState<VideoShotData>? videoShot;
+  Future<void>? _videoShotTask;
+  int _previewGeneration = 0;
+  int get previewGeneration => _previewGeneration;
+  int? _pendingPreviewSeconds;
   late final RxBool showPreview = false.obs;
   late final showSeekPreviewOnSlider = Pref.showSeekPreviewOnSlider;
   late final showSeekPreviewOnGesture = Pref.showSeekPreviewOnGesture;
@@ -1695,33 +1707,101 @@ class PlPlayerController with BlockConfigMixin {
 
   void updatePreviewIndex(int seconds, {double? globalX}) {
     previewGlobalX.value = globalX;
-    if (videoShot == null) {
-      videoShot = LoadingState.loading();
-      getVideoShot();
+    _pendingPreviewSeconds = seconds;
+    showPreview.value = true;
+
+    if (videoShot case Success(:final response)) {
+      _applyPreviewIndex(response, seconds);
+    } else if (videoShot == null || videoShot is Error) {
+      _loadVideoShot();
+    }
+  }
+
+  void _applyPreviewIndex(VideoShotData data, int seconds) {
+    if (!isSeeking.value) return;
+
+    previewIndex.value = max(
+      0,
+      data.index.where((item) => item <= seconds).length - 2,
+    );
+    showPreview.value = true;
+  }
+
+  void _loadVideoShot() {
+    if (_videoShotTask != null ||
+        isLive ||
+        isFileSource ||
+        _bvid?.isNotEmpty != true ||
+        cid == null) {
       return;
     }
-    if (videoShot case Success(:final response)) {
-      showPreview.value = true;
-      previewIndex.value = max(
-        0,
-        (response.index.where((item) => item <= seconds).length - 2),
+
+    final generation = _previewGeneration;
+    final requestBvid = _bvid!;
+    final requestCid = cid!;
+    videoShot = LoadingState.loading();
+    _videoShotTask = _fetchVideoShot(
+      generation,
+      requestBvid,
+      requestCid,
+    );
+  }
+
+  Future<void> _fetchVideoShot(
+    int generation,
+    String requestBvid,
+    int requestCid,
+  ) async {
+    try {
+      final result = await VideoHttp.videoshot(
+        bvid: requestBvid,
+        cid: requestCid,
       );
+      if (generation != _previewGeneration ||
+          _bvid != requestBvid ||
+          cid != requestCid) {
+        return;
+      }
+
+      videoShot = result;
+      if (result case Success(:final response)) {
+        final seconds = _pendingPreviewSeconds;
+        if (seconds != null && isSeeking.value) {
+          _applyPreviewIndex(response, seconds);
+        }
+      }
+    } catch (err) {
+      if (generation == _previewGeneration &&
+          _bvid == requestBvid &&
+          cid == requestCid) {
+        videoShot = Error(err.toString());
+      }
+    } finally {
+      if (generation == _previewGeneration &&
+          _bvid == requestBvid &&
+          cid == requestCid) {
+        _videoShotTask = null;
+      }
     }
   }
 
   void _clearPreview() {
+    _previewGeneration++;
+    _videoShotTask = null;
+    _pendingPreviewSeconds = null;
     showPreview.value = false;
     previewIndex.value = null;
     previewGlobalX.value = null;
     videoShot = null;
     for (final i in previewCache.values) {
-      i?.dispose();
+      i.dispose();
     }
     previewCache.clear();
-  }
-
-  Future<void> getVideoShot() async {
-    videoShot = await VideoHttp.videoshot(bvid: bvid, cid: cid!);
+    final pendingTasks = previewLoadTasks.values.toSet();
+    previewLoadTasks.clear();
+    for (final task in pendingTasks) {
+      task.then((image) => image?.dispose());
+    }
   }
 
   Future<void> takeScreenshot() async {
