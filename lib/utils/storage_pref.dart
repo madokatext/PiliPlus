@@ -293,6 +293,20 @@ abstract final class Pref {
     defaultValue: Platform.isAndroid ? '30' : '0',
   );
 
+  static String get customMpvOptions =>
+      _setting.get(SettingBoxKey.customMpvOptions, defaultValue: '');
+
+  static String get mpvLogLevel {
+    final value = _setting.get(
+      SettingBoxKey.mpvLogLevel,
+      defaultValue: 'error',
+    );
+    return switch (value) {
+      'error' || 'warn' || 'info' || 'v' || 'debug' || 'trace' => value,
+      _ => 'error',
+    };
+  }
+
   static CDNService get defaultCDNService {
     if (_setting.get(SettingBoxKey.CDNService) case final String cdnName) {
       return CDNService.values.byName(cdnName);

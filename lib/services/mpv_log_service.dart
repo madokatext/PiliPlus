@@ -1,0 +1,121 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:PiliPlus/utils/path_utils.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
+import 'package:media_kit/media_kit.dart';
+import 'package:path/path.dart' as path;
+
+abstract final class MpvLogService {
+  static const _maxBytes = 4 * 1024 * 1024;
+  static final File _file = File(
+    path.join(appSupportDirPath, 'mpv_last_playback.log'),
+  );
+
+  static Future<void> _operation = Future.value();
+  static IOSink? _sink;
+  static Player? _activePlayer;
+  static int _session = 0;
+  static int _writtenBytes = 0;
+  static int _pendingBytes = 0;
+  static bool _truncated = false;
+
+  static Future<void> _run(Future<void> Function() action) {
+    return _operation = _operation.then((_) async {
+      try {
+        await action();
+      } catch (_) {
+        // 日志写入失败不能影响播放，也不能阻断后续写入。
+      }
+    });
+  }
+
+  static Future<void> beginSession(
+    Player player, {
+    required String source,
+  }) {
+    _activePlayer = player;
+    final session = ++_session;
+    final header = [
+      '# PiliPlus mpv playback log',
+      '# source: $source',
+      '# level: ${Pref.mpvLogLevel}',
+      '# started: ${DateTime.now().toIso8601String()}',
+      '',
+    ].join('\n');
+    _writtenBytes = utf8.encode(header).length;
+    _pendingBytes = 0;
+    _truncated = false;
+
+    return _run(() async {
+      if (session != _session) return;
+      final oldSink = _sink;
+      _sink = null;
+      await oldSink?.flush();
+      await oldSink?.close();
+      if (session != _session) return;
+      final sink = _file.openWrite();
+      _sink = sink;
+      sink.write(header);
+      await sink.flush();
+    });
+  }
+
+  static void add(Player player, PlayerLog log) {
+    if (!identical(player, _activePlayer) || _truncated) return;
+
+    final session = _session;
+    final line =
+        '[${DateTime.now().toIso8601String()}] '
+        '[${log.level}] [${log.prefix}] ${log.text}\n';
+    final bytes = utf8.encode(line).length;
+
+    if (_writtenBytes + bytes > _maxBytes) {
+      _truncated = true;
+      const marker = '\n# 日志已达到 4 MiB，后续内容不再写入。\n';
+      if (session == _session) _sink?.write(marker);
+      _flushSilently();
+      return;
+    }
+
+    _writtenBytes += bytes;
+    _pendingBytes += bytes;
+    if (session == _session) _sink?.write(line);
+    if (_pendingBytes >= 64 * 1024 ||
+        log.level == 'error' ||
+        log.level == 'fatal') {
+      _pendingBytes = 0;
+      _flushSilently();
+    }
+  }
+
+  static void _flushSilently() {
+    final sink = _sink;
+    if (sink != null) {
+      sink.flush().then<void>((_) {}, onError: (_, _) {});
+    }
+  }
+
+  static Future<String> readLastLog() async {
+    await _operation;
+    await _sink?.flush();
+    if (!await _file.exists()) return '';
+    return _file.readAsString();
+  }
+
+  static Future<void> clear() {
+    _writtenBytes = 0;
+    _pendingBytes = 0;
+    _truncated = false;
+    return _run(() async {
+      final oldSink = _sink;
+      _sink = null;
+      await oldSink?.flush();
+      await oldSink?.close();
+      await _file.writeAsString('', flush: true);
+      if (_activePlayer != null) {
+        _sink = _file.openWrite(mode: FileMode.append);
+      }
+    });
+  }
+}

@@ -15,6 +15,7 @@
  * along with PiliPlus.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import 'dart:async' show StreamSubscription, unawaited;
 import 'dart:io' show File, Platform;
 
 import 'package:PiliPlus/common/widgets/colored_box_transition.dart';
@@ -28,11 +29,13 @@ import 'package:PiliPlus/common/widgets/scroll_physics.dart';
 import 'package:PiliPlus/main.dart' show tmpPadding;
 import 'package:PiliPlus/models/common/image_preview_type.dart';
 import 'package:PiliPlus/plugin/pl_player/utils/fullscreen.dart';
+import 'package:PiliPlus/services/mpv_log_service.dart';
 import 'package:PiliPlus/utils/device_utils.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/extension/string_ext.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:PiliPlus/utils/max_screen_size.dart';
+import 'package:PiliPlus/utils/mpv_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
@@ -85,6 +88,7 @@ class _GalleryViewerState extends State<GalleryViewer>
   late bool _hasInit = false;
   Player? _player;
   VideoController? _videoController;
+  StreamSubscription<PlayerLog>? _mpvLogSubscription;
 
   late final PageController _pageController;
 
@@ -109,19 +113,41 @@ class _GalleryViewerState extends State<GalleryViewer>
 
   Future<void> _initPlayer() async {
     assert(_player == null);
-    final player = await Player.create();
-    _videoController = await VideoController.create(player);
+    final customOptions = MpvUtils.customOptions;
+    final player = await Player.create(
+      configuration: PlayerConfiguration(
+        logLevel: MpvUtils.logLevel,
+        options: customOptions,
+      ),
+    );
+    _videoController = await VideoController.create(
+      player,
+      configuration: VideoControllerConfiguration(
+        vo: customOptions['vo'],
+        hwdec: customOptions['hwdec'],
+        enableHardwareAcceleration: customOptions['hwdec'] != 'no',
+      ),
+    );
     if (!mounted) {
       player.dispose();
       _videoController = null;
       return;
     }
     _player = player;
+    _mpvLogSubscription = player.stream.log.listen(
+      (log) => MpvLogService.add(player, log),
+    );
     final currItem = widget.sources[_currIndex.value];
     if (currItem.sourceType == .livePhoto) {
-      player.open(Media(currItem.liveUrl!));
+      unawaited(_openLivePhoto(player, currItem.liveUrl!));
       _currIndex.refresh();
     }
+  }
+
+  Future<void> _openLivePhoto(Player player, String url) async {
+    await MpvLogService.beginSession(player, source: 'Live Photo');
+    MpvUtils.applyRuntimeOverrides(player);
+    await player.open(Media(url));
   }
 
   @override
@@ -282,6 +308,8 @@ class _GalleryViewerState extends State<GalleryViewer>
 
   @override
   void dispose() {
+    _mpvLogSubscription?.cancel();
+    _mpvLogSubscription = null;
     _player?.dispose();
     _player = null;
     _videoController = null;
@@ -382,7 +410,7 @@ class _GalleryViewerState extends State<GalleryViewer>
   void _playIfNeeded(SourceModel item) {
     if (item.sourceType == .livePhoto) {
       if (_player != null) {
-        _player!.open(Media(item.liveUrl!));
+        unawaited(_openLivePhoto(_player!, item.liveUrl!));
       } else if (!_hasInit) {
         _hasInit = true;
         _initPlayer();

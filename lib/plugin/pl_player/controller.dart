@@ -30,6 +30,7 @@ import 'package:PiliPlus/plugin/pl_player/models/play_repeat.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
 import 'package:PiliPlus/plugin/pl_player/models/video_fit_type.dart';
 import 'package:PiliPlus/plugin/pl_player/utils/fullscreen.dart';
+import 'package:PiliPlus/services/mpv_log_service.dart';
 import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/android/android_helper.dart';
@@ -41,6 +42,7 @@ import 'package:PiliPlus/utils/extension/box_ext.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
+import 'package:PiliPlus/utils/mpv_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
@@ -728,7 +730,8 @@ class PlPlayerController with BlockConfigMixin {
 
   Future<Player> _initPlayer() async {
     assert(_videoPlayerController == null);
-    final opt = {
+    final customOptions = MpvUtils.customOptions;
+    final builtInOptions = <String, String>{
       'video-sync': Pref.videoSync,
       if (Platform.isAndroid) 'ao': Pref.audioOutput,
       'volume':
@@ -738,24 +741,29 @@ class PlPlayerController with BlockConfigMixin {
     };
     final autosync = Pref.autosync;
     if (autosync != '0') {
-      opt['autosync'] = autosync;
+      builtInOptions['autosync'] = autosync;
     }
+    final options = {...builtInOptions, ...customOptions};
 
     final player = await Player.create(
       configuration: PlayerConfiguration(
-        logLevel: kDebugMode ? .warn : .error,
-        options: opt,
+        logLevel: MpvUtils.logLevel,
+        options: options,
       ),
     );
 
     assert(_videoController == null);
 
+    final customHwdec = customOptions['hwdec'];
     _videoController = await VideoController.create(
       player,
       configuration: VideoControllerConfiguration(
-        enableHardwareAcceleration: hwdec != null,
+        vo: customOptions['vo'],
+        enableHardwareAcceleration: customHwdec != null
+            ? customHwdec != 'no'
+            : hwdec != null,
         androidAttachSurfaceAfterVideoParameters: false,
-        hwdec: hwdec,
+        hwdec: customHwdec ?? hwdec,
       ),
     );
 
@@ -846,7 +854,9 @@ class PlPlayerController with BlockConfigMixin {
       }
     }
 
-    await player.open(
+    MpvUtils.overridePerFileOptions(extras);
+    await _openVideoMedia(
+      player,
       Media(
         video,
         start: seekTo,
@@ -856,14 +866,34 @@ class PlPlayerController with BlockConfigMixin {
     );
   }
 
+  Future<void> _openVideoMedia(
+    NativePlayer player,
+    Media media, {
+    required bool play,
+    bool beginLogSession = true,
+  }) async {
+    if (beginLogSession) {
+      await MpvLogService.beginSession(
+        player,
+        source: isLive ? 'live video' : 'video',
+      );
+    }
+    // player.open 会先卸载旧媒体；每次打开（包括网络错误重试）前
+    // 都重新应用用户参数，避免重试路径绕过自定义设置。
+    MpvUtils.applyRuntimeOverrides(player);
+    await player.open(media, play: play);
+  }
+
   Future<void>? refreshPlayer() {
     if (dataSource is FileSource) {
       return null;
     }
     if (_videoPlayerController case final ctr? when (ctr.current.isNotEmpty)) {
-      return ctr.open(
+      return _openVideoMedia(
+        ctr,
         ctr.current.last.copyWith(start: ctr.state.position),
         play: true,
+        beginLogSession: false,
       );
     }
     return null;
@@ -982,14 +1012,16 @@ class PlPlayerController with BlockConfigMixin {
           isLive,
         );
       }),
-      if (kDebugMode)
-        stream.log.listen(((PlayerLog log) {
+      stream.log.listen((PlayerLog log) {
+        MpvLogService.add(player, log);
+        if (kDebugMode) {
           if (log.level == 'error' || log.level == 'fatal') {
             Utils.reportError('${log.level}: ${log.prefix}: ${log.text}', null);
           } else {
             debugPrint(log.toString());
           }
-        })),
+        }
+      }),
       stream.error.listen((String event) {
         if (dataSource is FileSource &&
             event.startsWith("Failed to open file")) {

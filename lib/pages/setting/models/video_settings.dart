@@ -11,6 +11,7 @@ import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
 import 'package:PiliPlus/plugin/pl_player/models/audio_output_type.dart';
 import 'package:PiliPlus/plugin/pl_player/models/hwdec_type.dart';
 import 'package:PiliPlus/utils/filtering_text.dart';
+import 'package:PiliPlus/utils/mpv_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
@@ -21,6 +22,31 @@ import 'package:flutter/services.dart' show FilteringTextInputFormatter;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+
+const _mpvLogLevels = <(String, String)>[
+  ('error', '错误（error）'),
+  ('warn', '警告（warn）'),
+  ('info', '信息（info）'),
+  ('v', '详细（v）'),
+  ('debug', '调试（debug）'),
+  ('trace', '跟踪（trace，最详细）'),
+];
+
+String _mpvLogLevelLabel(String value) =>
+    _mpvLogLevels.firstWhere((item) => item.$1 == value).$2;
+
+String _customMpvOptionsSubtitle() {
+  final source = Pref.customMpvOptions.trim();
+  if (source.isEmpty) {
+    return '未设置。每行一个，格式：--参数=值；示例：--video-sync=audio';
+  }
+  try {
+    final count = MpvUtils.parseOptions(source).length;
+    return '已设置 $count 项。每行一个，格式：--参数=值；示例：--video-sync=audio';
+  } catch (_) {
+    return '当前内容格式有误，点击修改；格式：--参数=值';
+  }
+}
 
 List<SettingsModel> get videoSettings => [
   const SwitchModel(
@@ -176,6 +202,25 @@ List<SettingsModel> get videoSettings => [
     leading: const Icon(Icons.memory_outlined),
     getSubtitle: () => '当前：${Pref.hardwareDecoding}（此项即mpv的--hwdec）',
     onTap: _showHwDecDialog,
+  ),
+  NormalModel(
+    title: '自定义 mpv 启动参数',
+    leading: const Icon(Icons.tune),
+    getSubtitle: _customMpvOptionsSubtitle,
+    onTap: _showCustomMpvOptionsDialog,
+  ),
+  NormalModel(
+    title: 'mpv 日志详细等级',
+    leading: const Icon(Icons.manage_search_outlined),
+    getSubtitle: () =>
+        '当前：${_mpvLogLevelLabel(Pref.mpvLogLevel)}；新建播放器后生效',
+    onTap: _showMpvLogLevelDialog,
+  ),
+  NormalModel(
+    title: '显示上次 mpv 播放日志',
+    subtitle: '查看最近一次视频、音频或 Live Photo 播放产生的 mpv 后端日志',
+    leading: const Icon(Icons.article_outlined),
+    onTap: (_, _) => Get.toNamed('/mpvLogs'),
   ),
 ];
 
@@ -463,6 +508,92 @@ Future<void> _showHwDecDialog(
       res.join(','),
     );
     setState();
+  }
+}
+
+Future<void> _showCustomMpvOptionsDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  var value = Pref.customMpvOptions;
+  final result = await showDialog<String>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('自定义 mpv 启动参数'),
+      content: SizedBox(
+        width: 520,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '每行一个参数，使用 --参数=值；无值开关可写 --参数，'
+              '保存时会转换为 yes，--no-参数会转换为 参数=no。'
+              '空行和以 # 开头的行会被忽略。\n\n'
+              '示例：\n--video-sync=audio\n--cache-secs=30\n--gpu-api=vulkan',
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              initialValue: value,
+              autofocus: true,
+              minLines: 6,
+              maxLines: 12,
+              keyboardType: TextInputType.multiline,
+              textInputAction: TextInputAction.newline,
+              onChanged: (text) => value = text,
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: Get.back,
+          child: Text(
+            '取消',
+            style: TextStyle(color: ColorScheme.of(context).outline),
+          ),
+        ),
+        TextButton(
+          onPressed: () {
+            try {
+              MpvUtils.parseOptions(value);
+              Get.back(result: value.trim());
+            } on FormatException catch (e) {
+              SmartDialog.showToast('${e.message}');
+            }
+          },
+          child: const Text('保存'),
+        ),
+      ],
+    ),
+  );
+
+  if (result == null) return;
+  if (result.isEmpty) {
+    await GStorage.setting.delete(SettingBoxKey.customMpvOptions);
+  } else {
+    await GStorage.setting.put(SettingBoxKey.customMpvOptions, result);
+  }
+  setState();
+  SmartDialog.showToast('已保存，新建播放器后生效');
+}
+
+Future<void> _showMpvLogLevelDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final result = await showDialog<String>(
+    context: context,
+    builder: (context) => SelectDialog<String>(
+      title: 'mpv 日志详细等级',
+      value: Pref.mpvLogLevel,
+      values: _mpvLogLevels,
+    ),
+  );
+  if (result != null) {
+    await GStorage.setting.put(SettingBoxKey.mpvLogLevel, result);
+    setState();
+    SmartDialog.showToast('新建播放器后生效');
   }
 }
 
