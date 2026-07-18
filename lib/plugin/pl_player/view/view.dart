@@ -1370,9 +1370,22 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
         : colorScheme.primary;
     late final thumbGlowColor = primary.withAlpha(80);
     late final bufferedBarColor = primary.withValues(alpha: 0.4);
-    const TextStyle textStyle = TextStyle(
+    final gestureToastFontSize =
+        plPlayerController.playerGestureToastFontSize;
+    final gestureToastTextStyle = TextStyle(
       color: Colors.white,
-      fontSize: 12,
+      fontSize: gestureToastFontSize,
+    );
+    final gestureToastAlignment = Alignment(
+      0,
+      plPlayerController.playerGestureToastVerticalPercent / 50 - 1,
+    );
+    final gestureToastPadding = EdgeInsets.symmetric(
+      horizontal: gestureToastFontSize * 5 / 6,
+      vertical: gestureToastFontSize * 2 / 3,
+    );
+    final gestureToastBorderRadius = BorderRadius.all(
+      Radius.circular(gestureToastFontSize * 2.5),
     );
     final isLive = plPlayerController.isLive;
     final verticalFullscreenBottomPadding =
@@ -1479,32 +1492,22 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
           IgnorePointer(
             ignoring: true,
             child: Align(
-              alignment: Alignment.topCenter,
-              child: FractionalTranslation(
-                translation: isFullScreen
-                    ? const Offset(0.0, 1.2)
-                    : const Offset(0.0, 0.8),
-                child: Obx(
-                  () => AnimatedOpacity(
-                    curve: Curves.easeInOut,
-                    opacity: plPlayerController.longPressStatus.value
-                        ? 1.0
-                        : 0.0,
-                    duration: const Duration(milliseconds: 150),
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: const BoxDecoration(
-                        color: Color(0x88000000),
-                        borderRadius: BorderRadius.all(Radius.circular(16)),
-                      ),
-                      child: Obx(
-                        () => Text(
-                          '${plPlayerController.enableAutoLongPressSpeed ? (plPlayerController.longPressStatus.value ? plPlayerController.lastPlaybackSpeed : plPlayerController.playbackSpeed) * 2 : plPlayerController.longPressSpeed}倍速中',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 13,
-                          ),
-                        ),
+              alignment: gestureToastAlignment,
+              child: Obx(
+                () => AnimatedOpacity(
+                  curve: Curves.easeInOut,
+                  opacity: plPlayerController.longPressStatus.value ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 150),
+                  child: Container(
+                    padding: gestureToastPadding,
+                    decoration: BoxDecoration(
+                      color: const Color(0x88000000),
+                      borderRadius: gestureToastBorderRadius,
+                    ),
+                    child: Obx(
+                      () => Text(
+                        '${plPlayerController.enableAutoLongPressSpeed ? (plPlayerController.longPressStatus.value ? plPlayerController.lastPlaybackSpeed : plPlayerController.playbackSpeed) * 2 : plPlayerController.longPressSpeed}倍速中',
+                        style: gestureToastTextStyle,
                       ),
                     ),
                   ),
@@ -1518,49 +1521,41 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
           IgnorePointer(
             ignoring: true,
             child: Align(
-              alignment: Alignment.topCenter,
-              child: FractionalTranslation(
-                translation: isFullScreen
-                    ? const Offset(0.0, 1.2)
-                    : const Offset(0.0, 0.8),
-                child: Obx(
-                  () => AnimatedOpacity(
-                    curve: Curves.easeInOut,
-                    opacity: plPlayerController.isSeeking.value ? 1.0 : 0.0,
-                    duration: const Duration(milliseconds: 150),
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        color: Color(0x88000000),
-                        borderRadius: BorderRadius.all(Radius.circular(64)),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 8,
-                      ),
-                      child: Row(
-                        spacing: 2,
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Obx(
-                            () => Text(
-                              DurationUtils.formatDuration(
-                                plPlayerController.position.value,
-                              ),
-                              style: textStyle,
+              alignment: gestureToastAlignment,
+              child: Obx(
+                () => AnimatedOpacity(
+                  curve: Curves.easeInOut,
+                  opacity: plPlayerController.isSeeking.value ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 150),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0x88000000),
+                      borderRadius: gestureToastBorderRadius,
+                    ),
+                    padding: gestureToastPadding,
+                    child: Row(
+                      spacing: gestureToastFontSize / 6,
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Obx(
+                          () => Text(
+                            DurationUtils.formatDuration(
+                              plPlayerController.position.value,
                             ),
+                            style: gestureToastTextStyle,
                           ),
-                          const Text('/', style: textStyle),
-                          Obx(
-                            () => Text(
-                              DurationUtils.formatDuration(
-                                plPlayerController.duration.value,
-                              ),
-                              style: textStyle,
+                        ),
+                        Text('/', style: gestureToastTextStyle),
+                        Obx(
+                          () => Text(
+                            DurationUtils.formatDuration(
+                              plPlayerController.duration.value,
                             ),
+                            style: gestureToastTextStyle,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

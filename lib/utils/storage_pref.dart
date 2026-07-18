@@ -758,6 +758,20 @@ abstract final class Pref {
     defaultValue: false,
   );
 
+  static double get playerGestureToastVerticalPercent => _getClampedDouble(
+    SettingBoxKey.playerGestureToastVerticalPercent,
+    10.0,
+    0.0,
+    100.0,
+  );
+
+  static double get playerGestureToastFontSize => _getClampedDouble(
+    SettingBoxKey.playerGestureToastFontSize,
+    13.0,
+    8.0,
+    32.0,
+  );
+
   static bool get enableSlideFS =>
       _setting.get(SettingBoxKey.enableSlideFS, defaultValue: true);
 

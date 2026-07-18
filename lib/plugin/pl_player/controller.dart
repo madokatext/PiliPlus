@@ -363,6 +363,9 @@ class PlPlayerController with BlockConfigMixin {
       Pref.brightnessGestureAngleThreshold;
   double get volumeGestureSpeed => Pref.volumeGestureSpeed;
   double get brightnessGestureSpeed => Pref.brightnessGestureSpeed;
+  double get playerGestureToastVerticalPercent =>
+      Pref.playerGestureToastVerticalPercent;
+  double get playerGestureToastFontSize => Pref.playerGestureToastFontSize;
   late final enableSlideFS = Pref.enableSlideFS;
   late final enableDragSubtitle = Pref.enableDragSubtitle;
   late final fastForBackwardDuration = Duration(

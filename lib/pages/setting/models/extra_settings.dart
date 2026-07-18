@@ -254,6 +254,42 @@ List<SettingsModel> get extraSettings => [
     onTap: _showTouchSlopDialog,
     leading: const Icon(Icons.pan_tool_alt_outlined),
   ),
+  NormalModel(
+    title: '进度与长按倍速浮窗垂直位置',
+    getSubtitle: () =>
+        '当前：${Pref.playerGestureToastVerticalPercent.toStringAsFixed(0)}%（0%顶部，100%底部）',
+    leading: const Icon(Icons.vertical_align_center_outlined),
+    onTap: (context, setState) => _showGestureSliderDialog(
+      context,
+      setState,
+      title: '进度与长按倍速浮窗垂直位置',
+      key: SettingBoxKey.playerGestureToastVerticalPercent,
+      value: Pref.playerGestureToastVerticalPercent,
+      min: 0,
+      max: 100,
+      divisions: 100,
+      precise: 0,
+      suffix: '%',
+    ),
+  ),
+  NormalModel(
+    title: '进度与长按倍速浮窗字体大小',
+    getSubtitle: () =>
+        '当前：${Pref.playerGestureToastFontSize.toStringAsFixed(1)}dp',
+    leading: const Icon(Icons.format_size_outlined),
+    onTap: (context, setState) => _showGestureSliderDialog(
+      context,
+      setState,
+      title: '进度与长按倍速浮窗字体大小',
+      key: SettingBoxKey.playerGestureToastFontSize,
+      value: Pref.playerGestureToastFontSize,
+      min: 8,
+      max: 32,
+      divisions: 48,
+      precise: 1,
+      suffix: 'dp',
+    ),
+  ),
   const SwitchModel(
     title: '音量与亮度手势使用图形进度条',
     subtitle: '关闭时显示百分比；开启后显示跟随主题色的图形进度条',

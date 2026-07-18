@@ -143,6 +143,8 @@ abstract final class SettingBoxKey {
       brightnessGestureSpeed = 'brightnessGestureSpeed',
       // 保留旧字符串值，已有用户设置无需迁移。
       volumeBrightnessGestureProgressBar = 'volumeGestureProgressBar',
+      playerGestureToastVerticalPercent = 'playerGestureToastVerticalPercent',
+      playerGestureToastFontSize = 'playerGestureToastFontSize',
       enableSlideFS = 'enableSlideFS',
       retryCount = 'retryCount',
       retryDelay = 'retryDelay',
