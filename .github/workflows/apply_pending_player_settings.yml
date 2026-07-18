@@ -1,9 +1,9 @@
 name: Apply pending player settings
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened]
-    branches: [mod]
+    branches: [main]
 
 permissions:
   contents: write
