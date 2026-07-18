@@ -51,9 +51,17 @@ jobs:
               'controller lifecycle: expected 3 matches',
               1,
           )
-          for number, line in enumerate(script.splitlines(), 1):
-              if 248 <= number <= 270:
-                  print(f'{number}: {line}')
+          lines = script.splitlines()
+          if not lines[256].startswith('replace_once('):
+              raise RuntimeError('unexpected seek cancellation patch position')
+          lines[256:265] = [
+              'replace_once(',
+              "    'lib/plugin/pl_player/view/view.dart',",
+              "    '          if (plPlayerController.showSeekPreview) {\\n            plPlayerController.showPreview.value = false;\\n          }\\n',",
+              "    '          plPlayerController.showPreview.value = false;\\n',",
+              ')',
+          ]
+          script = '\n'.join(lines)
           Path('/tmp/apply_pending_player_settings.py').write_text(script)
           PYCODE
             python3 /tmp/apply_pending_player_settings.py
