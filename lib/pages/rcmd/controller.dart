@@ -25,7 +25,8 @@ class RcmdController
 
   int? lastRefreshAt;
   late bool savedRcmdTip = Pref.savedRcmdTip;
-  Future<void>? _activeQuery;
+  bool _restoredFromCache = false;
+  bool _isPullRefresh = false;
 
   @override
   bool get isEnd => false;
@@ -42,27 +43,11 @@ class RcmdController
   @override
   Future<LoadingState<List<BaseRcmdVideoItemModel>>> customGetData() {
     return appRcmd
-        ? VideoHttp.rcmdVideoListApp(freshIdx: page)
+        ? VideoHttp.rcmdVideoListApp(
+            freshIdx: page,
+            pull: _isPullRefresh || page == 0,
+          )
         : VideoHttp.rcmdVideoList(freshIdx: page, ps: 20);
-  }
-
-  @override
-  Future<void> queryData([bool isRefresh = true]) {
-    return _activeQuery ??= _queryData(isRefresh).whenComplete(() {
-      _activeQuery = null;
-    });
-  }
-
-  Future<void> _queryData(bool isRefresh) async {
-    try {
-      await super.queryData(isRefresh);
-      if (enableSaveLastData) {
-        await _saveCache();
-      }
-    } finally {
-      // CommonListController does not reset this flag if customGetData throws.
-      isLoading = false;
-    }
   }
 
   @override
@@ -72,7 +57,7 @@ class RcmdController
 
   @override
   void handleListResponse(List<BaseRcmdVideoItemModel> dataList) {
-    if (enableSaveLastData && page == 0) {
+    if (enableSaveLastData && _isPullRefresh) {
       if (loadingState.value case Success(:final response)) {
         if (response != null && response.isNotEmpty) {
           if (savedRcmdTip) {
@@ -86,21 +71,27 @@ class RcmdController
         }
       }
     }
+    if (enableSaveLastData) {
+      // CommonListController updates loadingState and page after this callback.
+      unawaited(Future<void>.microtask(_saveCache));
+    }
   }
 
   @override
   Future<void> onRefresh() async {
-    // Restored cache can immediately trigger onLoadMore during the first frame.
-    // Wait for that request instead of letting the refresh be dropped by the
-    // isLoading guard in CommonListController.queryData.
-    if (_activeQuery case final activeQuery?) {
-      try {
-        await activeQuery;
-      } catch (_) {}
+    _isPullRefresh = true;
+    // The first request after restoring cache must continue from the saved
+    // fresh index. Requesting index 0 again can return the cached batch itself.
+    if (!_restoredFromCache) {
+      page = 0;
     }
-    page = 0;
+    _restoredFromCache = false;
     isEnd = false;
-    await queryData();
+    try {
+      await queryData();
+    } finally {
+      _isPullRefresh = false;
+    }
   }
 
   void removeAt(int index) {
@@ -170,6 +161,7 @@ class RcmdController
           ? marker
           : null;
       loadingState.value = Success(items);
+      _restoredFromCache = true;
       return true;
     } catch (_) {
       unawaited(GStorage.localCache.delete(LocalCacheKey.homeRcmdCache));
