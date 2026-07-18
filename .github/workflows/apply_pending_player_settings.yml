@@ -2,7 +2,7 @@ name: Apply pending player settings
 
 on:
   pull_request:
-    types: [opened]
+    types: [opened, synchronize]
     branches: [main]
 
 permissions:
@@ -19,9 +19,13 @@ jobs:
           fetch-depth: 0
 
       - name: Recover and apply validated patch
+        id: apply_patch
+        continue-on-error: true
         shell: bash
         run: |
-          python3 <<'PYCODE'
+          set -o pipefail
+          {
+            python3 <<'PYCODE'
           from pathlib import Path
           import subprocess
 
@@ -43,9 +47,18 @@ jobs:
           )
           Path('/tmp/apply_pending_player_settings.py').write_text(script)
           PYCODE
-          python3 /tmp/apply_pending_player_settings.py
+            python3 /tmp/apply_pending_player_settings.py
+          } 2>&1 | tee patch.log
+
+      - name: Upload patch diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pending-player-settings-log
+          path: patch.log
 
       - name: Commit source changes
+        if: steps.apply_patch.outcome == 'success'
         shell: bash
         run: |
           git config user.name github-actions[bot]
@@ -53,3 +66,7 @@ jobs:
           git add -A
           git commit -m "feat: split seek previews and customize control bars"
           git push origin HEAD:mod
+
+      - name: Fail when patch validation failed
+        if: steps.apply_patch.outcome != 'success'
+        run: exit 1
