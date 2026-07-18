@@ -43,17 +43,24 @@ class _BottomControlState extends State<BottomControl> with HeaderMixin {
   @override
   Widget build(BuildContext context) {
     final isFullScreen = plPlayerController.isFullScreen.value;
+    final thicknessScale =
+        plPlayerController.playerControlBarThicknessScale;
+    final controlHeight = 30.0 * thicknessScale;
     return AppBar(
       backgroundColor: Colors.transparent,
       foregroundColor: Colors.white,
       primary: false,
+      toolbarHeight: kToolbarHeight * thicknessScale,
       automaticallyImplyLeading: false,
       titleSpacing: 14,
       title: Row(
         children: [
-          PlayOrPauseButton(plPlayerController: plPlayerController),
+          PlayOrPauseButton(
+            plPlayerController: plPlayerController,
+            height: 34.0 * thicknessScale,
+          ),
           ComBtn(
-            height: 30,
+            height: controlHeight,
             tooltip: '刷新',
             icon: const Icon(
               Icons.refresh,
@@ -64,7 +71,7 @@ class _BottomControlState extends State<BottomControl> with HeaderMixin {
           ),
           const Spacer(),
           ComBtn(
-            height: 30,
+            height: controlHeight,
             tooltip: '屏蔽',
             icon: const Icon(
               size: 18,
@@ -90,7 +97,7 @@ class _BottomControlState extends State<BottomControl> with HeaderMixin {
               final enableShowLiveDanmaku =
                   plPlayerController.enableShowLiveDanmaku.value;
               return ComBtn(
-                height: 30,
+                height: controlHeight,
                 tooltip: "${enableShowLiveDanmaku ? '关闭' : '开启'}弹幕",
                 icon: enableShowLiveDanmaku
                     ? const Icon(
@@ -117,7 +124,7 @@ class _BottomControlState extends State<BottomControl> with HeaderMixin {
             },
           ),
           ComBtn(
-            height: 30,
+            height: controlHeight,
             tooltip: '弹幕设置',
             icon: const Icon(
               size: 18,
@@ -195,7 +202,7 @@ class _BottomControlState extends State<BottomControl> with HeaderMixin {
           ),
           if (!plPlayerController.isDesktopPip)
             ComBtn(
-              height: 30,
+              height: controlHeight,
               tooltip: isFullScreen ? '退出全屏' : '全屏',
               icon: isFullScreen
                   ? const Icon(

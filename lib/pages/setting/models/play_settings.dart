@@ -162,7 +162,7 @@ List<SettingsModel> get playSettings => [
   NormalModel(
     title: '播放器上下边栏整体厚度',
     getSubtitle: () =>
-        '当前：${Pref.playerControlBarThicknessScale.toStringAsFixed(1)}×',
+        '当前：${Pref.playerControlBarThicknessScale.toStringAsFixed(1)}×；同步调整内容纵向密度',
     leading: const Icon(Icons.height),
     onTap: _showPlayerControlBarThicknessScaleDialog,
   ),

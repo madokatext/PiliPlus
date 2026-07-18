@@ -1763,8 +1763,9 @@ class HeaderControlState extends State<HeaderControl>
       title = const Spacer();
     }
 
+    final thicknessScale = plPlayerController.playerControlBarThicknessScale;
     const btnWidth = 40.0;
-    const btnHeight = 34.0;
+    final btnHeight = 34.0 * thicknessScale;
     const btnStyle = ButtonStyle(padding: WidgetStatePropertyAll(.zero));
 
     return AppBar(
@@ -1774,11 +1775,12 @@ class HeaderControlState extends State<HeaderControl>
       foregroundColor: Colors.white,
       primary: false,
       automaticallyImplyLeading: false,
-      toolbarHeight: showFSActionItem ? 112 : null,
+      toolbarHeight:
+          (showFSActionItem ? 112.0 : kToolbarHeight) * thicknessScale,
       flexibleSpace: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(height: 11),
+          SizedBox(height: 11 * thicknessScale),
           Padding(
             padding: EdgeInsets.symmetric(
               horizontal: plPlayerController.playerControlHorizontalPadding,

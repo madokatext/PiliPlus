@@ -69,6 +69,9 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
   @override
   Widget build(BuildContext context) {
     final isFullScreen = this.isFullScreen;
+    final thicknessScale =
+        plPlayerController.playerControlBarThicknessScale;
+    final controlHeight = 30.0 * thicknessScale;
     showCurrTimeIfNeeded(isFullScreen);
     final liveController = widget.liveController;
     Widget child;
@@ -84,7 +87,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
     );
     if (isFullScreen) {
       child = Column(
-        spacing: 5,
+        spacing: 5 * thicknessScale,
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -113,13 +116,14 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
       backgroundColor: Colors.transparent,
       foregroundColor: Colors.white,
       primary: false,
+      toolbarHeight: kToolbarHeight * thicknessScale,
       automaticallyImplyLeading: false,
       titleSpacing: 14,
       title: Row(
         children: [
           if (isFullScreen || plPlayerController.isDesktopPip)
             ComBtn(
-              height: 30,
+              height: controlHeight,
               tooltip: '返回',
               icon: const Icon(FontAwesomeIcons.arrowLeft, size: 15),
               onTap: () {
@@ -137,7 +141,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
             Obx(() {
               final isAlwaysOnTop = plPlayerController.isAlwaysOnTop.value;
               return ComBtn(
-                height: 30,
+                height: controlHeight,
                 tooltip: '${isAlwaysOnTop ? '取消' : ''}置顶',
                 icon: isAlwaysOnTop
                     ? const Icon(
@@ -155,7 +159,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
             }),
           if (isFullScreen || PlatformUtils.isDesktop)
             ComBtn(
-              height: 30,
+              height: controlHeight,
               tooltip: '发弹幕',
               icon: const Icon(
                 size: 18,
@@ -166,7 +170,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
             ),
           if (Platform.isAndroid || (PlatformUtils.isDesktop && !isFullScreen))
             ComBtn(
-              height: 30,
+              height: controlHeight,
               tooltip: '画中画',
               onTap: () {
                 if (PlatformUtils.isDesktop) {
@@ -187,7 +191,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
             () {
               final onlyPlayAudio = plPlayerController.onlyPlayAudio.value;
               return ComBtn(
-                height: 30,
+                height: controlHeight,
                 tooltip: '仅播放音频',
                 onTap: () {
                   plPlayerController.onlyPlayAudio.value = !onlyPlayAudio;
@@ -212,7 +216,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
               final continuePlayInBackground =
                   plPlayerController.continuePlayInBackground.value;
               return ComBtn(
-                height: 30,
+                height: controlHeight,
                 tooltip: '${continuePlayInBackground ? '关闭' : ''}后台播放',
                 onTap: plPlayerController.setContinuePlayInBackground,
                 icon: continuePlayInBackground
@@ -229,7 +233,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
               );
             }),
           ComBtn(
-            height: 30,
+            height: controlHeight,
             tooltip: '定时关闭',
             onTap: () => shutdownTimerService.showScheduleExitDialog(
               context,
@@ -244,7 +248,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
           ),
           if (plPlayerController.videoPlayerController case final player?)
             SizedBox.square(
-              dimension: 30,
+              dimension: controlHeight,
               child: PopupMenuButton(
                 iconSize: 18,
                 padding: .zero,

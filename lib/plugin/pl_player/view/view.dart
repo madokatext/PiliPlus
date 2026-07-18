@@ -404,8 +404,13 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     final isFullScreen = this.isFullScreen;
     final officialTimeStyle = plPlayerController.biliProgressTimeStyle;
     final compactBottomBar = officialTimeStyle && !isFullScreen;
-    final controlHeight = compactBottomBar ? 26.0 : 30.0;
-    final playButtonHeight = officialTimeStyle ? controlHeight : 34.0;
+    final thicknessScale =
+        plPlayerController.playerControlBarThicknessScale;
+    final controlHeight =
+        (compactBottomBar ? 26.0 : 30.0) * thicknessScale;
+    final playButtonHeight = officialTimeStyle
+        ? controlHeight
+        : 34.0 * thicknessScale;
     final playButtonWidth = compactBottomBar ? 34.0 : 42.0;
     final playIconSize = compactBottomBar ? 18.0 : 20.0;
     final double widgetWidth = compactBottomBar
@@ -1612,8 +1617,6 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                     controller: _animationController,
                     isFullScreen: isFullScreen,
                     removeSafeArea: plPlayerController.removeSafeArea,
-                    thicknessScale:
-                        plPlayerController.playerControlBarThicknessScale,
                     gradientExtent:
                         plPlayerController.playerControlBarGradientExtent,
                     child: plPlayerController.isDesktopPip
@@ -1630,8 +1633,6 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                     isFullScreen: isFullScreen,
                     removeSafeArea: plPlayerController.removeSafeArea,
                     bottomPadding: verticalFullscreenBottomPadding,
-                    thicknessScale:
-                        plPlayerController.playerControlBarThicknessScale,
                     gradientExtent:
                         plPlayerController.playerControlBarGradientExtent,
                     child:

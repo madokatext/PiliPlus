@@ -89,15 +89,16 @@ class BottomControl extends StatelessWidget {
     final bufferedBarColor = primary.withValues(alpha: 0.4);
     final officialTimeStyle = controller.biliProgressTimeStyle;
     final compact = officialTimeStyle && !isFullScreen;
+    final thicknessScale = controller.playerControlBarThicknessScale;
     final outerBottomPadding = officialTimeStyle
-        ? (compact ? 2.0 : 6.0)
-        : 12.0;
+        ? (compact ? 2.0 : 6.0) * thicknessScale
+        : 12.0 * thicknessScale;
     // 原来进度条总边距为 compact 12dp、普通 20dp。按钮边距改为可配置后，
     // 进度条仍保持原有位置，不被按钮边距设置连带修改。
     final progressHorizontalPadding = compact ? 12.0 : 20.0;
     final progressBottomPadding = officialTimeStyle
-        ? (compact ? 2.0 : 4.0)
-        : 7.0;
+        ? (compact ? 2.0 : 4.0) * thicknessScale
+        : 7.0 * thicknessScale;
     final barHeight = officialTimeStyle ? (compact ? 2.5 : 3.0) : 3.5;
     final thumbRadius = officialTimeStyle ? (compact ? 5.0 : 6.0) : 7.0;
     final thumbGlowRadius = officialTimeStyle

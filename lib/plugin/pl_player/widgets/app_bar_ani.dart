@@ -10,7 +10,6 @@ class AppBarAni extends StatelessWidget {
     required this.isFullScreen,
     required this.removeSafeArea,
     this.bottomPadding = 0,
-    this.thicknessScale = 1,
     this.gradientExtent = 0,
   });
 
@@ -20,7 +19,6 @@ class AppBarAni extends StatelessWidget {
   final bool isFullScreen;
   final bool removeSafeArea;
   final double bottomPadding;
-  final double thicknessScale;
   final double gradientExtent;
 
   static final _topPos = Tween<Offset>(
@@ -55,7 +53,7 @@ class AppBarAni extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget bar = Padding(
+    final bar = Padding(
       padding: EdgeInsets.only(bottom: isTop ? 0 : bottomPadding),
       child: removeSafeArea
           ? child
@@ -65,15 +63,6 @@ class AppBarAni extends StatelessWidget {
               child: child,
             ),
     );
-    if (thicknessScale != 1) {
-      bar = ClipRect(
-        child: Align(
-          alignment: isTop ? Alignment.topCenter : Alignment.bottomCenter,
-          heightFactor: thicknessScale,
-          child: bar,
-        ),
-      );
-    }
 
     return SlideTransition(
       position: controller.drive(isTop ? _topPos : _bottomPos),
