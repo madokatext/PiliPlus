@@ -577,6 +577,13 @@ abstract final class Pref {
     defaultValue: false,
   );
 
+  static double get playerControlHorizontalPadding => _getClampedDouble(
+    SettingBoxKey.playerControlHorizontalPadding,
+    12.0,
+    0.0,
+    32.0,
+  );
+
   static bool get seekPreviewFollowSlider => _setting.get(
     SettingBoxKey.seekPreviewFollowSlider,
     defaultValue: false,
@@ -673,8 +680,8 @@ abstract final class Pref {
     4.0,
   );
 
-  static bool get volumeGestureProgressBar => _setting.get(
-    SettingBoxKey.volumeGestureProgressBar,
+  static bool get volumeBrightnessGestureProgressBar => _setting.get(
+    SettingBoxKey.volumeBrightnessGestureProgressBar,
     defaultValue: false,
   );
 
@@ -884,6 +891,29 @@ abstract final class Pref {
       defaultCustomThemeSeeds.tertiary,
     ),
   );
+
+  static String customThemeToneKey(
+    Brightness brightness,
+    ThemeToneRole role,
+  ) =>
+      '${SettingBoxKey.customThemeTonePrefix}.${brightness.name}.${role.name}';
+
+  static double customThemeToneOffset(
+    Brightness brightness,
+    ThemeToneRole role,
+  ) => _getClampedDouble(
+    customThemeToneKey(brightness, role),
+    0,
+    -30,
+    30,
+  );
+
+  static Map<ThemeToneRole, double> customThemeToneOffsets(
+    Brightness brightness,
+  ) => {
+    for (final role in ThemeToneRole.values)
+      role: customThemeToneOffset(brightness, role),
+  };
 
   static bool get enableSystemProxy =>
       _setting.get(SettingBoxKey.enableSystemProxy, defaultValue: false);
@@ -1172,6 +1202,19 @@ abstract final class Pref {
 
   static bool get removeSafeArea =>
       _setting.get(SettingBoxKey.removeSafeArea, defaultValue: false);
+
+  static bool get verticalFullscreenBottomBarSafeArea => _setting.get(
+    SettingBoxKey.verticalFullscreenBottomBarSafeArea,
+    defaultValue: false,
+  );
+
+  static double get verticalFullscreenBottomBarSafeHeight =>
+      _getClampedDouble(
+        SettingBoxKey.verticalFullscreenBottomBarSafeHeight,
+        24.0,
+        0.0,
+        80.0,
+      );
 
   static int get angleDegrees =>
       _setting.get(SettingBoxKey.angleDegrees, defaultValue: 30);

@@ -146,6 +146,13 @@ List<SettingsModel> get playSettings => [
     setKey: SettingBoxKey.biliProgressTimeStyle,
     defaultVal: false,
   ),
+  NormalModel(
+    title: '播放器上下按钮横向边距',
+    getSubtitle: () =>
+        '当前：${Pref.playerControlHorizontalPadding.toStringAsFixed(0)}dp',
+    leading: const Icon(Icons.horizontal_distribute_outlined),
+    onTap: _showPlayerControlHorizontalPaddingDialog,
+  ),
   const SwitchModel(
     title: '滑动跳转预览视频缩略图',
     leading: Icon(Icons.preview_outlined),
@@ -343,6 +350,31 @@ Future<void> _showSeekPreviewScaleDialog(
   );
   if (res != null) {
     await GStorage.setting.put(SettingBoxKey.seekPreviewScale, res);
+    setState();
+  }
+}
+
+Future<void> _showPlayerControlHorizontalPaddingDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final res = await showDialog<double>(
+    context: context,
+    builder: (context) => SliderDialog(
+      title: const Text('播放器上下按钮横向边距'),
+      value: Pref.playerControlHorizontalPadding,
+      min: 0,
+      max: 32,
+      divisions: 32,
+      precise: 0,
+      suffix: 'dp',
+    ),
+  );
+  if (res != null) {
+    await GStorage.setting.put(
+      SettingBoxKey.playerControlHorizontalPadding,
+      res,
+    );
     setState();
   }
 }

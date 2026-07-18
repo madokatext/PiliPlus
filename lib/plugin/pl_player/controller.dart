@@ -332,8 +332,11 @@ class PlPlayerController with BlockConfigMixin {
   late final enableShrinkVideoSize = Pref.enableShrinkVideoSize;
   late final darkVideoPage = Pref.darkVideoPage;
   late final enableSlideVolumeBrightness = Pref.enableSlideVolumeBrightness;
-  late final volumeGestureProgressBar = Pref.volumeGestureProgressBar;
+  bool get volumeBrightnessGestureProgressBar =>
+      Pref.volumeBrightnessGestureProgressBar;
   late final biliProgressTimeStyle = Pref.biliProgressTimeStyle;
+  double get playerControlHorizontalPadding =>
+      Pref.playerControlHorizontalPadding;
   double get volumeGestureAngleThreshold =>
       Pref.volumeGestureAngleThreshold;
   double get brightnessGestureAngleThreshold =>
@@ -1399,6 +1402,10 @@ class PlPlayerController with BlockConfigMixin {
   late final FullScreenMode mode = Pref.fullScreenMode;
   late final horizontalScreen = Pref.horizontalScreen;
   late final removeSafeArea = Pref.removeSafeArea;
+  bool get verticalFullscreenBottomBarSafeArea =>
+      Pref.verticalFullscreenBottomBarSafeArea;
+  double get verticalFullscreenBottomBarSafeHeight =>
+      Pref.verticalFullscreenBottomBarSafeHeight;
 
   Future<void>? changeOrientation({
     required bool isVertical,

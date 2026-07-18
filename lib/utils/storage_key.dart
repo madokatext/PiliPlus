@@ -109,6 +109,7 @@ abstract final class SettingBoxKey {
       enableLivePhoto = 'enableLivePhoto',
       showSeekPreview = 'showSeekPreview',
       biliProgressTimeStyle = 'biliProgressTimeStyle',
+      playerControlHorizontalPadding = 'playerControlHorizontalPadding',
       seekPreviewFollowSlider = 'seekPreviewFollowSlider',
       seekPreviewScale = 'seekPreviewScale',
       showSeekPreviewInNonFullscreen = 'showSeekPreviewInNonFullscreen',
@@ -133,7 +134,8 @@ abstract final class SettingBoxKey {
       brightnessGestureAngleThreshold = 'brightnessGestureAngleThreshold',
       volumeGestureSpeed = 'volumeGestureSpeed',
       brightnessGestureSpeed = 'brightnessGestureSpeed',
-      volumeGestureProgressBar = 'volumeGestureProgressBar',
+      // 保留旧字符串值，已有用户设置无需迁移。
+      volumeBrightnessGestureProgressBar = 'volumeGestureProgressBar',
       enableSlideFS = 'enableSlideFS',
       retryCount = 'retryCount',
       retryDelay = 'retryDelay',
@@ -165,6 +167,10 @@ abstract final class SettingBoxKey {
       touchSlopH = 'touchSlopH',
       floatingNavBar = 'floatingNavBar',
       removeSafeArea = 'removeSafeArea',
+      verticalFullscreenBottomBarSafeArea =
+          'verticalFullscreenBottomBarSafeArea',
+      verticalFullscreenBottomBarSafeHeight =
+          'verticalFullscreenBottomBarSafeHeight',
       angleDegrees = 'angleDegrees',
       liveStream = 'liveStream';
 
@@ -232,6 +238,7 @@ abstract final class SettingBoxKey {
       customPrimarySeed = 'customPrimarySeed',
       customSecondarySeed = 'customSecondarySeed',
       customTertiarySeed = 'customTertiarySeed',
+      customThemeTonePrefix = 'customThemeTone',
       displayMode = 'displayMode',
       smallCardWidth = 'smallCardWidth',
       recommendCardWidth = 'recommendCardWidth',
@@ -259,7 +266,6 @@ abstract final class SettingBoxKey {
 
 abstract final class LocalCacheKey {
   static const String historyPause = 'historyPause',
-      homeRcmdCache = 'homeRcmdCache',
       blackMids = 'blackMids',
       danmakuFilterRules = 'danmakuFilterRules',
       mixinKey = 'mixinKey',

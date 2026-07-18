@@ -6,6 +6,7 @@ enum BottomControlType {
   episode,
   fit,
   subtitle,
+  danmakuToggle,
   speed,
   fullscreen,
   viewPoints,

@@ -112,6 +112,18 @@ List<SettingsModel> get extraSettings => [
     setKey: SettingBoxKey.showViewPoints,
     defaultVal: true,
   ),
+  const SplitModel(
+    normalModel: NormalModel.split(
+      title: '竖屏视频全屏底栏避让系统导航栏',
+      subtitle: '开启后点击设置避让高度（0–80dp）',
+      leading: Icon(Icons.vertical_align_bottom),
+    ),
+    switchModel: SwitchModel.split(
+      setKey: SettingBoxKey.verticalFullscreenBottomBarSafeArea,
+      defaultVal: false,
+      onTap: _showVerticalFullscreenBottomBarSafeHeightDialog,
+    ),
+  ),
   const SwitchModel(
     title: '视频页显示相关视频',
     leading: Icon(MdiIcons.motionPlayOutline),
@@ -243,10 +255,10 @@ List<SettingsModel> get extraSettings => [
     leading: const Icon(Icons.pan_tool_alt_outlined),
   ),
   const SwitchModel(
-    title: '音量手势使用图形进度条',
-    subtitle: '关闭时显示当前音量百分比；开启后按最高音量显示图形进度',
+    title: '音量与亮度手势使用图形进度条',
+    subtitle: '关闭时显示百分比；开启后显示跟随主题色的图形进度条',
     leading: Icon(Icons.graphic_eq),
-    setKey: SettingBoxKey.volumeGestureProgressBar,
+    setKey: SettingBoxKey.volumeBrightnessGestureProgressBar,
     defaultVal: false,
   ),
   NormalModel(
@@ -1016,6 +1028,29 @@ Future<void> _showGestureSliderDialog(
   if (res != null) {
     await GStorage.setting.put(key, res);
     setState();
+  }
+}
+
+Future<void> _showVerticalFullscreenBottomBarSafeHeightDialog(
+  BuildContext context,
+) async {
+  final res = await showDialog<double>(
+    context: context,
+    builder: (context) => SliderDialog(
+      title: const Text('竖屏视频全屏底栏避让高度'),
+      value: Pref.verticalFullscreenBottomBarSafeHeight,
+      min: 0,
+      max: 80,
+      divisions: 80,
+      precise: 0,
+      suffix: 'dp',
+    ),
+  );
+  if (res != null) {
+    await GStorage.setting.put(
+      SettingBoxKey.verticalFullscreenBottomBarSafeHeight,
+      res,
+    );
   }
 }
 

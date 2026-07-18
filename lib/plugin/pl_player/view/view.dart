@@ -42,11 +42,11 @@ import 'package:PiliPlus/plugin/pl_player/models/double_tap_type.dart';
 import 'package:PiliPlus/plugin/pl_player/models/fullscreen_mode.dart';
 import 'package:PiliPlus/plugin/pl_player/models/gesture_type.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
-import 'package:PiliPlus/plugin/pl_player/models/video_fit_type.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/app_bar_ani.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/backward_seek.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/bottom_control.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/common_btn.dart';
+import 'package:PiliPlus/plugin/pl_player/widgets/display_controls.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/forward_seek.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/mpv_convert_webp.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/play_pause_btn.dart';
@@ -393,7 +393,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
   // 动态构建底部控制条
   Widget buildBottomControl(
     VideoDetailController videoDetailController,
-    bool isLandscape,
+    bool isPlayerLandscape,
   ) {
     final videoDetail = introController.videoDetail.value;
     final isSeason = videoDetail.ugcSeason != null;
@@ -410,7 +410,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     final playIconSize = compactBottomBar ? 18.0 : 20.0;
     final double widgetWidth = compactBottomBar
         ? 32
-        : isLandscape && isFullScreen
+        : isPlayerLandscape && isFullScreen
         ? 42
         : 35;
 
@@ -626,42 +626,9 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       ),
 
       /// 画面比例
-      BottomControlType.fit => Obx(
-        () {
-          final fit = plPlayerController.videoFit.value;
-          return PopupMenuButton<VideoFitType>(
-            tooltip: '画面比例',
-            requestFocus: false,
-            initialValue: fit,
-            color: Colors.black.withValues(alpha: 0.8),
-            itemBuilder: (context) {
-              return VideoFitType.values
-                  .map(
-                    (boxFit) => PopupMenuItem<VideoFitType>(
-                      height: 35,
-                      padding: const EdgeInsets.only(left: 30),
-                      value: boxFit,
-                      onTap: () => plPlayerController.toggleVideoFit(boxFit),
-                      child: Text(
-                        boxFit.desc,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  )
-                  .toList();
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
-                fit.desc,
-                style: const TextStyle(color: Colors.white, fontSize: 13),
-              ),
-            ),
-          );
-        },
+      BottomControlType.fit => PlayerFitButton(
+        controller: plPlayerController,
+        height: controlHeight,
       ),
 
       BottomControlType.aiTranslate => Obx(
@@ -778,39 +745,31 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
         },
       ),
 
-      /// 播放速度
-      BottomControlType.speed => Obx(
-        () => PopupMenuButton<double>(
-          tooltip: '倍速',
-          requestFocus: false,
-          initialValue: plPlayerController.playbackSpeed,
-          color: Colors.black.withValues(alpha: 0.8),
-          itemBuilder: (context) {
-            return plPlayerController.speedList
-                .map(
-                  (double speed) => PopupMenuItem<double>(
-                    height: 35,
-                    padding: const EdgeInsets.only(left: 30),
-                    value: speed,
-                    onTap: () => plPlayerController.setPlaybackSpeed(speed),
-                    child: Text(
-                      "${speed}X",
-                      style: const TextStyle(color: Colors.white, fontSize: 13),
-                      semanticsLabel: "$speed倍速",
-                    ),
-                  ),
-                )
-                .toList();
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(
-              "${plPlayerController.playbackSpeed}X",
-              style: const TextStyle(color: Colors.white, fontSize: 13),
-              semanticsLabel: "${plPlayerController.playbackSpeed}倍速",
-            ),
+      BottomControlType.danmakuToggle => Obx(() {
+        final enabled = plPlayerController.enableShowDanmaku.value;
+        return ComBtn(
+          width: widgetWidth,
+          height: controlHeight,
+          tooltip: '${enabled ? '关闭' : '开启'}弹幕',
+          icon: Icon(
+            enabled ? CustomIcons.dm_on : CustomIcons.dm_off,
+            size: 20,
+            color: Colors.white,
           ),
-        ),
+          onTap: () {
+            final value = !enabled;
+            plPlayerController.enableShowDanmaku.value = value;
+            if (!plPlayerController.tempPlayerConf) {
+              GStorage.setting.put(SettingBoxKey.enableShowDanmaku, value);
+            }
+          },
+        );
+      }),
+
+      /// 播放速度
+      BottomControlType.speed => PlayerSpeedButton(
+        controller: plPlayerController,
+        height: controlHeight,
       ),
 
       BottomControlType.qa => Obx(
@@ -921,14 +880,16 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     final flag =
         isFullScreen || plPlayerController.isDesktopPip || maxWidth >= 500;
     final List<BottomControlType> userSpecifyItemRight = [
+      // PlayerBar 会把这一组整体贴右；第一项就是右侧组最左侧按钮。
+      if (isFullScreen) .danmakuToggle,
       if (isNotFileSource && plPlayerController.showDmChart) .dmChart,
       if (plPlayerController.isAnim) .superResolution,
       if (isNotFileSource && plPlayerController.showViewPoints) .viewPoints,
       if (isNotFileSource && anySeason) .episode,
-      if (flag) .fit,
+      if (!isFullScreen && flag) .fit,
       if (isNotFileSource) .aiTranslate,
       .subtitle,
-      .speed,
+      if (!isFullScreen) .speed,
       if (isNotFileSource && flag) .qa,
       if (!plPlayerController.isDesktopPip) .fullscreen,
     ];
@@ -1394,6 +1355,66 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       fontSize: 12,
     );
     final isLive = plPlayerController.isLive;
+    final verticalFullscreenBottomPadding =
+        PlatformUtils.isMobile &&
+            isFullScreen &&
+            plPlayerController.isVertical &&
+            plPlayerController.verticalFullscreenBottomBarSafeArea
+        ? plPlayerController.verticalFullscreenBottomBarSafeHeight
+        : 0.0;
+
+    Widget gestureLevelIndicator({
+      required String label,
+      required IconData icon,
+      required double value,
+      required double maxValue,
+    }) {
+      final normalized = (value / maxValue).clamp(0.0, 1.0).toDouble();
+      final percent = (value * 100).round();
+      final useProgress =
+          plPlayerController.volumeBrightnessGestureProgressBar;
+      return Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: useProgress ? 14 : 10,
+          vertical: useProgress ? 9 : 6,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.48),
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: Colors.white, size: useProgress ? 28 : 20),
+            SizedBox(width: useProgress ? 10 : 4),
+            if (useProgress)
+              Semantics(
+                label: label,
+                value: '$percent%',
+                child: ExcludeSemantics(
+                  child: SizedBox(
+                    width: 132,
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.all(Radius.circular(3)),
+                      child: LinearProgressIndicator(
+                        value: normalized,
+                        minHeight: 6,
+                        color: primary,
+                        backgroundColor: primary.withValues(alpha: 0.24),
+                      ),
+                    ),
+                  ),
+                ),
+              )
+            else
+              Text(
+                '$percent%',
+                style: const TextStyle(fontSize: 13, color: Colors.white),
+              ),
+          ],
+        ),
+      );
+    }
 
     final child = Stack(
       fit: StackFit.passthrough,
@@ -1539,63 +1560,15 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                   curve: Curves.easeInOut,
                   opacity: plPlayerController.volumeIndicator.value ? 1.0 : 0.0,
                   duration: const Duration(milliseconds: 150),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 5,
-                    ),
-                    decoration: const BoxDecoration(
-                      color: Color(0x88000000),
-                      borderRadius: BorderRadius.all(Radius.circular(64)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Icon(
-                          volume == 0.0
-                              ? Icons.volume_off
-                              : volume < 0.5
-                              ? Icons.volume_down
-                              : Icons.volume_up,
-                          color: Colors.white,
-                          size: 20.0,
-                        ),
-                        const SizedBox(width: 2.0),
-                        if (plPlayerController.volumeGestureProgressBar)
-                          Semantics(
-                            label: '音量',
-                            value: '${(volume * 100.0).round()}%',
-                            child: ExcludeSemantics(
-                              child: SizedBox(
-                                width: 72,
-                                child: ClipRRect(
-                                  borderRadius: const BorderRadius.all(
-                                    Radius.circular(2),
-                                  ),
-                                  child: LinearProgressIndicator(
-                                    value: (volume /
-                                            plPlayerController.maxVolume)
-                                        .clamp(0.0, 1.0)
-                                        .toDouble(),
-                                    minHeight: 4,
-                                    color: Colors.white,
-                                    backgroundColor: Colors.white30,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          )
-                        else
-                          Text(
-                            '${(volume * 100.0).round()}%',
-                            style: const TextStyle(
-                              fontSize: 13.0,
-                              color: Colors.white,
-                            ),
-                          ),
-                      ],
-                    ),
+                  child: gestureLevelIndicator(
+                    label: '音量',
+                    icon: volume == 0.0
+                        ? Icons.volume_off
+                        : volume < 0.5
+                        ? Icons.volume_down
+                        : Icons.volume_up,
+                    value: volume,
+                    maxValue: plPlayerController.maxVolume,
                   ),
                 );
               },
@@ -1613,38 +1586,15 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                 curve: Curves.easeInOut,
                 opacity: _brightnessIndicator.value ? 1.0 : 0.0,
                 duration: const Duration(milliseconds: 150),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 5,
-                  ),
-                  decoration: const BoxDecoration(
-                    color: Color(0x88000000),
-                    borderRadius: BorderRadius.all(Radius.circular(64)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Icon(
-                        _brightnessValue.value < 1.0 / 3.0
-                            ? Icons.brightness_low
-                            : _brightnessValue.value < 2.0 / 3.0
-                            ? Icons.brightness_medium
-                            : Icons.brightness_high,
-                        color: Colors.white,
-                        size: 18.0,
-                      ),
-                      const SizedBox(width: 2.0),
-                      Text(
-                        '${(_brightnessValue.value * 100.0).round()}%',
-                        style: const TextStyle(
-                          fontSize: 13.0,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
+                child: gestureLevelIndicator(
+                  label: '亮度',
+                  icon: _brightnessValue.value < 1.0 / 3.0
+                      ? Icons.brightness_low
+                      : _brightnessValue.value < 2.0 / 3.0
+                      ? Icons.brightness_medium
+                      : Icons.brightness_high,
+                  value: _brightnessValue.value,
+                  maxValue: 1,
                 ),
               ),
             ),
@@ -1678,6 +1628,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                     controller: _animationController,
                     isFullScreen: isFullScreen,
                     removeSafeArea: plPlayerController.removeSafeArea,
+                    bottomPadding: verticalFullscreenBottomPadding,
                     child:
                         widget.bottomControl ??
                         BottomControl(
@@ -1825,6 +1776,10 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                           padding: const .only(bottom: 4.25),
                           child: ViewPointSegmentProgressBar(
                             segments: videoDetailController.viewPointList,
+                            progress: plPlayerController.duration.value <= 0
+                                ? 0.0
+                                : plPlayerController.position.value /
+                                      plPlayerController.duration.value,
                             onSeek: PlatformUtils.isMobile
                                 ? (position) {
                                     if (!plPlayerController

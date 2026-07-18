@@ -9,6 +9,7 @@ class AppBarAni extends StatelessWidget {
     required this.isTop,
     required this.isFullScreen,
     required this.removeSafeArea,
+    this.bottomPadding = 0,
   });
 
   final Widget child;
@@ -16,6 +17,7 @@ class AppBarAni extends StatelessWidget {
   final bool isTop;
   final bool isFullScreen;
   final bool removeSafeArea;
+  final double bottomPadding;
 
   static final _topPos = Tween<Offset>(
     begin: const Offset(0.0, -1.0),
@@ -55,13 +57,16 @@ class AppBarAni extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: isTop ? _topDecoration : _bottomDecoration,
         ),
-        child: removeSafeArea
-            ? child
-            : ViewSafeArea(
-                left: isFullScreen,
-                right: isFullScreen,
-                child: child,
-              ),
+        child: Padding(
+          padding: EdgeInsets.only(bottom: isTop ? 0 : bottomPadding),
+          child: removeSafeArea
+              ? child
+              : ViewSafeArea(
+                  left: isFullScreen,
+                  right: isFullScreen,
+                  child: child,
+                ),
+        ),
       ),
     );
   }

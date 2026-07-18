@@ -247,11 +247,14 @@ class MyApp extends StatelessWidget {
       if (dynamicColor) {
         return brightness == Brightness.light ? _light! : _dark!;
       }
-      return switch (Pref.themeColorMode) {
+      final scheme = switch (Pref.themeColorMode) {
         ThemeColorMode.customMultiSeed => Pref.customThemeSeeds
             .asColorSchemeSeeds(variant, brightness),
         _ => brandColor.asColorSchemeSeed(variant, brightness),
       };
+      return Pref.themeColorMode == ThemeColorMode.customMultiSeed
+          ? scheme.applyToneOffsets(Pref.customThemeToneOffsets(brightness))
+          : scheme;
     }
 
     return (

@@ -17,6 +17,23 @@ typedef ThemeSeedColors = ({
   Color tertiary,
 });
 
+enum ThemeToneRole {
+  page('页面背景', 'Scaffold、页面底色'),
+  card('卡片背景', '普通卡片、列表块'),
+  elevated('浮层背景', '弹窗、菜单、较高层容器'),
+  selected('选中项背景', '选中标签、导航项、强调容器'),
+  content('主要内容', '正文、主要图标'),
+  selectedContent('选中项内容', '选中容器上的文字和图标'),
+  mutedContent('次要内容', '说明文字、弱化图标'),
+  border('边框分隔', '弱边框和分隔线'),
+  ;
+
+  const ThemeToneRole(this.label, this.description);
+
+  final String label;
+  final String description;
+}
+
 const ThemeSeedColors defaultCustomThemeSeeds = (
   primary: Color(0xFF5CB67B),
   secondary: Color(0xFF42A5F5),

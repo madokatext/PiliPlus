@@ -38,6 +38,7 @@ import 'package:PiliPlus/pages/video/widgets/header_mixin.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/data_source.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_repeat.dart';
+import 'package:PiliPlus/plugin/pl_player/widgets/display_controls.dart';
 import 'package:PiliPlus/services/shutdown_timer_service.dart'
     show shutdownTimerService;
 import 'package:PiliPlus/utils/accounts.dart';
@@ -1778,8 +1779,12 @@ class HeaderControlState extends State<HeaderControl>
         mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(height: 11),
-          Row(
-            children: [
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: plPlayerController.playerControlHorizontalPadding,
+            ),
+            child: Row(
+              children: [
               SizedBox(
                 width: btnWidth,
                 height: btnHeight,
@@ -1813,7 +1818,17 @@ class HeaderControlState extends State<HeaderControl>
                 ),
               title,
               // show current datetime
-              ...?timeBatteryWidgets,
+                ...?timeBatteryWidgets,
+                if (isFullScreen) ...[
+                  PlayerSpeedButton(
+                    controller: plPlayerController,
+                    height: btnHeight,
+                  ),
+                  PlayerFitButton(
+                    controller: plPlayerController,
+                    height: btnHeight,
+                  ),
+                ],
               if (PlatformUtils.isDesktop && !plPlayerController.isDesktopPip)
                 Obx(() {
                   final isAlwaysOnTop = plPlayerController.isAlwaysOnTop.value;
@@ -1920,41 +1935,42 @@ class HeaderControlState extends State<HeaderControl>
                     ),
                   ),
                 ),
-                SizedBox(
-                  width: btnWidth,
-                  height: btnHeight,
-                  child: Obx(
-                    () {
-                      final enableShowDanmaku =
-                          plPlayerController.enableShowDanmaku.value;
-                      return IconButton(
-                        tooltip: "${enableShowDanmaku ? '关闭' : '开启'}弹幕",
-                        style: btnStyle,
-                        onPressed: () {
-                          final newVal = !enableShowDanmaku;
-                          plPlayerController.enableShowDanmaku.value = newVal;
-                          if (!plPlayerController.tempPlayerConf) {
-                            setting.put(
-                              SettingBoxKey.enableShowDanmaku,
-                              newVal,
-                            );
-                          }
-                        },
-                        icon: enableShowDanmaku
-                            ? const Icon(
-                                size: 20,
-                                CustomIcons.dm_on,
-                                color: Colors.white,
-                              )
-                            : const Icon(
-                                size: 20,
-                                CustomIcons.dm_off,
-                                color: Colors.white,
-                              ),
-                      );
-                    },
+                if (!isFullScreen)
+                  SizedBox(
+                    width: btnWidth,
+                    height: btnHeight,
+                    child: Obx(
+                      () {
+                        final enableShowDanmaku =
+                            plPlayerController.enableShowDanmaku.value;
+                        return IconButton(
+                          tooltip: "${enableShowDanmaku ? '关闭' : '开启'}弹幕",
+                          style: btnStyle,
+                          onPressed: () {
+                            final newVal = !enableShowDanmaku;
+                            plPlayerController.enableShowDanmaku.value = newVal;
+                            if (!plPlayerController.tempPlayerConf) {
+                              setting.put(
+                                SettingBoxKey.enableShowDanmaku,
+                                newVal,
+                              );
+                            }
+                          },
+                          icon: enableShowDanmaku
+                              ? const Icon(
+                                  size: 20,
+                                  CustomIcons.dm_on,
+                                  color: Colors.white,
+                                )
+                              : const Icon(
+                                  size: 20,
+                                  CustomIcons.dm_off,
+                                  color: Colors.white,
+                                ),
+                        );
+                      },
+                    ),
                   ),
-                ),
               ],
               SizedBox(
                 width: btnWidth,
@@ -2008,7 +2024,8 @@ class HeaderControlState extends State<HeaderControl>
                   ),
                 ),
               ),
-            ],
+              ],
+            ),
           ),
           if (showFSActionItem)
             Row(

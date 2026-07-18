@@ -89,11 +89,12 @@ class BottomControl extends StatelessWidget {
     final bufferedBarColor = primary.withValues(alpha: 0.4);
     final officialTimeStyle = controller.biliProgressTimeStyle;
     final compact = officialTimeStyle && !isFullScreen;
-    final outerHorizontalPadding = compact ? 6.0 : 10.0;
     final outerBottomPadding = officialTimeStyle
         ? (compact ? 2.0 : 6.0)
         : 12.0;
-    final progressHorizontalPadding = compact ? 6.0 : 10.0;
+    // 原来进度条总边距为 compact 12dp、普通 20dp。按钮边距改为可配置后，
+    // 进度条仍保持原有位置，不被按钮边距设置连带修改。
+    final progressHorizontalPadding = compact ? 12.0 : 20.0;
     final progressBottomPadding = officialTimeStyle
         ? (compact ? 2.0 : 4.0)
         : 7.0;
@@ -159,11 +160,16 @@ class BottomControl extends StatelessWidget {
             videoDetailController.showVP.value)
           Padding(
             padding: EdgeInsets.only(bottom: 8.75 - overlayOffset),
-            child: ViewPointSegmentProgressBar(
-              segments: videoDetailController.viewPointList,
-              onSeek: PlatformUtils.isDesktop
-                  ? (position) => controller.seekTo(position, isSeek: false)
-                  : null,
+            child: Obx(
+              () => ViewPointSegmentProgressBar(
+                segments: videoDetailController.viewPointList,
+                progress: controller.duration.value <= 0
+                    ? 0.0
+                    : controller.position.value / controller.duration.value,
+                onSeek: PlatformUtils.isDesktop
+                    ? (position) => controller.seekTo(position, isSeek: false)
+                    : null,
+              ),
             ),
           ),
         if (videoDetailController.showDmTrendChart.value)
@@ -179,9 +185,9 @@ class BottomControl extends StatelessWidget {
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
-        outerHorizontalPadding,
         0,
-        outerHorizontalPadding,
+        0,
+        0,
         outerBottomPadding,
       ),
       child: Column(
@@ -219,7 +225,12 @@ class BottomControl extends StatelessWidget {
               ),
             ),
           ),
-          buildBottomControl(),
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: controller.playerControlHorizontalPadding,
+            ),
+            child: buildBottomControl(),
+          ),
         ],
       ),
     );

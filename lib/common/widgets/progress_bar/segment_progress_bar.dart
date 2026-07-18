@@ -15,14 +15,11 @@
  * along with PiliPlus.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import 'dart:ui' as ui;
-
+import 'package:PiliPlus/common/widgets/marquee.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart' show listEquals;
-import 'package:flutter/gestures.dart' show TapGestureRecognizer;
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart' show BoxHitTestEntry;
 
 @immutable
 sealed class BaseSegment {
@@ -142,185 +139,174 @@ class RenderProgressBar extends BaseRenderProgressBar<Segment> {
   }
 }
 
-class ViewPointSegmentProgressBar
-    extends BaseSegmentProgressBar<ViewPointSegment> {
+class ViewPointSegmentProgressBar extends StatelessWidget {
   const ViewPointSegmentProgressBar({
     super.key,
-    super.height,
-    required super.segments,
+    this.height = 3.5,
+    required this.segments,
+    required this.progress,
     this.onSeek,
   });
 
+  final double height;
+  final List<ViewPointSegment> segments;
+  final double progress;
   final ValueSetter<Duration>? onSeek;
-
-  @override
-  RenderObject createRenderObject(BuildContext context) {
-    return RenderViewPointProgressBar(
-      height: height,
-      segments: segments,
-      onSeek: onSeek,
-    );
-  }
-
-  @override
-  void updateRenderObject(
-    BuildContext context,
-    RenderViewPointProgressBar renderObject,
-  ) {
-    renderObject
-      ..height = height
-      ..segments = segments
-      ..onSeek = onSeek;
-  }
-}
-
-class RenderViewPointProgressBar
-    extends BaseRenderProgressBar<ViewPointSegment> {
-  RenderViewPointProgressBar({
-    required super.height,
-    required super.segments,
-    ValueSetter<Duration>? onSeek,
-  }) : _onSeek = onSeek,
-       _hitTestSelf = onSeek != null {
-    if (onSeek != null) {
-      _tapGestureRecognizer = TapGestureRecognizer()..onTapUp = _onTapUp;
-    }
-  }
-
-  @override
-  void performLayout() {
-    size = constraints.constrainDimensions(constraints.maxWidth, _barHeight);
-  }
 
   static const double _barHeight = 15.0;
   static const double _dividerWidth = 2.0;
-
-  static ui.Paragraph _getParagraph(String title, double size) {
-    final builder =
-        ui.ParagraphBuilder(
-            ui.ParagraphStyle(
-              textDirection: .ltr,
-              strutStyle: ui.StrutStyle(
-                leading: 0,
-                height: 1,
-                fontSize: size,
-              ),
-            ),
-          )
-          ..pushStyle(.new(color: Colors.white, fontSize: size, height: 1))
-          ..addText(title);
-    return builder.build()
-      ..layout(const ui.ParagraphConstraints(width: double.infinity));
-  }
+  static const double _fontSize = 10.5;
+  static const double _textPadding = 3.0;
+  static const textStyle = TextStyle(
+    color: Colors.white,
+    fontSize: _fontSize,
+    height: 1,
+  );
+  static const strutStyle = StrutStyle(
+    fontSize: _fontSize,
+    height: 1,
+    leading: 0,
+    forceStrutHeight: true,
+  );
 
   @override
-  void paint(PaintingContext context, Offset offset) {
-    final size = this.size;
-    final canvas = context.canvas;
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final width = constraints.maxWidth;
+      final normalizedProgress = progress.clamp(0.0, 1.0).toDouble();
+      var currentIndex = segments.indexWhere(
+        (segment) => normalizedProgress <= segment.end,
+      );
+      if (currentIndex == -1 && segments.isNotEmpty) {
+        currentIndex = segments.length - 1;
+      }
+
+      final labels = <Widget>[];
+      var previousEnd = 0.0;
+      for (var index = 0; index < segments.length; index++) {
+        final segment = segments[index];
+        final title = segment.title;
+        final left = previousEnd * width + (index == 0 ? 0 : _dividerWidth);
+        final right = segment.end * width;
+        final segmentWidth = right - left;
+        previousEnd = segment.end;
+
+        if (title == null || title.isEmpty || segmentWidth <= _textPadding) {
+          continue;
+        }
+
+        final availableWidth = (segmentWidth - _textPadding * 2)
+            .clamp(0.0, width)
+            .toDouble();
+        final isCurrent = index == currentIndex;
+        labels.add(
+          Positioned(
+            left: left + _textPadding,
+            top: 0,
+            width: availableWidth,
+            height: _barHeight,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: isCurrent
+                  ? MarqueeText(
+                      title,
+                      spacing: 24,
+                      velocity: 24,
+                      style: textStyle,
+                      strutStyle: strutStyle,
+                    )
+                  : OverflowBox(
+                      alignment: Alignment.centerLeft,
+                      minWidth: 0,
+                      maxWidth: double.infinity,
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        softWrap: false,
+                        textAlign: TextAlign.left,
+                        style: textStyle,
+                        strutStyle: strutStyle,
+                      ),
+                    ),
+            ),
+          ),
+        );
+      }
+
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapUp: onSeek == null || segments.isEmpty
+            ? null
+            : (details) {
+                final value = (details.localPosition.dx / width)
+                    .clamp(0.0, 1.0)
+                    .toDouble();
+                final index = segments
+                    .lowerBoundByKey((item) => item.end, value)
+                    .clamp(0, segments.length - 1)
+                    .toInt();
+                if (segments[index].from case final from?) {
+                  onSeek?.call(Duration(seconds: from));
+                }
+              },
+        child: SizedBox(
+          height: _barHeight,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: _ViewPointBackgroundPainter(
+                    segments: segments,
+                    dividerExtension: height,
+                  ),
+                ),
+              ),
+              ...labels,
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+class _ViewPointBackgroundPainter extends CustomPainter {
+  const _ViewPointBackgroundPainter({
+    required this.segments,
+    required this.dividerExtension,
+  });
+
+  final List<ViewPointSegment> segments;
+  final double dividerExtension;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    assert(segments.isSortedBy((item) => item.end));
     final paint = Paint()..style = PaintingStyle.fill;
-
-    if (offset != .zero) {
-      canvas
-        ..save()
-        ..translate(offset.dx, offset.dy);
-    }
-
-    assert(segments.isSortedBy((i) => i.end));
-
     canvas.drawRect(
-      Rect.fromLTRB(0, 0, size.width, _barHeight),
+      Offset.zero & size,
       paint..color = Colors.grey[600]!.withValues(alpha: 0.45),
     );
-
     paint.color = Colors.black.withValues(alpha: 0.5);
-
-    double prevEnd = 0.0;
     for (final segment in segments) {
-      final segmentEnd = segment.end * size.width;
+      final end = segment.end * size.width;
       canvas.drawRect(
         Rect.fromLTRB(
-          segmentEnd,
+          end,
           0,
-          segmentEnd + _dividerWidth,
-          _barHeight + height,
+          end + ViewPointSegmentProgressBar._dividerWidth,
+          size.height + dividerExtension,
         ),
         paint,
       );
-      final title = segment.title;
-      if (title != null && title.isNotEmpty) {
-        final segmentWidth = segmentEnd - prevEnd;
-        final paragraph = _getParagraph(title, 10);
-        final textWidth = paragraph.maxIntrinsicWidth;
-        final textHeight = paragraph.height;
-
-        final isOverflow = textWidth > segmentWidth;
-        final Offset offset;
-        if (isOverflow) {
-          final scale = segmentWidth / textWidth;
-          canvas
-            ..save()
-            ..translate(prevEnd, (_barHeight - textHeight * scale) / 2)
-            ..scale(scale);
-          offset = Offset.zero;
-        } else {
-          offset = Offset(
-            (segmentWidth - textWidth) / 2 + prevEnd,
-            (_barHeight - textHeight) / 2,
-          );
-        }
-        canvas.drawParagraph(paragraph, offset);
-        paragraph.dispose();
-        if (isOverflow) {
-          canvas.restore();
-        }
-      }
-      prevEnd = segmentEnd + _dividerWidth;
-    }
-    if (offset != .zero) canvas.restore();
-  }
-
-  ValueSetter<Duration>? _onSeek;
-  set onSeek(ValueSetter<Duration>? value) {
-    if (_onSeek == value) {
-      return;
-    }
-    _onSeek = value;
-  }
-
-  TapGestureRecognizer? _tapGestureRecognizer;
-
-  @override
-  void dispose() {
-    _onSeek = null;
-    _tapGestureRecognizer
-      ?..onTapUp = null
-      ..dispose();
-    _tapGestureRecognizer = null;
-    super.dispose();
-  }
-
-  final bool _hitTestSelf;
-  @override
-  bool hitTestSelf(Offset position) => _hitTestSelf;
-
-  @override
-  void handleEvent(PointerEvent event, BoxHitTestEntry entry) {
-    if (event is PointerDownEvent) {
-      _tapGestureRecognizer?.addPointer(event);
     }
   }
 
-  @pragma('vm:notify-debugger-on-exception')
-  void _onTapUp(TapUpDetails details) {
-    try {
-      final seg = details.localPosition.dx / size.width;
-      final item = _segments[_segments.lowerBoundByKey((i) => i.end, seg)];
-      if (item.from case final from?) {
-        _onSeek?.call(Duration(seconds: from));
-      }
-      // if (kDebugMode) debugPrint('${item.title},,${item.from}');
-    } catch (_) {}
-  }
+  @override
+  bool shouldRepaint(_ViewPointBackgroundPainter oldDelegate) =>
+      dividerExtension != oldDelegate.dividerExtension ||
+      !listEquals(segments, oldDelegate.segments);
 }
 
 abstract class BaseSegmentProgressBar<T extends BaseSegment>

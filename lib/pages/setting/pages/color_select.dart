@@ -11,6 +11,7 @@ import 'package:PiliPlus/pages/mine/controller.dart';
 import 'package:PiliPlus/pages/setting/slide_color_picker.dart';
 import 'package:PiliPlus/pages/setting/widgets/popup_item.dart';
 import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
+import 'package:PiliPlus/pages/setting/widgets/slider_dialog.dart';
 import 'package:PiliPlus/utils/extension/get_ext.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/storage.dart';
@@ -45,6 +46,17 @@ class Item {
 class _ColorSelectPageState extends State<ColorSelectPage> {
   final ctr = Get.put(_ColorSelectController());
   FlexSchemeVariant _schemeVariant = Pref.schemeVariant;
+  Brightness _toneBrightness = Brightness.light;
+  bool _toneBrightnessInitialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_toneBrightnessInitialized) {
+      _toneBrightness = Theme.of(context).brightness;
+      _toneBrightnessInitialized = true;
+    }
+  }
 
   Future<void> _onColorModeChanged(ThemeColorMode mode) async {
     if (mode == ctr.colorMode.value) return;
@@ -124,6 +136,53 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
       ),
     );
   });
+
+  Future<void> _showToneOffsetDialog(ThemeToneRole role) async {
+    final value = Pref.customThemeToneOffset(_toneBrightness, role);
+    final result = await showDialog<double>(
+      context: context,
+      builder: (context) => SliderDialog(
+        title: Text('${role.label}明暗偏移'),
+        value: value,
+        min: -30,
+        max: 30,
+        divisions: 60,
+        precise: 0,
+      ),
+    );
+    if (result == null) return;
+    final key = Pref.customThemeToneKey(_toneBrightness, role);
+    if (result == 0) {
+      await GStorage.setting.delete(key);
+    } else {
+      await GStorage.setting.put(key, result);
+    }
+    if (!mounted) return;
+    setState(() {});
+    Get.updateMyAppTheme();
+  }
+
+  Future<void> _resetToneOffsets() async {
+    await GStorage.setting.deleteAll(
+      ThemeToneRole.values
+          .map((role) => Pref.customThemeToneKey(_toneBrightness, role)),
+    );
+    if (!mounted) return;
+    setState(() {});
+    Get.updateMyAppTheme();
+  }
+
+  Widget _toneOffsetTile(ThemeToneRole role) {
+    final value = Pref.customThemeToneOffset(_toneBrightness, role);
+    final sign = value > 0 ? '+' : '';
+    return ListTile(
+      dense: true,
+      title: Text(role.label),
+      subtitle: Text('${role.description}；负数更暗，正数更亮'),
+      trailing: Text('$sign${value.toStringAsFixed(0)}'),
+      onTap: () => _showToneOffsetDialog(role),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -278,35 +337,85 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
                     color: ctr.tertiarySeed,
                     storageKey: SettingBoxKey.customTertiarySeed,
                   ),
+                  const Divider(height: 24),
+                  const ListTile(
+                    leading: Icon(Icons.contrast_outlined),
+                    title: Text('语义区域明暗层级'),
+                    subtitle: Text('只改变 HCT 明度，不改变已选种子色的色相'),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: SegmentedButton<Brightness>(
+                      segments: const [
+                        ButtonSegment(
+                          value: Brightness.light,
+                          label: Text('亮色主题'),
+                          icon: Icon(Icons.light_mode_outlined),
+                        ),
+                        ButtonSegment(
+                          value: Brightness.dark,
+                          label: Text('暗色主题'),
+                          icon: Icon(Icons.dark_mode_outlined),
+                        ),
+                      ],
+                      selected: {_toneBrightness},
+                      onSelectionChanged: (value) {
+                        setState(() => _toneBrightness = value.single);
+                      },
+                    ),
+                  ),
+                  ...ThemeToneRole.values.map(_toneOffsetTile),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 16, bottom: 8),
+                      child: TextButton.icon(
+                        onPressed: _resetToneOffsets,
+                        icon: const Icon(Icons.restart_alt),
+                        label: const Text('重置当前模式明暗层级'),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
-          Padding(
-            padding: padding,
-            child: ExcludeFocus(
-              child: IgnorePointer(
-                child: Container(
-                  height: size.height / 2,
-                  width: size.width,
-                  color: theme.colorScheme.surface,
-                  child: const HomePage(),
-                ),
-              ),
-            ),
-          ),
-          ExcludeFocus(
-            child: IgnorePointer(
-              child: NavigationBar(
-                destinations: NavigationBarType.values
-                    .map(
-                      (item) => NavigationDestination(
-                        icon: item.icon,
-                        label: item.label,
+          Theme(
+            data: _toneBrightness == Brightness.light
+                ? ThemeUtils.lightTheme
+                : ThemeUtils.darkTheme,
+            child: Column(
+              children: [
+                Padding(
+                  padding: padding,
+                  child: ExcludeFocus(
+                    child: IgnorePointer(
+                      child: Builder(
+                        builder: (context) => Container(
+                          height: size.height / 2,
+                          width: size.width,
+                          color: Theme.of(context).colorScheme.surface,
+                          child: const HomePage(),
+                        ),
                       ),
-                    )
-                    .toList(),
-              ),
+                    ),
+                  ),
+                ),
+                ExcludeFocus(
+                  child: IgnorePointer(
+                    child: NavigationBar(
+                      destinations: NavigationBarType.values
+                          .map(
+                            (item) => NavigationDestination(
+                              icon: item.icon,
+                              label: item.label,
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

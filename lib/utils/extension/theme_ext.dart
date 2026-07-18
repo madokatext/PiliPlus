@@ -3,6 +3,7 @@ import 'package:PiliPlus/utils/bili_colors.dart';
 import 'package:flex_seed_scheme/flex_seed_scheme.dart';
 import 'package:flutter/material.dart'
     show ThemeData, Color, ColorScheme, Brightness, Colors;
+import 'package:material_color_utilities/hct/hct.dart';
 
 extension ThemeDataExt on ThemeData {
   bool get isLight => brightness.isLight;
@@ -64,6 +65,56 @@ extension ThemeSeedColorsExt on ThemeSeedColors {
     respectMonochromeSeed: true,
     useExpressiveOnContainerColors: false,
   );
+}
+
+extension ThemeToneExt on ColorScheme {
+  ColorScheme applyToneOffsets(Map<ThemeToneRole, double> offsets) {
+    Color tone(Color color, ThemeToneRole role) {
+      final offset = offsets[role] ?? 0;
+      if (offset == 0) return color;
+      final hct = Hct.fromInt(color.toARGB32());
+      hct.tone = (hct.tone + offset).clamp(0.0, 100.0).toDouble();
+      return Color(hct.toInt());
+    }
+
+    return copyWith(
+      surface: tone(surface, ThemeToneRole.page),
+      surfaceDim: tone(surfaceDim, ThemeToneRole.page),
+      surfaceBright: tone(surfaceBright, ThemeToneRole.page),
+      // PiliPlus 现有代码大量把 onInverseSurface 当作卡片底色使用。
+      onInverseSurface: tone(onInverseSurface, ThemeToneRole.card),
+      surfaceContainerLowest: tone(
+        surfaceContainerLowest,
+        ThemeToneRole.card,
+      ),
+      surfaceContainerLow: tone(surfaceContainerLow, ThemeToneRole.card),
+      surfaceContainer: tone(surfaceContainer, ThemeToneRole.elevated),
+      surfaceContainerHigh: tone(surfaceContainerHigh, ThemeToneRole.elevated),
+      surfaceContainerHighest: tone(
+        surfaceContainerHighest,
+        ThemeToneRole.elevated,
+      ),
+      primaryContainer: tone(primaryContainer, ThemeToneRole.selected),
+      secondaryContainer: tone(secondaryContainer, ThemeToneRole.selected),
+      tertiaryContainer: tone(tertiaryContainer, ThemeToneRole.selected),
+      onSurface: tone(onSurface, ThemeToneRole.content),
+      onPrimaryContainer: tone(
+        onPrimaryContainer,
+        ThemeToneRole.selectedContent,
+      ),
+      onSecondaryContainer: tone(
+        onSecondaryContainer,
+        ThemeToneRole.selectedContent,
+      ),
+      onTertiaryContainer: tone(
+        onTertiaryContainer,
+        ThemeToneRole.selectedContent,
+      ),
+      onSurfaceVariant: tone(onSurfaceVariant, ThemeToneRole.mutedContent),
+      outline: tone(outline, ThemeToneRole.mutedContent),
+      outlineVariant: tone(outlineVariant, ThemeToneRole.border),
+    );
+  }
 }
 
 extension BrightnessExt on Brightness {
