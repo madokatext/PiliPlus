@@ -1052,7 +1052,9 @@ abstract final class Pref {
   static int get longPressSpeedTriggerDelay {
     final defaultValue = PlatformUtils.isMobile && enableTapDm ? 300 : 500;
     final value = _setting.get(SettingBoxKey.longPressSpeedTriggerDelay);
-    return (value is num ? value.toInt() : defaultValue).clamp(100, 1000);
+    return (value is num ? value.toInt() : defaultValue)
+        .clamp(100, 1000)
+        .toInt();
   }
 
   static double get playSpeedDefault =>
