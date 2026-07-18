@@ -27,6 +27,7 @@ jobs:
           {
             python3 <<'PYCODE'
           from pathlib import Path
+          import base64
           import subprocess
 
           workflow = subprocess.check_output(
@@ -61,91 +62,7 @@ jobs:
               "    '          plPlayerController.showPreview.value = false;\\n',",
               ')',
           ]
-
-          appbar_content = '''import 'package:PiliPlus/common/widgets/view_safe_area.dart';
-import 'package:flutter/material.dart';
-
-class AppBarAni extends StatelessWidget {
-  const AppBarAni({
-    super.key,
-    required this.child,
-    required this.controller,
-    required this.isTop,
-    required this.isFullScreen,
-    required this.removeSafeArea,
-    this.bottomPadding = 0,
-    this.gradientExtent = 0,
-  });
-
-  final Widget child;
-  final AnimationController controller;
-  final bool isTop;
-  final bool isFullScreen;
-  final bool removeSafeArea;
-  final double bottomPadding;
-  final double gradientExtent;
-
-  static final _topPos = Tween<Offset>(
-    begin: const Offset(0.0, -1.0),
-    end: Offset.zero,
-  );
-
-  static const _topDecoration = LinearGradient(
-    begin: Alignment.bottomCenter,
-    end: Alignment.topCenter,
-    colors: <Color>[
-      Colors.transparent,
-      Color(0xBF000000),
-    ],
-    tileMode: TileMode.mirror,
-  );
-
-  static final _bottomPos = Tween<Offset>(
-    begin: const Offset(0, 1.2),
-    end: Offset.zero,
-  );
-
-  static const _bottomDecoration = LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: <Color>[
-      Colors.transparent,
-      Color(0xBF000000),
-    ],
-    tileMode: TileMode.mirror,
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    final content = Padding(
-      padding: EdgeInsets.only(bottom: isTop ? 0 : bottomPadding),
-      child: removeSafeArea
-          ? child
-          : ViewSafeArea(
-              left: isFullScreen,
-              right: isFullScreen,
-              child: child,
-            ),
-    );
-
-    return SlideTransition(
-      position: controller.drive(isTop ? _topPos : _bottomPos),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: isTop ? _topDecoration : _bottomDecoration,
-        ),
-        child: Padding(
-          padding: EdgeInsets.only(
-            top: isTop ? 0 : gradientExtent,
-            bottom: isTop ? gradientExtent : 0,
-          ),
-          child: content,
-        ),
-      ),
-    );
-  }
-}
-'''
+          appbar_content = base64.b64decode('aW1wb3J0ICdwYWNrYWdlOlBpbGlQbHVzL2NvbW1vbi93aWRnZXRzL3ZpZXdfc2FmZV9hcmVhLmRhcnQnOwppbXBvcnQgJ3BhY2thZ2U6Zmx1dHRlci9tYXRlcmlhbC5kYXJ0JzsKCmNsYXNzIEFwcEJhckFuaSBleHRlbmRzIFN0YXRlbGVzc1dpZGdldCB7CiAgY29uc3QgQXBwQmFyQW5pKHsKICAgIHN1cGVyLmtleSwKICAgIHJlcXVpcmVkIHRoaXMuY2hpbGQsCiAgICByZXF1aXJlZCB0aGlzLmNvbnRyb2xsZXIsCiAgICByZXF1aXJlZCB0aGlzLmlzVG9wLAogICAgcmVxdWlyZWQgdGhpcy5pc0Z1bGxTY3JlZW4sCiAgICByZXF1aXJlZCB0aGlzLnJlbW92ZVNhZmVBcmVhLAogICAgdGhpcy5ib3R0b21QYWRkaW5nID0gMCwKICAgIHRoaXMuZ3JhZGllbnRFeHRlbnQgPSAwLAogIH0pOwoKICBmaW5hbCBXaWRnZXQgY2hpbGQ7CiAgZmluYWwgQW5pbWF0aW9uQ29udHJvbGxlciBjb250cm9sbGVyOwogIGZpbmFsIGJvb2wgaXNUb3A7CiAgZmluYWwgYm9vbCBpc0Z1bGxTY3JlZW47CiAgZmluYWwgYm9vbCByZW1vdmVTYWZlQXJlYTsKICBmaW5hbCBkb3VibGUgYm90dG9tUGFkZGluZzsKICBmaW5hbCBkb3VibGUgZ3JhZGllbnRFeHRlbnQ7CgogIHN0YXRpYyBmaW5hbCBfdG9wUG9zID0gVHdlZW48T2Zmc2V0PigKICAgIGJlZ2luOiBjb25zdCBPZmZzZXQoMC4wLCAtMS4wKSwKICAgIGVuZDogT2Zmc2V0Lnplcm8sCiAgKTsKCiAgc3RhdGljIGNvbnN0IF90b3BEZWNvcmF0aW9uID0gTGluZWFyR3JhZGllbnQoCiAgICBiZWdpbjogQWxpZ25tZW50LmJvdHRvbUNlbnRlciwKICAgIGVuZDogQWxpZ25tZW50LnRvcENlbnRlciwKICAgIGNvbG9yczogPENvbG9yPlsKICAgICAgQ29sb3JzLnRyYW5zcGFyZW50LAogICAgICBDb2xvcigweEJGMDAwMDAwKSwKICAgIF0sCiAgICB0aWxlTW9kZTogVGlsZU1vZGUubWlycm9yLAogICk7CgogIHN0YXRpYyBmaW5hbCBfYm90dG9tUG9zID0gVHdlZW48T2Zmc2V0PigKICAgIGJlZ2luOiBjb25zdCBPZmZzZXQoMCwgMS4yKSwKICAgIGVuZDogT2Zmc2V0Lnplcm8sCiAgKTsKCiAgc3RhdGljIGNvbnN0IF9ib3R0b21EZWNvcmF0aW9uID0gTGluZWFyR3JhZGllbnQoCiAgICBiZWdpbjogQWxpZ25tZW50LnRvcENlbnRlciwKICAgIGVuZDogQWxpZ25tZW50LmJvdHRvbUNlbnRlciwKICAgIGNvbG9yczogPENvbG9yPlsKICAgICAgQ29sb3JzLnRyYW5zcGFyZW50LAogICAgICBDb2xvcigweEJGMDAwMDAwKSwKICAgIF0sCiAgICB0aWxlTW9kZTogVGlsZU1vZGUubWlycm9yLAogICk7CgogIEBvdmVycmlkZQogIFdpZGdldCBidWlsZChCdWlsZENvbnRleHQgY29udGV4dCkgewogICAgZmluYWwgY29udGVudCA9IFBhZGRpbmcoCiAgICAgIHBhZGRpbmc6IEVkZ2VJbnNldHMub25seShib3R0b206IGlzVG9wID8gMCA6IGJvdHRvbVBhZGRpbmcpLAogICAgICBjaGlsZDogcmVtb3ZlU2FmZUFyZWEKICAgICAgICAgID8gY2hpbGQKICAgICAgICAgIDogVmlld1NhZmVBcmVhKAogICAgICAgICAgICAgIGxlZnQ6IGlzRnVsbFNjcmVlbiwKICAgICAgICAgICAgICByaWdodDogaXNGdWxsU2NyZWVuLAogICAgICAgICAgICAgIGNoaWxkOiBjaGlsZCwKICAgICAgICAgICAgKSwKICAgICk7CgogICAgcmV0dXJuIFNsaWRlVHJhbnNpdGlvbigKICAgICAgcG9zaXRpb246IGNvbnRyb2xsZXIuZHJpdmUoaXNUb3AgPyBfdG9wUG9zIDogX2JvdHRvbVBvcyksCiAgICAgIGNoaWxkOiBEZWNvcmF0ZWRCb3goCiAgICAgICAgZGVjb3JhdGlvbjogQm94RGVjb3JhdGlvbigKICAgICAgICAgIGdyYWRpZW50OiBpc1RvcCA/IF90b3BEZWNvcmF0aW9uIDogX2JvdHRvbURlY29yYXRpb24sCiAgICAgICAgKSwKICAgICAgICBjaGlsZDogUGFkZGluZygKICAgICAgICAgIHBhZGRpbmc6IEVkZ2VJbnNldHMub25seSgKICAgICAgICAgICAgdG9wOiBpc1RvcCA/IDAgOiBncmFkaWVudEV4dGVudCwKICAgICAgICAgICAgYm90dG9tOiBpc1RvcCA/IGdyYWRpZW50RXh0ZW50IDogMCwKICAgICAgICAgICksCiAgICAgICAgICBjaGlsZDogY29udGVudCwKICAgICAgICApLAogICAgICApLAogICAgKTsKICB9Cn0K').decode()
           appbar_start = next(
               i for i, line in enumerate(lines)
               if "'lib/plugin/pl_player/widgets/app_bar_ani.dart'" in line
