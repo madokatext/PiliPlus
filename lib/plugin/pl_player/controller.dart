@@ -339,6 +339,10 @@ class PlPlayerController with BlockConfigMixin {
   late final biliProgressTimeStyle = Pref.biliProgressTimeStyle;
   double get playerControlHorizontalPadding =>
       Pref.playerControlHorizontalPadding;
+  double get playerControlBarThicknessScale =>
+      Pref.playerControlBarThicknessScale;
+  double get playerControlBarGradientExtent =>
+      Pref.playerControlBarGradientExtent;
   double get volumeGestureAngleThreshold =>
       Pref.volumeGestureAngleThreshold;
   double get brightnessGestureAngleThreshold =>
@@ -642,7 +646,7 @@ class PlPlayerController with BlockConfigMixin {
       _seasonId = seasonId;
       _pgcType = pgcType;
 
-      if (showSeekPreview) {
+      if (showAnySeekPreview) {
         _clearPreview();
       }
       cancelLongPressTimer();
@@ -1218,7 +1222,7 @@ class PlPlayerController with BlockConfigMixin {
     if (seekToPos != null) {
       feedBack();
     }
-    if (showSeekPreview) {
+    if (showAnySeekPreview) {
       showPreview.value = false;
       previewGlobalX.value = null;
     }
@@ -1608,7 +1612,7 @@ class PlPlayerController with BlockConfigMixin {
     _disableAutoEnterPip();
     setPlayCallBack(null);
     dmState.clear();
-    if (showSeekPreview) {
+    if (showAnySeekPreview) {
       _clearPreview();
     }
     if (Platform.isAndroid) {
@@ -1677,7 +1681,10 @@ class PlPlayerController with BlockConfigMixin {
   late final Map<String, ui.Image?> previewCache = {};
   LoadingState<VideoShotData>? videoShot;
   late final RxBool showPreview = false.obs;
-  late final showSeekPreview = Pref.showSeekPreview;
+  late final showSeekPreviewOnSlider = Pref.showSeekPreviewOnSlider;
+  late final showSeekPreviewOnGesture = Pref.showSeekPreviewOnGesture;
+  bool get showAnySeekPreview =>
+      showSeekPreviewOnSlider || showSeekPreviewOnGesture;
   late final seekPreviewFollowSlider = Pref.seekPreviewFollowSlider;
   late final seekPreviewScale = Pref.seekPreviewScale;
   late final showSeekPreviewInNonFullscreen =

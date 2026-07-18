@@ -159,11 +159,33 @@ List<SettingsModel> get playSettings => [
     leading: const Icon(Icons.horizontal_distribute_outlined),
     onTap: _showPlayerControlHorizontalPaddingDialog,
   ),
-  const SwitchModel(
-    title: '滑动跳转预览视频缩略图',
-    leading: Icon(Icons.preview_outlined),
-    setKey: SettingBoxKey.showSeekPreview,
-    defaultVal: true,
+  NormalModel(
+    title: '播放器上下边栏整体厚度',
+    getSubtitle: () =>
+        '当前：${Pref.playerControlBarThicknessScale.toStringAsFixed(1)}×',
+    leading: const Icon(Icons.height),
+    onTap: _showPlayerControlBarThicknessScaleDialog,
+  ),
+  NormalModel(
+    title: '播放器上下边栏渐变弥散宽度',
+    getSubtitle: () =>
+        '当前：${Pref.playerControlBarGradientExtent.toStringAsFixed(0)}dp',
+    leading: const Icon(Icons.gradient),
+    onTap: _showPlayerControlBarGradientExtentDialog,
+  ),
+  SwitchModel(
+    title: '拖动进度条显示预览浮窗',
+    subtitle: '控制拖动底部进度条滑块时的预览浮窗',
+    leading: const Icon(Icons.preview_outlined),
+    setKey: SettingBoxKey.showSeekPreviewOnSlider,
+    defaultVal: Pref.showSeekPreview,
+  ),
+  SwitchModel(
+    title: '左右滑动手势显示预览浮窗',
+    subtitle: '控制在画面上横向滑动快进或快退时的预览浮窗',
+    leading: const Icon(Icons.swipe_outlined),
+    setKey: SettingBoxKey.showSeekPreviewOnGesture,
+    defaultVal: Pref.showSeekPreview,
   ),
   const SwitchModel(
     title: '预览窗跟随进度条滑块',
@@ -404,6 +426,56 @@ Future<void> _showPlayerControlHorizontalPaddingDialog(
   if (res != null) {
     await GStorage.setting.put(
       SettingBoxKey.playerControlHorizontalPadding,
+      res,
+    );
+    setState();
+  }
+}
+
+Future<void> _showPlayerControlBarThicknessScaleDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final res = await showDialog<double>(
+    context: context,
+    builder: (context) => SliderDialog(
+      title: const Text('播放器上下边栏整体厚度'),
+      value: Pref.playerControlBarThicknessScale,
+      min: 0.8,
+      max: 1.5,
+      divisions: 7,
+      precise: 1,
+      suffix: '×',
+    ),
+  );
+  if (res != null) {
+    await GStorage.setting.put(
+      SettingBoxKey.playerControlBarThicknessScale,
+      res,
+    );
+    setState();
+  }
+}
+
+Future<void> _showPlayerControlBarGradientExtentDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final res = await showDialog<double>(
+    context: context,
+    builder: (context) => SliderDialog(
+      title: const Text('播放器上下边栏渐变弥散宽度'),
+      value: Pref.playerControlBarGradientExtent,
+      min: 0,
+      max: 96,
+      divisions: 24,
+      precise: 0,
+      suffix: 'dp',
+    ),
+  );
+  if (res != null) {
+    await GStorage.setting.put(
+      SettingBoxKey.playerControlBarGradientExtent,
       res,
     );
     setState();

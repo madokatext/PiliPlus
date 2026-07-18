@@ -959,7 +959,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       ..seekToPos = Duration(milliseconds: newPos)
       ..position.value = seconds;
     if (!plPlayerController.isFileSource &&
-        plPlayerController.showSeekPreview) {
+        plPlayerController.showSeekPreviewOnGesture) {
       plPlayerController.updatePreviewIndex(seconds);
     }
   }
@@ -1038,7 +1038,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
           plPlayerController
             ..seekToPos = null
             ..hasToasted = true;
-          if (plPlayerController.showSeekPreview) {
+          if (plPlayerController.showSeekPreviewOnGesture) {
             plPlayerController.showPreview.value = false;
           }
           SmartDialog.showAttach(
@@ -1612,6 +1612,10 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                     controller: _animationController,
                     isFullScreen: isFullScreen,
                     removeSafeArea: plPlayerController.removeSafeArea,
+                    thicknessScale:
+                        plPlayerController.playerControlBarThicknessScale,
+                    gradientExtent:
+                        plPlayerController.playerControlBarGradientExtent,
                     child: plPlayerController.isDesktopPip
                         ? GestureDetector(
                             behavior: HitTestBehavior.translucent,
@@ -1626,6 +1630,10 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                     isFullScreen: isFullScreen,
                     removeSafeArea: plPlayerController.removeSafeArea,
                     bottomPadding: verticalFullscreenBottomPadding,
+                    thicknessScale:
+                        plPlayerController.playerControlBarThicknessScale,
+                    gradientExtent:
+                        plPlayerController.playerControlBarGradientExtent,
                     child:
                         widget.bottomControl ??
                         BottomControl(
@@ -1803,7 +1811,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             ),
           ),
 
-        if (!isLive && plPlayerController.showSeekPreview)
+        if (!isLive && plPlayerController.showAnySeekPreview)
           buildSeekPreviewWidget(
             plPlayerController,
             maxWidth,

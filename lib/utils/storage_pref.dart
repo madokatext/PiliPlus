@@ -584,6 +584,18 @@ abstract final class Pref {
   static bool get showSeekPreview =>
       _setting.get(SettingBoxKey.showSeekPreview, defaultValue: true);
 
+  // Use the former combined preference as the migration default so existing
+  // users keep their previous preview behavior until either new switch is set.
+  static bool get showSeekPreviewOnSlider => _setting.get(
+    SettingBoxKey.showSeekPreviewOnSlider,
+    defaultValue: showSeekPreview,
+  );
+
+  static bool get showSeekPreviewOnGesture => _setting.get(
+    SettingBoxKey.showSeekPreviewOnGesture,
+    defaultValue: showSeekPreview,
+  );
+
   static bool get biliProgressTimeStyle => _setting.get(
     SettingBoxKey.biliProgressTimeStyle,
     defaultValue: false,
@@ -594,6 +606,20 @@ abstract final class Pref {
     12.0,
     0.0,
     32.0,
+  );
+
+  static double get playerControlBarThicknessScale => _getClampedDouble(
+    SettingBoxKey.playerControlBarThicknessScale,
+    1.0,
+    0.8,
+    1.5,
+  );
+
+  static double get playerControlBarGradientExtent => _getClampedDouble(
+    SettingBoxKey.playerControlBarGradientExtent,
+    0.0,
+    0.0,
+    96.0,
   );
 
   static bool get seekPreviewFollowSlider => _setting.get(

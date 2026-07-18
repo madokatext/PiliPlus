@@ -28,7 +28,7 @@ class BottomControl extends StatelessWidget {
 
   bool get _canShowPreview =>
       !controller.isFileSource &&
-      controller.showSeekPreview &&
+      controller.showSeekPreviewOnSlider &&
       (isFullScreen || controller.showSeekPreviewInNonFullscreen);
 
   void onDragStart(ThumbDragDetails duration) {
