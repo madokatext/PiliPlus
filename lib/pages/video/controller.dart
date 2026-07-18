@@ -122,6 +122,14 @@ class VideoDetailController extends GetxController
   bool get usingInitialHalfScreenQuality =>
     _usingInitialHalfScreenQuality;
 
+  bool _isPageActive = false;
+  bool get isPageActive => _isPageActive && !isClosed;
+
+  void setPageActive(bool isActive) {
+    _isPageActive = isActive;
+    plPlayerController.setVideoPageActive(heroTag, isActive);
+  }
+
   // 是否开始自动播放 存在多p的情况下，第二p需要为true
   final RxBool _autoPlay = Pref.autoPlayEnable.obs;
 
@@ -390,7 +398,9 @@ class VideoDetailController extends GetxController
     _fullScreenQualityWorker = ever<bool>(
       plPlayerController.isFullScreen,
       (isFullScreen) {
-        if (isFullScreen && _usingInitialHalfScreenQuality) {
+        if (isPageActive &&
+            isFullScreen &&
+            _usingInitialHalfScreenQuality) {
           unawaited(_switchFromInitialHalfScreenQuality());
         }
       },
@@ -674,14 +684,16 @@ class VideoDetailController extends GetxController
   }
   
   Future<void> _switchFromInitialHalfScreenQuality() async {
-    if (!_usingInitialHalfScreenQuality) {
+    if (!isPageActive || !_usingInitialHalfScreenQuality) {
       return;
     }
   
-    _usingInitialHalfScreenQuality = false;
-  
     final isWiFi =
         _videoQualityOnWiFi ?? await ConnectivityUtils.isWiFi;
+    if (!isPageActive) {
+      return;
+    }
+    _usingInitialHalfScreenQuality = false;
     _videoQualityOnWiFi = isWiFi;
   
     final preferredQuality = isWiFi
@@ -746,8 +758,10 @@ class VideoDetailController extends GetxController
 
   /// 更新画质、音质
   void updatePlayer() {
+    if (!isPageActive) return;
     final currentVideoQa = this.currentVideoQa.value;
     if (currentVideoQa == null) return;
+    final autoplay = plPlayerController.playerStatus.isPlaying;
     _autoPlay.value = true;
     playedTime = plPlayerController.videoPlayerController?.state.position;
     plPlayerController
@@ -766,7 +780,7 @@ class VideoDetailController extends GetxController
       audioUrl = VideoUtils.getCdnUrl(firstAudio.playUrls, isAudio: true);
     }
 
-    playerInit();
+    playerInit(autoplay: autoplay);
   }
 
   Future<void>? _initPlayerIfNeeded(bool autoFullScreenFlag) {
@@ -786,6 +800,7 @@ class VideoDetailController extends GetxController
     bool? autoplay,
     bool autoFullScreenFlag = false,
   }) async {
+    if (!isPageActive) return;
     Duration? seek = defaultST ?? playedTime;
     if (seek == null || seek == Duration.zero) {
       seek = getFirstSegment();
@@ -816,6 +831,7 @@ class VideoDetailController extends GetxController
       pgcType: isUgc ? null : pgcType,
       videoType: videoType,
       onInit: () {
+        if (!isPageActive) return;
         videoState.value = true;
         setSubtitle(vttSubtitlesIndex.value);
       },
@@ -823,9 +839,10 @@ class VideoDetailController extends GetxController
       height: firstVideo.height,
       volume: volume,
       autoFullScreenFlag: autoFullScreenFlag,
+      videoPageTag: heroTag,
     );
 
-    if (isClosed) return;
+    if (!isPageActive) return;
 
     if (!isFileSource) {
       if (plPlayerController.enableBlock) {
@@ -1303,6 +1320,7 @@ class VideoDetailController extends GetxController
 
   @override
   void onClose() {
+    setPageActive(false);
     _fullScreenQualityWorker?.dispose();
     _fullScreenQualityWorker = null;
     cid.close();

@@ -73,6 +73,7 @@ typedef PlayCallback = Future<void>? Function();
 class PlPlayerController with BlockConfigMixin {
   Player? _videoPlayerController;
   VideoController? _videoController;
+  Future<Player>? _playerInitTask;
 
   static PlPlayerController? _instance;
 
@@ -101,6 +102,18 @@ class PlPlayerController with BlockConfigMixin {
   }
 
   int _playerCount = 0;
+  String? _activeVideoPageTag;
+  int _dataSourceGeneration = 0;
+
+  void setVideoPageActive(String pageTag, bool isActive) {
+    if (isActive) {
+      _activeVideoPageTag = pageTag;
+    } else if (_activeVideoPageTag == pageTag) {
+      _activeVideoPageTag = null;
+    }
+  }
+
+  bool isVideoPageActive(String pageTag) => _activeVideoPageTag == pageTag;
 
   late double lastPlaybackSpeed = 1.0;
   final RxDouble _playbackSpeed = Pref.playSpeedDefault.obs;
@@ -624,7 +637,16 @@ class PlPlayerController with BlockConfigMixin {
     VoidCallback? onInit,
     Volume? volume,
     bool autoFullScreenFlag = false,
+    String? videoPageTag,
   }) async {
+    if (videoPageTag != null && !isVideoPageActive(videoPageTag)) {
+      return;
+    }
+    final dataSourceGeneration = ++_dataSourceGeneration;
+    bool isCurrentDataSource() =>
+        dataSourceGeneration == _dataSourceGeneration &&
+        (videoPageTag == null || isVideoPageActive(videoPageTag));
+
     try {
       _processing = true;
       this.isLive = isLive;
@@ -661,17 +683,24 @@ class PlPlayerController with BlockConfigMixin {
         await pause(notify: false);
       }
 
-      if (_playerCount == 0) {
+      if (_playerCount == 0 || !isCurrentDataSource()) {
         return;
       }
       // 配置Player 音轨、字幕等等
-      await _createVideoController(dataSource, seekTo, volume);
+      await _createVideoController(
+        dataSource,
+        seekTo,
+        volume,
+        isCurrentDataSource: isCurrentDataSource,
+      );
 
-      if (_playerCount == 0) {
-        _removeListeners();
-        _videoPlayerController?.dispose();
-        _videoPlayerController = null;
-        _videoController = null;
+      if (_playerCount == 0 || !isCurrentDataSource()) {
+        if (_playerCount == 0) {
+          _removeListeners();
+          _videoPlayerController?.dispose();
+          _videoPlayerController = null;
+          _videoController = null;
+        }
         return;
       }
 
@@ -684,16 +713,22 @@ class PlPlayerController with BlockConfigMixin {
         triggerFullScreen(status: true);
       }
 
-      await _initializePlayer();
-      onInit?.call();
+      await _initializePlayer(isCurrentDataSource);
+      if (isCurrentDataSource()) {
+        onInit?.call();
+      }
     } catch (err, stackTrace) {
-      dataStatus.value = DataStatus.error;
-      if (kDebugMode) {
-        debugPrint(stackTrace.toString());
-        debugPrint('plPlayer err:  $err');
+      if (isCurrentDataSource()) {
+        dataStatus.value = DataStatus.error;
+        if (kDebugMode) {
+          debugPrint(stackTrace.toString());
+          debugPrint('plPlayer err:  $err');
+        }
       }
     } finally {
-      _processing = false;
+      if (dataSourceGeneration == _dataSourceGeneration) {
+        _processing = false;
+      }
     }
   }
 
@@ -807,8 +842,10 @@ class PlPlayerController with BlockConfigMixin {
   Future<void> _createVideoController(
     DataSource dataSource,
     Duration? seekTo,
-    Volume? volume,
-  ) async {
+    Volume? volume, {
+    required bool Function() isCurrentDataSource,
+  }) async {
+    if (!isCurrentDataSource()) return;
     isBuffering.value = false;
     _heartDuration = 0;
     danmakuController?.clear();
@@ -816,17 +853,25 @@ class PlPlayerController with BlockConfigMixin {
     var player = _videoPlayerController;
 
     if (player == null) {
-      player = await _initPlayer();
+      final initTask = _playerInitTask ??= _initPlayer();
+      try {
+        player = await initTask;
+      } finally {
+        if (identical(_playerInitTask, initTask)) {
+          _playerInitTask = null;
+        }
+      }
       if (_playerCount == 0) {
         _removeListeners();
         player.dispose();
-        player = null;
         _videoController = null;
         return;
       }
-      _videoPlayerController = player;
+      _videoPlayerController ??= player;
+      if (!isCurrentDataSource()) return;
       if (isAnim && superResolutionType.value != .disable) {
         await setShader();
+        if (!isCurrentDataSource()) return;
       }
     }
 
@@ -886,6 +931,7 @@ class PlPlayerController with BlockConfigMixin {
         extras: extras.isEmpty ? null : extras,
       ),
       play: false,
+      isCurrentDataSource: isCurrentDataSource,
     );
   }
 
@@ -894,6 +940,7 @@ class PlPlayerController with BlockConfigMixin {
     Media media, {
     required bool play,
     bool beginLogSession = true,
+    bool Function()? isCurrentDataSource,
   }) async {
     if (beginLogSession) {
       await MpvLogService.beginSession(
@@ -901,6 +948,7 @@ class PlPlayerController with BlockConfigMixin {
         source: isLive ? 'live video' : 'video',
       );
     }
+    if (isCurrentDataSource?.call() == false) return;
     // player.open 会先卸载旧媒体；每次打开（包括网络错误重试）前
     // 都重新应用用户参数，避免重试路径绕过自定义设置。
     MpvUtils.applyRuntimeOverrides(player);
@@ -923,8 +971,10 @@ class PlPlayerController with BlockConfigMixin {
   }
 
   // 开始播放
-  Future<void> _initializePlayer() async {
-    if (_instance == null) return;
+  Future<void> _initializePlayer(
+    bool Function() isCurrentDataSource,
+  ) async {
+    if (_instance == null || !isCurrentDataSource()) return;
     // 设置倍速
     if (isLive) {
       await setPlaybackSpeed(1.0);
@@ -933,6 +983,7 @@ class PlPlayerController with BlockConfigMixin {
         await setPlaybackSpeed(_playbackSpeed.value);
       }
     }
+    if (!isCurrentDataSource()) return;
     _initVideoFit();
     // if (_looping) {
     //   await setLooping(_looping);
@@ -944,7 +995,7 @@ class PlPlayerController with BlockConfigMixin {
     // }
 
     // 自动播放
-    if (_autoPlay) {
+    if (_autoPlay && isCurrentDataSource()) {
       playIfExists();
       // await play(duration: duration);
     }
@@ -1611,6 +1662,8 @@ class PlPlayerController with BlockConfigMixin {
     }
 
     _playerCount = 0;
+    _activeVideoPageTag = null;
+    _dataSourceGeneration++;
     if (removeSafeArea) {
       showSystemBar();
     }
@@ -1656,6 +1709,7 @@ class PlPlayerController with BlockConfigMixin {
     _videoPlayerController?.dispose();
     _videoPlayerController = null;
     _videoController = null;
+    _playerInitTask = null;
     _instance = null;
     videoPlayerServiceHandler?.clear();
   }
