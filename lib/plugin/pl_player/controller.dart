@@ -345,6 +345,7 @@ class PlPlayerController with BlockConfigMixin {
   // settings
   late final showFSActionItem = Pref.showFSActionItem;
   late final enableShrinkVideoSize = Pref.enableShrinkVideoSize;
+  double get pinchGestureAngleThreshold => Pref.pinchGestureAngleThreshold;
   late final darkVideoPage = Pref.darkVideoPage;
   late final enableSlideVolumeBrightness = Pref.enableSlideVolumeBrightness;
   bool get volumeBrightnessGestureProgressBar =>

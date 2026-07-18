@@ -28,12 +28,14 @@ class MouseInteractiveViewer extends StatefulWidget {
     this.onPointerPanZoomEnd,
     required this.onPointerDown,
     required this.onPanEnd,
+    required this.onPanCancel,
     required this.onPanStart,
     required this.onPanUpdate,
     required this.onScaleUpdate,
     this.panEnabled = true,
     this.scaleEnabled = true,
     this.scaleFactor = kDefaultMouseScrollToScaleFactor,
+    this.pinchGestureAngleThreshold = 90.0,
     required this.transformationController,
     this.alignment,
     this.trackpadScrollCausesScale = false,
@@ -43,7 +45,11 @@ class MouseInteractiveViewer extends StatefulWidget {
   }) : assert(minScale > 0),
        assert(interactionEndFrictionCoefficient > 0),
        assert(maxScale > 0),
-       assert(maxScale >= minScale);
+       assert(maxScale >= minScale),
+       assert(
+         pinchGestureAngleThreshold >= 0 &&
+             pinchGestureAngleThreshold <= 90,
+       );
 
   final Alignment? alignment;
   final Clip clipBehavior;
@@ -55,6 +61,7 @@ class MouseInteractiveViewer extends StatefulWidget {
   final bool scaleEnabled;
   final bool trackpadScrollCausesScale;
   final double scaleFactor;
+  final double pinchGestureAngleThreshold;
   final double maxScale;
   final double minScale;
   final double interactionEndFrictionCoefficient;
@@ -63,6 +70,7 @@ class MouseInteractiveViewer extends StatefulWidget {
   final PointerPanZoomEndEventListener? onPointerPanZoomEnd;
   final PointerDownEventListener onPointerDown;
   final GestureScaleEndCallback onPanEnd;
+  final VoidCallback onPanCancel;
   final GestureScaleStartCallback onPanStart;
   final GestureScaleUpdateCallback onPanUpdate;
   final ValueChanged<double> onScaleUpdate;
@@ -264,10 +272,14 @@ class _MouseInteractiveViewerState extends State<MouseInteractiveViewer>
 
   _GestureType _getGestureType(ScaleUpdateDetails details) {
     final double scale = !widget.scaleEnabled ? 1.0 : details.scale;
-    final double rotation = !_rotateEnabled ? 0.0 : details.rotation;
-    if ((scale - 1).abs() > rotation.abs()) {
+    final double scaleDelta = (scale - 1).abs();
+    final double rotationDelta = details.rotation.abs();
+    final double pinchAngle =
+        math.atan2(rotationDelta, scaleDelta) * 180.0 / math.pi;
+    if (scaleDelta > 0 &&
+        pinchAngle <= widget.pinchGestureAngleThreshold) {
       return _GestureType.scale;
-    } else if (rotation != 0.0) {
+    } else if (_rotateEnabled && rotationDelta != 0.0) {
       return _GestureType.rotate;
     } else {
       return _GestureType.pan;
@@ -310,8 +322,21 @@ class _MouseInteractiveViewerState extends State<MouseInteractiveViewer>
   // handled with GestureDetector's scale gesture.
   void _onScaleUpdate(ScaleUpdateDetails details) {
     if (_isSinglePointer) {
-      widget.onPanUpdate(details);
-      return;
+      if (details.pointerCount == 1) {
+        widget.onPanUpdate(details);
+        return;
+      }
+
+      // The recognizer may be accepted while only the first finger is down.
+      // Promote the sequence when another finger joins instead of keeping it
+      // locked to single-finger brightness/volume/pan handling.
+      _isSinglePointer = false;
+      widget.onPanCancel();
+      _gestureType = null;
+      _currentAxis = null;
+      _scaleStart = _transformer.value.getMaxScaleOnAxis();
+      _referenceFocalPoint = _transformer.toScene(details.localFocalPoint);
+      _rotationStart = _currentRotation;
     }
 
     final double scale = _transformer.value.getMaxScaleOnAxis();

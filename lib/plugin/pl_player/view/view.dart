@@ -1139,6 +1139,23 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     _gestureType = null;
   }
 
+  void _onPanCancel() {
+    if (_gestureType == .horizontal) {
+      plPlayerController
+        ..onSeekEnd()
+        ..seekToPos = null
+        ..position.value =
+            plPlayerController
+                .videoPlayerController
+                ?.state
+                .position
+                .inSeconds ??
+            0;
+    }
+    _initialFocalPoint = null;
+    _gestureType = null;
+  }
+
   void onDoubleTapDownMobile(TapDownDetails details) {
     if (plPlayerController.isLive || plPlayerController.controlsLock.value) {
       return;
@@ -2057,7 +2074,10 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
           onPanStart: _onPanStart,
           onPanUpdate: _onPanUpdate,
           onPanEnd: _onPanEnd,
+          onPanCancel: _onPanCancel,
           onScaleUpdate: _onScaleUpdate,
+          pinchGestureAngleThreshold:
+              plPlayerController.pinchGestureAngleThreshold,
           scaleGestureRecognizer: _scaleGestureRecognizer,
           panEnabled: false,
           minScale: plPlayerController.enableShrinkVideoSize ? 0.75 : 1,

@@ -108,6 +108,13 @@ List<SettingsModel> get playSettings => [
     setKey: SettingBoxKey.enableSlideFS,
     defaultVal: true,
   ),
+  NormalModel(
+    title: '双指缩放识别角度',
+    getSubtitle: () =>
+        '当前：${Pref.pinchGestureAngleThreshold.toStringAsFixed(0)}°；越大越容易触发',
+    leading: const Icon(Icons.pinch),
+    onTap: _showPinchGestureAngleThresholdDialog,
+  ),
   if (PlatformUtils.isMobile)
     NormalModel(
       title: '播放器音量',
@@ -387,6 +394,31 @@ Future<void> _showLongPressSpeedTriggerDelayDialog(
     await GStorage.setting.put(
       SettingBoxKey.longPressSpeedTriggerDelay,
       res.toInt(),
+    );
+    setState();
+  }
+}
+
+Future<void> _showPinchGestureAngleThresholdDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final res = await showDialog<double>(
+    context: context,
+    builder: (context) => SliderDialog(
+      title: const Text('双指缩放识别角度'),
+      value: Pref.pinchGestureAngleThreshold,
+      min: 15,
+      max: 90,
+      divisions: 15,
+      precise: 0,
+      suffix: '°',
+    ),
+  );
+  if (res != null) {
+    await GStorage.setting.put(
+      SettingBoxKey.pinchGestureAngleThreshold,
+      res,
     );
     setState();
   }

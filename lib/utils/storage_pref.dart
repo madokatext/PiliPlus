@@ -699,6 +699,13 @@ abstract final class Pref {
   static bool get enableShrinkVideoSize =>
       _setting.get(SettingBoxKey.enableShrinkVideoSize, defaultValue: true);
 
+  static double get pinchGestureAngleThreshold => _getClampedDouble(
+    SettingBoxKey.pinchGestureAngleThreshold,
+    90.0,
+    15.0,
+    90.0,
+  );
+
   static bool get showDynActionBar =>
       _setting.get(SettingBoxKey.showDynActionBar, defaultValue: true);
 

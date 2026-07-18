@@ -136,6 +136,7 @@ abstract final class SettingBoxKey {
       showDynActionBar = 'showDynActionBar',
       darkVideoPage = 'darkVideoPage',
       enableSlideVolumeBrightness = 'enableSlideVolumeBrightness',
+      pinchGestureAngleThreshold = 'pinchGestureAngleThreshold',
       volumeGestureAngleThreshold = 'volumeGestureAngleThreshold',
       brightnessGestureAngleThreshold = 'brightnessGestureAngleThreshold',
       volumeGestureSpeed = 'volumeGestureSpeed',
