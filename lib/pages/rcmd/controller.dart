@@ -25,7 +25,6 @@ class RcmdController
 
   int? lastRefreshAt;
   late bool savedRcmdTip = Pref.savedRcmdTip;
-  bool _restoredFromCache = false;
   bool _isPullRefresh = false;
 
   @override
@@ -80,12 +79,7 @@ class RcmdController
   @override
   Future<void> onRefresh() async {
     _isPullRefresh = true;
-    // The first request after restoring cache must continue from the saved
-    // fresh index. Requesting index 0 again can return the cached batch itself.
-    if (!_restoredFromCache) {
-      page = 0;
-    }
-    _restoredFromCache = false;
+    page = 0;
     isEnd = false;
     try {
       await queryData();
@@ -161,7 +155,6 @@ class RcmdController
           ? marker
           : null;
       loadingState.value = Success(items);
-      _restoredFromCache = true;
       return true;
     } catch (_) {
       unawaited(GStorage.localCache.delete(LocalCacheKey.homeRcmdCache));
