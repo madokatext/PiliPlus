@@ -1,0 +1,26 @@
+name: Apply pending player settings
+
+on:
+  push:
+    branches:
+      - mod
+    paths:
+      - .github/workflows/apply_pending_player_settings.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: mod
+          fetch-depth: 0
+
+      - name: Apply source changes
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import
