@@ -954,14 +954,22 @@ class HeaderControlState extends State<HeaderControl>
 
                         SmartDialog.showToast("画质已变为：${newQa.desc}");
 
-                        // update
+                        // 保存画质设置
                         if (!plPlayerController.tempPlayerConf) {
-                          setting.put(
-                            await ConnectivityUtils.isWiFi
+                          final String settingKey;
+                        
+                          if (videoDetailCtr.usingInitialHalfScreenQuality) {
+                            // 首次半屏阶段：只更新半屏默认画质
+                            settingKey = SettingBoxKey.defaultVideoQaHalfScreen;
+                          } else {
+                            // 已直接全屏起播，或本次播放已经进入过全屏：
+                            // 继续沿用项目原来的默认画质设置
+                            settingKey = await ConnectivityUtils.isWiFi
                                 ? SettingBoxKey.defaultVideoQa
-                                : SettingBoxKey.defaultVideoQaCellular,
-                            quality,
-                          );
+                                : SettingBoxKey.defaultVideoQaCellular;
+                          }
+                        
+                          await setting.put(settingKey, quality);
                         }
                       },
                       // 可能包含会员解锁画质
