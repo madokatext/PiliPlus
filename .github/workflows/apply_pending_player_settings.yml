@@ -46,8 +46,8 @@ jobs:
               for line in block.splitlines()
           )
           script = script.replace(
-              "              if count != 2:\n                  raise RuntimeError(f'controller lifecycle: expected 2 matches, found {count}')",
-              "              if count != 3:\n                  raise RuntimeError(f'controller lifecycle: expected 3 matches, found {count}')",
+              "if count != 2:\n                  raise RuntimeError(f'controller lifecycle: expected 2 matches, found {count}')",
+              "if count != 3:\n                  raise RuntimeError(f'controller lifecycle: expected 3 matches, found {count}')",
               1,
           )
           Path('/tmp/apply_pending_player_settings.py').write_text(script)
