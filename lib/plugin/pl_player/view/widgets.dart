@@ -126,18 +126,18 @@ Widget buildSeekPreviewWidget(
           ),
         );
 
+        var centerX = maxWidth / 2;
         final globalX = plPlayerController.previewGlobalX.value;
-        if (!plPlayerController.seekPreviewFollowSlider || globalX == null) {
-          return Align(alignment: Alignment.center, child: preview);
-        }
-
-        final localX = globalToLocalX(globalX);
-        if (localX == null) {
-          return Align(alignment: Alignment.center, child: preview);
+        if (plPlayerController.seekPreviewFollowSlider && globalX != null) {
+          centerX = globalToLocalX(globalX) ?? centerX;
         }
         return CustomSingleChildLayout(
           delegate: _SeekPreviewLayoutDelegate(
-            centerX: localX,
+            centerX: centerX,
+            centerY:
+                maxHeight *
+                plPlayerController.seekPreviewVerticalPosition /
+                100,
             margin: horizontalMargin,
           ),
           child: preview,
@@ -153,10 +153,12 @@ Widget buildSeekPreviewWidget(
 class _SeekPreviewLayoutDelegate extends SingleChildLayoutDelegate {
   const _SeekPreviewLayoutDelegate({
     required this.centerX,
+    required this.centerY,
     required this.margin,
   });
 
   final double centerX;
+  final double centerY;
   final double margin;
 
   @override
@@ -180,13 +182,20 @@ class _SeekPreviewLayoutDelegate extends SingleChildLayoutDelegate {
     final left = (centerX - childSize.width / 2)
         .clamp(minLeft, maxLeft)
         .toDouble();
-    final top = math.max(0.0, (size.height - childSize.height) / 2);
+    final verticalSpace = math.max(0.0, size.height - childSize.height);
+    final minTop = math.min(margin, verticalSpace / 2);
+    final maxTop = math.max(minTop, verticalSpace - minTop);
+    final top = (centerY - childSize.height / 2)
+        .clamp(minTop, maxTop)
+        .toDouble();
     return Offset(left, top);
   }
 
   @override
   bool shouldRelayout(_SeekPreviewLayoutDelegate oldDelegate) =>
-      centerX != oldDelegate.centerX || margin != oldDelegate.margin;
+      centerX != oldDelegate.centerX ||
+      centerY != oldDelegate.centerY ||
+      margin != oldDelegate.margin;
 }
 
 class VideoShotImage extends StatefulWidget {

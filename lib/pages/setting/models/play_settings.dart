@@ -200,6 +200,13 @@ List<SettingsModel> get playSettings => [
     leading: const Icon(Icons.photo_size_select_large),
     onTap: _showSeekPreviewScaleDialog,
   ),
+  NormalModel(
+    title: '进度预览窗垂直位置',
+    getSubtitle: () =>
+        '距播放器顶部：${Pref.seekPreviewVerticalPosition.toStringAsFixed(0)}%',
+    leading: const Icon(Icons.vertical_align_center_outlined),
+    onTap: _showSeekPreviewVerticalPositionDialog,
+  ),
   const SwitchModel(
     title: '非全屏拖动进度条显示预览窗',
     subtitle: '关闭后，全屏拖动进度条仍显示预览窗',
@@ -403,6 +410,31 @@ Future<void> _showSeekPreviewScaleDialog(
   );
   if (res != null) {
     await GStorage.setting.put(SettingBoxKey.seekPreviewScale, res);
+    setState();
+  }
+}
+
+Future<void> _showSeekPreviewVerticalPositionDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final res = await showDialog<double>(
+    context: context,
+    builder: (context) => SliderDialog(
+      title: const Text('进度预览窗垂直位置'),
+      value: Pref.seekPreviewVerticalPosition,
+      min: 10,
+      max: 90,
+      divisions: 80,
+      precise: 0,
+      suffix: '%',
+    ),
+  );
+  if (res != null) {
+    await GStorage.setting.put(
+      SettingBoxKey.seekPreviewVerticalPosition,
+      res,
+    );
     setState();
   }
 }

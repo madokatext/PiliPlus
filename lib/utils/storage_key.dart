@@ -117,6 +117,7 @@ abstract final class SettingBoxKey {
       playerControlBarGradientExtent = 'playerControlBarGradientExtent',
       seekPreviewFollowSlider = 'seekPreviewFollowSlider',
       seekPreviewScale = 'seekPreviewScale',
+      seekPreviewVerticalPosition = 'seekPreviewVerticalPosition',
       showSeekPreviewInNonFullscreen = 'showSeekPreviewInNonFullscreen',
       showDmChart = 'showDmChart',
       enableCommAntifraud = 'enableCommAntifraud',

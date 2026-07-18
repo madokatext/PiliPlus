@@ -41,15 +41,25 @@ class MineController extends CommonDataController<FavFolderData, FavFolderData>
   static RxBool anonymity =
       (Accounts.account.isNotEmpty && !Accounts.heartbeat.isLogin).obs;
 
-  late final list = <({IconData icon, String title, VoidCallback onTap})>[
+  late final list =
+      <
+        ({
+          IconData icon,
+          String title,
+          bool usePrimaryColor,
+          VoidCallback onTap,
+        })
+      >[
     (
       icon: CustomIcons.folderDownloadOutline,
       title: '离线缓存',
+      usePrimaryColor: true,
       onTap: () => Get.toNamed('/download'),
     ),
     (
       icon: CustomIcons.history,
       title: '观看记录',
+      usePrimaryColor: false,
       onTap: () {
         if (isLogin) {
           Get.toNamed('/history');
@@ -59,6 +69,7 @@ class MineController extends CommonDataController<FavFolderData, FavFolderData>
     (
       icon: CustomIcons.subscriptions_outlined,
       title: '我的订阅',
+      usePrimaryColor: false,
       onTap: () {
         if (isLogin) {
           Get.toNamed('/subscription');
@@ -68,6 +79,7 @@ class MineController extends CommonDataController<FavFolderData, FavFolderData>
     (
       icon: CustomIcons.watch_later_outlined,
       title: '稍后再看',
+      usePrimaryColor: false,
       onTap: () {
         if (isLogin) {
           Get.toNamed('/later');

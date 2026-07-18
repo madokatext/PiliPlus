@@ -215,18 +215,14 @@ class ViewPointSegmentProgressBar extends StatelessWidget {
                       style: textStyle,
                       strutStyle: strutStyle,
                     )
-                  : OverflowBox(
-                      alignment: Alignment.centerLeft,
-                      minWidth: 0,
-                      maxWidth: double.infinity,
-                      child: Text(
-                        title,
-                        maxLines: 1,
-                        softWrap: false,
-                        textAlign: TextAlign.left,
-                        style: textStyle,
-                        strutStyle: strutStyle,
-                      ),
+                  : Text(
+                      title,
+                      maxLines: 1,
+                      softWrap: false,
+                      overflow: TextOverflow.clip,
+                      textAlign: TextAlign.left,
+                      style: textStyle,
+                      strutStyle: strutStyle,
                     ),
             ),
           ),
