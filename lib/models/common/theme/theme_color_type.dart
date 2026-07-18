@@ -18,6 +18,30 @@ typedef ThemeSeedColors = ({
 });
 
 enum ThemeToneRole {
+  primaryAccent(
+    '主强调色',
+    '开关、主按钮、主进度条等',
+  ),
+  primaryAccentContent(
+    '主强调色内容',
+    '主强调色上的文字和图标',
+  ),
+  secondaryAccent(
+    '次强调色',
+    '“我的”页快捷入口、次级操作等',
+  ),
+  secondaryAccentContent(
+    '次强调色内容',
+    '次强调色上的文字和图标',
+  ),
+  tertiaryAccent(
+    '第三强调色',
+    '第三层级强调元素',
+  ),
+  tertiaryAccentContent(
+    '第三强调色内容',
+    '第三强调色上的文字和图标',
+  ),
   page('页面背景', 'Scaffold、页面底色'),
   card('卡片背景', '普通卡片、列表块'),
   elevated('浮层背景', '弹窗、菜单、较高层容器'),

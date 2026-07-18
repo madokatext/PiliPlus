@@ -78,6 +78,53 @@ extension ThemeToneExt on ColorScheme {
     }
 
     return copyWith(
+      // 直接强调色。Switch 选中轨道等组件通常使用 primary。
+      primary: tone(primary, ThemeToneRole.primaryAccent),
+      onPrimary: tone(onPrimary, ThemeToneRole.primaryAccentContent),
+      inversePrimary: tone(inversePrimary, ThemeToneRole.primaryAccent),
+      primaryFixed: tone(primaryFixed, ThemeToneRole.primaryAccent),
+      primaryFixedDim: tone(primaryFixedDim, ThemeToneRole.primaryAccent),
+      onPrimaryFixed: tone(
+        onPrimaryFixed,
+        ThemeToneRole.primaryAccentContent,
+      ),
+      onPrimaryFixedVariant: tone(
+        onPrimaryFixedVariant,
+        ThemeToneRole.primaryAccentContent,
+      ),
+      // “我的”页快捷入口等当前使用 secondary。
+      secondary: tone(secondary, ThemeToneRole.secondaryAccent),
+      onSecondary: tone(onSecondary, ThemeToneRole.secondaryAccentContent),
+      secondaryFixed: tone(secondaryFixed, ThemeToneRole.secondaryAccent),
+      secondaryFixedDim: tone(
+        secondaryFixedDim,
+        ThemeToneRole.secondaryAccent,
+      ),
+      onSecondaryFixed: tone(
+        onSecondaryFixed,
+        ThemeToneRole.secondaryAccentContent,
+      ),
+      onSecondaryFixedVariant: tone(
+        onSecondaryFixedVariant,
+        ThemeToneRole.secondaryAccentContent,
+      ),
+      tertiary: tone(tertiary, ThemeToneRole.tertiaryAccent),
+      onTertiary: tone(onTertiary, ThemeToneRole.tertiaryAccentContent),
+      tertiaryFixed: tone(tertiaryFixed, ThemeToneRole.tertiaryAccent),
+      tertiaryFixedDim: tone(
+        tertiaryFixedDim,
+        ThemeToneRole.tertiaryAccent,
+      ),
+      onTertiaryFixed: tone(
+        onTertiaryFixed,
+        ThemeToneRole.tertiaryAccentContent,
+      ),
+      onTertiaryFixedVariant: tone(
+        onTertiaryFixedVariant,
+        ThemeToneRole.tertiaryAccentContent,
+      ),
+      // surfaceTint 也是由 primary 派生的直接强调色。
+      surfaceTint: tone(surfaceTint, ThemeToneRole.primaryAccent),
       surface: tone(surface, ThemeToneRole.page),
       surfaceDim: tone(surfaceDim, ThemeToneRole.page),
       surfaceBright: tone(surfaceBright, ThemeToneRole.page),

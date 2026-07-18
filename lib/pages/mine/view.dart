@@ -85,7 +85,7 @@ class _MediaPageState extends CommonPageState<MinePage>
                   physics: const AlwaysScrollableScrollPhysics(),
                   children: [
                     _buildUserInfo(theme, secondary),
-                    _buildActions(theme.colorScheme),
+                    _buildActions(secondary),
                     Obx(
                       () => controller.loadingState.value is Loading
                           ? const SizedBox.shrink()
@@ -101,7 +101,7 @@ class _MediaPageState extends CommonPageState<MinePage>
     );
   }
 
-  Widget _buildActions(ColorScheme colorScheme) {
+  Widget _buildActions(Color primary) {
     return Row(
       mainAxisAlignment: .spaceEvenly,
       children: controller.list
@@ -119,12 +119,7 @@ class _MediaPageState extends CommonPageState<MinePage>
                       mainAxisSize: .min,
                       mainAxisAlignment: .center,
                       children: [
-                        Icon(
-                          e.icon,
-                          color: e.usePrimaryColor
-                              ? colorScheme.primary
-                              : colorScheme.secondary,
-                        ),
+                        Icon(e.icon, color: primary),
                         Text(
                           e.title,
                           style: const TextStyle(fontSize: 13),

@@ -136,34 +136,10 @@ abstract final class ThemeUtils {
       cupertinoOverrideTheme: CupertinoThemeData(
         selectionHandleColor: colorScheme.primary,
       ),
-      switchTheme: SwitchThemeData(
+      switchTheme: const SwitchThemeData(
         padding: .zero,
         materialTapTargetSize: .shrinkWrap,
-        thumbColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.disabled)) {
-            return colorScheme.onSurface.withValues(alpha: 0.38);
-          }
-          return states.contains(WidgetState.selected)
-              ? colorScheme.onPrimary
-              : colorScheme.outline;
-        }),
-        trackColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.disabled)) {
-            return colorScheme.onSurface.withValues(alpha: 0.12);
-          }
-          return states.contains(WidgetState.selected)
-              ? colorScheme.primary
-              : colorScheme.surfaceContainerHighest;
-        }),
-        trackOutlineColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.disabled)) {
-            return colorScheme.onSurface.withValues(alpha: 0.12);
-          }
-          return states.contains(WidgetState.selected)
-              ? Colors.transparent
-              : colorScheme.outline;
-        }),
-        thumbIcon: const WidgetStateProperty<Icon?>.fromMap(
+        thumbIcon: WidgetStateProperty<Icon?>.fromMap(
           <WidgetStatesConstraint, Icon?>{
             WidgetState.selected: Icon(Icons.done),
             WidgetState.any: null,
