@@ -623,7 +623,8 @@ class ReplyItemGrpc extends StatelessWidget {
                     child: Text.rich(
                       style: TextStyle(
                         height: 1.6 * Pref.replyLineSpacingScale,
-                        fontSize: Pref.replyFontSize,
+                        fontSize:
+                            Pref.replyFontSize * Pref.collapsedReplyFontScale,
                         color: colorScheme.onSurface.withValues(alpha: 0.85),
                       ),
                       overflow: TextOverflow.ellipsis,

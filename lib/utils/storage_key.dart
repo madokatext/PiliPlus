@@ -248,6 +248,7 @@ abstract final class SettingBoxKey {
       customThemeTonePrefix = 'customThemeTone',
       displayMode = 'displayMode',
       replyFontSize = 'replyFontSize',
+      collapsedReplyFontScale = 'collapsedReplyFontScale',
       replyLineSpacingScale = 'replyLineSpacingScale',
       smallCardWidth = 'smallCardWidth',
       recommendCardWidth = 'recommendCardWidth',

@@ -374,6 +374,13 @@ List<SettingsModel> get styleSettings => [
     onTap: _showReplyFontSizeDialog,
   ),
   NormalModel(
+    title: '折叠回复字号比例',
+    getSubtitle: () =>
+        '相对主评论：${Pref.collapsedReplyFontScale.toStringAsFixed(2)}倍',
+    leading: const Icon(Icons.compare_arrows),
+    onTap: _showCollapsedReplyFontScaleDialog,
+  ),
+  NormalModel(
     title: '评论区评论行距',
     getSubtitle: () =>
         '当前：${Pref.replyLineSpacingScale.toStringAsFixed(2)}倍',
@@ -709,6 +716,29 @@ Future<void> _showReplyFontSizeDialog(
   );
   if (res != null) {
     await GStorage.setting.put(SettingBoxKey.replyFontSize, res);
+    Get.appUpdate();
+    setState();
+  }
+}
+
+Future<void> _showCollapsedReplyFontScaleDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final res = await showDialog<double>(
+    context: context,
+    builder: (context) => SliderDialog(
+      title: const Text('折叠回复字号比例'),
+      value: Pref.collapsedReplyFontScale,
+      min: 0.7,
+      max: 1.3,
+      divisions: 12,
+      suffix: '倍',
+      precise: 2,
+    ),
+  );
+  if (res != null) {
+    await GStorage.setting.put(SettingBoxKey.collapsedReplyFontScale, res);
     Get.appUpdate();
     setState();
   }

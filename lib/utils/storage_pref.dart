@@ -203,6 +203,13 @@ abstract final class Pref {
     22.0,
   );
 
+  static double get collapsedReplyFontScale => _getClampedDouble(
+    SettingBoxKey.collapsedReplyFontScale,
+    0.9,
+    0.7,
+    1.3,
+  );
+
   static double get replyLineSpacingScale => _getClampedDouble(
     SettingBoxKey.replyLineSpacingScale,
     1.0,
