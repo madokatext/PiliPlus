@@ -110,6 +110,8 @@ class ZanButtonGrpc extends StatelessWidget {
     final primary = theme.colorScheme.primary;
     final ButtonStyle style = TextButton.styleFrom(
       padding: EdgeInsets.zero,
+      minimumSize: Size.zero,
+      alignment: Alignment.centerLeft,
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       visualDensity: VisualDensity.compact,
     );
@@ -129,6 +131,7 @@ class ZanButtonGrpc extends StatelessWidget {
             ),
             child: Row(
               spacing: 4,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   isLike

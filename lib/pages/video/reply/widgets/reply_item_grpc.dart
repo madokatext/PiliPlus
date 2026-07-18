@@ -396,7 +396,10 @@ class ReplyItemGrpc extends StatelessWidget {
         ],
         if (replyLevel != 0) ...[
           const SizedBox(height: 4),
-          buttonAction(context, colorScheme, replyControl),
+          Padding(
+            padding: padding,
+            child: buttonAction(context, colorScheme, replyControl),
+          ),
         ],
         if (replyLevel == 1 && replyItem.count > Int64.ZERO) ...[
           Padding(

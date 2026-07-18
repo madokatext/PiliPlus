@@ -38,6 +38,7 @@ import 'package:PiliPlus/pages/video/widgets/header_mixin.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/data_source.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_repeat.dart';
+import 'package:PiliPlus/plugin/pl_player/widgets/app_bar_ani.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/display_controls.dart';
 import 'package:PiliPlus/services/shutdown_timer_service.dart'
     show shutdownTimerService;
@@ -1698,7 +1699,11 @@ class HeaderControlState extends State<HeaderControl>
   late final isFileSource = videoDetailCtr.isFileSource;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => PlayerControlBarBuilder(
+    builder: _buildControl,
+  );
+
+  Widget _buildControl(BuildContext context) {
     final isFullScreen = this.isFullScreen;
     final isFSOrPip = isFullScreen || plPlayerController.isDesktopPip;
     final showFSActionItem =

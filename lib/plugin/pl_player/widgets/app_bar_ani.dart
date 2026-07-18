@@ -1,5 +1,24 @@
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
+import 'package:PiliPlus/utils/storage.dart';
+import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:flutter/material.dart';
+
+class PlayerControlBarBuilder extends StatelessWidget {
+  const PlayerControlBarBuilder({
+    super.key,
+    required this.builder,
+  });
+
+  final WidgetBuilder builder;
+
+  @override
+  Widget build(BuildContext context) => StreamBuilder(
+    stream: GStorage.setting.watch(
+      key: SettingBoxKey.playerControlBarThicknessScale,
+    ),
+    builder: (context, _) => builder(context),
+  );
+}
 
 class AppBarAni extends StatelessWidget {
   const AppBarAni({

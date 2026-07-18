@@ -204,7 +204,10 @@ class VideoCardV extends StatelessWidget {
                     size: .small,
                     type: .secondary,
                   ),
-                _buildUpIcon(theme),
+                Padding(
+                  padding: const EdgeInsets.only(right: 2),
+                  child: _buildUpIcon(theme),
+                ),
                 Expanded(
                   flex: 1,
                   child: Text(

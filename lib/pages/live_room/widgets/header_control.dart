@@ -10,6 +10,7 @@ import 'package:PiliPlus/pages/setting/models/play_settings.dart'
     show showPlayerVolumeDialog;
 import 'package:PiliPlus/pages/video/widgets/header_control.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
+import 'package:PiliPlus/plugin/pl_player/widgets/app_bar_ani.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/common_btn.dart';
 import 'package:PiliPlus/services/shutdown_timer_service.dart'
     show shutdownTimerService;
@@ -67,7 +68,11 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
   bool get isPortrait => widget.isPortrait;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => PlayerControlBarBuilder(
+    builder: _buildControl,
+  );
+
+  Widget _buildControl(BuildContext context) {
     final isFullScreen = this.isFullScreen;
     final thicknessScale =
         plPlayerController.playerControlBarThicknessScale;
