@@ -4,6 +4,7 @@ import 'package:PiliPlus/models_new/video/video_ai_conclusion/model_result.dart'
 import 'package:PiliPlus/pages/common/slide/common_slide_page.dart';
 import 'package:PiliPlus/pages/video/controller.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
+import 'package:PiliPlus/utils/utils.dart';
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -19,6 +20,20 @@ class AiConclusionPanel extends CommonSlidePage {
   @override
   State<AiConclusionPanel> createState() => _AiDetailState();
 
+  static String buildCopyText(AiConclusionResult res) {
+    final subtitleParts = res.webSubtitleParts.toList(growable: false);
+    if (subtitleParts.isNotEmpty) {
+      return subtitleParts
+          .map(
+            (item) =>
+                '${DurationUtils.formatDuration(item.startTimestamp)} '
+                '${item.content!.trim()}',
+          )
+          .join('\n');
+    }
+    return res.fallbackSubtitle?.trim() ?? '';
+  }
+
   static Widget buildContent(
     BuildContext context,
     ThemeData theme,
@@ -28,6 +43,7 @@ class AiConclusionPanel extends CommonSlidePage {
   }) {
     final subtitleParts = res.webSubtitleParts.toList(growable: false);
     final fallbackSubtitle = res.fallbackSubtitle?.trim();
+    final copyText = buildCopyText(res);
     final bottomPadding =
         !tap ? 0.0 : MediaQuery.viewPaddingOf(context).bottom + 100;
 
@@ -36,6 +52,23 @@ class AiConclusionPanel extends CommonSlidePage {
       shrinkWrap: !tap,
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
+        if (copyText.isNotEmpty)
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            sliver: SliverToBoxAdapter(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: () => Utils.copyText(
+                    copyText,
+                    toastText: '已复制全部内容',
+                  ),
+                  icon: const Icon(Icons.copy_all_outlined, size: 18),
+                  label: const Text('复制全部'),
+                ),
+              ),
+            ),
+          ),
         if (subtitleParts.isNotEmpty)
           SliverPadding(
             padding: EdgeInsets.only(

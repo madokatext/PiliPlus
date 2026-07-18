@@ -243,6 +243,78 @@ List<SettingsModel> get extraSettings => [
     leading: const Icon(Icons.pan_tool_alt_outlined),
   ),
   NormalModel(
+    title: '音量手势识别角度',
+    getSubtitle: () =>
+        '当前: ${Pref.volumeGestureAngleThreshold.toStringAsFixed(1)}°（相对竖直方向，越大越容易识别）',
+    leading: const Icon(Icons.volume_up_outlined),
+    onTap: (context, setState) => _showGestureSliderDialog(
+      context,
+      setState,
+      title: '音量手势识别角度',
+      key: SettingBoxKey.volumeGestureAngleThreshold,
+      value: Pref.volumeGestureAngleThreshold,
+      min: 5.0,
+      max: 60.0,
+      divisions: 110,
+      precise: 1,
+      suffix: '°',
+    ),
+  ),
+  NormalModel(
+    title: '亮度手势识别角度',
+    getSubtitle: () =>
+        '当前: ${Pref.brightnessGestureAngleThreshold.toStringAsFixed(1)}°（相对竖直方向，越大越容易识别）',
+    leading: const Icon(Icons.brightness_6_outlined),
+    onTap: (context, setState) => _showGestureSliderDialog(
+      context,
+      setState,
+      title: '亮度手势识别角度',
+      key: SettingBoxKey.brightnessGestureAngleThreshold,
+      value: Pref.brightnessGestureAngleThreshold,
+      min: 5.0,
+      max: 60.0,
+      divisions: 110,
+      precise: 1,
+      suffix: '°',
+    ),
+  ),
+  NormalModel(
+    title: '音量手势调节速度',
+    getSubtitle: () =>
+        '当前: ${Pref.volumeGestureSpeed.toStringAsFixed(2)}×（越大调节越快）',
+    leading: const Icon(Icons.speed_outlined),
+    onTap: (context, setState) => _showGestureSliderDialog(
+      context,
+      setState,
+      title: '音量手势调节速度',
+      key: SettingBoxKey.volumeGestureSpeed,
+      value: Pref.volumeGestureSpeed,
+      min: 0.25,
+      max: 4.0,
+      divisions: 15,
+      precise: 2,
+      suffix: '×',
+    ),
+  ),
+  NormalModel(
+    title: '亮度手势调节速度',
+    getSubtitle: () =>
+        '当前: ${Pref.brightnessGestureSpeed.toStringAsFixed(2)}×（越大调节越快）',
+    leading: const Icon(Icons.speed_outlined),
+    onTap: (context, setState) => _showGestureSliderDialog(
+      context,
+      setState,
+      title: '亮度手势调节速度',
+      key: SettingBoxKey.brightnessGestureSpeed,
+      value: Pref.brightnessGestureSpeed,
+      min: 0.25,
+      max: 4.0,
+      divisions: 15,
+      precise: 2,
+      suffix: '×',
+    ),
+  ),
+  NormalModel(
     title: '刷新滑动距离',
     leading: const Icon(Icons.refresh),
     getSubtitle: () => '当前滑动距离: ${Pref.refreshDragPercentage}x',
@@ -914,6 +986,36 @@ void _showTouchSlopDialog(BuildContext context, VoidCallback setState) {
       ],
     ),
   );
+}
+
+Future<void> _showGestureSliderDialog(
+  BuildContext context,
+  VoidCallback setState, {
+  required String title,
+  required String key,
+  required double value,
+  required double min,
+  required double max,
+  required int divisions,
+  required int precise,
+  required String suffix,
+}) async {
+  final res = await showDialog<double>(
+    context: context,
+    builder: (context) => SliderDialog(
+      title: Text(title),
+      value: value,
+      min: min,
+      max: max,
+      divisions: divisions,
+      precise: precise,
+      suffix: suffix,
+    ),
+  );
+  if (res != null) {
+    await GStorage.setting.put(key, res);
+    setState();
+  }
 }
 
 Future<void> _showRefreshDragDialog(

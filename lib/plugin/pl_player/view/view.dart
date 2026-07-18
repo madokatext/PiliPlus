@@ -148,6 +148,9 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
 
   GestureType? _gestureType;
   Offset? _initialFocalPoint;
+  double _initialBrightness = 0.0;
+  double _initialVolume = 0.0;
+  double? _panZoomInitialVolume;
 
   bool _pauseDueToPauseUponEnteringBackgroundMode = false;
 
@@ -955,6 +958,8 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
   void _onPanStart(ScaleStartDetails details) {
     _gestureType = null;
     _initialFocalPoint = details.localFocalPoint;
+    _initialBrightness = _brightnessValue.value;
+    _initialVolume = plPlayerController.volume.value;
   }
 
   void _onScaleUpdate(double scale) {
@@ -1006,13 +1011,10 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       if (dx > 3 * dy) {
         _onHorizontalDragStart();
         _gestureType = .horizontal;
-      } else if (dy > 3 * dx) {
-        if (!plPlayerController.enableSlideVolumeBrightness &&
-            !plPlayerController.enableSlideFS) {
-          return;
-        }
-
-        final double tapPosition = details.localFocalPoint.dx;
+      } else {
+        final angleFromVertical =
+            math.atan2(dx, dy) * 180.0 / math.pi;
+        final double tapPosition = _initialFocalPoint!.dx;
         final double sectionWidth = maxWidth / 3;
         if (tapPosition < sectionWidth) {
           if (!plPlayerController.enableSlideVolumeBrightness) {
@@ -1020,22 +1022,28 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
           }
           // 左边区域
           if (PlatformUtils.isDesktop) {
-            _gestureType = .right;
-          } else {
+            if (angleFromVertical <=
+                plPlayerController.volumeGestureAngleThreshold) {
+              _gestureType = .right;
+            }
+          } else if (angleFromVertical <=
+              plPlayerController.brightnessGestureAngleThreshold) {
             _gestureType = .left;
           }
         } else if (tapPosition < sectionWidth * 2) {
-          if (!plPlayerController.enableSlideFS) {
-            return;
+          if (plPlayerController.enableSlideFS && dy > 3 * dx) {
+            // 中间区域仍沿用原来的 3:1 全屏手势阈值。
+            _gestureType = .center;
           }
-          // 全屏
-          _gestureType = .center;
         } else {
           if (!plPlayerController.enableSlideVolumeBrightness) {
             return;
           }
           // 右边区域
-          _gestureType = .right;
+          if (angleFromVertical <=
+              plPlayerController.volumeGestureAngleThreshold) {
+            _gestureType = .right;
+          }
         }
       }
       return;
@@ -1087,8 +1095,14 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     } else if (_gestureType == .left) {
       // 左边区域 👈
       final double level = maxHeight * 3;
-      final double brightness = (_brightnessValue.value - delta.dy / level)
-          .clamp(0.0, 1.0);
+      final cumulativeDy =
+          details.localFocalPoint.dy - _initialFocalPoint!.dy;
+      final double brightness = (
+        _initialBrightness -
+            cumulativeDy /
+                level *
+                plPlayerController.brightnessGestureSpeed
+      ).clamp(0.0, 1.0);
       setBrightness(brightness);
     } else if (_gestureType == .center) {
       // 全屏
@@ -1117,12 +1131,17 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     } else if (_gestureType == .right) {
       // 右边区域
       final double level = maxHeight * 0.5;
+      final cumulativeDy =
+          details.localFocalPoint.dy - _initialFocalPoint!.dy;
       EasyThrottle.throttle(
         'setVolume',
         const Duration(milliseconds: 20),
         () {
           final double volume = clampDouble(
-            plPlayerController.volume.value - delta.dy / level,
+            _initialVolume -
+                cumulativeDy /
+                    level *
+                    plPlayerController.volumeGestureSpeed,
             0.0,
             plPlayerController.maxVolume,
           );
@@ -1281,12 +1300,14 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     if (_gestureType == null) {
       final pan = event.pan;
       if (pan.distanceSquared < 1) return;
+      _panZoomInitialVolume ??= plPlayerController.volume.value;
       final dx = pan.dx.abs();
       final dy = pan.dy.abs();
       if (dx > 3 * dy) {
         _onHorizontalDragStart();
         _gestureType = .horizontal;
-      } else if (dy > 3 * dx) {
+      } else if (math.atan2(dx, dy) * 180.0 / math.pi <=
+          plPlayerController.volumeGestureAngleThreshold) {
         _gestureType = .right;
       }
       return;
@@ -1307,7 +1328,10 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
         const Duration(milliseconds: 20),
         () {
           final double volume = clampDouble(
-            plPlayerController.volume.value - event.localPanDelta.dy / level,
+            _panZoomInitialVolume! -
+                event.pan.dy /
+                    level *
+                    plPlayerController.volumeGestureSpeed,
             0.0,
             plPlayerController.maxVolume,
           );
@@ -1322,11 +1346,15 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       _onHorizontalDragEnd();
     }
     _gestureType = null;
+    _panZoomInitialVolume = null;
   }
 
   void _onPointerSignal(PointerSignalEvent event) {
     if (event is PointerScrollEvent) {
-      final offset = -event.scrollDelta.dy / 4000;
+      final offset =
+          -event.scrollDelta.dy /
+          4000 *
+          plPlayerController.volumeGestureSpeed;
       final volume = clampDouble(
         plPlayerController.volume.value + offset,
         0.0,

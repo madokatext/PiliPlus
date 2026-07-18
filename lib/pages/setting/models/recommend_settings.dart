@@ -17,16 +17,14 @@ List<SettingsModel> get recommendSettings => [
     needReboot: true,
   ),
   SwitchModel(
-    title: '保留首页推荐刷新',
-    subtitle: '下拉刷新时保留上次内容',
+    title: '保留首页推荐内容',
+    subtitle: '下拉刷新或重新启动时保留上次内容',
     leading: const Icon(Icons.refresh),
     setKey: SettingBoxKey.enableSaveLastData,
     defaultVal: true,
     onChanged: (value) {
       try {
-        Get.find<RcmdController>()
-          ..enableSaveLastData = value
-          ..lastRefreshAt = null;
+        Get.find<RcmdController>().updateSaveLastData(value);
       } catch (e) {
         if (kDebugMode) debugPrint('$e');
       }
@@ -40,9 +38,7 @@ List<SettingsModel> get recommendSettings => [
     defaultVal: true,
     onChanged: (value) {
       try {
-        Get.find<RcmdController>()
-          ..savedRcmdTip = value
-          ..lastRefreshAt = null;
+        Get.find<RcmdController>().updateSavedRcmdTip(value);
       } catch (e) {
         if (kDebugMode) debugPrint('$e');
       }

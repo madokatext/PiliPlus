@@ -125,6 +125,10 @@ abstract final class SettingBoxKey {
       showDynActionBar = 'showDynActionBar',
       darkVideoPage = 'darkVideoPage',
       enableSlideVolumeBrightness = 'enableSlideVolumeBrightness',
+      volumeGestureAngleThreshold = 'volumeGestureAngleThreshold',
+      brightnessGestureAngleThreshold = 'brightnessGestureAngleThreshold',
+      volumeGestureSpeed = 'volumeGestureSpeed',
+      brightnessGestureSpeed = 'brightnessGestureSpeed',
       enableSlideFS = 'enableSlideFS',
       retryCount = 'retryCount',
       retryDelay = 'retryDelay',
@@ -244,6 +248,7 @@ abstract final class SettingBoxKey {
 
 abstract final class LocalCacheKey {
   static const String historyPause = 'historyPause',
+      homeRcmdCache = 'homeRcmdCache',
       blackMids = 'blackMids',
       danmakuFilterRules = 'danmakuFilterRules',
       mixinKey = 'mixinKey',

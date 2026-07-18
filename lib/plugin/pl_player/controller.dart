@@ -332,6 +332,12 @@ class PlPlayerController with BlockConfigMixin {
   late final enableShrinkVideoSize = Pref.enableShrinkVideoSize;
   late final darkVideoPage = Pref.darkVideoPage;
   late final enableSlideVolumeBrightness = Pref.enableSlideVolumeBrightness;
+  double get volumeGestureAngleThreshold =>
+      Pref.volumeGestureAngleThreshold;
+  double get brightnessGestureAngleThreshold =>
+      Pref.brightnessGestureAngleThreshold;
+  double get volumeGestureSpeed => Pref.volumeGestureSpeed;
+  double get brightnessGestureSpeed => Pref.brightnessGestureSpeed;
   late final enableSlideFS = Pref.enableSlideFS;
   late final enableDragSubtitle = Pref.enableDragSubtitle;
   late final fastForBackwardDuration = Duration(

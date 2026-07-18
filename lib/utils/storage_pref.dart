@@ -53,6 +53,18 @@ abstract final class Pref {
   static final Box _video = GStorage.video;
   static final Box _localCache = GStorage.localCache;
 
+  static double _getClampedDouble(
+    String key,
+    double defaultValue,
+    double min,
+    double max,
+  ) {
+    final value = _setting.get(key, defaultValue: defaultValue);
+    return (value is num ? value.toDouble() : defaultValue)
+        .clamp(min, max)
+        .toDouble();
+  }
+
   static UserInfoData? get userInfoCache =>
       GStorage.userInfo.get('userInfoCache');
 
@@ -595,6 +607,35 @@ abstract final class Pref {
   static bool get enableSlideVolumeBrightness => _setting.get(
     SettingBoxKey.enableSlideVolumeBrightness,
     defaultValue: true,
+  );
+
+  // 旧逻辑 dy > 3 * dx，相当于手势方向与竖直方向夹角小于 atan(1 / 3)。
+  static double get volumeGestureAngleThreshold => _getClampedDouble(
+    SettingBoxKey.volumeGestureAngleThreshold,
+    18.43494882292201,
+    5.0,
+    60.0,
+  );
+
+  static double get brightnessGestureAngleThreshold => _getClampedDouble(
+    SettingBoxKey.brightnessGestureAngleThreshold,
+    18.43494882292201,
+    5.0,
+    60.0,
+  );
+
+  static double get volumeGestureSpeed => _getClampedDouble(
+    SettingBoxKey.volumeGestureSpeed,
+    1.0,
+    0.25,
+    4.0,
+  );
+
+  static double get brightnessGestureSpeed => _getClampedDouble(
+    SettingBoxKey.brightnessGestureSpeed,
+    1.0,
+    0.25,
+    4.0,
   );
 
   static bool get enableSlideFS =>
