@@ -115,6 +115,13 @@ class VideoDetailController extends GetxController
   AudioQuality? currentAudioQa;
   late VideoDecodeFormatType currentDecodeFormats;
 
+  bool _initialVideoQualitySelected = false;
+  bool _usingInitialHalfScreenQuality = false;
+  bool? _videoQualityOnWiFi;
+  Worker? _fullScreenQualityWorker;
+  bool get usingInitialHalfScreenQuality =>
+    _usingInitialHalfScreenQuality;
+
   // 是否开始自动播放 存在多p的情况下，第二p需要为true
   final RxBool _autoPlay = Pref.autoPlayEnable.obs;
 
@@ -380,6 +387,15 @@ class VideoDetailController extends GetxController
       getMediaList();
     }
 
+    _fullScreenQualityWorker = ever<bool>(
+      plPlayerController.isFullScreen,
+      (isFullScreen) {
+        if (isFullScreen && _usingInitialHalfScreenQuality) {
+          unawaited(_switchFromInitialHalfScreenQuality());
+        }
+      },
+    );
+
     tabCtr = TabController(
       length: 2,
       vsync: this,
@@ -640,6 +656,60 @@ class VideoDetailController extends GetxController
     }
   }
 
+  int _resolveAvailableVideoQuality(int preferredQuality) {
+    final videoList = data.dash!.video!;
+    final curHighestVideoQa = videoList.first.quality.code;
+  
+    int targetVideoQa = curHighestVideoQa;
+  
+    if (data.acceptQuality?.isNotEmpty == true &&
+        preferredQuality <= curHighestVideoQa) {
+      targetVideoQa = data.acceptQuality!.findClosestTarget(
+        (quality) => quality <= preferredQuality,
+        (a, b) => a > b ? a : b,
+      );
+    }
+  
+    return targetVideoQa;
+  }
+  
+  Future<void> _switchFromInitialHalfScreenQuality() async {
+    if (!_usingInitialHalfScreenQuality) {
+      return;
+    }
+  
+    _usingInitialHalfScreenQuality = false;
+  
+    final isWiFi =
+        _videoQualityOnWiFi ?? await ConnectivityUtils.isWiFi;
+    _videoQualityOnWiFi = isWiFi;
+  
+    final preferredQuality = isWiFi
+        ? Pref.defaultVideoQa
+        : Pref.defaultVideoQaCellular;
+  
+    plPlayerController.cacheVideoQa = preferredQuality;
+  
+    if (currentVideoQa.value == null) {
+      return;
+    }
+  
+    if (data.dash == null) {
+      return;
+    }
+  
+    final targetQuality = _resolveAvailableVideoQuality(
+      preferredQuality,
+    );
+  
+    if (currentVideoQa.value!.code == targetQuality) {
+      return;
+    }
+  
+    currentVideoQa.value = VideoQuality.fromCode(targetQuality);
+    updatePlayer();
+  }
+
   VideoItem findVideoByQa(int qa, {bool setCodecs = false}) {
     /// 根据currentVideoQa和currentDecodeFormats 重新设置videoUrl
     final videoList = data.dash!.video!.where((i) => i.id == qa).toList();
@@ -806,12 +876,32 @@ class VideoDetailController extends GetxController
     if (plPlayerController.enableSponsorBlock && isBlock && !fromReset) {
       querySponsorBlock(bvid: bvid, cid: cid.value);
     }
-    if (plPlayerController.cacheVideoQa == null) {
+    if (!_initialVideoQualitySelected) {
+      _initialVideoQualitySelected = true;
+    
       final isWiFi = await ConnectivityUtils.isWiFi;
+      _videoQualityOnWiFi = isWiFi;
+    
+      final willStartFullScreen =
+          plPlayerController.isFullScreen.value ||
+          (autoFullScreenFlag &&
+              _autoPlay.value &&
+              plPlayerController.autoEnterFullScreen);
+    
+      _usingInitialHalfScreenQuality = !willStartFullScreen;
+    
+      final int initialVideoQuality;
+    
+      if (_usingInitialHalfScreenQuality) {
+        initialVideoQuality = Pref.defaultVideoQaHalfScreen;
+      } else if (isWiFi) {
+        initialVideoQuality = Pref.defaultVideoQa;
+      } else {
+        initialVideoQuality = Pref.defaultVideoQaCellular;
+      }
+    
       plPlayerController
-        ..cacheVideoQa = isWiFi
-            ? Pref.defaultVideoQa
-            : Pref.defaultVideoQaCellular
+        ..cacheVideoQa = initialVideoQuality
         ..cacheAudioQa = isWiFi
             ? Pref.defaultAudioQa
             : Pref.defaultAudioQaCellular;
@@ -891,17 +981,10 @@ class VideoDetailController extends GetxController
       final List<VideoItem> videoList = data.dash!.video!;
       // if (kDebugMode) debugPrint("allVideosList:${allVideosList}");
       // 当前可播放的最高质量视频
-      final curHighestVideoQa = videoList.first.quality.code;
-      // 预设的画质为null，则当前可用的最高质量
-      int targetVideoQa = curHighestVideoQa;
-      if (data.acceptQuality?.isNotEmpty == true &&
-          plPlayerController.cacheVideoQa! <= curHighestVideoQa) {
-        // 如果预设的画质低于当前最高
-        targetVideoQa = data.acceptQuality!.findClosestTarget(
-          (e) => e <= plPlayerController.cacheVideoQa!,
-          (a, b) => a > b ? a : b,
-        );
-      }
+      final targetVideoQa = _resolveAvailableVideoQuality(
+        plPlayerController.cacheVideoQa!,
+      );
+      
       currentVideoQa.value = VideoQuality.fromCode(targetVideoQa);
 
       /// 优先顺序 设置中指定解码格式 -> 当前可选的首个解码格式
@@ -1220,6 +1303,8 @@ class VideoDetailController extends GetxController
 
   @override
   void onClose() {
+    _fullScreenQualityWorker?.dispose();
+    _fullScreenQualityWorker = null;
     cid.close();
     if (isFileSource) {
       cacheLocalProgress();
