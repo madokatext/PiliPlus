@@ -10,11 +10,13 @@ class SlideColorPicker extends StatefulWidget {
     required this.color,
     required this.onChanged,
     this.showResetBtn = false,
+    this.showAlpha = false,
   });
 
   final Color color;
   final Function(Color? color) onChanged;
   final bool showResetBtn;
+  final bool showAlpha;
 
   @override
   State<SlideColorPicker> createState() => _SlideColorPickerState();
@@ -22,12 +24,14 @@ class SlideColorPicker extends StatefulWidget {
 
 class _SlideColorPickerState extends State<SlideColorPicker> {
   late int _rgb;
+  late int _alpha;
   late final TextEditingController _textController;
 
   @override
   void initState() {
     super.initState();
     _rgb = widget.color.toARGB32() & 0xFFFFFF;
+    _alpha = widget.color.toARGB32() >>> 24;
     _textController = TextEditingController(text: _convert);
   }
 
@@ -38,6 +42,8 @@ class _SlideColorPickerState extends State<SlideColorPicker> {
   }
 
   String get _convert => _rgb.toRadixString(16).toUpperCase().padLeft(6, '0');
+
+  Color get _color => Color((_alpha << 24) | _rgb);
 
   Widget _slider({
     required String title,
@@ -86,9 +92,25 @@ class _SlideColorPickerState extends State<SlideColorPicker> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
+          SizedBox(
             height: 100,
-            color: DmUtils.decimalToColor(_rgb),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (widget.showAlpha)
+                  const Row(
+                    children: [
+                      Expanded(child: ColoredBox(color: Colors.white)),
+                      Expanded(child: ColoredBox(color: Colors.black)),
+                    ],
+                  ),
+                ColoredBox(
+                  color: widget.showAlpha
+                      ? _color
+                      : DmUtils.decimalToColor(_rgb),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 10),
           IntrinsicWidth(
@@ -143,6 +165,16 @@ class _SlideColorPickerState extends State<SlideColorPicker> {
               });
             },
           ),
+          if (widget.showAlpha)
+            _slider(
+              title: 'A',
+              value: _alpha,
+              onChanged: (value) {
+                setState(() {
+                  _alpha = value.round();
+                });
+              },
+            ),
           Row(
             children: [
               if (widget.showResetBtn) ...[
@@ -168,7 +200,11 @@ class _SlideColorPickerState extends State<SlideColorPicker> {
               TextButton(
                 onPressed: () {
                   Get.back();
-                  widget.onChanged(DmUtils.decimalToColor(_rgb));
+                  widget.onChanged(
+                    widget.showAlpha
+                        ? _color
+                        : DmUtils.decimalToColor(_rgb),
+                  );
                 },
                 child: const Text('确定'),
               ),

@@ -17,6 +17,7 @@ import 'package:PiliPlus/models/common/sponsor_block/segment_type.dart';
 import 'package:PiliPlus/models/common/sponsor_block/skip_type.dart';
 import 'package:PiliPlus/models/common/super_chat_type.dart';
 import 'package:PiliPlus/models/common/super_resolution_type.dart';
+import 'package:PiliPlus/models/common/theme/theme_color_type.dart';
 import 'package:PiliPlus/models/common/theme/theme_type.dart';
 import 'package:PiliPlus/models/common/video/audio_quality.dart';
 import 'package:PiliPlus/models/common/video/cdn_type.dart';
@@ -836,12 +837,53 @@ abstract final class Pref {
   static bool get p1080 =>
       _setting.get(SettingBoxKey.p1080, defaultValue: true);
 
-  static int get customColor =>
-      _setting.get(SettingBoxKey.customColor, defaultValue: 0);
+  static int get customColor {
+    final value = _setting.get(SettingBoxKey.customColor, defaultValue: 0);
+    return value is int
+        ? value.clamp(0, colorThemeTypes.length - 1).toInt()
+        : 0;
+  }
 
-  static bool get dynamicColor =>
+  static bool get _legacyDynamicColor =>
       !Platform.isIOS &&
       _setting.get(SettingBoxKey.dynamicColor, defaultValue: true);
+
+  static ThemeColorMode get themeColorMode {
+    final value = _setting.get(SettingBoxKey.themeColorMode);
+    if (value is int &&
+        value >= 0 &&
+        value < ThemeColorMode.values.length) {
+      final mode = ThemeColorMode.values[value];
+      if (!Platform.isIOS || mode != ThemeColorMode.dynamic) {
+        return mode;
+      }
+    }
+    return _legacyDynamicColor
+        ? ThemeColorMode.dynamic
+        : ThemeColorMode.preset;
+  }
+
+  static bool get dynamicColor => themeColorMode == ThemeColorMode.dynamic;
+
+  static Color _getThemeSeed(String key, Color fallback) {
+    final value = _setting.get(key);
+    return value is int ? Color(value) : fallback;
+  }
+
+  static ThemeSeedColors get customThemeSeeds => (
+    primary: _getThemeSeed(
+      SettingBoxKey.customPrimarySeed,
+      defaultCustomThemeSeeds.primary,
+    ),
+    secondary: _getThemeSeed(
+      SettingBoxKey.customSecondarySeed,
+      defaultCustomThemeSeeds.secondary,
+    ),
+    tertiary: _getThemeSeed(
+      SettingBoxKey.customTertiarySeed,
+      defaultCustomThemeSeeds.tertiary,
+    ),
+  );
 
   static bool get enableSystemProxy =>
       _setting.get(SettingBoxKey.enableSystemProxy, defaultValue: false);

@@ -321,18 +321,8 @@ List<SettingsModel> get styleSettings => [
     onTap: (context, setState) => Get.toNamed('/colorSetting'),
     leading: const Icon(Icons.color_lens_outlined),
     title: '应用主题',
-    getSubtitle: () => '当前主题：${Pref.dynamicColor ? '动态取色' : '指定颜色'}',
-    getTrailing: (theme) => Pref.dynamicColor
-        ? Icon(Icons.color_lens_rounded, color: theme.colorScheme.primary)
-        : SizedBox.square(
-            dimension: 20,
-            child: ColorPalette(
-              colorScheme: colorThemeTypes[Pref.customColor].color
-                  .asColorSchemeSeed(Pref.schemeVariant, theme.brightness),
-              selected: false,
-              showBgColor: false,
-            ),
-          ),
+    getSubtitle: () => '当前主题：${Pref.themeColorMode.label}',
+    getTrailing: _themeColorTrailing,
   ),
   NormalModel(
     leading: const Icon(Icons.home_outlined),
@@ -954,6 +944,30 @@ Future<void> _showThemeTypeDialog(
     Get.changeThemeMode(ThemeUtils.themeMode = res.toThemeMode);
     setState();
   }
+}
+
+Widget _themeColorTrailing(ThemeData theme) {
+  if (Pref.themeColorMode == ThemeColorMode.dynamic) {
+    return Icon(Icons.color_lens_rounded, color: theme.colorScheme.primary);
+  }
+  final colorScheme = switch (Pref.themeColorMode) {
+    ThemeColorMode.customMultiSeed => Pref.customThemeSeeds.asColorSchemeSeeds(
+      Pref.schemeVariant,
+      theme.brightness,
+    ),
+    _ => colorThemeTypes[Pref.customColor].color.asColorSchemeSeed(
+      Pref.schemeVariant,
+      theme.brightness,
+    ),
+  };
+  return SizedBox.square(
+    dimension: 20,
+    child: ColorPalette(
+      colorScheme: colorScheme,
+      selected: false,
+      showBgColor: false,
+    ),
+  );
 }
 
 Future<void> _showDefHomeDialog(

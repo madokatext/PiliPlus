@@ -1,5 +1,28 @@
 import 'package:flutter/material.dart';
 
+enum ThemeColorMode {
+  dynamic('动态取色'),
+  preset('预设单种子'),
+  customMultiSeed('自定义多种子'),
+  ;
+
+  const ThemeColorMode(this.label);
+
+  final String label;
+}
+
+typedef ThemeSeedColors = ({
+  Color primary,
+  Color secondary,
+  Color tertiary,
+});
+
+const ThemeSeedColors defaultCustomThemeSeeds = (
+  primary: Color(0xFF5CB67B),
+  secondary: Color(0xFF42A5F5),
+  tertiary: Color(0xFFFF7299),
+);
+
 const List<({Color color, String label})> colorThemeTypes = [
   (color: Color(0xFF5CB67B), label: '默认绿'),
   (color: Color(0xFFFF7299), label: '粉红色'),

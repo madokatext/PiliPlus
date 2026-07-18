@@ -182,8 +182,11 @@ void main() async {
     });
   }
 
-  if (Pref.dynamicColor) {
-    await MyApp.initPlatformState();
+  if (Pref.dynamicColor && !await MyApp.initPlatformState()) {
+    await GStorage.setting.put(
+      SettingBoxKey.themeColorMode,
+      ThemeColorMode.preset.index,
+    );
   }
 
   if (Pref.enableLog) {
@@ -239,18 +242,26 @@ class MyApp extends StatelessWidget {
     final dynamicColor = _light != null && _dark != null && Pref.dynamicColor;
     late final brandColor = colorThemeTypes[Pref.customColor].color;
     late final variant = Pref.schemeVariant;
+
+    ColorScheme getColorScheme(Brightness brightness) {
+      if (dynamicColor) {
+        return brightness == Brightness.light ? _light! : _dark!;
+      }
+      return switch (Pref.themeColorMode) {
+        ThemeColorMode.customMultiSeed => Pref.customThemeSeeds
+            .asColorSchemeSeeds(variant, brightness),
+        _ => brandColor.asColorSchemeSeed(variant, brightness),
+      };
+    }
+
     return (
       ThemeUtils.lightTheme = ThemeUtils.getThemeData(
-        colorScheme: dynamicColor
-            ? _light!
-            : brandColor.asColorSchemeSeed(variant, .light),
+        colorScheme: getColorScheme(.light),
         isDynamic: dynamicColor,
       ),
       ThemeUtils.darkTheme = ThemeUtils.getThemeData(
         isDark: true,
-        colorScheme: dynamicColor
-            ? _dark!
-            : brandColor.asColorSchemeSeed(variant, .dark),
+        colorScheme: getColorScheme(.dark),
         isDynamic: dynamicColor,
       ),
     );
@@ -369,7 +380,7 @@ class MyApp extends StatelessWidget {
     if (kDebugMode) {
       debugPrint('dynamic_color: Dynamic color not detected on this device.');
     }
-    GStorage.setting.put(SettingBoxKey.dynamicColor, false);
+    await GStorage.setting.put(SettingBoxKey.dynamicColor, false);
     return false;
   }
 }

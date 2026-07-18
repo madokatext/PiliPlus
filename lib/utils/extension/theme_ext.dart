@@ -1,3 +1,4 @@
+import 'package:PiliPlus/models/common/theme/theme_color_type.dart';
 import 'package:PiliPlus/utils/bili_colors.dart';
 import 'package:flex_seed_scheme/flex_seed_scheme.dart';
 import 'package:flutter/material.dart'
@@ -40,6 +41,27 @@ extension ColorExtension on Color {
     primaryKey: this,
     variant: variant,
     brightness: brightness,
+    useExpressiveOnContainerColors: false,
+  );
+
+  /// HCT 生成只读取 RGB；先叠到明/暗基底，让种子色的 A 通道可见且结果仍为不透明色表。
+  Color opaqueSeed(Brightness brightness) => Color.alphaBlend(
+    this,
+    brightness.isLight ? Colors.white : Colors.black,
+  );
+}
+
+extension ThemeSeedColorsExt on ThemeSeedColors {
+  ColorScheme asColorSchemeSeeds(
+    FlexSchemeVariant variant,
+    Brightness brightness,
+  ) => SeedColorScheme.fromSeeds(
+    primaryKey: primary.opaqueSeed(brightness),
+    secondaryKey: secondary.opaqueSeed(brightness),
+    tertiaryKey: tertiary.opaqueSeed(brightness),
+    variant: variant,
+    brightness: brightness,
+    respectMonochromeSeed: true,
     useExpressiveOnContainerColors: false,
   );
 }
