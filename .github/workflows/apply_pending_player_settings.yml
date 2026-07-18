@@ -1,17 +1,16 @@
 name: Apply pending player settings
 
 on:
-  push:
-    branches:
-      - mod
-    paths:
-      - .github/workflows/apply_pending_player_settings.yml
+  pull_request_target:
+    types: [opened]
+    branches: [mod]
 
 permissions:
   contents: write
 
 jobs:
   apply:
+    if: github.event.pull_request.head.ref == 'agent/trigger-player-settings'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,427 +18,32 @@ jobs:
           ref: mod
           fetch-depth: 0
 
-      - name: Apply source changes
+      - name: Recover and apply validated patch
         shell: bash
         run: |
-          python3 <<'PY'
+          python3 <<'PYCODE'
           from pathlib import Path
+          import subprocess
 
-          def replace_once(path: str, old: str, new: str) -> None:
-              file = Path(path)
-              text = file.read_text()
-              count = text.count(old)
-              if count != 1:
-                  raise RuntimeError(f'{path}: expected one match, found {count}')
-              file.write_text(text.replace(old, new, 1))
-
-          Path('lib/utils/player_control_prefs.dart').write_text("""import 'package:PiliPlus/utils/storage.dart';
-
-abstract final class PlayerControlPrefs {
-  static const String showSeekPreviewOnSliderKey =
-          'showSeekPreviewOnSlider',
-      showSeekPreviewOnGestureKey = 'showSeekPreviewOnGesture',
-      controlBarThicknessScaleKey = 'playerControlBarThicknessScale',
-      controlBarGradientExtentKey = 'playerControlBarGradientExtent';
-
-  static bool get _legacyShowSeekPreview =>
-      GStorage.setting.get('showSeekPreview', defaultValue: true);
-
-  static bool get showSeekPreviewOnSlider => GStorage.setting.get(
-    showSeekPreviewOnSliderKey,
-    defaultValue: _legacyShowSeekPreview,
-  );
-
-  static bool get showSeekPreviewOnGesture => GStorage.setting.get(
-    showSeekPreviewOnGestureKey,
-    defaultValue: _legacyShowSeekPreview,
-  );
-
-  static double _getClampedDouble(
-    String key,
-    double defaultValue,
-    double min,
-    double max,
-  ) {
-    final value = GStorage.setting.get(key, defaultValue: defaultValue);
-    return (value is num ? value.toDouble() : defaultValue)
-        .clamp(min, max)
-        .toDouble();
-  }
-
-  static double get controlBarThicknessScale => _getClampedDouble(
-    controlBarThicknessScaleKey,
-    1.0,
-    0.8,
-    1.5,
-  );
-
-  static double get controlBarGradientExtent => _getClampedDouble(
-    controlBarGradientExtentKey,
-    0.0,
-    0.0,
-    96.0,
-  );
-}
-""")
-
-          Path('lib/pages/setting/models/player_control_settings.dart').write_text("""import 'package:PiliPlus/pages/setting/models/model.dart';
-import 'package:PiliPlus/pages/setting/widgets/slider_dialog.dart';
-import 'package:PiliPlus/utils/player_control_prefs.dart';
-import 'package:PiliPlus/utils/storage.dart';
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-
-List<SettingsModel> get seekPreviewModeSettings => [
-  const SwitchModel(
-    title: '拖动进度条滑块显示预览浮窗',
-    subtitle: '拖动播放器底部进度条时显示视频缩略图',
-    leading: Icon(Icons.linear_scale),
-    setKey: PlayerControlPrefs.showSeekPreviewOnSliderKey,
-    defaultVal: true,
-  ),
-  const SwitchModel(
-    title: '左右滑动手势显示预览浮窗',
-    subtitle: '在播放器画面上左右滑动快进或快退时显示视频缩略图',
-    leading: Icon(Icons.swipe),
-    setKey: PlayerControlPrefs.showSeekPreviewOnGestureKey,
-    defaultVal: true,
-  ),
-];
-
-List<SettingsModel> get playerControlBarSettings => [
-  NormalModel(
-    title: '上下控制栏整体厚度',
-    getSubtitle: () =>
-        '当前：${PlayerControlPrefs.controlBarThicknessScale.toStringAsFixed(2)}×',
-    leading: const Icon(Icons.height),
-    onTap: _showControlBarThicknessDialog,
-  ),
-  NormalModel(
-    title: '控制栏渐变阴影弥散宽度',
-    getSubtitle: () =>
-        '当前：${PlayerControlPrefs.controlBarGradientExtent.toStringAsFixed(0)}dp',
-    leading: const Icon(Icons.gradient_outlined),
-    onTap: _showControlBarGradientExtentDialog,
-  ),
-];
-
-Future<void> _showControlBarThicknessDialog(
-  BuildContext context,
-  VoidCallback setState,
-) async {
-  final res = await showDialog<double>(
-    context: context,
-    builder: (context) => SliderDialog(
-      title: const Text('上下控制栏整体厚度'),
-      value: PlayerControlPrefs.controlBarThicknessScale,
-      min: 0.8,
-      max: 1.5,
-      divisions: 14,
-      precise: 2,
-      suffix: '×',
-    ),
-  );
-  if (res != null) {
-    await GStorage.setting.put(
-      PlayerControlPrefs.controlBarThicknessScaleKey,
-      res,
-    );
-    setState();
-    Get.appUpdate();
-  }
-}
-
-Future<void> _showControlBarGradientExtentDialog(
-  BuildContext context,
-  VoidCallback setState,
-) async {
-  final res = await showDialog<double>(
-    context: context,
-    builder: (context) => SliderDialog(
-      title: const Text('控制栏渐变阴影弥散宽度'),
-      value: PlayerControlPrefs.controlBarGradientExtent,
-      min: 0,
-      max: 96,
-      divisions: 24,
-      precise: 0,
-      suffix: 'dp',
-    ),
-  );
-  if (res != null) {
-    await GStorage.setting.put(
-      PlayerControlPrefs.controlBarGradientExtentKey,
-      res,
-    );
-    setState();
-    Get.appUpdate();
-  }
-}
-""")
-
-          replace_once(
-              'lib/models/common/setting_type.dart',
-              "import 'package:PiliPlus/pages/setting/models/play_settings.dart';\n",
-              "import 'package:PiliPlus/pages/setting/models/play_settings.dart';\nimport 'package:PiliPlus/pages/setting/models/player_control_settings.dart';\n",
+          workflow = subprocess.check_output(
+              [
+                  'git',
+                  'show',
+                  'a6d21178e66502694d98a6973a2cd6621de48343:.github/workflows/apply_pending_player_settings.yml',
+              ],
+              text=True,
           )
-          replace_once(
-              'lib/models/common/setting_type.dart',
-              '    .playSetting => playSettings,\n',
-              '    .playSetting => _playSettingsWithPlayerControls,\n',
+          marker = "          python3 <<'PY'\n"
+          start = workflow.index(marker) + len(marker)
+          end = workflow.index('          PY\n', start)
+          block = workflow[start:end]
+          script = '\n'.join(
+              line[10:] if line.startswith('          ') else line
+              for line in block.splitlines()
           )
-          replace_once(
-              'lib/models/common/setting_type.dart',
-              "List<SettingsModel> get _styleSettingsWithHomeCardLayout {\n",
-              """List<SettingsModel> get _playSettingsWithPlayerControls {
-  final settings = <SettingsModel>[...playSettings];
-  final legacyPreviewIndex = settings.indexWhere(
-    (item) => item.title == '滑动跳转预览视频缩略图',
-  );
-  if (legacyPreviewIndex >= 0) {
-    settings
-      ..removeAt(legacyPreviewIndex)
-      ..insertAll(legacyPreviewIndex, seekPreviewModeSettings);
-  }
-  final horizontalPaddingIndex = settings.indexWhere(
-    (item) => item.title == '播放器上下按钮横向边距',
-  );
-  settings.insertAll(
-    horizontalPaddingIndex < 0 ? 0 : horizontalPaddingIndex + 1,
-    playerControlBarSettings,
-  );
-  return settings;
-}
-
-List<SettingsModel> get _styleSettingsWithHomeCardLayout {
-""",
-          )
-
-          replace_once(
-              'lib/plugin/pl_player/controller.dart',
-              "import 'package:PiliPlus/utils/page_utils.dart';\n",
-              "import 'package:PiliPlus/utils/page_utils.dart';\nimport 'package:PiliPlus/utils/player_control_prefs.dart';\n",
-          )
-          replace_once(
-              'lib/plugin/pl_player/controller.dart',
-              """  double get playerControlHorizontalPadding =>
-      Pref.playerControlHorizontalPadding;
-""",
-              """  double get playerControlHorizontalPadding =>
-      Pref.playerControlHorizontalPadding;
-  double get playerControlBarThicknessScale =>
-      PlayerControlPrefs.controlBarThicknessScale;
-  double get playerControlBarGradientExtent =>
-      PlayerControlPrefs.controlBarGradientExtent;
-""",
-          )
-          replace_once(
-              'lib/plugin/pl_player/controller.dart',
-              """  late final showSeekPreview = Pref.showSeekPreview;
-  late final seekPreviewFollowSlider = Pref.seekPreviewFollowSlider;
-""",
-              """  late final showSeekPreviewOnSlider =
-      PlayerControlPrefs.showSeekPreviewOnSlider;
-  late final showSeekPreviewOnGesture =
-      PlayerControlPrefs.showSeekPreviewOnGesture;
-  bool get canShowAnySeekPreview =>
-      showSeekPreviewOnSlider || showSeekPreviewOnGesture;
-  late final seekPreviewFollowSlider = Pref.seekPreviewFollowSlider;
-""",
-          )
-          for old, new in [
-              ('if (showSeekPreview) {', 'if (canShowAnySeekPreview) {'),
-          ]:
-              path = Path('lib/plugin/pl_player/controller.dart')
-              text = path.read_text()
-              count = text.count(old)
-              if count != 2:
-                  raise RuntimeError(f'controller lifecycle: expected 2 matches, found {count}')
-              path.write_text(text.replace(old, new))
-
-          replace_once(
-              'lib/plugin/pl_player/view/view.dart',
-              """    final controlHeight = compactBottomBar ? 26.0 : 30.0;
-    final playButtonHeight = officialTimeStyle ? controlHeight : 34.0;
-""",
-              """    final thicknessScale =
-        plPlayerController.playerControlBarThicknessScale;
-    final controlHeight =
-        (compactBottomBar ? 26.0 : 30.0) * thicknessScale;
-    final playButtonHeight =
-        (officialTimeStyle ? (compactBottomBar ? 26.0 : 30.0) : 34.0) *
-        thicknessScale;
-""",
-          )
-          replace_once(
-              'lib/plugin/pl_player/view/view.dart',
-              """    if (!plPlayerController.isFileSource &&
-        plPlayerController.showSeekPreview) {
-""",
-              """    if (!plPlayerController.isFileSource &&
-        plPlayerController.showSeekPreviewOnGesture) {
-""",
-          )
-          replace_once(
-              'lib/plugin/pl_player/view/view.dart',
-              """          if (plPlayerController.showSeekPreview) {
-            plPlayerController.showPreview.value = false;
-          }
-""",
-              """          plPlayerController.showPreview.value = false;
-""",
-          )
-          view = Path('lib/plugin/pl_player/view/view.dart')
-          text = view.read_text()
-          old = """                    removeSafeArea: plPlayerController.removeSafeArea,
-"""
-          new = """                    removeSafeArea: plPlayerController.removeSafeArea,
-                    gradientExtent:
-                        plPlayerController.playerControlBarGradientExtent,
-"""
-          count = text.count(old)
-          if count != 2:
-              raise RuntimeError(f'view AppBarAni: expected 2 matches, found {count}')
-          view.write_text(text.replace(old, new))
-          replace_once(
-              'lib/plugin/pl_player/view/view.dart',
-              '        if (!isLive && plPlayerController.showSeekPreview)\n',
-              '        if (!isLive && plPlayerController.canShowAnySeekPreview)\n',
-          )
-
-          replace_once(
-              'lib/plugin/pl_player/widgets/bottom_control.dart',
-              """      controller.showSeekPreview &&
-""",
-              """      controller.showSeekPreviewOnSlider &&
-""",
-          )
-          replace_once(
-              'lib/plugin/pl_player/widgets/bottom_control.dart',
-              """    final outerBottomPadding = officialTimeStyle
-        ? (compact ? 2.0 : 6.0)
-        : 12.0;
-""",
-              """    final thicknessScale = controller.playerControlBarThicknessScale;
-    final baseOuterBottomPadding = officialTimeStyle
-        ? (compact ? 2.0 : 6.0)
-        : 12.0;
-    final outerBottomPadding = baseOuterBottomPadding * thicknessScale;
-""",
-          )
-          replace_once(
-              'lib/plugin/pl_player/widgets/bottom_control.dart',
-              """    final progressBottomPadding = officialTimeStyle
-        ? (compact ? 2.0 : 4.0)
-        : 7.0;
-""",
-              """    final baseProgressBottomPadding = officialTimeStyle
-        ? (compact ? 2.0 : 4.0)
-        : 7.0;
-    final progressBottomPadding =
-        baseProgressBottomPadding * thicknessScale;
-""",
-          )
-
-          replace_once(
-              'lib/pages/video/widgets/header_control.dart',
-              """    const btnWidth = 40.0;
-    const btnHeight = 34.0;
-""",
-              """    final thicknessScale =
-        plPlayerController.playerControlBarThicknessScale;
-    const btnWidth = 40.0;
-    final btnHeight = 34.0 * thicknessScale;
-""",
-          )
-          replace_once(
-              'lib/pages/video/widgets/header_control.dart',
-              '      toolbarHeight: showFSActionItem ? 112 : null,\n',
-              """      toolbarHeight:
-          (showFSActionItem ? 112.0 : kToolbarHeight) * thicknessScale,
-""",
-          )
-          replace_once(
-              'lib/pages/video/widgets/header_control.dart',
-              '          const SizedBox(height: 11),\n',
-              '          SizedBox(height: 11 * thicknessScale),\n',
-          )
-
-          replace_once(
-              'lib/plugin/pl_player/widgets/app_bar_ani.dart',
-              """    required this.removeSafeArea,
-    this.bottomPadding = 0,
-""",
-              """    required this.removeSafeArea,
-    this.bottomPadding = 0,
-    this.gradientExtent = 0,
-""",
-          )
-          replace_once(
-              'lib/plugin/pl_player/widgets/app_bar_ani.dart',
-              """  final double bottomPadding;
-""",
-              """  final double bottomPadding;
-  final double gradientExtent;
-""",
-          )
-          replace_once(
-              'lib/plugin/pl_player/widgets/app_bar_ani.dart',
-              """  @override
-  Widget build(BuildContext context) {
-    return SlideTransition(
-      position: controller.drive(isTop ? _topPos : _bottomPos),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: isTop ? _topDecoration : _bottomDecoration,
-        ),
-        child: Padding(
-          padding: EdgeInsets.only(bottom: isTop ? 0 : bottomPadding),
-          child: removeSafeArea
-              ? child
-              : ViewSafeArea(
-                  left: isFullScreen,
-                  right: isFullScreen,
-                  child: child,
-                ),
-        ),
-      ),
-    );
-  }
-""",
-              """  @override
-  Widget build(BuildContext context) {
-    final content = Padding(
-      padding: EdgeInsets.only(bottom: isTop ? 0 : bottomPadding),
-      child: removeSafeArea
-          ? child
-          : ViewSafeArea(
-              left: isFullScreen,
-              right: isFullScreen,
-              child: child,
-            ),
-    );
-
-    return SlideTransition(
-      position: controller.drive(isTop ? _topPos : _bottomPos),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: isTop ? _topDecoration : _bottomDecoration,
-        ),
-        child: Padding(
-          padding: EdgeInsets.only(
-            top: isTop ? 0 : gradientExtent,
-            bottom: isTop ? gradientExtent : 0,
-          ),
-          child: content,
-        ),
-      ),
-    );
-  }
-""",
-          )
-
-          Path('.github/workflows/apply_pending_player_settings.yml').unlink()
-          PY
+          Path('/tmp/apply_pending_player_settings.py').write_text(script)
+          PYCODE
+          python3 /tmp/apply_pending_player_settings.py
 
       - name: Commit source changes
         shell: bash
