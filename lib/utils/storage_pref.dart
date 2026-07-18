@@ -196,6 +196,20 @@ abstract final class Pref {
   static int get previewQ =>
       _setting.get(SettingBoxKey.previewQuality, defaultValue: 100);
 
+  static double get replyFontSize => _getClampedDouble(
+    SettingBoxKey.replyFontSize,
+    14.0,
+    10.0,
+    22.0,
+  );
+
+  static double get replyLineSpacingScale => _getClampedDouble(
+    SettingBoxKey.replyLineSpacingScale,
+    1.0,
+    0.7,
+    1.5,
+  );
+
   static double get smallCardWidth =>
       _setting.get(SettingBoxKey.smallCardWidth, defaultValue: 240.0);
 

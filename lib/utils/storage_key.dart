@@ -246,6 +246,8 @@ abstract final class SettingBoxKey {
       customTertiarySeed = 'customTertiarySeed',
       customThemeTonePrefix = 'customThemeTone',
       displayMode = 'displayMode',
+      replyFontSize = 'replyFontSize',
+      replyLineSpacingScale = 'replyLineSpacingScale',
       smallCardWidth = 'smallCardWidth',
       recommendCardWidth = 'recommendCardWidth',
       recommendDurationInStatRow = 'recommendDurationInStatRow',

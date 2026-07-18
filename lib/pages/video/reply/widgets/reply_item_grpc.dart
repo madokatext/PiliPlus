@@ -343,7 +343,10 @@ class ReplyItemGrpc extends StatelessWidget {
           padding: padding,
           child: custom_text.Text.rich(
             primary: colorScheme.primary,
-            style: const TextStyle(height: 1.75, fontSize: 14),
+            style: TextStyle(
+              height: 1.75 * Pref.replyLineSpacingScale,
+              fontSize: Pref.replyFontSize,
+            ),
             maxLines: replyLevel == 1 ? replyLengthLimit : null,
             TextSpan(
               children: [
@@ -510,7 +513,8 @@ class ReplyItemGrpc extends StatelessWidget {
     }
     return Row(
       children: [
-        const SizedBox(width: 36),
+        ZanButtonGrpc(replyItem: replyItem),
+        const SizedBox(width: 8),
         SizedBox(
           height: 32,
           child: TextButton(
@@ -554,9 +558,6 @@ class ReplyItemGrpc extends StatelessWidget {
           const SizedBox(width: 2),
         ],
         ?dialogBtn,
-        const Spacer(),
-        ZanButtonGrpc(replyItem: replyItem),
-        const SizedBox(width: 5),
       ],
     );
   }
@@ -618,8 +619,8 @@ class ReplyItemGrpc extends StatelessWidget {
                     padding: padding,
                     child: Text.rich(
                       style: TextStyle(
-                        height: 1.6,
-                        fontSize: 14,
+                        height: 1.6 * Pref.replyLineSpacingScale,
+                        fontSize: Pref.replyFontSize,
                         color: colorScheme.onSurface.withValues(alpha: 0.85),
                       ),
                       overflow: TextOverflow.ellipsis,

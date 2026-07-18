@@ -368,6 +368,19 @@ List<SettingsModel> get styleSettings => [
     },
   ),
   NormalModel(
+    title: '评论区评论字体大小',
+    getSubtitle: () => '当前：${Pref.replyFontSize.toStringAsFixed(1)}dp',
+    leading: const Icon(Icons.text_fields),
+    onTap: _showReplyFontSizeDialog,
+  ),
+  NormalModel(
+    title: '评论区评论行距',
+    getSubtitle: () =>
+        '当前：${Pref.replyLineSpacingScale.toStringAsFixed(2)}倍',
+    leading: const Icon(Icons.format_line_spacing),
+    onTap: _showReplyLineSpacingDialog,
+  ),
+  NormalModel(
     onTap: (context, setState) => Get.toNamed(
       '/barSetting',
       arguments: {
@@ -675,6 +688,52 @@ Future<void> _showFontWeightDialog(BuildContext context) async {
   if (res != null) {
     await GStorage.setting.put(SettingBoxKey.appFontWeight, res.toInt() - 1);
     Get.updateMyAppTheme();
+  }
+}
+
+Future<void> _showReplyFontSizeDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final res = await showDialog<double>(
+    context: context,
+    builder: (context) => SliderDialog(
+      title: const Text('评论区评论字体大小'),
+      value: Pref.replyFontSize,
+      min: 10,
+      max: 22,
+      divisions: 24,
+      suffix: 'dp',
+      precise: 1,
+    ),
+  );
+  if (res != null) {
+    await GStorage.setting.put(SettingBoxKey.replyFontSize, res);
+    Get.appUpdate();
+    setState();
+  }
+}
+
+Future<void> _showReplyLineSpacingDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final res = await showDialog<double>(
+    context: context,
+    builder: (context) => SliderDialog(
+      title: const Text('评论区评论行距'),
+      value: Pref.replyLineSpacingScale,
+      min: 0.7,
+      max: 1.5,
+      divisions: 16,
+      suffix: '倍',
+      precise: 2,
+    ),
+  );
+  if (res != null) {
+    await GStorage.setting.put(SettingBoxKey.replyLineSpacingScale, res);
+    Get.appUpdate();
+    setState();
   }
 }
 

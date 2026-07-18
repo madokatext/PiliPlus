@@ -204,6 +204,7 @@ class VideoCardV extends StatelessWidget {
                     size: .small,
                     type: .secondary,
                   ),
+                _buildUpIcon(theme),
                 Expanded(
                   flex: 1,
                   child: Text(
@@ -222,6 +223,29 @@ class VideoCardV extends StatelessWidget {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUpIcon(ThemeData theme) {
+    final color = theme.colorScheme.outline.withValues(alpha: 0.85);
+    return ExcludeSemantics(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+        decoration: BoxDecoration(
+          border: Border.all(color: color, width: 0.8),
+          borderRadius: BorderRadius.circular(2.5),
+        ),
+        child: Text(
+          'UP',
+          textScaler: TextScaler.noScaling,
+          style: TextStyle(
+            height: 1,
+            fontSize: 8,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
         ),
       ),
     );

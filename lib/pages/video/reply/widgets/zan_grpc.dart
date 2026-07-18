@@ -119,32 +119,6 @@ class ZanButtonGrpc extends StatelessWidget {
         SizedBox(
           height: 32,
           child: TextButton(
-            style: const ButtonStyle(
-              visualDensity: .compact,
-              tapTargetSize: .shrinkWrap,
-              padding: WidgetStatePropertyAll(.zero),
-              minimumSize: WidgetStatePropertyAll(.square(40)),
-            ),
-            onPressed: () => onHateReply(
-              context,
-              isProcessing,
-              () => isProcessing = false,
-              isLike: isLike,
-              isDislike: isDislike,
-            ),
-            child: Icon(
-              isDislike
-                  ? FontAwesomeIcons.solidThumbsDown
-                  : FontAwesomeIcons.thumbsDown,
-              size: 16,
-              color: isDislike ? primary : outline,
-              semanticLabel: isDislike ? '已踩' : '点踩',
-            ),
-          ),
-        ),
-        SizedBox(
-          height: 32,
-          child: TextButton(
             style: style,
             onPressed: () => onLikeReply(
               context,
@@ -172,6 +146,33 @@ class ZanButtonGrpc extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        SizedBox(
+          height: 32,
+          child: TextButton(
+            style: const ButtonStyle(
+              visualDensity: .compact,
+              tapTargetSize: .shrinkWrap,
+              padding: WidgetStatePropertyAll(.zero),
+              minimumSize: WidgetStatePropertyAll(.square(40)),
+            ),
+            onPressed: () => onHateReply(
+              context,
+              isProcessing,
+              () => isProcessing = false,
+              isLike: isLike,
+              isDislike: isDislike,
+            ),
+            child: Icon(
+              isDislike
+                  ? FontAwesomeIcons.solidThumbsDown
+                  : FontAwesomeIcons.thumbsDown,
+              size: 16,
+              color: isDislike ? primary : outline,
+              semanticLabel: isDislike ? '已踩' : '点踩',
             ),
           ),
         ),
