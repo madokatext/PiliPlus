@@ -353,6 +353,7 @@ class PlPlayerController with BlockConfigMixin {
   bool get volumeBrightnessGestureProgressBar =>
       Pref.volumeBrightnessGestureProgressBar;
   late final biliProgressTimeStyle = Pref.biliProgressTimeStyle;
+  double get playerProgressThumbScale => Pref.playerProgressThumbScale;
   double get playerControlHorizontalPadding =>
       Pref.playerControlHorizontalPadding;
   double get playerControlBarThicknessScale =>
