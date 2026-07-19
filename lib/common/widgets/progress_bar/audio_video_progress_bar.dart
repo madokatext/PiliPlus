@@ -43,6 +43,7 @@ class ProgressBar extends LeafRenderObjectWidget {
     required this.thumbGlowColor,
     this.thumbGlowRadius = 30.0,
     this.thumbCanPaintOutsideBar = true,
+    this.verticalTouchPadding = 0.0,
   });
 
   /// The elapsed playing time of the media.
@@ -173,6 +174,9 @@ class ProgressBar extends LeafRenderObjectWidget {
   /// is happening during this time, though.
   final bool thumbCanPaintOutsideBar;
 
+  /// Extra transparent hit area added equally above and below the visible bar.
+  final double verticalTouchPadding;
+
   @override
   RenderObject createRenderObject(BuildContext context) {
     return RenderProgressBar(
@@ -192,6 +196,7 @@ class ProgressBar extends LeafRenderObjectWidget {
       thumbGlowColor: thumbGlowColor,
       thumbGlowRadius: thumbGlowRadius,
       thumbCanPaintOutsideBar: thumbCanPaintOutsideBar,
+      verticalTouchPadding: verticalTouchPadding,
     );
   }
 
@@ -216,7 +221,8 @@ class ProgressBar extends LeafRenderObjectWidget {
       ..thumbColor = thumbColor
       ..thumbGlowColor = thumbGlowColor
       ..thumbGlowRadius = thumbGlowRadius
-      ..thumbCanPaintOutsideBar = thumbCanPaintOutsideBar;
+      ..thumbCanPaintOutsideBar = thumbCanPaintOutsideBar
+      ..verticalTouchPadding = verticalTouchPadding;
   }
 
   @override
@@ -262,6 +268,7 @@ class ProgressBar extends LeafRenderObjectWidget {
       ..add(ColorProperty('thumbColor', thumbColor))
       ..add(ColorProperty('thumbGlowColor', thumbGlowColor))
       ..add(DoubleProperty('thumbGlowRadius', thumbGlowRadius))
+      ..add(DoubleProperty('verticalTouchPadding', verticalTouchPadding))
       ..add(
         FlagProperty(
           'thumbCanPaintOutsideBar',
@@ -341,11 +348,13 @@ class RenderProgressBar extends RenderBox implements MouseTrackerAnnotation {
     required this._thumbGlowColor,
     double thumbGlowRadius = 30.0,
     this._thumbCanPaintOutsideBar = true,
+    double verticalTouchPadding = 0.0,
   }) : _onDragStartUserCallback = onDragStart,
        _onDragUpdateUserCallback = onDragUpdate,
        _onDragEndUserCallback = onDragEnd,
        _thumbRadius = thumbRadius,
        _thumbGlowRadius = thumbGlowRadius,
+       _verticalTouchPadding = verticalTouchPadding,
        _paintThumbGlow = thumbGlowRadius > thumbRadius,
        _hitTestSelf = onDragStart != null {
     if (onDragStart != null) {
@@ -614,6 +623,15 @@ class RenderProgressBar extends RenderBox implements MouseTrackerAnnotation {
     markNeedsPaint();
   }
 
+  /// Extra transparent hit area above and below the visible progress bar.
+  double get verticalTouchPadding => _verticalTouchPadding;
+  double _verticalTouchPadding;
+  set verticalTouchPadding(double value) {
+    if (_verticalTouchPadding == value) return;
+    _verticalTouchPadding = value;
+    markNeedsLayout();
+  }
+
   // The smallest that this widget would ever want to be.
   static const _minDesiredWidth = 100.0;
 
@@ -654,7 +672,7 @@ class RenderProgressBar extends RenderBox implements MouseTrackerAnnotation {
   }
 
   double _heightWhenNoLabels() {
-    return max(2 * _thumbRadius, _barHeight);
+    return max(2 * _thumbRadius, _barHeight) + 2 * _verticalTouchPadding;
   }
 
   @override
