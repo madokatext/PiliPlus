@@ -1440,6 +1440,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                         minHeight: 6,
                         color: primary,
                         backgroundColor: primary.withValues(alpha: 0.24),
+                        stopIndicatorColor: Colors.transparent,
                       ),
                     ),
                   ),
