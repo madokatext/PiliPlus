@@ -636,6 +636,13 @@ abstract final class Pref {
     2.0,
   );
 
+  static double get playerProgressBarTouchPadding => _getClampedDouble(
+    SettingBoxKey.playerProgressBarTouchPadding,
+    0.0,
+    0.0,
+    32.0,
+  );
+
   static double get playerControlHorizontalPadding => _getClampedDouble(
     SettingBoxKey.playerControlHorizontalPadding,
     12.0,
