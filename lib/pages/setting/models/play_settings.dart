@@ -152,6 +152,13 @@ List<SettingsModel> get playSettings => [
     defaultValue: 90,
     isFilter: false,
   ),
+  NormalModel(
+    title: '水平滑动快进/快退触发距离',
+    getSubtitle: () =>
+        '当前：${Pref.horizontalSeekGestureThreshold.toStringAsFixed(0)}dp；越小越容易触发',
+    leading: const Icon(Icons.swipe_outlined),
+    onTap: _showHorizontalSeekGestureThresholdDialog,
+  ),
   const SwitchModel(
     title: '使用B站官方进度时间样式',
     subtitle: '当前时间和总时长显示在进度条两侧，并压缩底栏与渐变阴影高度',
@@ -418,6 +425,31 @@ Future<void> _showPinchGestureAngleThresholdDialog(
   if (res != null) {
     await GStorage.setting.put(
       SettingBoxKey.pinchGestureAngleThreshold,
+      res,
+    );
+    setState();
+  }
+}
+
+Future<void> _showHorizontalSeekGestureThresholdDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final res = await showDialog<double>(
+    context: context,
+    builder: (context) => SliderDialog(
+      title: const Text('水平滑动快进/快退触发距离'),
+      value: Pref.horizontalSeekGestureThreshold,
+      min: 1,
+      max: 100,
+      divisions: 99,
+      precise: 0,
+      suffix: 'dp',
+    ),
+  );
+  if (res != null) {
+    await GStorage.setting.put(
+      SettingBoxKey.horizontalSeekGestureThreshold,
       res,
     );
     setState();
