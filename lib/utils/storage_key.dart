@@ -114,6 +114,7 @@ abstract final class SettingBoxKey {
       showSeekPreviewOnGesture = 'showSeekPreviewOnGesture',
       biliProgressTimeStyle = 'biliProgressTimeStyle',
       playerProgressThumbScale = 'playerProgressThumbScale',
+      playerProgressBarTouchPadding = 'playerProgressBarTouchPadding',
       playerControlHorizontalPadding = 'playerControlHorizontalPadding',
       playerControlBarThicknessScale = 'playerControlBarThicknessScale',
       playerControlBarGradientExtent = 'playerControlBarGradientExtent',
