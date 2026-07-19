@@ -1,5 +1,6 @@
 import 'package:PiliPlus/pages/setting/models/extra_settings.dart';
 import 'package:PiliPlus/pages/setting/models/home_card_layout_settings.dart';
+import 'package:PiliPlus/pages/setting/models/horizontal_seek_gesture_settings.dart';
 import 'package:PiliPlus/pages/setting/models/model.dart';
 import 'package:PiliPlus/pages/setting/models/play_settings.dart';
 import 'package:PiliPlus/pages/setting/models/privacy_settings.dart';
@@ -25,11 +26,23 @@ enum SettingType {
     .privacySetting => privacySettings,
     .recommendSetting => recommendSettings,
     .videoSetting => videoSettings,
-    .playSetting => playSettings,
+    .playSetting => _playSettingsWithHorizontalSeekAngle,
     .styleSetting => _styleSettingsWithHomeCardLayout,
     .extraSetting => extraSettings,
     _ => throw UnimplementedError(),
   };
+}
+
+List<SettingsModel> get _playSettingsWithHorizontalSeekAngle {
+  final settings = <SettingsModel>[...playSettings];
+  final triggerDistanceIndex = settings.indexWhere(
+    (item) => item.title == '水平滑动快进/快退触发距离',
+  );
+  settings.insertAll(
+    triggerDistanceIndex < 0 ? settings.length : triggerDistanceIndex + 1,
+    horizontalSeekGestureSettings,
+  );
+  return settings;
 }
 
 List<SettingsModel> get _styleSettingsWithHomeCardLayout {
