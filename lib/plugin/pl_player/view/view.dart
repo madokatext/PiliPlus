@@ -989,7 +989,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       if (cumulativeDelta.distanceSquared < 1) return;
       final dx = cumulativeDelta.dx.abs();
       final dy = cumulativeDelta.dy.abs();
-      if (dx > 3 * dy) {
+      if (dx > dy) {
         if (dx < plPlayerController.horizontalSeekGestureThreshold) {
           return;
         }
