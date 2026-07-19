@@ -155,11 +155,6 @@ class VideoCardV extends StatelessWidget {
   Widget content(BuildContext context) {
     const upInfoSpacing = 4.0;
     final theme = Theme.of(context);
-    final showRecommendationBadge =
-        videoItem.goto == 'bangumi' ||
-        videoItem.rcmdReason != null ||
-        videoItem.goto == 'picture' ||
-        videoItem.isFollowed;
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(6, 5, 6, 5),
@@ -177,46 +172,47 @@ class VideoCardV extends StatelessWidget {
               ),
             ),
             videoStat(context, theme),
-            if (showRecommendationBadge) ...[
-              Row(
-                spacing: 2,
-                children: [
-                  if (videoItem.goto == 'bangumi')
-                    PBadge(
-                      text: videoItem.pgcBadge,
-                      isStack: false,
-                      size: .small,
-                      type: .line_primary,
-                      fontSize: 9,
-                    ),
-                  if (videoItem.rcmdReason != null)
-                    PBadge(
-                      text: videoItem.rcmdReason,
-                      isStack: false,
-                      size: .small,
-                      type: .secondary,
-                    ),
-                  if (videoItem.goto == 'picture')
-                    const PBadge(
-                      text: '动态',
-                      isStack: false,
-                      size: .small,
-                      type: .line_primary,
-                      fontSize: 9,
-                    ),
-                  if (videoItem.isFollowed)
-                    const PBadge(
-                      text: '已关注',
-                      isStack: false,
-                      size: .small,
-                      type: .secondary,
-                    ),
-                ],
-              ),
-              const SizedBox(height: upInfoSpacing),
-            ],
             Row(
               children: [
+                if (videoItem.goto == 'bangumi' &&
+                    videoItem.pgcBadge?.isNotEmpty == true) ...[
+                  PBadge(
+                    text: videoItem.pgcBadge,
+                    isStack: false,
+                    size: .small,
+                    type: .line_primary,
+                    fontSize: 9,
+                  ),
+                  const SizedBox(width: upInfoSpacing),
+                ],
+                if (videoItem.rcmdReason?.isNotEmpty == true) ...[
+                  PBadge(
+                    text: videoItem.rcmdReason,
+                    isStack: false,
+                    size: .small,
+                    type: .secondary,
+                  ),
+                  const SizedBox(width: upInfoSpacing),
+                ],
+                if (videoItem.goto == 'picture') ...[
+                  const PBadge(
+                    text: '动态',
+                    isStack: false,
+                    size: .small,
+                    type: .line_primary,
+                    fontSize: 9,
+                  ),
+                  const SizedBox(width: upInfoSpacing),
+                ],
+                if (videoItem.isFollowed) ...[
+                  const PBadge(
+                    text: '已关注',
+                    isStack: false,
+                    size: .small,
+                    type: .secondary,
+                  ),
+                  const SizedBox(width: upInfoSpacing),
+                ],
                 _buildUpIcon(theme),
                 const SizedBox(width: upInfoSpacing),
                 Expanded(
