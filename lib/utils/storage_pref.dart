@@ -293,6 +293,13 @@ abstract final class Pref {
   static int get sliderDuration =>
       _setting.get(SettingBoxKey.sliderDuration, defaultValue: 90);
 
+  static double get horizontalSeekGestureThreshold => _getClampedDouble(
+    SettingBoxKey.horizontalSeekGestureThreshold,
+    1.0,
+    1.0,
+    100.0,
+  );
+
   static int get defaultVideoQa => _setting.get(
     SettingBoxKey.defaultVideoQa,
     defaultValue: VideoQuality.super8k.code,
