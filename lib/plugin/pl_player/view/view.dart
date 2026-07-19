@@ -990,6 +990,9 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       final dx = cumulativeDelta.dx.abs();
       final dy = cumulativeDelta.dy.abs();
       if (dx > 3 * dy) {
+        if (dx < plPlayerController.horizontalSeekGestureThreshold) {
+          return;
+        }
         _onHorizontalDragStart();
         _gestureType = .horizontal;
       } else {
@@ -1300,6 +1303,9 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       final dx = pan.dx.abs();
       final dy = pan.dy.abs();
       if (dx > 3 * dy) {
+        if (dx < plPlayerController.horizontalSeekGestureThreshold) {
+          return;
+        }
         _onHorizontalDragStart();
         _gestureType = .horizontal;
       } else if (math.atan2(dx, dy) * 180.0 / math.pi <=
