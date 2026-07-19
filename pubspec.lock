@@ -224,9 +224,9 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: main
-      resolved-ref: "697d4516df2fc3ba7417c7ce9aba079d34ba13e5"
-      url: "https://github.com/bggRGjQaUbCoE/canvas_danmaku.git"
+      ref: e4e4d7a8878dc7e72100c8e624214076fb94ecbb
+      resolved-ref: "e4e4d7a8878dc7e72100c8e624214076fb94ecbb"
+      url: "https://github.com/madokatext/canvas_danmaku.git"
     source: git
     version: "0.2.6"
   catcher_2:
