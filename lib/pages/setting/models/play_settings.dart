@@ -167,6 +167,13 @@ List<SettingsModel> get playSettings => [
     defaultVal: false,
   ),
   NormalModel(
+    title: '进度条手柄圆形大小',
+    getSubtitle: () =>
+        '当前：${Pref.playerProgressThumbScale.toStringAsFixed(1)}×；放大后更容易拖动',
+    leading: const Icon(Icons.radio_button_checked),
+    onTap: _showPlayerProgressThumbScaleDialog,
+  ),
+  NormalModel(
     title: '播放器上下按钮横向边距',
     getSubtitle: () =>
         '当前：${Pref.playerControlHorizontalPadding.toStringAsFixed(0)}dp',
@@ -450,6 +457,31 @@ Future<void> _showHorizontalSeekGestureThresholdDialog(
   if (res != null) {
     await GStorage.setting.put(
       SettingBoxKey.horizontalSeekGestureThreshold,
+      res,
+    );
+    setState();
+  }
+}
+
+Future<void> _showPlayerProgressThumbScaleDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final res = await showDialog<double>(
+    context: context,
+    builder: (context) => SliderDialog(
+      title: const Text('进度条手柄圆形大小'),
+      value: Pref.playerProgressThumbScale,
+      min: 0.5,
+      max: 2.0,
+      divisions: 15,
+      precise: 1,
+      suffix: '×',
+    ),
+  );
+  if (res != null) {
+    await GStorage.setting.put(
+      SettingBoxKey.playerProgressThumbScale,
       res,
     );
     setState();
