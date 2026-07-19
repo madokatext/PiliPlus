@@ -970,7 +970,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
   }
 
   Widget get _aiBtn => Positioned(
-    right: 8,
+    right: 0,
     child: Center(
       child: GestureDetector(
         behavior: .opaque,
@@ -989,7 +989,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
         child: SizedBox.square(
           dimension: 36,
           child: Align(
-            alignment: .centerRight,
+            alignment: .center,
             child: Image.asset(
               semanticLabel: 'AI总结',
               Assets.ai,
