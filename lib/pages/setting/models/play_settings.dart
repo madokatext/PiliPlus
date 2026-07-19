@@ -174,6 +174,13 @@ List<SettingsModel> get playSettings => [
     onTap: _showPlayerProgressThumbScaleDialog,
   ),
   NormalModel(
+    title: '点击进度条垂直触摸范围',
+    getSubtitle: () =>
+        '当前：上下各扩展${Pref.playerProgressBarTouchPadding.toStringAsFixed(0)}dp；不改变可视尺寸',
+    leading: const Icon(Icons.unfold_more),
+    onTap: _showPlayerProgressBarTouchPaddingDialog,
+  ),
+  NormalModel(
     title: '播放器上下按钮横向边距',
     getSubtitle: () =>
         '当前：${Pref.playerControlHorizontalPadding.toStringAsFixed(0)}dp',
@@ -482,6 +489,31 @@ Future<void> _showPlayerProgressThumbScaleDialog(
   if (res != null) {
     await GStorage.setting.put(
       SettingBoxKey.playerProgressThumbScale,
+      res,
+    );
+    setState();
+  }
+}
+
+Future<void> _showPlayerProgressBarTouchPaddingDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final res = await showDialog<double>(
+    context: context,
+    builder: (context) => SliderDialog(
+      title: const Text('点击进度条垂直触摸范围'),
+      value: Pref.playerProgressBarTouchPadding,
+      min: 0,
+      max: 32,
+      divisions: 32,
+      precise: 0,
+      suffix: 'dp',
+    ),
+  );
+  if (res != null) {
+    await GStorage.setting.put(
+      SettingBoxKey.playerProgressBarTouchPadding,
       res,
     );
     setState();
