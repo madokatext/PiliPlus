@@ -113,7 +113,8 @@ class BottomControl extends StatelessWidget {
     final thumbGlowRadius = officialTimeStyle
         ? (compact ? 18.0 : 22.0)
         : 25.0;
-    final overlayOffset = 7.0 - thumbRadius;
+    final verticalTouchPadding = controller.playerProgressBarTouchPadding;
+    final overlayOffset = 7.0 - thumbRadius - verticalTouchPadding;
 
     Widget buildProgressTime(
       String label,
@@ -151,6 +152,7 @@ class BottomControl extends StatelessWidget {
             barHeight: barHeight,
             thumbRadius: thumbRadius,
             thumbGlowRadius: thumbGlowRadius,
+            verticalTouchPadding: verticalTouchPadding,
             onDragStart: onDragStart,
             onDragUpdate: onDragUpdate,
             onSeek: onSeek,
