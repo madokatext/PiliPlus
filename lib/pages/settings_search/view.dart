@@ -83,15 +83,6 @@ class _SettingsSearchPageState
     ctr!.add(keyword);
   }
 
-  void _removeHistory(String keyword) {
-    _history.remove(keyword);
-    if (_history.isEmpty) {
-      GStorage.historyWord.delete(_historyKey);
-    } else {
-      GStorage.historyWord.put(_historyKey, _history.toList());
-    }
-  }
-
   void _clearHistory() {
     showConfirmDialog(
       context: context,
@@ -198,11 +189,9 @@ class _SettingsSearchPageState
               runSpacing: 4,
               children: [
                 for (final keyword in _history)
-                  InputChip(
+                  ActionChip(
                     label: Text(keyword),
                     onPressed: () => _searchHistory(keyword),
-                    onDeleted: () => _removeHistory(keyword),
-                    deleteIcon: const Icon(Icons.close, size: 16),
                     visualDensity: VisualDensity.compact,
                   ),
               ],
