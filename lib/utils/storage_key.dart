@@ -46,6 +46,7 @@ abstract final class SettingBoxKey {
       longPressSpeedTriggerDelay = 'longPressSpeedTriggerDelay',
       useRelativeSlide = 'useRelativeSlide',
       sliderDuration = 'sliderOffset',
+      horizontalSeekGestureThreshold = 'horizontalSeekGestureThreshold',
       enableQuickDouble = 'enableQuickDouble',
       fullScreenGestureReverse = 'fullScreenGestureReverse',
       enableBackgroundPlay = 'enableBackgroundPlay',
