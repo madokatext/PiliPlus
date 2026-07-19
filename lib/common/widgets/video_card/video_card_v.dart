@@ -213,7 +213,10 @@ class VideoCardV extends StatelessWidget {
                   ),
                   const SizedBox(width: upInfoSpacing),
                 ],
-                _buildUpIcon(theme),
+                Transform.translate(
+                  offset: const Offset(1, 0),
+                  child: _buildUpIcon(theme),
+                ),
                 const SizedBox(width: upInfoSpacing),
                 Expanded(
                   flex: 1,
