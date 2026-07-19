@@ -123,12 +123,18 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
                   const SizedBox(height: 8),
                   buildTitle(isLoading, isHorizontal, videoDetail),
                   const SizedBox(height: 8),
-                  Stack(
-                    clipBehavior: .none,
-                    children: [
-                      _buildInfo(videoDetail.stat, videoDetail.pubdate),
-                      if (introController.enableAi) _aiBtn,
-                    ],
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: introController.enableAi ? 36 : 0,
+                    ),
+                    child: Stack(
+                      alignment: .centerLeft,
+                      clipBehavior: .none,
+                      children: [
+                        _buildInfo(videoDetail.stat, videoDetail.pubdate),
+                        if (introController.enableAi) _aiBtn,
+                      ],
+                    ),
                   ),
                   if (introController.showArgueMsg)
                     if (videoDetail.argueInfo?.argueMsg case final argueMsg?
@@ -980,12 +986,18 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
             }
           }
         },
-        child: Image.asset(
-          semanticLabel: 'AI总结',
-          Assets.ai,
-          height: 18,
-          width: 18,
-          cacheHeight: 18.cacheSize(context),
+        child: SizedBox.square(
+          dimension: 36,
+          child: Align(
+            alignment: .centerRight,
+            child: Image.asset(
+              semanticLabel: 'AI总结',
+              Assets.ai,
+              height: 18,
+              width: 18,
+              cacheHeight: 18.cacheSize(context),
+            ),
+          ),
         ),
       ),
     ),
