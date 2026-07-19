@@ -629,6 +629,13 @@ abstract final class Pref {
     defaultValue: false,
   );
 
+  static double get playerProgressThumbScale => _getClampedDouble(
+    SettingBoxKey.playerProgressThumbScale,
+    1.0,
+    0.5,
+    2.0,
+  );
+
   static double get playerControlHorizontalPadding => _getClampedDouble(
     SettingBoxKey.playerControlHorizontalPadding,
     12.0,
