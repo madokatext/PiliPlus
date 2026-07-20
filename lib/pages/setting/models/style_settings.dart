@@ -696,21 +696,23 @@ Future<void> _showVerticalScrollPhysicsDialog(
   final res = await showDialog<(double, double)>(
     context: context,
     builder: (context) => DualSliderDialog(
-      title: const Text('页面上下滚动惯性'),
-      value1: Pref.verticalScrollInertiaScale,
-      value2: Pref.verticalScrollDecelerationScale,
-      description1: const Text(
-        '惯性距离倍率（通过缩放松手速度实现，越大通常滑得越远）',
-      ),
-      description2: const Text(
-        '减速度倍率（越大速度衰减越快，越早停止）',
-      ),
-      min: 0.5,
-      max: 2.0,
-      divisions: 30,
-      suffix: '×',
-      precise: 2,
-    ),
+  title: const Text('页面上下滚动惯性'),
+  value1: Pref.verticalScrollInertiaScale,
+  value2: Pref.verticalScrollDecelerationScale,
+  description1: const Text(
+    '惯性距离倍率（通过缩放松手速度实现，越大通常滑得越远）',
+  ),
+  description2: const Text(
+    '减速度倍率（越大速度衰减越快，越早停止）',
+  ),
+  min: 0.5,
+  max: 2.0,
+  divisions: 30,
+  min2: 0.05,
+  divisions2: 39,
+  suffix: '×',
+  precise: 2,
+),
   );
 
   if (res != null) {
