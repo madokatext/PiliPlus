@@ -1621,7 +1621,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
           ? videoDetailController.effectiveIntroScrollCtr
           : null,
       physics: !needCtr
-          ? const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics())
+          ? const AlwaysScrollableScrollPhysics()
           : null,
       key: const PageStorageKey(CommonIntroController),
       slivers: [
@@ -1654,10 +1654,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
             ? videoDetailController.effectiveIntroScrollCtr
             : null,
         physics: !needCtr
-            ? const AlwaysScrollableScrollPhysics(
-                parent: ClampingScrollPhysics(),
-              )
-            : null,
+    ? const AlwaysScrollableScrollPhysics()
+    : null,
         slivers: [
           if (videoDetailController.isUgc) ...[
             UgcIntroPanel(
