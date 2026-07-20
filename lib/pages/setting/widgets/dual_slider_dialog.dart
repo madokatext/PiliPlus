@@ -8,24 +8,39 @@ class DualSliderDialog extends StatefulWidget {
   final Widget description1;
   final Widget description2;
   final double min;
-  final double max;
-  final int? divisions;
-  final String suffix;
-  final int precise;
+final double max;
+final int? divisions;
+
+final double? min1;
+final double? max1;
+final int? divisions1;
+
+final double? min2;
+final double? max2;
+final int? divisions2;
+
+final String suffix;
+final int precise;
 
   const DualSliderDialog({
-    super.key,
-    required this.value1,
-    required this.value2,
-    required this.description1,
-    required this.description2,
-    required this.title,
-    required this.min,
-    required this.max,
-    this.divisions,
-    this.suffix = '',
-    this.precise = 1,
-  });
+  super.key,
+  required this.value1,
+  required this.value2,
+  required this.description1,
+  required this.description2,
+  required this.title,
+  required this.min,
+  required this.max,
+  this.divisions,
+  this.min1,
+  this.max1,
+  this.divisions1,
+  this.min2,
+  this.max2,
+  this.divisions2,
+  this.suffix = '',
+  this.precise = 1,
+});
 
   @override
   State<DualSliderDialog> createState() => _DualSliderDialogState();
@@ -59,10 +74,10 @@ class _DualSliderDialogState extends State<DualSliderDialog> {
           Builder(
             builder: (context) {
               return Slider(
-                value: _tempValue1,
-                min: widget.min,
-                max: widget.max,
-                divisions: widget.divisions,
+  value: _tempValue1,
+  min: widget.min1 ?? widget.min,
+  max: widget.max1 ?? widget.max,
+  divisions: widget.divisions1 ?? widget.divisions,
                 label:
                     '${_tempValue1.toStringAsFixed(widget.precise)}${widget.suffix}',
                 onChanged: (double value) {
@@ -76,10 +91,10 @@ class _DualSliderDialogState extends State<DualSliderDialog> {
           Builder(
             builder: (context) {
               return Slider(
-                value: _tempValue2,
-                min: widget.min,
-                max: widget.max,
-                divisions: widget.divisions,
+  value: _tempValue2,
+  min: widget.min2 ?? widget.min,
+  max: widget.max2 ?? widget.max,
+  divisions: widget.divisions2 ?? widget.divisions,
                 label:
                     '${_tempValue2.toStringAsFixed(widget.precise)}${widget.suffix}',
                 onChanged: (double value) {
