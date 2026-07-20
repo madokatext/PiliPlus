@@ -152,6 +152,10 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
   double _initialBrightness = 0.0;
   double _initialVolume = 0.0;
   double? _panZoomInitialVolume;
+    bool _gestureDidAct = false;
+bool _gestureHadMultiplePointers = false;
+double _gestureMaxDistanceSquared = 0.0;
+ui.PointerDeviceKind? _gesturePointerKind;
 
   bool _pauseDueToPauseUponEnteringBackgroundMode = false;
 
@@ -937,14 +941,21 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
   }
 
   void _onPanStart(ScaleStartDetails details) {
-    _gestureType = null;
-    _initialFocalPoint = details.localFocalPoint;
-    _initialBrightness = _brightnessValue.value;
-    _initialVolume = plPlayerController.volume.value;
+  _gestureType = null;
+  _gestureDidAct = false;
+  _gestureHadMultiplePointers = details.pointerCount > 1;
+  _gestureMaxDistanceSquared = 0.0;
+
+  _initialFocalPoint = details.localFocalPoint;
+  _initialBrightness = _brightnessValue.value;
+  _initialVolume = plPlayerController.volume.value;
   }
 
   void _onScaleUpdate(double scale) {
-    showRestoreScaleBtn.value = scale != 1.0;
+  if ((scale - 1.0).abs() > 0.001) {
+    _gestureDidAct = true;
+  }
+  showRestoreScaleBtn.value = scale != 1.0;
   }
 
   void _onHorizontalDragStart() {
@@ -952,6 +963,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
   }
 
   void _onHorizontalDragUpdate(double dx) {
+      _gestureDidAct = true;
     final curPos =
         plPlayerController.seekToPos?.inMilliseconds ??
         plPlayerController.position.value * 1000;
@@ -984,7 +996,16 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
   }
 
   void _onPanUpdate(ScaleUpdateDetails details) {
-    if (_gestureType == null) {
+    _gestureHadMultiplePointers |= details.pointerCount > 1;
+
+if (_initialFocalPoint case final initial?) {
+  final distanceSquared =
+      (details.localFocalPoint - initial).distanceSquared;
+  if (distanceSquared > _gestureMaxDistanceSquared) {
+    _gestureMaxDistanceSquared = distanceSquared;
+  }
+}
+      if (_gestureType == null) {
       final cumulativeDelta = details.localFocalPoint - _initialFocalPoint!;
       if (cumulativeDelta.distanceSquared < 1) return;
       final dx = cumulativeDelta.dx.abs();
@@ -1087,6 +1108,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                 level *
                 plPlayerController.brightnessGestureSpeed
       ).clamp(0.0, 1.0);
+    _gestureDidAct = true;
       setBrightness(brightness);
     } else if (_gestureType == .center) {
       // 全屏
@@ -1094,8 +1116,9 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       double cumulativeDy = details.localFocalPoint.dy - _initialFocalPoint!.dy;
 
       void fullScreenTrigger(bool status) {
-        plPlayerController.triggerFullScreen(status: status);
-      }
+  _gestureDidAct = true;
+  plPlayerController.triggerFullScreen(status: status);
+}
 
       if (cumulativeDy > threshold) {
         _gestureType = .center_down;
@@ -1117,7 +1140,8 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       final double level = maxHeight * 0.5;
       final cumulativeDy =
           details.localFocalPoint.dy - _initialFocalPoint!.dy;
-      EasyThrottle.throttle(
+      _gestureDidAct = true;
+        EasyThrottle.throttle(
         'setVolume',
         const Duration(milliseconds: 20),
         () {
@@ -1136,11 +1160,32 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
   }
 
   void _onPanEnd(ScaleEndDetails details) {
-    if (_gestureType == .horizontal) {
-      _onHorizontalDragEnd();
-    }
-    _initialFocalPoint = null;
-    _gestureType = null;
+  final fallbackPosition = _initialFocalPoint;
+
+  final shouldFallbackToTap =
+      PlatformUtils.isMobile &&
+      !_gestureDidAct &&
+      !_gestureHadMultiplePointers &&
+      fallbackPosition != null &&
+      _gestureMaxDistanceSquared <= kTouchSlop * kTouchSlop;
+
+  if (_gestureType == .horizontal) {
+    _onHorizontalDragEnd();
+  }
+
+  if (shouldFallbackToTap) {
+    _handleSingleTap(
+      fallbackPosition,
+      _gesturePointerKind ?? ui.PointerDeviceKind.touch,
+    );
+  }
+
+  _initialFocalPoint = null;
+  _gestureType = null;
+  _gestureDidAct = false;
+  _gestureHadMultiplePointers = false;
+  _gestureMaxDistanceSquared = 0.0;
+  _gesturePointerKind = null;
   }
 
   void _onPanCancel() {
@@ -1158,6 +1203,10 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     }
     _initialFocalPoint = null;
     _gestureType = null;
+      _gestureDidAct = false;
+_gestureHadMultiplePointers = false;
+_gestureMaxDistanceSquared = 0.0;
+_gesturePointerKind = null;
   }
 
   void onDoubleTapDownMobile(TapDownDetails details) {
@@ -1177,20 +1226,29 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     plPlayerController.doubleTapFuc(type);
   }
 
-  void _onTapUp(TapUpDetails details) {
-    switch (details.kind) {
-      case ui.PointerDeviceKind.mouse when PlatformUtils.isDesktop:
-        plPlayerController.onDoubleTapCenter();
-      default:
-        if (_suspendedDm == null) {
-          plPlayerController.controls = !plPlayerController.showControls.value;
-        } else if (_suspendedDm!.suspend) {
-          _dmOffset.value = details.localPosition;
-        } else {
-          _suspendedDm = null;
-        }
-    }
+  void _handleSingleTap(
+  Offset localPosition,
+  ui.PointerDeviceKind? kind,
+) {
+  switch (kind) {
+    case ui.PointerDeviceKind.mouse when PlatformUtils.isDesktop:
+      plPlayerController.onDoubleTapCenter();
+
+    default:
+      if (_suspendedDm == null) {
+        plPlayerController.controls =
+            !plPlayerController.showControls.value;
+      } else if (_suspendedDm!.suspend) {
+        _dmOffset.value = localPosition;
+      } else {
+        _suspendedDm = null;
+      }
   }
+}
+
+void _onTapUp(TapUpDetails details) {
+  _handleSingleTap(details.localPosition, details.kind);
+}
 
   void _onTapDown(TapDownDetails details) {
     final ctr = plPlayerController.danmakuController;
@@ -1252,6 +1310,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
   }
 
   void _onPointerDown(PointerDownEvent event) {
+    _gesturePointerKind = event.kind;
     if (PlatformUtils.isDesktop) {
       final buttons = event.buttons;
       final isSecondaryBtn = buttons == kSecondaryMouseButton;
