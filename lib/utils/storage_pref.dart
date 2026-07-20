@@ -257,6 +257,20 @@ abstract final class Pref {
     return value is num ? value.toDouble().clamp(0.0, 48.0).toDouble() : null;
   }
 
+static double get verticalScrollInertiaScale => _getClampedDouble(
+  SettingBoxKey.verticalScrollInertiaScale,
+  1.0,
+  0.5,
+  2.0,
+);
+
+static double get verticalScrollDecelerationScale => _getClampedDouble(
+  SettingBoxKey.verticalScrollDecelerationScale,
+  1.0,
+  0.5,
+  2.0,
+);
+    
   static UpPanelPosition get upPanelPosition =>
       UpPanelPosition.values[_setting.get(
         SettingBoxKey.upPanelPosition,
