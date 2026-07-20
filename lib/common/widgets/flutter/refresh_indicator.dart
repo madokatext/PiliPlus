@@ -549,15 +549,17 @@ class RefreshIndicatorState extends State<RefreshIndicator>
       return child;
     }
     return ScrollConfiguration(
-      behavior: RefreshScrollBehavior(
-        desktopDragDevices,
-        scrollPhysics: RefreshScrollPhysics(
-          parent: const RangeMaintainingScrollPhysics(),
-          onDrag: _onDrag,
-        ),
-      ),
-      child: child,
-    );
+  behavior: RefreshScrollBehavior(
+    customDragDevices: desktopDragDevices,
+    verticalInertiaScale: Pref.verticalScrollInertiaScale,
+    verticalDecelerationScale: Pref.verticalScrollDecelerationScale,
+    scrollPhysics: RefreshScrollPhysics(
+      parent: const RangeMaintainingScrollPhysics(),
+      onDrag: _onDrag,
+    ),
+  ),
+  child: child,
+);
   }
 
   bool _onDrag(double offset, double viewportDimension) {
@@ -613,8 +615,10 @@ class RefreshIndicatorState extends State<RefreshIndicator>
 typedef refreshIndicator = RefreshIndicator;
 
 class RefreshScrollBehavior extends CustomScrollBehavior {
-  const RefreshScrollBehavior(
-    super.dragDevices, {
+  const RefreshScrollBehavior({
+    super.customDragDevices,
+    super.verticalInertiaScale,
+    super.verticalDecelerationScale,
     required this.scrollPhysics,
   });
 
@@ -622,6 +626,6 @@ class RefreshScrollBehavior extends CustomScrollBehavior {
 
   @override
   ScrollPhysics getScrollPhysics(BuildContext context) {
-    return scrollPhysics;
+    return scrollPhysics.applyTo(super.getScrollPhysics(context));
   }
 }
