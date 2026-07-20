@@ -626,6 +626,6 @@ class RefreshScrollBehavior extends CustomScrollBehavior {
 
   @override
   ScrollPhysics getScrollPhysics(BuildContext context) {
-    return scrollPhysics.applyTo(super.getScrollPhysics(context));
+    return super.getScrollPhysics(context).applyTo(scrollPhysics);
   }
 }
