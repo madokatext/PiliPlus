@@ -263,6 +263,8 @@ abstract final class SettingBoxKey {
       cardRadius = 'cardRadius',
       homeTabBarHeight = 'homeTabBarHeight',
       legacyBottomBarBottomPadding = 'legacyBottomBarBottomPadding',
+      verticalScrollInertiaScale = 'verticalScrollInertiaScale',
+verticalScrollDecelerationScale = 'verticalScrollDecelerationScale',
       dynamicsWaterfallFlow = 'dynamicsWaterfallFlow',
       upPanelPosition = 'upPanelPosition',
       dynamicsShowAllFollowedUp = 'dynamicsShowAllFollowedUp',
