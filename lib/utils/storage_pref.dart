@@ -267,7 +267,7 @@ static double get verticalScrollInertiaScale => _getClampedDouble(
 static double get verticalScrollDecelerationScale => _getClampedDouble(
   SettingBoxKey.verticalScrollDecelerationScale,
   1.0,
-  0.5,
+  0.05,
   2.0,
 );
     
