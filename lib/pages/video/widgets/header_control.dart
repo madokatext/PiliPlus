@@ -1785,7 +1785,7 @@ class HeaderControlState extends State<HeaderControl>
       flexibleSpace: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(height: 11 * thicknessScale),
+          SizedBox(height: 5 * thicknessScale),
           Padding(
             padding: EdgeInsets.symmetric(
               horizontal: plPlayerController.playerControlHorizontalPadding,
