@@ -354,6 +354,14 @@ List<SettingsModel> get styleSettings => [
     onTap: _showSpringDialog,
   ),
   NormalModel(
+  title: '页面上下滚动惯性',
+  getSubtitle: () =>
+      '惯性：${Pref.verticalScrollInertiaScale.toStringAsFixed(2)}×；'
+      '减速度：${Pref.verticalScrollDecelerationScale.toStringAsFixed(2)}×',
+  leading: const Icon(Icons.swap_vert),
+  onTap: _showVerticalScrollPhysicsDialog,
+),
+  NormalModel(
     onTap: (context, setState) async {
       final res = await Get.toNamed('/fontSizeSetting');
       if (res != null) {
@@ -679,6 +687,40 @@ void _showSpringDialog(BuildContext context, _) {
       ],
     ),
   );
+}
+
+Future<void> _showVerticalScrollPhysicsDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final res = await showDialog<(double, double)>(
+    context: context,
+    builder: (context) => DualSliderDialog(
+      title: const Text('页面上下滚动惯性'),
+      value1: Pref.verticalScrollInertiaScale,
+      value2: Pref.verticalScrollDecelerationScale,
+      description1: const Text(
+        '惯性距离倍率（通过缩放松手速度实现，越大通常滑得越远）',
+      ),
+      description2: const Text(
+        '减速度倍率（越大速度衰减越快，越早停止）',
+      ),
+      min: 0.5,
+      max: 2.0,
+      divisions: 30,
+      suffix: '×',
+      precise: 2,
+    ),
+  );
+
+  if (res != null) {
+    await GStorage.setting.putAll({
+      SettingBoxKey.verticalScrollInertiaScale: res.$1,
+      SettingBoxKey.verticalScrollDecelerationScale: res.$2,
+    });
+    setState();
+    Get.appUpdate();
+  }
 }
 
 Future<void> _showFontWeightDialog(BuildContext context) async {
