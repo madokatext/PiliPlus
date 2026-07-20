@@ -1781,7 +1781,7 @@ class HeaderControlState extends State<HeaderControl>
       primary: false,
       automaticallyImplyLeading: false,
       toolbarHeight:
-          (showFSActionItem ? 112.0 : kToolbarHeight) * thicknessScale,
+          (showFSActionItem ? 88.0 : 44.0) * thicknessScale,
       flexibleSpace: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
