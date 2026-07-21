@@ -803,7 +803,28 @@ bool hitTest(
     }
     canvas.drawCircle(center, thumbRadius, thumbPaint);
   }
+/// 返回指定播放进度对应的手柄全局横坐标。
+///
+/// 横滑快进/快退时，进度条本身可能还没有完成下一帧重绘，
+/// 因此不能直接读取当前 _thumbValue，而要根据传入进度重新计算。
+double globalThumbXForProgress(int progress) {
+  final thumbValue = _proportionOfTotal(progress);
+  final barCapRadius = _barHeight / 2;
+  final availableWidth = size.width - _barHeight;
 
+  var thumbDx = thumbValue * availableWidth + barCapRadius;
+
+  if (!_thumbCanPaintOutsideBar) {
+    thumbDx = thumbDx.clamp(
+      _thumbRadius,
+      size.width - _thumbRadius,
+    );
+  }
+
+  return localToGlobal(
+    Offset(thumbDx, size.height / 2),
+  ).dx;
+}
   double _proportionOfTotal(int duration) {
     if (total == 0) {
       return 0.0;
