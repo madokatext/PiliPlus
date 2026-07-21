@@ -139,7 +139,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
   final _playerKey = GlobalKey();
   final _videoKey = GlobalKey();
   final _progressBarKey = GlobalKey();
-
+final _collapsedProgressBarKey = GlobalKey();
   final RxDouble _brightnessValue = 0.0.obs;
   final RxBool _brightnessIndicator = false.obs;
   Timer? _brightnessTimer;
@@ -962,16 +962,24 @@ ui.PointerDeviceKind? _gesturePointerKind;
   void _onHorizontalDragStart() {
     plPlayerController.isSeeking.value = true;
   }
-double? _progressBarThumbGlobalX(int seconds) {
-  final renderObject =
-      _progressBarKey.currentContext?.findRenderObject();
+RenderProgressBar? _visibleProgressBarRenderObject() {
+  final key = plPlayerController.showControls.value
+      ? _progressBarKey
+      : _collapsedProgressBarKey;
+
+  final renderObject = key.currentContext?.findRenderObject();
 
   if (renderObject is! RenderProgressBar ||
       !renderObject.hasSize) {
     return null;
   }
 
-  return renderObject.globalThumbXForProgress(seconds);
+  return renderObject;
+}
+
+double? _progressBarThumbGlobalX(int seconds) {
+  return _visibleProgressBarRenderObject()
+      ?.globalThumbXForProgress(seconds);
 }
   void _onHorizontalDragUpdate(double dx) {
       _gestureDidAct = true;
@@ -1876,6 +1884,7 @@ backgroundColor: gestureProgressColor.withValues(alpha: 0.24),
                     children: [
                       Obx(
                         () => ProgressBar(
+                            key: _collapsedProgressBarKey,
                           progress: plPlayerController.position.value,
                           buffered: plPlayerController.buffered.value,
                           total: plPlayerController.duration.value,
@@ -1949,22 +1958,25 @@ backgroundColor: gestureProgressColor.withValues(alpha: 0.24),
                   .dx;
             },
             () {
-              if (!plPlayerController.showControls.value) {
-                return null;
-              }
-              final progressBarBox =
-                  _progressBarKey.currentContext?.findRenderObject()
-                      as RenderBox?;
-              final playerBox =
-                  _playerKey.currentContext?.findRenderObject() as RenderBox?;
-              if (progressBarBox == null || playerBox == null) {
-                return null;
-              }
-              final globalCenter = progressBarBox.localToGlobal(
-                Offset(0, progressBarBox.size.height / 2),
-              );
-              return playerBox.globalToLocal(globalCenter).dy;
-            },
+  final progressBarBox = _visibleProgressBarRenderObject();
+  final playerBox =
+      _playerKey.currentContext?.findRenderObject() as RenderBox?;
+
+  if (progressBarBox == null ||
+      playerBox == null ||
+      !playerBox.hasSize) {
+    return null;
+  }
+
+  final globalCenter = progressBarBox.localToGlobal(
+    Offset(
+      0,
+      progressBarBox.size.height / 2,
+    ),
+  );
+
+  return playerBox.globalToLocal(globalCenter).dy;
+},
           ),
 
         if (isFullScreen || plPlayerController.isDesktopPip) ...[
