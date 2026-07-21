@@ -254,6 +254,44 @@ List<SettingsModel> get extraSettings => [
     onTap: _showTouchSlopDialog,
     leading: const Icon(Icons.pan_tool_alt_outlined),
   ),
+      NormalModel(
+    title: '横向标签页快滑速度阈值',
+    getSubtitle: () =>
+        '当前：${Pref.tabSwipeVelocityThreshold.toStringAsFixed(0)} dp/s'
+        '（越大越难判定为快滑）',
+    leading: const Icon(Icons.speed_outlined),
+    onTap: (context, setState) => _showGestureSliderDialog(
+      context,
+      setState,
+      title: '横向标签页快滑速度阈值',
+      key: SettingBoxKey.tabSwipeVelocityThreshold,
+      value: Pref.tabSwipeVelocityThreshold,
+      min: 10.0,
+      max: 3000.0,
+      divisions: 299,
+      precise: 0,
+      suffix: 'dp/s',
+    ),
+  ),
+  NormalModel(
+    title: '横向标签页慢滑翻页距离',
+    getSubtitle: () =>
+        '当前：${Pref.tabSwipeDistanceThresholdPercent.toStringAsFixed(0)}%'
+        ' 页面宽度',
+    leading: const Icon(Icons.compare_arrows_outlined),
+    onTap: (context, setState) => _showGestureSliderDialog(
+      context,
+      setState,
+      title: '横向标签页慢滑翻页距离',
+      key: SettingBoxKey.tabSwipeDistanceThresholdPercent,
+      value: Pref.tabSwipeDistanceThresholdPercent,
+      min: 5.0,
+      max: 95.0,
+      divisions: 90,
+      precise: 0,
+      suffix: '%',
+    ),
+  ),
   NormalModel(
     title: '进度与长按倍速浮窗垂直位置',
     getSubtitle: () =>
