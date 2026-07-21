@@ -5,10 +5,111 @@
 // ignore_for_file: prefer_initializing_formals
 
 import 'package:PiliPlus/common/widgets/flutter/page/page_view.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flutter/foundation.dart' show clampDouble;
 import 'package:flutter/gestures.dart'
     show DragStartBehavior, HorizontalDragGestureRecognizer;
 import 'package:flutter/material.dart' hide TabBarView, PageView;
+import 'package:flutter/physics.dart';
+
+class _ThresholdPageScrollPhysics extends ScrollPhysics {
+  const _ThresholdPageScrollPhysics({
+    required this.currentPage,
+    super.parent,
+  });
+
+  /// 返回本次拖动起始时对应的标签页。
+  ///
+  /// 不能只根据当前小数页码判断，因为当阈值不等于 50% 时，
+  /// 相同的小数页码可能来自两个相反方向的拖动。
+  final int Function() currentPage;
+
+  @override
+  _ThresholdPageScrollPhysics applyTo(ScrollPhysics? ancestor) {
+    return _ThresholdPageScrollPhysics(
+      currentPage: currentPage,
+      parent: buildParent(ancestor),
+    );
+  }
+
+  double _getPage(ScrollMetrics position) {
+    if (position is PageMetrics) {
+      return position.page!;
+    }
+    return position.pixels / position.viewportDimension;
+  }
+
+  double _getPixels(
+    ScrollMetrics position,
+    double targetPage,
+  ) {
+    if (position is PageMetrics) {
+      final double visiblePage = position.page!;
+      final double pageExtent =
+          position.viewportDimension * position.viewportFraction;
+
+      return position.pixels +
+          (targetPage - visiblePage) * pageExtent;
+    }
+
+    return targetPage * position.viewportDimension;
+  }
+
+  @override
+  Simulation? createBallisticSimulation(
+    ScrollMetrics position,
+    double velocity,
+  ) {
+    // 位于边界且仍然朝边界外运动时，交给父物理处理。
+    if ((velocity <= 0.0 &&
+            position.pixels <= position.minScrollExtent) ||
+        (velocity >= 0.0 &&
+            position.pixels >= position.maxScrollExtent)) {
+      return super.createBallisticSimulation(position, velocity);
+    }
+
+    final Tolerance tolerance = toleranceFor(position);
+
+    final double originPage = currentPage().toDouble();
+    final double visiblePage = _getPage(position);
+    final double draggedPageDelta = visiblePage - originPage;
+
+    double targetPage = originPage;
+
+    if (velocity.abs() > Pref.tabSwipeVelocityThreshold) {
+      // 快滑：不再检查距离，按最终松手速度方向切换一页。
+      targetPage += velocity.sign;
+    } else if (draggedPageDelta.abs() >=
+        Pref.tabSwipeDistanceThresholdPercent / 100.0) {
+      // 慢滑：达到设置的页面宽度比例后，按实际拖动方向切换。
+      targetPage += draggedPageDelta.sign;
+    }
+
+    final double targetPixels = _getPixels(
+      position,
+      targetPage,
+    ).clamp(
+      position.minScrollExtent,
+      position.maxScrollExtent,
+    ).toDouble();
+
+    if ((targetPixels - position.pixels).abs() <=
+        tolerance.distance) {
+      return null;
+    }
+
+    return ScrollSpringSimulation(
+      spring,
+      position.pixels,
+      targetPixels,
+      velocity,
+      tolerance: tolerance,
+    );
+  }
+
+  @override
+  bool get allowImplicitScrolling => false;
+}
 
 /// A page view that displays the widget which corresponds to the currently
 /// selected tab.
@@ -363,9 +464,12 @@ class _TabBarViewState<T extends HorizontalDragGestureRecognizer>
         dragStartBehavior: widget.dragStartBehavior,
         clipBehavior: widget.clipBehavior,
         controller: _pageController,
-        physics: widget.physics == null
-            ? const PageScrollPhysics().applyTo(const ClampingScrollPhysics())
-            : const PageScrollPhysics().applyTo(widget.physics),
+        physics: _ThresholdPageScrollPhysics(
+  currentPage: () => _currentIndex ?? _controller!.index,
+).applyTo(
+  widget.physics ?? const ClampingScrollPhysics(),
+),
+pageSnapping: false,
         horizontalDragGestureRecognizer: widget.horizontalDragGestureRecognizer,
         children: _childrenWithKey,
       ),
