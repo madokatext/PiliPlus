@@ -625,12 +625,16 @@ class RenderProgressBar extends RenderBox implements MouseTrackerAnnotation {
 
   /// Extra transparent hit area above and below the visible progress bar.
   double get verticalTouchPadding => _verticalTouchPadding;
-  double _verticalTouchPadding;
-  set verticalTouchPadding(double value) {
-    if (_verticalTouchPadding == value) return;
-    _verticalTouchPadding = value;
-    markNeedsLayout();
-  }
+double _verticalTouchPadding;
+
+set verticalTouchPadding(double value) {
+  if (_verticalTouchPadding == value) return;
+  _verticalTouchPadding = value;
+
+  // verticalTouchPadding 只影响命中测试，
+  // 不再触发布局和绘制尺寸变化。
+  markNeedsSemanticsUpdate();
+}
 
   // The smallest that this widget would ever want to be.
   static const _minDesiredWidth = 100.0;
@@ -648,8 +652,34 @@ class RenderProgressBar extends RenderBox implements MouseTrackerAnnotation {
   double computeMaxIntrinsicHeight(double width) => _heightWhenNoLabels();
 
   final bool _hitTestSelf;
-  @override
-  bool hitTestSelf(Offset position) => _hitTestSelf;
+
+@override
+bool hitTestSelf(Offset position) => _hitTestSelf;
+
+@override
+bool hitTest(
+  BoxHitTestResult result, {
+  required Offset position,
+}) {
+  if (!_hitTestSelf) {
+    return false;
+  }
+
+  // 布局尺寸保持不变，只把命中矩形向上、向下扩展。
+  final Rect expandedHitRect = Rect.fromLTRB(
+    0,
+    -_verticalTouchPadding,
+    size.width,
+    size.height + _verticalTouchPadding,
+  );
+
+  if (!expandedHitRect.contains(position)) {
+    return false;
+  }
+
+  result.add(BoxHitTestEntry(this, position));
+  return true;
+}
 
   @override
   void handleEvent(PointerEvent event, BoxHitTestEntry entry) {
@@ -672,7 +702,9 @@ class RenderProgressBar extends RenderBox implements MouseTrackerAnnotation {
   }
 
   double _heightWhenNoLabels() {
-    return max(2 * _thumbRadius, _barHeight) + 2 * _verticalTouchPadding;
+  // 只返回可见内容所需高度。
+  // 触摸扩展范围不得参与布局。
+  return max(2 * _thumbRadius, _barHeight);
   }
 
   @override
