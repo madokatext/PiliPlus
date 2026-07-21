@@ -104,6 +104,7 @@ class ZanButtonGrpc extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
     late bool isProcessing = false;
     final action = replyItem.replyControl.action;
+      final likeCount = replyItem.like.toInt();
     final isLike = action == $fixnum.Int64.ONE;
     final isDislike = action == $fixnum.Int64.TWO;
     final outline = theme.colorScheme.outline;
@@ -141,13 +142,19 @@ class ZanButtonGrpc extends StatelessWidget {
                   color: isLike ? primary : outline,
                   semanticLabel: isLike ? '已赞' : '点赞',
                 ),
-                Text(
-                  NumUtils.numFormat(replyItem.like.toInt()),
-                  style: TextStyle(
-                    color: isLike ? primary : outline,
-                    fontSize: theme.textTheme.labelSmall!.fontSize,
-                  ),
-                ),
+                Visibility(
+  visible: likeCount > 0,
+  maintainState: true,
+  maintainAnimation: true,
+  maintainSize: true,
+  child: Text(
+    NumUtils.numFormat(likeCount),
+    style: TextStyle(
+      color: isLike ? primary : outline,
+      fontSize: theme.textTheme.labelSmall!.fontSize,
+    ),
+  ),
+),
               ],
             ),
           ),
