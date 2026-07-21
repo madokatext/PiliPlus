@@ -1430,9 +1430,9 @@ void _onTapUp(TapUpDetails details) {
     maxWidth = widget.maxWidth;
     maxHeight = widget.maxHeight;
     final isFullScreen = this.isFullScreen;
-    final primary = isFullScreen && colorScheme.isLight
-        ? colorScheme.inversePrimary
-        : colorScheme.primary;
+    final primary = colorScheme.isLight
+    ? colorScheme.inversePrimary
+    : colorScheme.primary;
     late final thumbGlowColor = primary.withAlpha(80);
     late final bufferedBarColor = primary.withValues(alpha: 0.4);
     final gestureToastFontSize =
