@@ -552,7 +552,7 @@ class ReplyItemGrpc extends StatelessWidget {
           ),
           const SizedBox(width: 2),
         ] else if (replyControl.cardLabels.isNotEmpty) ...[
-          const SizedBox(width: 4),
+          const SizedBox(width: 10),
           Text(
             dialogBtn != null
                 ? replyControl.cardLabels.first.textContent
