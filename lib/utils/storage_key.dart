@@ -36,9 +36,16 @@ abstract final class SettingBoxKey {
       maxVolume = 'maxVolume';
 
   static const String enableVerticalExpand = 'enableVerticalExpand',
-      feedBackEnable = 'feedBackEnable',
-      enableLongShowControl = 'enableLongShowControl',
-      horizontalScreen = 'horizontalScreen',
+    feedBackEnable = 'feedBackEnable',
+
+    // 旧版布尔设置，保留用于兼容已有用户。
+    enableLongShowControl = 'enableLongShowControl',
+
+    // 播放控件无操作后自动隐藏的秒数。
+    playerControlDisplayDurationSeconds =
+        'playerControlDisplayDurationSeconds',
+
+    horizontalScreen = 'horizontalScreen',
       CDNService = 'CDNService',
       disableAudioCDN = 'disableAudioCDN',
       autoPiP = 'autoPiP',
