@@ -540,9 +540,9 @@ class ReplyItemGrpc extends StatelessWidget {
             ),
           ),
         ),
-                if (replyControl.translationSwitch ==
+                        if (replyControl.translationSwitch ==
             .TRANSLATION_SWITCH_SHOW_TRANSLATION) ...[
-          const SizedBox(width: 2),
+          const SizedBox(width: 10),
           _buildTranslateBtn(
             context,
             colorScheme,
@@ -550,7 +550,6 @@ class ReplyItemGrpc extends StatelessWidget {
             textStyle,
             buttonStyle,
           ),
-          const SizedBox(width: 2),
         ] else if (replyControl.cardLabels.isNotEmpty) ...[
           const SizedBox(width: 10),
           Text(
@@ -559,10 +558,11 @@ class ReplyItemGrpc extends StatelessWidget {
                 : replyControl.cardLabels.map((e) => e.textContent).join('  '),
             style: textStyle.copyWith(color: colorScheme.secondary),
           ),
-          const SizedBox(width: 2),
         ],
-        ?dialogBtn,
-      ],
+        if (dialogBtn != null) ...[
+          const SizedBox(width: 10),
+          dialogBtn,
+        ],
     );
   }
 
