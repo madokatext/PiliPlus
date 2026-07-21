@@ -1323,7 +1323,28 @@ void _onTapUp(TapUpDetails details) {
     }
     return true;
   }
+void _handleProgressBarExpandedPointerDown(
+  PointerDownEvent event,
+) {
+  if (!plPlayerController.showControls.value ||
+      plPlayerController.controlsLock.value) {
+    return;
+  }
 
+  final renderObject =
+      _progressBarKey.currentContext?.findRenderObject();
+
+  if (renderObject is RenderProgressBar) {
+    renderObject.addPointerFromExpandedHitRegion(
+      event,
+
+      // 每次按下都从 Pref 动态读取最新值，
+      // 不依赖 BottomControl 是否重新 build。
+      verticalPadding:
+          plPlayerController.playerProgressBarTouchPadding,
+    );
+  }
+}
   void _onPointerDown(PointerDownEvent event) {
     _gesturePointerKind = event.kind;
     if (PlatformUtils.isDesktop) {
@@ -1533,10 +1554,13 @@ backgroundColor: gestureProgressColor.withValues(alpha: 0.24),
       );
     }
 
-    final child = Stack(
-      fit: StackFit.passthrough,
-      key: _playerKey,
-      children: <Widget>[
+    final child = Listener(
+  behavior: HitTestBehavior.translucent,
+  onPointerDown: _handleProgressBarExpandedPointerDown,
+  child: Stack(
+    fit: StackFit.passthrough,
+    key: _playerKey,
+    children: <Widget>[
         _videoWidget,
 
         if (widget.danmuWidget case final danmaku?)
@@ -2138,6 +2162,7 @@ backgroundColor: gestureProgressColor.withValues(alpha: 0.24),
                 : const SizedBox.shrink();
           }),
       ],
+      ),
     );
     if (PlatformUtils.isDesktop) {
       return Obx(
