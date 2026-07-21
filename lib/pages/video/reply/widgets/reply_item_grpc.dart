@@ -563,6 +563,7 @@ class ReplyItemGrpc extends StatelessWidget {
           const SizedBox(width: 10),
           dialogBtn,
         ],
+          ],
     );
   }
 
