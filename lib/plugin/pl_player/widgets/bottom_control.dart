@@ -122,7 +122,9 @@ class BottomControl extends StatelessWidget {
     if (_canShowPreview) {
       controller.updatePreviewIndex(
         duration.seconds,
-        globalX: duration.globalPosition.dx,
+        globalX: controller.seekPreviewFollowSlider
+    ? duration.globalPosition.dx
+    : null,
       );
     }
   }
@@ -131,7 +133,9 @@ class BottomControl extends StatelessWidget {
     if (_canShowPreview) {
       controller.updatePreviewIndex(
         duration.seconds,
-        globalX: duration.globalPosition.dx,
+        globalX: controller.seekPreviewFollowSlider
+    ? duration.globalPosition.dx
+    : null,
       );
     }
     controller.position.value = duration.seconds;
