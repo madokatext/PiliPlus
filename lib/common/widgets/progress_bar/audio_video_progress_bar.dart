@@ -686,7 +686,18 @@ void addPointerFromExpandedHitRegion(
   );
 
   if (expandedRect.contains(localPosition)) {
-    _drag!.addPointer(event);
+  // getTransformTo(null) 是“进度条局部坐标 → 全局坐标”；
+  // 识别器需要“全局坐标 → 进度条局部坐标”，因此取逆矩阵。
+  final transform = Matrix4.tryInvert(getTransformTo(null));
+  if (transform == null) {
+    return;
+  }
+
+  final transformedEvent = event.transformed(transform);
+
+  if (transformedEvent is PointerDownEvent) {
+    _drag!.addPointer(transformedEvent);
+  }
   }
 }
 
