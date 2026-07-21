@@ -961,7 +961,17 @@ ui.PointerDeviceKind? _gesturePointerKind;
   void _onHorizontalDragStart() {
     plPlayerController.isSeeking.value = true;
   }
+double? _progressBarThumbGlobalX(int seconds) {
+  final renderObject =
+      _progressBarKey.currentContext?.findRenderObject();
 
+  if (renderObject is! RenderProgressBar ||
+      !renderObject.hasSize) {
+    return null;
+  }
+
+  return renderObject.globalThumbXForProgress(seconds);
+}
   void _onHorizontalDragUpdate(double dx) {
       _gestureDidAct = true;
     final curPos =
@@ -977,8 +987,13 @@ ui.PointerDeviceKind? _gesturePointerKind;
       ..seekToPos = Duration(milliseconds: newPos)
       ..position.value = seconds;
     if (!plPlayerController.isFileSource &&
-        plPlayerController.showSeekPreviewOnGesture) {
-      plPlayerController.updatePreviewIndex(seconds);
+    plPlayerController.showSeekPreviewOnGesture) {
+  plPlayerController.updatePreviewIndex(
+    seconds,
+    globalX: plPlayerController.seekPreviewFollowGesture
+        ? _progressBarThumbGlobalX(seconds)
+        : null,
+  );
     }
   }
 
