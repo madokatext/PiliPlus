@@ -656,29 +656,38 @@ set verticalTouchPadding(double value) {
 @override
 bool hitTestSelf(Offset position) => _hitTestSelf;
 
-@override
-bool hitTest(
-  BoxHitTestResult result, {
-  required Offset position,
+/// 将位于组件正常布局范围之外、但位于扩展触摸区域内的指针
+/// 交给进度条的拖动识别器。
+///
+/// 该方法由播放器最外层 Listener 调用，因此不受中间父组件
+/// RenderBox 命中边界的限制。
+void addPointerFromExpandedHitRegion(
+  PointerDownEvent event, {
+  required double verticalPadding,
 }) {
-  if (!_hitTestSelf) {
-    return false;
+  if (!_hitTestSelf || _drag == null || verticalPadding <= 0) {
+    return;
   }
 
-  // 布局尺寸保持不变，只把命中矩形向上、向下扩展。
-  final Rect expandedHitRect = Rect.fromLTRB(
+  final Offset localPosition = globalToLocal(event.position);
+  final Rect normalRect = Offset.zero & size;
+
+  // 正常布局范围内的事件已经会由 handleEvent 加入识别器。
+  // 这里必须返回，防止同一个 pointer 被重复 addPointer。
+  if (normalRect.contains(localPosition)) {
+    return;
+  }
+
+  final Rect expandedRect = Rect.fromLTRB(
     0,
-    -_verticalTouchPadding,
+    -verticalPadding,
     size.width,
-    size.height + _verticalTouchPadding,
+    size.height + verticalPadding,
   );
 
-  if (!expandedHitRect.contains(position)) {
-    return false;
+  if (expandedRect.contains(localPosition)) {
+    _drag!.addPointer(event);
   }
-
-  result.add(BoxHitTestEntry(this, position));
-  return true;
 }
 
   @override
