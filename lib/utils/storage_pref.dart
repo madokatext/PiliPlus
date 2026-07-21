@@ -415,6 +415,14 @@ static double get verticalScrollDecelerationScale => _getClampedDouble(
   static bool get appRcmd =>
       _setting.get(SettingBoxKey.appRcmd, defaultValue: true);
 
+static int get rcmdRefreshCount {
+  final value = _setting.get(
+    SettingBoxKey.rcmdRefreshCount,
+    defaultValue: 20,
+  );
+  return (value is num ? value.toInt() : 20).clamp(4, 30).toInt();
+}
+    
   static String get systemProxyHost =>
       _setting.get(SettingBoxKey.systemProxyHost, defaultValue: '');
 
