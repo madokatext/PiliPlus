@@ -307,13 +307,14 @@ List<SettingsModel> get playSettings => [
     setKey: SettingBoxKey.enableAutoExit,
     defaultVal: true,
   ),
-  const SwitchModel(
-    title: '延长播放控件显示时间',
-    subtitle: '开启后延长至30秒，便于屏幕阅读器滑动切换控件焦点',
-    leading: Icon(Icons.timer_outlined),
-    setKey: SettingBoxKey.enableLongShowControl,
-    defaultVal: false,
-  ),
+  NormalModel(
+  title: '播放控件显示时间',
+  getSubtitle: () =>
+      '当前：${Pref.playerControlDisplayDurationSeconds}秒；'
+      '无操作后自动隐藏',
+  leading: const Icon(Icons.timer_outlined),
+  onTap: _showPlayerControlDisplayDurationDialog,
+),
   if (PlatformUtils.isMobile)
     const SwitchModel(
       title: '后台播放',
@@ -457,6 +458,40 @@ Future<void> _showLongPressSpeedTriggerDelayDialog(
     );
     setState();
   }
+}
+
+Future<void> _showPlayerControlDisplayDurationDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final result = await showDialog<double>(
+    context: context,
+    builder: (context) => SliderDialog(
+      title: const Text('播放控件显示时间'),
+      value: Pref.playerControlDisplayDurationSeconds.toDouble(),
+      min: 1,
+      max: 60,
+      divisions: 59,
+      precise: 0,
+      suffix: '秒',
+    ),
+  );
+
+  if (result == null) {
+    return;
+  }
+
+  await GStorage.setting.put(
+    SettingBoxKey.playerControlDisplayDurationSeconds,
+    result.round(),
+  );
+
+  // 新数值已经保存，删除旧布尔键，完成惰性迁移。
+  await GStorage.setting.delete(
+    SettingBoxKey.enableLongShowControl,
+  );
+
+  setState();
 }
 
 Future<void> _showPinchGestureAngleThresholdDialog(
