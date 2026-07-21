@@ -329,9 +329,9 @@ class PlPlayerController with BlockConfigMixin {
   late bool enableAutoLongPressSpeed = Pref.enableAutoLongPressSpeed;
   Duration get longPressSpeedTriggerDelay =>
       Duration(milliseconds: Pref.longPressSpeedTriggerDelay);
-  late final showControlDuration = Pref.enableLongShowControl
-      ? const Duration(seconds: 30)
-      : const Duration(seconds: 3);
+  Duration get showControlDuration => Duration(
+  seconds: Pref.playerControlDisplayDurationSeconds,
+);
   // 字幕
   late double subtitleFontScale = Pref.subtitleFontScale;
   late double subtitleFontScaleFS = Pref.subtitleFontScaleFS;
