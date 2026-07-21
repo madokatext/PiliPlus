@@ -39,6 +39,18 @@ class CustomHorizontalDragGestureRecognizer
       lastPosition.global,
     );
   }
+    @override
+  bool isFlingGesture(
+    VelocityEstimate estimate,
+    PointerDeviceKind kind,
+  ) {
+    final double minDistance =
+        minFlingDistance ?? computeHitSlop(kind, gestureSettings);
+
+    return estimate.pixelsPerSecond.dx.abs() >
+            Pref.tabSwipeVelocityThreshold &&
+        estimate.offset.dx.abs() > minDistance;
+  }
 }
 
 double touchSlopH = Pref.touchSlopH;
