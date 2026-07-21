@@ -10,6 +10,86 @@ import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter/rendering.dart';
+
+class _OverflowHitTestStack extends Stack {
+  const _OverflowHitTestStack({
+    required this.verticalHitPadding,
+    super.alignment,
+    super.textDirection,
+    super.fit,
+    super.clipBehavior,
+    super.children,
+  });
+
+  final double verticalHitPadding;
+
+  @override
+  RenderStack createRenderObject(BuildContext context) {
+    return _RenderOverflowHitTestStack(
+      verticalHitPadding: verticalHitPadding,
+      alignment: alignment,
+      textDirection: textDirection ?? Directionality.maybeOf(context),
+      fit: fit,
+      clipBehavior: clipBehavior,
+    );
+  }
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderOverflowHitTestStack renderObject,
+  ) {
+    renderObject
+      ..verticalHitPadding = verticalHitPadding
+      ..alignment = alignment
+      ..textDirection = textDirection ?? Directionality.maybeOf(context)
+      ..fit = fit
+      ..clipBehavior = clipBehavior;
+  }
+}
+
+class _RenderOverflowHitTestStack extends RenderStack {
+  _RenderOverflowHitTestStack({
+    required double verticalHitPadding,
+    required super.alignment,
+    required super.textDirection,
+    required super.fit,
+    required super.clipBehavior,
+  }) : _verticalHitPadding = verticalHitPadding;
+
+  double _verticalHitPadding;
+
+  set verticalHitPadding(double value) {
+    if (_verticalHitPadding == value) return;
+    _verticalHitPadding = value;
+  }
+
+  @override
+  bool hitTest(
+    BoxHitTestResult result, {
+    required Offset position,
+  }) {
+    final expandedBounds = Rect.fromLTRB(
+      0,
+      -_verticalHitPadding,
+      size.width,
+      size.height + _verticalHitPadding,
+    );
+
+    if (!expandedBounds.contains(position)) {
+      return false;
+    }
+
+    if (hitTestChildren(result, position: position) ||
+        hitTestSelf(position)) {
+      result.add(BoxHitTestEntry(this, position));
+      return true;
+    }
+
+    return false;
+  }
+}
 
 class BottomControl extends StatelessWidget {
   const BottomControl({
@@ -114,7 +194,7 @@ class BottomControl extends StatelessWidget {
         ? (compact ? 18.0 : 22.0)
         : 25.0;
     final verticalTouchPadding = controller.playerProgressBarTouchPadding;
-    final overlayOffset = 7.0 - thumbRadius - verticalTouchPadding;
+    final overlayOffset = 7.0 - thumbRadius;
 
     Widget buildProgressTime(
       String label,
@@ -134,7 +214,8 @@ class BottomControl extends StatelessWidget {
       );
     }
 
-    Widget buildProgressStack() => Stack(
+    Widget buildProgressStack() => _OverflowHitTestStack(
+  verticalHitPadding: verticalTouchPadding,
   clipBehavior: Clip.none,
   alignment: Alignment.bottomCenter,
   children: [
