@@ -1330,9 +1330,30 @@ static int get rcmdRefreshCount {
   static bool get showDynDispute =>
       _setting.get(SettingBoxKey.showDynDispute, defaultValue: false);
 
-  static double get touchSlopH => _setting.get(
+   static double get touchSlopH => _setting.get(
     SettingBoxKey.touchSlopH,
     defaultValue: deviceTouchSlop + 6.0,
+  );
+
+  /// 横向标签页快滑速度阈值，单位为逻辑像素每秒。
+  ///
+  /// Flutter 默认触摸 fling 最低速度为 50.0，因此默认值保持 50，
+  /// 尽量维持当前未自定义时的行为。
+  static double get tabSwipeVelocityThreshold => _getClampedDouble(
+    SettingBoxKey.tabSwipeVelocityThreshold,
+    50.0,
+    10.0,
+    3000.0,
+  );
+
+  /// 慢滑切换标签页所需的页面宽度百分比。
+  ///
+  /// 默认 50%，对应 PageScrollPhysics 原有的四舍五入逻辑。
+  static double get tabSwipeDistanceThresholdPercent => _getClampedDouble(
+    SettingBoxKey.tabSwipeDistanceThresholdPercent,
+    50.0,
+    5.0,
+    95.0,
   );
 
   static bool get saveReply =>
