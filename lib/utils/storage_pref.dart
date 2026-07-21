@@ -1125,8 +1125,28 @@ static int get rcmdRefreshCount {
   );
 
   static bool get enableLongShowControl =>
-      _setting.get(SettingBoxKey.enableLongShowControl, defaultValue: false);
+    _setting.get(
+      SettingBoxKey.enableLongShowControl,
+      defaultValue: false,
+    );
 
+/// 播放控件无操作后的自动隐藏时间，单位为秒。
+///
+/// 新键不存在时读取旧版布尔开关：
+/// - 旧开关开启：30 秒
+/// - 旧开关关闭或不存在：3 秒
+static int get playerControlDisplayDurationSeconds {
+  final value = _setting.get(
+    SettingBoxKey.playerControlDisplayDurationSeconds,
+  );
+
+  if (value is num) {
+    return value.toInt().clamp(1, 60).toInt();
+  }
+
+  return enableLongShowControl ? 30 : 3;
+}
+    
   static double get bufferSize =>
       _setting.get(SettingBoxKey.bufferSize, defaultValue: 4.0);
 
