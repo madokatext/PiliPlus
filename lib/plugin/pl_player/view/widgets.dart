@@ -102,10 +102,11 @@ Widget buildSeekPreviewWidget(
 
         Widget positionPreview(Widget preview) {
           var centerX = maxWidth / 2;
-          final globalX = plPlayerController.previewGlobalX.value;
-          if (plPlayerController.seekPreviewFollowSlider && globalX != null) {
-            centerX = globalToLocalX(globalX) ?? centerX;
-          }
+final globalX = plPlayerController.previewGlobalX.value;
+
+if (globalX != null) {
+  centerX = globalToLocalX(globalX) ?? centerX;
+}
           return CustomSingleChildLayout(
             delegate: _SeekPreviewLayoutDelegate(
               centerX: centerX,
