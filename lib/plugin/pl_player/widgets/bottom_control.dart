@@ -135,66 +135,77 @@ class BottomControl extends StatelessWidget {
     }
 
     Widget buildProgressStack() => Stack(
-      clipBehavior: Clip.none,
-      alignment: Alignment.bottomCenter,
-      children: [
-        Obx(
-          () => ProgressBar(
-            key: progressBarKey,
-            progress: controller.position.value,
-            buffered: controller.buffered.value,
-            total: controller.duration.value,
-            progressBarColor: primary,
-            baseBarColor: const Color(0x33FFFFFF),
-            bufferedBarColor: bufferedBarColor,
-            thumbColor: primary,
-            thumbGlowColor: thumbGlowColor,
-            barHeight: barHeight,
-            thumbRadius: thumbRadius,
-            thumbGlowRadius: thumbGlowRadius,
-            verticalTouchPadding: verticalTouchPadding,
-            onDragStart: onDragStart,
-            onDragUpdate: onDragUpdate,
-            onSeek: onSeek,
+  clipBehavior: Clip.none,
+  alignment: Alignment.bottomCenter,
+  children: [
+    // 章节条先绘制，放在播放进度条的层级下面。
+    if (controller.showViewPoints &&
+        videoDetailController.viewPointList.isNotEmpty &&
+        videoDetailController.showVP.value)
+      Padding(
+        padding: EdgeInsets.only(bottom: 8.75 - overlayOffset),
+        child: Obx(
+          () => ViewPointSegmentProgressBar(
+            segments: videoDetailController.viewPointList,
+            progress: controller.duration.value <= 0
+                ? 0.0
+                : controller.position.value / controller.duration.value,
+            onSeek: PlatformUtils.isDesktop
+                ? (position) => controller.seekTo(
+                    position,
+                    isSeek: false,
+                  )
+                : null,
           ),
         ),
-        if (controller.enableBlock &&
-            videoDetailController.segmentProgressList.isNotEmpty)
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 5.25 - overlayOffset,
-            child: SegmentProgressBar(
-              segments: videoDetailController.segmentProgressList,
-            ),
-          ),
-        if (controller.showViewPoints &&
-            videoDetailController.viewPointList.isNotEmpty &&
-            videoDetailController.showVP.value)
-          Padding(
-            padding: EdgeInsets.only(bottom: 8.75 - overlayOffset),
-            child: Obx(
-              () => ViewPointSegmentProgressBar(
-                segments: videoDetailController.viewPointList,
-                progress: controller.duration.value <= 0
-                    ? 0.0
-                    : controller.position.value / controller.duration.value,
-                onSeek: PlatformUtils.isDesktop
-                    ? (position) => controller.seekTo(position, isSeek: false)
-                    : null,
-              ),
-            ),
-          ),
-        if (videoDetailController.showDmTrendChart.value)
-          if (videoDetailController.dmTrend.value?.dataOrNull case final list?)
-            buildDmChart(
-              primary,
-              list,
-              videoDetailController,
-              4.5 - overlayOffset,
-            ),
-      ],
-    );
+      ),
+
+    // 播放进度条在章节条之后绘制，因此位于章节条上层，
+    // 并在重叠区域优先获得触摸事件。
+    Obx(
+      () => ProgressBar(
+        key: progressBarKey,
+        progress: controller.position.value,
+        buffered: controller.buffered.value,
+        total: controller.duration.value,
+        progressBarColor: primary,
+        baseBarColor: const Color(0x33FFFFFF),
+        bufferedBarColor: bufferedBarColor,
+        thumbColor: primary,
+        thumbGlowColor: thumbGlowColor,
+        barHeight: barHeight,
+        thumbRadius: thumbRadius,
+        thumbGlowRadius: thumbGlowRadius,
+        verticalTouchPadding: verticalTouchPadding,
+        onDragStart: onDragStart,
+        onDragUpdate: onDragUpdate,
+        onSeek: onSeek,
+      ),
+    ),
+
+    // 分段屏蔽条不处理手势，可以继续显示在播放进度条上。
+    if (controller.enableBlock &&
+        videoDetailController.segmentProgressList.isNotEmpty)
+      Positioned(
+        left: 0,
+        right: 0,
+        bottom: 5.25 - overlayOffset,
+        child: SegmentProgressBar(
+          segments: videoDetailController.segmentProgressList,
+        ),
+      ),
+
+    // 弹幕趋势图同样不处理拖动手势，保持原来的视觉层级。
+    if (videoDetailController.showDmTrendChart.value)
+      if (videoDetailController.dmTrend.value?.dataOrNull case final list?)
+        buildDmChart(
+          primary,
+          list,
+          videoDetailController,
+          4.5 - overlayOffset,
+        ),
+  ],
+);
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
