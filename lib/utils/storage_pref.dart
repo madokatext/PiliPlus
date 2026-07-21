@@ -687,9 +687,14 @@ static int get rcmdRefreshCount {
   );
 
   static bool get seekPreviewFollowSlider => _setting.get(
-    SettingBoxKey.seekPreviewFollowSlider,
-    defaultValue: false,
-  );
+  SettingBoxKey.seekPreviewFollowSlider,
+  defaultValue: false,
+);
+
+static bool get seekPreviewFollowGesture => _setting.get(
+  SettingBoxKey.seekPreviewFollowGesture,
+  defaultValue: false,
+);
 
   static double get seekPreviewScale => _getClampedDouble(
     SettingBoxKey.seekPreviewScale,
