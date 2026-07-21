@@ -1430,7 +1430,10 @@ void _onTapUp(TapUpDetails details) {
     maxWidth = widget.maxWidth;
     maxHeight = widget.maxHeight;
     final isFullScreen = this.isFullScreen;
-    final primary = colorScheme.isLight
+    final primary = isFullScreen && colorScheme.isLight
+    ? colorScheme.inversePrimary
+    : colorScheme.primary;
+      final gestureProgressColor = colorScheme.isLight
     ? colorScheme.inversePrimary
     : colorScheme.primary;
     late final thumbGlowColor = primary.withAlpha(80);
@@ -1497,8 +1500,8 @@ void _onTapUp(TapUpDetails details) {
                       child: LinearProgressIndicator(
                         value: normalized,
                         minHeight: 6,
-                        color: primary,
-                        backgroundColor: primary.withValues(alpha: 0.24),
+                        color: gestureProgressColor,
+backgroundColor: gestureProgressColor.withValues(alpha: 0.24),
                         stopIndicatorColor: Colors.transparent,
                       ),
                     ),
