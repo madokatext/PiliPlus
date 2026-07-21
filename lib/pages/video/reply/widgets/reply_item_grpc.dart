@@ -540,9 +540,9 @@ class ReplyItemGrpc extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 2),
-        if (replyControl.translationSwitch ==
+                if (replyControl.translationSwitch ==
             .TRANSLATION_SWITCH_SHOW_TRANSLATION) ...[
+          const SizedBox(width: 2),
           _buildTranslateBtn(
             context,
             colorScheme,
@@ -552,6 +552,7 @@ class ReplyItemGrpc extends StatelessWidget {
           ),
           const SizedBox(width: 2),
         ] else if (replyControl.cardLabels.isNotEmpty) ...[
+          const SizedBox(width: 4),
           Text(
             dialogBtn != null
                 ? replyControl.cardLabels.first.textContent
