@@ -176,8 +176,11 @@ enableSaveLastData = 'enableSaveLastData',
       downloadPath = 'downloadPath',
       followOrderType = 'followOrderType',
       enableImgMenu = 'enableImgMenu',
-      showDynDispute = 'showDynDispute',
+            showDynDispute = 'showDynDispute',
       touchSlopH = 'touchSlopH',
+      tabSwipeVelocityThreshold = 'tabSwipeVelocityThreshold',
+      tabSwipeDistanceThresholdPercent =
+          'tabSwipeDistanceThresholdPercent',
       floatingNavBar = 'floatingNavBar',
       removeSafeArea = 'removeSafeArea',
       verticalFullscreenBottomBarSafeArea =
