@@ -218,6 +218,7 @@ if (globalX != null) {
             height: height,
             maxWidth: maxPreviewWidth,
             videoAspectRatio: videoAspectRatio,
+            restoreVideoAspectRatio: !plPlayerController.isVertical,
             generation: plPlayerController.previewGeneration,
             imageCache: plPlayerController.previewCache,
             imageLoadTasks: plPlayerController.previewLoadTasks,
@@ -300,6 +301,7 @@ class VideoShotImage extends StatefulWidget {
     required this.height,
     required this.maxWidth,
     required this.videoAspectRatio,
+    required this.restoreVideoAspectRatio,
     required this.generation,
     required this.imageLoadTasks,
     required this.onSetSize,
@@ -318,6 +320,7 @@ class VideoShotImage extends StatefulWidget {
   final double height;
   final double maxWidth;
   final double videoAspectRatio;
+  final bool restoreVideoAspectRatio;
   final int generation;
   final Function(double imgXSize, double imgYSize) onSetSize;
   final ValueGetter<bool> isMounted;
@@ -354,6 +357,7 @@ class _VideoShotImageState extends State<VideoShotImage> {
   late Rect _srcRect;
   late Rect _dstRect;
   late RRect _rrect;
+  late bool _hasLetterboxing;
   ui.Image? _image;
 
   @override
@@ -396,10 +400,12 @@ class _VideoShotImageState extends State<VideoShotImage> {
         ? _videoAspectRatio
         : cellSize.width / cellSize.height;
     // The server may stretch a video frame to the sprite cell's aspect ratio.
-    // Keep that ratio for cropping and the outer frame, but restore the video's
-    // aspect ratio inside it so any remaining space becomes letterboxing.
-    final contentAspectRatio = cellSize != null &&
-            !_hasSameAspectRatio(frameAspectRatio, _videoAspectRatio)
+    // For non-portrait videos, keep that ratio for cropping and the outer frame,
+    // but restore the video's aspect ratio inside it. Portrait sprites stay as-is.
+    _hasLetterboxing = widget.restoreVideoAspectRatio &&
+        cellSize != null &&
+        !_hasSameAspectRatio(frameAspectRatio, _videoAspectRatio);
+    final contentAspectRatio = _hasLetterboxing
         ? _videoAspectRatio
         : frameAspectRatio;
     var height = widget.height.isFinite && widget.height > 0
@@ -525,7 +531,8 @@ class _VideoShotImageState extends State<VideoShotImage> {
         oldWidget.imgYLen != widget.imgYLen ||
         oldWidget.height != widget.height ||
         oldWidget.maxWidth != widget.maxWidth ||
-        oldWidget.videoAspectRatio != widget.videoAspectRatio) {
+        oldWidget.videoAspectRatio != widget.videoAspectRatio ||
+        oldWidget.restoreVideoAspectRatio != widget.restoreVideoAspectRatio) {
       _initSize();
     }
     if (_image == null) {
@@ -542,20 +549,19 @@ class _VideoShotImageState extends State<VideoShotImage> {
   @override
   Widget build(BuildContext context) {
     if (_image != null && _srcRect.width > 0 && _srcRect.height > 0) {
+      final image = CroppedImage(
+        size: _size,
+        image: _image!,
+        srcRect: _srcRect,
+        dstRect: _dstRect,
+        rrect: _rrect,
+        imgPaint: _imgPaint,
+        borderPaint: _borderPaint,
+      );
+      if (!_hasLetterboxing) return image;
       return SizedBox.fromSize(
         size: _size,
-        child: ColoredBox(
-          color: Colors.black,
-          child: CroppedImage(
-            size: _size,
-            image: _image!,
-            srcRect: _srcRect,
-            dstRect: _dstRect,
-            rrect: _rrect,
-            imgPaint: _imgPaint,
-            borderPaint: _borderPaint,
-          ),
-        ),
+        child: ColoredBox(color: Colors.black, child: image),
       );
     }
     return SizedBox.fromSize(
