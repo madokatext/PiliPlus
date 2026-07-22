@@ -2,7 +2,6 @@ import 'dart:async' show unawaited;
 
 import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/clipboard_link_parser.dart';
-import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
@@ -73,12 +72,11 @@ final class ClipboardLinkHandler with WidgetsBindingObserver {
       if (PiliScheme.receivedExternalLinkRecently) return;
 
       if (Pref.openInBrowser) {
-        final handled = await PiliScheme.routePushFromUrl(
+        await PiliScheme.routePushFromUrl(
           link,
           selfHandle: true,
           external: true,
         );
-        if (!handled) await PageUtils.launchURL(link);
       } else {
         await PiliScheme.routePushFromUrl(link, external: true);
       }
