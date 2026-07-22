@@ -33,6 +33,7 @@ import 'package:get/get.dart';
 abstract final class PiliScheme {
   static late AppLinks appLinks;
   static StreamSubscription? listener;
+  static DateTime? _lastExternalLinkAt;
   static final uriDigitRegExp = RegExp(r'/(\d+)');
   static final _prefixRegex = RegExp(r'^\S+://');
 
@@ -66,6 +67,7 @@ abstract final class PiliScheme {
     Map? parameters,
     int? businessId,
     int? oid,
+    bool external = false,
   }) {
     try {
       if (url.startsWith('//')) {
@@ -80,6 +82,7 @@ abstract final class PiliScheme {
         parameters: parameters,
         businessId: businessId,
         oid: oid,
+        external: external,
       );
     } catch (_) {
       return Future.syncValue(false);
@@ -97,6 +100,10 @@ abstract final class PiliScheme {
     bool external = false,
   }) async {
     // if (kDebugMode) debugPrint('onAppLink: $uri');
+
+    if (external) {
+      _lastExternalLinkAt = DateTime.now();
+    }
 
     final String scheme = uri.scheme;
     final String host = uri.host;
@@ -445,6 +452,12 @@ abstract final class PiliScheme {
         }
         return false;
     }
+  }
+
+  static bool get receivedExternalLinkRecently {
+    final at = _lastExternalLinkAt;
+    return at != null &&
+        DateTime.now().difference(at) <= const Duration(seconds: 2);
   }
 
   static const b23_tv = 'b23.tv';

@@ -591,6 +591,11 @@ static int get rcmdRefreshCount {
     defaultValue: false,
   );
 
+  static bool get openClipboardLinkOnResume => _setting.get(
+    SettingBoxKey.openClipboardLinkOnResume,
+    defaultValue: false,
+  );
+
   static bool get savedRcmdTip =>
       _setting.get(SettingBoxKey.savedRcmdTip, defaultValue: true);
 

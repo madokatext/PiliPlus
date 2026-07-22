@@ -255,6 +255,13 @@ List<SettingsModel> get extraSettings => [
     setKey: SettingBoxKey.externalVideoLinkOpenInDetail,
     defaultVal: false,
   ),
+  const SwitchModel(
+    title: '返回前台时打开剪贴板链接',
+    subtitle: '从后台返回时读取剪贴板首条文本，提取并打开其中第一个链接；相同链接仅处理一次',
+    leading: Icon(Icons.content_paste_outlined),
+    setKey: SettingBoxKey.openClipboardLinkOnResume,
+    defaultVal: false,
+  ),
   NormalModel(
     title: '横向滑动阈值',
     getSubtitle: () => '当前:「${Pref.touchSlopH}」，系统默认值: $deviceTouchSlop',

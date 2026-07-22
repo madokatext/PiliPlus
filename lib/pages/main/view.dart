@@ -15,6 +15,7 @@ import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
 import 'package:PiliPlus/utils/android/android_helper.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
+import 'package:PiliPlus/utils/clipboard_link_handler.dart';
 import 'package:PiliPlus/utils/extension/context_ext.dart';
 import 'package:PiliPlus/utils/extension/size_ext.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
@@ -68,6 +69,7 @@ class _MainAppState extends PopScopeState<MainApp>
     } else {
       // FlutterSmartDialog throws
       PiliScheme.init();
+      ClipboardLinkHandler.instance.start();
     }
   }
 
@@ -123,6 +125,7 @@ class _MainAppState extends PopScopeState<MainApp>
       windowManager.removeListener(this);
     }
     removeObserverMobile(this);
+    ClipboardLinkHandler.instance.stop();
     PiliScheme.listener?.cancel();
     GStorage.close();
     super.dispose();

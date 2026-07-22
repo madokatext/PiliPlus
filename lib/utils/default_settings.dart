@@ -94,6 +94,7 @@ const Map<String, Object> defaultSettingValues = {
   'mergeDanmaku': false,
   'mpvLogLevel': 'v',
   'msgBadgeMode': 0,
+  'openClipboardLinkOnResume': false,
   'openInBrowser': true,
   'optTabletNav': false,
   'pinchGestureAngleThreshold': 30.0,
