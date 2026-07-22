@@ -1,4 +1,4 @@
-package com.example.piliplus
+package com.max.piliplus
 
 import android.content.ContentValues
 import android.content.Intent
@@ -122,6 +122,6 @@ class MainActivity : AudioServiceActivity() {
     }
 
     companion object {
-        private const val STORAGE_CHANNEL = "com.example.piliplus/storage"
+        private const val STORAGE_CHANNEL = "com.max.piliplus/storage"
     }
 }

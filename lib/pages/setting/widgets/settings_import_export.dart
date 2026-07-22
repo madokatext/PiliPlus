@@ -11,7 +11,7 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart' show DateFormat;
 
-const _storageChannel = MethodChannel('com.example.piliplus/storage');
+const _storageChannel = MethodChannel('com.max.piliplus/storage');
 
 Future<void> _exportSettingsToDownloads() async {
   if (!Platform.isAndroid) {

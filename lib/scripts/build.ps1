@@ -4,18 +4,20 @@ param(
 
 try {
     $versionName = $null
+    $pubVersionName = $null
 
     $versionCode = [int](git rev-list --count HEAD).Trim()
 
     $commitHash = (git rev-parse HEAD).Trim()
 
     $updatedContent = foreach ($line in (Get-Content -Path 'pubspec.yaml' -Encoding UTF8)) {
-        if ($line -match '^\s*version:\s*([\d\.]+)') {
-            $versionName = $matches[1]
+        if ($line -match '^\s*version:\s*([\d\.]+(?:-[0-9A-Za-z\.-]+)?)') {
+            $pubVersionName = $matches[1]
+            $versionName = if ($pubVersionName -eq '2.1.0-a') { '2.1a' } else { $pubVersionName }
             if ($Arg -eq 'android') {
                 $versionName += '-' + $commitHash.Substring(0, 9)
             }
-            "version: $versionName+$versionCode"
+            "version: $pubVersionName+$versionCode"
         }
         else {
             $line

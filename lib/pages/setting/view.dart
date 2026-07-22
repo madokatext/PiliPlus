@@ -1,9 +1,11 @@
+import 'package:PiliPlus/common/widgets/dialog/export_import.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
 import 'package:PiliPlus/http/login.dart';
 import 'package:PiliPlus/models/common/setting_type.dart';
 import 'package:PiliPlus/pages/about/view.dart';
 import 'package:PiliPlus/pages/login/controller.dart';
+import 'package:PiliPlus/pages/mine/controller.dart';
 import 'package:PiliPlus/pages/setting/common_setting.dart';
 import 'package:PiliPlus/pages/setting/widgets/multi_select_dialog.dart';
 import 'package:PiliPlus/pages/setting/widgets/settings_import_export.dart';
@@ -11,6 +13,8 @@ import 'package:PiliPlus/pages/webdav/view.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/accounts/account.dart';
 import 'package:PiliPlus/utils/extension/size_ext.dart';
+import 'package:PiliPlus/utils/login_utils.dart';
+import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/material.dart' hide ListTile;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
@@ -205,6 +209,29 @@ class _SettingPageState extends State<SettingPage> {
             style: subTitleStyle,
           ),
           onTap: () => showSettingsImportExportDialog(context),
+        ),
+        ListTile(
+          leading: const Icon(Icons.manage_accounts_outlined),
+          title: Text('导入/导出登录信息', style: titleStyle),
+          onTap: () => showImportExportDialog<Map>(
+            context,
+            title: '登录信息',
+            localFileName: () => 'account',
+            onExport: () =>
+                Utils.jsonEncoder.convert(Accounts.account.toMap()),
+            onImport: (json) async {
+              final res = json.map(
+                (key, value) => MapEntry(key, LoginAccount.fromJson(value)),
+              );
+              await Accounts.account.putAll(res);
+              await Accounts.refresh();
+              _noAccount.value = Accounts.account.isEmpty;
+              MineController.anonymity.value = !Accounts.heartbeat.isLogin;
+              if (Accounts.main.isLogin) {
+                await LoginUtils.onLoginMain();
+              }
+            },
+          ),
         ),
         Obx(
           () => _noAccount.value
