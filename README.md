@@ -20,17 +20,13 @@
 <img src="assets/screenshots/main_screen.png" width="96%" alt="home" />
 </div>
 
-## 与 main 分支的区别
-
-以下按当前 [`main...mod2`](https://github.com/madokatext/PiliPlus-Max/compare/main...mod2) 的最终代码差异整理，已排除后来完全回滚的中间方案。
+## 与 Piliplus 项目的区别
 
 ### 项目与设置
 
-- 应用改名为 `PiliPlus-max`，包名改为 `com.max.piliplus`，版本标识改为 `2.1a`。
-- 源码、更新、Release、问题反馈和构建链接均指向本仓库。
 - 关闭 Android 主题色图标，固定使用默认绿色图标和白色背景。
 - 内置一套深度调校的首次启动默认配置，仅填充尚不存在的设置。
-- 新增所有设置 JSON 导入导出，文件保存到公共 Download 目录并带导出时间。
+- 所有设置导入导出功能的输出文件保存到公共 Download 目录并带导出时间。
 - 登录信息导入导出移至设置首页，关于页不再重复显示导入导出入口。
 
 ### 主题、首页与交互
@@ -93,7 +89,7 @@
 
 ## 下载
 
-可以通过右侧 Release 下载，或拉取代码到本地编译。
+可以通过右侧 Release 下载，亦可使用 Actions 页面在线编译，或拉取代码到本地编译。
 
 ## 声明
 
