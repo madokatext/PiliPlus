@@ -87,13 +87,42 @@ abstract final class GStorage {
   static Future<void> importAllSettings(String data) =>
       importAllJsonSettings(jsonDecode(data));
 
-  static Future<List<void>> importAllJsonSettings(
+  static Future<void> importAllJsonSettings(
     Map<String, dynamic> map,
+  ) async {
+    final settingData = _readSettingsMap(map, setting.name);
+    final videoData = _readSettingsMap(map, video.name);
+    final settingBackup = setting.toMap();
+    final videoBackup = video.toMap();
+
+    try {
+      await Future.wait([setting.clear(), video.clear()]);
+      await Future.wait([
+        setting.putAll(settingData),
+        video.putAll(videoData),
+      ]);
+    } catch (_) {
+      await Future.wait([setting.clear(), video.clear()]);
+      await Future.wait([
+        setting.putAll(settingBackup),
+        video.putAll(videoBackup),
+      ]);
+      rethrow;
+    }
+  }
+
+  static Map<dynamic, dynamic> _readSettingsMap(
+    Map<String, dynamic> map,
+    String boxName,
   ) {
-    return Future.wait([
-      setting.clear().then((_) => setting.putAll(map[setting.name])),
-      video.clear().then((_) => video.putAll(map[video.name])),
-    ]);
+    final data = map[boxName];
+    if (data is! Map) {
+      throw FormatException('缺少或无效的 $boxName 设置');
+    }
+    if (data.keys.any((key) => key is! String)) {
+      throw FormatException('$boxName 设置包含无效键名');
+    }
+    return Map<dynamic, dynamic>.from(data);
   }
 
   static void regAdapter() {

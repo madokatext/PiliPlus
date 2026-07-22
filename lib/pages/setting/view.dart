@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/dialog/export_import.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
 import 'package:PiliPlus/http/login.dart';
@@ -9,7 +10,10 @@ import 'package:PiliPlus/pages/setting/widgets/multi_select_dialog.dart';
 import 'package:PiliPlus/pages/webdav/view.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/accounts/account.dart';
+import 'package:PiliPlus/utils/device_utils.dart';
 import 'package:PiliPlus/utils/extension/size_ext.dart';
+import 'package:PiliPlus/utils/path_utils.dart';
+import 'package:PiliPlus/utils/storage.dart';
 import 'package:flutter/material.dart' hide ListTile;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
@@ -178,6 +182,22 @@ class _SettingPageState extends State<SettingPage> {
       padding: EdgeInsets.only(bottom: padding.bottom + 100),
       children: [
         _buildSearchItem(theme),
+        ListTile(
+          leading: const Icon(Icons.import_export_outlined),
+          title: Text('导入/导出所有设置', style: titleStyle),
+          subtitle: Text(
+            'JSON 文件导出至 download 目录；导入后重启应用生效',
+            style: subTitleStyle,
+          ),
+          onTap: () => showImportExportDialog<Map<String, dynamic>>(
+            context,
+            title: '所有设置',
+            localFileName: () => 'settings_${DeviceUtils.platformName}',
+            localDirectory: () => downloadPath,
+            onExport: GStorage.exportAllSettings,
+            onImport: GStorage.importAllJsonSettings,
+          ),
+        ),
         ..._items
             .take(_items.length - 1)
             .map(
