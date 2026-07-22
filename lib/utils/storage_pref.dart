@@ -811,6 +811,7 @@ static bool get seekPreviewFollowGesture => _setting.get(
     defaultValue: false,
   );
 
+  // 旧共享设置保留为新设置的迁移默认值。
   static double get playerGestureToastVerticalPercent => _getClampedDouble(
     SettingBoxKey.playerGestureToastVerticalPercent,
     10.0,
@@ -818,9 +819,37 @@ static bool get seekPreviewFollowGesture => _setting.get(
     100.0,
   );
 
+  static double get seekTimeToastVerticalPercent => _getClampedDouble(
+    SettingBoxKey.seekTimeToastVerticalPercent,
+    playerGestureToastVerticalPercent,
+    0.0,
+    100.0,
+  );
+
+  static double get longPressSpeedToastVerticalPercent => _getClampedDouble(
+    SettingBoxKey.longPressSpeedToastVerticalPercent,
+    playerGestureToastVerticalPercent,
+    0.0,
+    100.0,
+  );
+
   static double get playerGestureToastFontSize => _getClampedDouble(
     SettingBoxKey.playerGestureToastFontSize,
     13.0,
+    8.0,
+    32.0,
+  );
+
+  static double get seekTimeToastFontSize => _getClampedDouble(
+    SettingBoxKey.seekTimeToastFontSize,
+    playerGestureToastFontSize,
+    8.0,
+    32.0,
+  );
+
+  static double get longPressSpeedToastFontSize => _getClampedDouble(
+    SettingBoxKey.longPressSpeedToastFontSize,
+    playerGestureToastFontSize,
     8.0,
     32.0,
   );

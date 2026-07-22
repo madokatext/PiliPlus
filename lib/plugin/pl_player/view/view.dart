@@ -1483,22 +1483,39 @@ void _handleProgressBarExpandedPointerDown(
     : colorScheme.primary;
     late final thumbGlowColor = primary.withAlpha(80);
     late final bufferedBarColor = primary.withValues(alpha: 0.4);
-    final gestureToastFontSize =
-        plPlayerController.playerGestureToastFontSize;
-    final gestureToastTextStyle = TextStyle(
+    final seekTimeToastFontSize =
+        plPlayerController.seekTimeToastFontSize;
+    final seekTimeToastTextStyle = TextStyle(
       color: Colors.white,
-      fontSize: gestureToastFontSize,
+      fontSize: seekTimeToastFontSize,
     );
-    final gestureToastAlignment = Alignment(
+    final seekTimeToastAlignment = Alignment(
       0,
-      plPlayerController.playerGestureToastVerticalPercent / 50 - 1,
+      plPlayerController.seekTimeToastVerticalPercent / 50 - 1,
     );
-    final gestureToastPadding = EdgeInsets.symmetric(
-      horizontal: gestureToastFontSize * 5 / 6,
-      vertical: gestureToastFontSize * 2 / 3,
+    final seekTimeToastPadding = EdgeInsets.symmetric(
+      horizontal: seekTimeToastFontSize * 5 / 6,
+      vertical: seekTimeToastFontSize * 2 / 3,
     );
-    final gestureToastBorderRadius = BorderRadius.all(
-      Radius.circular(gestureToastFontSize * 2.5),
+    final seekTimeToastBorderRadius = BorderRadius.all(
+      Radius.circular(seekTimeToastFontSize * 2.5),
+    );
+    final longPressSpeedToastFontSize =
+        plPlayerController.longPressSpeedToastFontSize;
+    final longPressSpeedToastTextStyle = TextStyle(
+      color: Colors.white,
+      fontSize: longPressSpeedToastFontSize,
+    );
+    final longPressSpeedToastAlignment = Alignment(
+      0,
+      plPlayerController.longPressSpeedToastVerticalPercent / 50 - 1,
+    );
+    final longPressSpeedToastPadding = EdgeInsets.symmetric(
+      horizontal: longPressSpeedToastFontSize * 5 / 6,
+      vertical: longPressSpeedToastFontSize * 2 / 3,
+    );
+    final longPressSpeedToastBorderRadius = BorderRadius.all(
+      Radius.circular(longPressSpeedToastFontSize * 2.5),
     );
     final isLive = plPlayerController.isLive;
 
@@ -1517,11 +1534,11 @@ void _handleProgressBarExpandedPointerDown(
           child: Container(
             decoration: BoxDecoration(
               color: const Color(0x88000000),
-              borderRadius: gestureToastBorderRadius,
+              borderRadius: seekTimeToastBorderRadius,
             ),
-            padding: gestureToastPadding,
+            padding: seekTimeToastPadding,
             child: Row(
-              spacing: gestureToastFontSize / 6,
+              spacing: seekTimeToastFontSize / 6,
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -1529,14 +1546,14 @@ void _handleProgressBarExpandedPointerDown(
                   DurationUtils.formatDuration(
                     plPlayerController.position.value,
                   ),
-                  style: gestureToastTextStyle,
+                  style: seekTimeToastTextStyle,
                 ),
-                Text('/', style: gestureToastTextStyle),
+                Text('/', style: seekTimeToastTextStyle),
                 Text(
                   DurationUtils.formatDuration(
                     plPlayerController.duration.value,
                   ),
-                  style: gestureToastTextStyle,
+                  style: seekTimeToastTextStyle,
                 ),
               ],
             ),
@@ -1653,22 +1670,22 @@ backgroundColor: gestureProgressColor.withValues(alpha: 0.24),
           IgnorePointer(
             ignoring: true,
             child: Align(
-              alignment: gestureToastAlignment,
+              alignment: longPressSpeedToastAlignment,
               child: Obx(
                 () => AnimatedOpacity(
                   curve: Curves.easeInOut,
                   opacity: plPlayerController.longPressStatus.value ? 1.0 : 0.0,
                   duration: const Duration(milliseconds: 150),
                   child: Container(
-                    padding: gestureToastPadding,
+                    padding: longPressSpeedToastPadding,
                     decoration: BoxDecoration(
                       color: const Color(0x88000000),
-                      borderRadius: gestureToastBorderRadius,
+                      borderRadius: longPressSpeedToastBorderRadius,
                     ),
                     child: Obx(
                       () => Text(
                         '${plPlayerController.enableAutoLongPressSpeed ? (plPlayerController.longPressStatus.value ? plPlayerController.lastPlaybackSpeed : plPlayerController.playbackSpeed) * 2 : plPlayerController.longPressSpeed}倍速中',
-                        style: gestureToastTextStyle,
+                        style: longPressSpeedToastTextStyle,
                       ),
                     ),
                   ),
@@ -1683,7 +1700,7 @@ backgroundColor: gestureProgressColor.withValues(alpha: 0.24),
           IgnorePointer(
             ignoring: true,
             child: Align(
-              alignment: gestureToastAlignment,
+              alignment: seekTimeToastAlignment,
               child: buildSeekTimeToast(insidePreview: false),
             ),
           ),
@@ -1988,7 +2005,7 @@ backgroundColor: gestureProgressColor.withValues(alpha: 0.24),
             seekTimeOverlay: plPlayerController.seekTimeInPreview
                 ? buildSeekTimeToast(insidePreview: true)
                 : null,
-            seekTimeOverlayAlignment: gestureToastAlignment,
+            seekTimeOverlayAlignment: seekTimeToastAlignment,
           ),
 
         if (isFullScreen || plPlayerController.isDesktopPip) ...[

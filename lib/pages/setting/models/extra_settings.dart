@@ -293,17 +293,17 @@ List<SettingsModel> get extraSettings => [
     ),
   ),
   NormalModel(
-    title: '进度与长按倍速浮窗垂直位置',
+    title: '进度浮窗垂直位置',
     getSubtitle: () => Pref.seekTimeInPreview
-        ? '当前：${Pref.playerGestureToastVerticalPercent.toStringAsFixed(0)}%；进度相对预览窗，倍速相对播放器'
-        : '当前：${Pref.playerGestureToastVerticalPercent.toStringAsFixed(0)}%（0%播放器顶部，100%播放器底部）',
+        ? '当前：${Pref.seekTimeToastVerticalPercent.toStringAsFixed(0)}%（0%预览窗顶部，100%预览窗底部）'
+        : '当前：${Pref.seekTimeToastVerticalPercent.toStringAsFixed(0)}%（0%播放器顶部，100%播放器底部）',
     leading: const Icon(Icons.vertical_align_center_outlined),
     onTap: (context, setState) => _showGestureSliderDialog(
       context,
       setState,
-      title: '进度与长按倍速浮窗垂直位置',
-      key: SettingBoxKey.playerGestureToastVerticalPercent,
-      value: Pref.playerGestureToastVerticalPercent,
+      title: '进度浮窗垂直位置',
+      key: SettingBoxKey.seekTimeToastVerticalPercent,
+      value: Pref.seekTimeToastVerticalPercent,
       min: 0,
       max: 100,
       divisions: 100,
@@ -312,16 +312,52 @@ List<SettingsModel> get extraSettings => [
     ),
   ),
   NormalModel(
-    title: '进度与长按倍速浮窗字体大小',
+    title: '长按倍速浮窗垂直位置',
     getSubtitle: () =>
-        '当前：${Pref.playerGestureToastFontSize.toStringAsFixed(1)}dp',
+        '当前：${Pref.longPressSpeedToastVerticalPercent.toStringAsFixed(0)}%（0%播放器顶部，100%播放器底部）',
+    leading: const Icon(Icons.vertical_align_center_outlined),
+    onTap: (context, setState) => _showGestureSliderDialog(
+      context,
+      setState,
+      title: '长按倍速浮窗垂直位置',
+      key: SettingBoxKey.longPressSpeedToastVerticalPercent,
+      value: Pref.longPressSpeedToastVerticalPercent,
+      min: 0,
+      max: 100,
+      divisions: 100,
+      precise: 0,
+      suffix: '%',
+    ),
+  ),
+  NormalModel(
+    title: '进度浮窗字体大小',
+    getSubtitle: () =>
+        '当前：${Pref.seekTimeToastFontSize.toStringAsFixed(1)}dp',
     leading: const Icon(Icons.format_size_outlined),
     onTap: (context, setState) => _showGestureSliderDialog(
       context,
       setState,
-      title: '进度与长按倍速浮窗字体大小',
-      key: SettingBoxKey.playerGestureToastFontSize,
-      value: Pref.playerGestureToastFontSize,
+      title: '进度浮窗字体大小',
+      key: SettingBoxKey.seekTimeToastFontSize,
+      value: Pref.seekTimeToastFontSize,
+      min: 8,
+      max: 32,
+      divisions: 48,
+      precise: 1,
+      suffix: 'dp',
+    ),
+  ),
+  NormalModel(
+    title: '长按倍速浮窗字体大小',
+    getSubtitle: () =>
+        '当前：${Pref.longPressSpeedToastFontSize.toStringAsFixed(1)}dp',
+    leading: const Icon(Icons.format_size_outlined),
+    onTap: (context, setState) => _showGestureSliderDialog(
+      context,
+      setState,
+      title: '长按倍速浮窗字体大小',
+      key: SettingBoxKey.longPressSpeedToastFontSize,
+      value: Pref.longPressSpeedToastFontSize,
       min: 8,
       max: 32,
       divisions: 48,
