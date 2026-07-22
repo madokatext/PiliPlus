@@ -646,6 +646,11 @@ static int get rcmdRefreshCount {
     defaultValue: showSeekPreview,
   );
 
+  static bool get seekTimeInPreview => _setting.get(
+    SettingBoxKey.seekTimeInPreview,
+    defaultValue: false,
+  );
+
   static bool get biliProgressTimeStyle => _setting.get(
     SettingBoxKey.biliProgressTimeStyle,
     defaultValue: false,

@@ -1501,6 +1501,50 @@ void _handleProgressBarExpandedPointerDown(
       Radius.circular(gestureToastFontSize * 2.5),
     );
     final isLive = plPlayerController.isLive;
+
+    Widget buildSeekTimeToast({required bool insidePreview}) {
+      return Obx(() {
+        final previewVisible = plPlayerController.showPreview.value;
+        final visible = plPlayerController.isSeeking.value &&
+            (insidePreview
+                ? previewVisible
+                : !plPlayerController.seekTimeInPreview || !previewVisible);
+
+        return AnimatedOpacity(
+          curve: Curves.easeInOut,
+          opacity: visible ? 1.0 : 0.0,
+          duration: const Duration(milliseconds: 150),
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0x88000000),
+              borderRadius: gestureToastBorderRadius,
+            ),
+            padding: gestureToastPadding,
+            child: Row(
+              spacing: gestureToastFontSize / 6,
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  DurationUtils.formatDuration(
+                    plPlayerController.position.value,
+                  ),
+                  style: gestureToastTextStyle,
+                ),
+                Text('/', style: gestureToastTextStyle),
+                Text(
+                  DurationUtils.formatDuration(
+                    plPlayerController.duration.value,
+                  ),
+                  style: gestureToastTextStyle,
+                ),
+              ],
+            ),
+          ),
+        );
+      });
+    }
+
     final verticalFullscreenBottomPadding =
         PlatformUtils.isMobile &&
             isFullScreen &&
@@ -1633,50 +1677,14 @@ backgroundColor: gestureProgressColor.withValues(alpha: 0.24),
             ),
           ),
 
-        /// 时间进度 toast
+        /// 独立时间进度 toast
+        /// 集成模式下，仅在本次操作没有预览窗时作为回退显示。
         if (!isLive)
           IgnorePointer(
             ignoring: true,
             child: Align(
               alignment: gestureToastAlignment,
-              child: Obx(
-                () => AnimatedOpacity(
-                  curve: Curves.easeInOut,
-                  opacity: plPlayerController.isSeeking.value ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 150),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0x88000000),
-                      borderRadius: gestureToastBorderRadius,
-                    ),
-                    padding: gestureToastPadding,
-                    child: Row(
-                      spacing: gestureToastFontSize / 6,
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Obx(
-                          () => Text(
-                            DurationUtils.formatDuration(
-                              plPlayerController.position.value,
-                            ),
-                            style: gestureToastTextStyle,
-                          ),
-                        ),
-                        Text('/', style: gestureToastTextStyle),
-                        Obx(
-                          () => Text(
-                            DurationUtils.formatDuration(
-                              plPlayerController.duration.value,
-                            ),
-                            style: gestureToastTextStyle,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+              child: buildSeekTimeToast(insidePreview: false),
             ),
           ),
 
@@ -1977,6 +1985,10 @@ backgroundColor: gestureProgressColor.withValues(alpha: 0.24),
 
   return playerBox.globalToLocal(globalCenter).dy;
 },
+            seekTimeOverlay: plPlayerController.seekTimeInPreview
+                ? buildSeekTimeToast(insidePreview: true)
+                : null,
+            seekTimeOverlayAlignment: gestureToastAlignment,
           ),
 
         if (isFullScreen || plPlayerController.isDesktopPip) ...[

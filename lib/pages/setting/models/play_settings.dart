@@ -224,6 +224,13 @@ List<SettingsModel> get playSettings => [
     defaultVal: Pref.showSeekPreview,
   ),
   const SwitchModel(
+    title: '当前时间浮窗集成到预览窗',
+    subtitle: '开启后，时间浮窗在预览窗内部显示并随预览窗移动；没有预览窗时仍单独显示',
+    leading: Icon(Icons.layers_outlined),
+    setKey: SettingBoxKey.seekTimeInPreview,
+    defaultVal: false,
+  ),
+  const SwitchModel(
   title: '拖动进度条时预览窗跟随滑块',
   subtitle: '拖动底部进度条时，预览窗随滑块水平移动',
   leading: Icon(Icons.swipe),

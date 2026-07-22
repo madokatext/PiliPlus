@@ -294,8 +294,9 @@ List<SettingsModel> get extraSettings => [
   ),
   NormalModel(
     title: '进度与长按倍速浮窗垂直位置',
-    getSubtitle: () =>
-        '当前：${Pref.playerGestureToastVerticalPercent.toStringAsFixed(0)}%（0%顶部，100%底部）',
+    getSubtitle: () => Pref.seekTimeInPreview
+        ? '当前：${Pref.playerGestureToastVerticalPercent.toStringAsFixed(0)}%；进度相对预览窗，倍速相对播放器'
+        : '当前：${Pref.playerGestureToastVerticalPercent.toStringAsFixed(0)}%（0%播放器顶部，100%播放器底部）',
     leading: const Icon(Icons.vertical_align_center_outlined),
     onTap: (context, setState) => _showGestureSliderDialog(
       context,

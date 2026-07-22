@@ -57,8 +57,10 @@ Widget buildSeekPreviewWidget(
   double maxHeight,
   ValueGetter<bool> isMounted,
   double? Function(double globalX) globalToLocalX,
-  ValueGetter<double?> progressBarCenterY,
-) {
+  ValueGetter<double?> progressBarCenterY, {
+  Widget? seekTimeOverlay,
+  Alignment seekTimeOverlayAlignment = Alignment.center,
+}) {
   return Obx(
     () {
       if (!plPlayerController.showPreview.value) {
@@ -100,6 +102,29 @@ Widget buildSeekPreviewWidget(
           return value;
         }
 
+        Widget withSeekTimeOverlay(Widget preview) {
+          final overlay = seekTimeOverlay;
+          if (overlay == null) return preview;
+
+          return ClipRRect(
+            borderRadius: Style.mdRadius,
+            child: Stack(
+              children: [
+                preview,
+                Positioned.fill(
+                  child: Align(
+                    alignment: seekTimeOverlayAlignment,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: overlay,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
         Widget positionPreview(Widget preview) {
           var centerX = maxWidth / 2;
 final globalX = plPlayerController.previewGlobalX.value;
@@ -122,19 +147,21 @@ if (globalX != null) {
         Widget loadingPreview(double aspectRatio) {
           final previewHeight = fitHeight(height, aspectRatio);
           return positionPreview(
-            ClipRRect(
-              borderRadius: Style.mdRadius,
-              child: SizedBox(
-                width: previewHeight * aspectRatio,
-                height: previewHeight,
-                child: const ColoredBox(
-                  color: Color(0xB3000000),
-                  child: Center(
-                    child: SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
+            withSeekTimeOverlay(
+              ClipRRect(
+                borderRadius: Style.mdRadius,
+                child: SizedBox(
+                  width: previewHeight * aspectRatio,
+                  height: previewHeight,
+                  child: const ColoredBox(
+                    color: Color(0xB3000000),
+                    child: Center(
+                      child: SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
@@ -200,7 +227,9 @@ if (globalX != null) {
             isMounted: isMounted,
           ),
         );
-        return positionPreview(preview);
+        return positionPreview(
+          withSeekTimeOverlay(preview),
+        );
       } catch (e) {
         if (kDebugMode) rethrow;
         return const SizedBox.shrink();

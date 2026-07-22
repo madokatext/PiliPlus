@@ -1758,6 +1758,7 @@ class PlPlayerController with BlockConfigMixin {
   late final RxBool showPreview = false.obs;
   late final showSeekPreviewOnSlider = Pref.showSeekPreviewOnSlider;
   late final showSeekPreviewOnGesture = Pref.showSeekPreviewOnGesture;
+  bool get seekTimeInPreview => Pref.seekTimeInPreview;
   bool get showAnySeekPreview =>
       showSeekPreviewOnSlider || showSeekPreviewOnGesture;
   bool get seekPreviewFollowSlider => Pref.seekPreviewFollowSlider;
