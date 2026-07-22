@@ -249,6 +249,13 @@ List<SettingsModel> get extraSettings => [
     defaultVal: false,
   ),
   const SwitchModel(
+    title: '视频详情页 BV 号转为 AV 号',
+    subtitle: '开启后详情页显示并复制 AV 号；关闭则保持显示 BV 号',
+    leading: Icon(Icons.swap_horiz),
+    setKey: SettingBoxKey.videoDetailUseAv,
+    defaultVal: false,
+  ),
+  const SwitchModel(
     title: '全屏接收外部视频跳转时打开竖屏详情',
     subtitle: '开启后退出全屏并打开视频详情，不自动播放；关闭则保持当前全屏行为',
     leading: Icon(Icons.stay_current_portrait_outlined),

@@ -39,6 +39,9 @@ import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/request_utils.dart';
+import 'package:PiliPlus/utils/storage.dart';
+import 'package:PiliPlus/utils/storage_key.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -281,12 +284,18 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
 
   List<Widget> _infos(VideoDetailData videoDetail) => [
     const SizedBox(height: 8, width: .infinity),
-    GestureDetector(
-      onTap: () => Utils.copyText('${videoDetail.bvid}'),
-      child: Text(
-        videoDetail.bvid ?? '',
-        style: TextStyle(fontSize: 14, color: colorScheme.secondary),
-      ),
+    StreamBuilder(
+      stream: GStorage.setting.watch(key: SettingBoxKey.videoDetailUseAv),
+      builder: (context, _) {
+        final videoId = _videoId(videoDetail);
+        return GestureDetector(
+          onTap: () => Utils.copyText(videoId),
+          child: Text(
+            videoId,
+            style: TextStyle(fontSize: 14, color: colorScheme.secondary),
+          ),
+        );
+      },
     ),
     if (videoDetail.descV2 case final descV2? when descV2.isNotEmpty) ...[
       const SizedBox(height: 8),
@@ -305,6 +314,18 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
       }),
     ),
   ];
+
+  String _videoId(VideoDetailData videoDetail) {
+    final bvid = videoDetail.bvid ?? '';
+    if (!Pref.videoDetailUseAv) return bvid;
+    if (videoDetail.aid case final aid?) return 'av$aid';
+    if (bvid.isEmpty) return '';
+    try {
+      return 'av${IdUtils.bv2av(bvid)}';
+    } catch (_) {
+      return bvid;
+    }
+  }
 
   WidgetSpan _labelWidget(String text, Color bgColor, Color textColor) {
     return WidgetSpan(

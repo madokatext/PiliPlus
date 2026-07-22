@@ -154,6 +154,7 @@ const Map<String, Object> defaultSettingValues = {
   'touchSlopH': 8.0,
   'upPanelPosition': 0,
   'useRelativeSlide': true,
+  'videoDetailUseAv': false,
   'verticalFullscreenBottomBarSafeArea': true,
   'verticalFullscreenBottomBarSafeHeight': 30.0,
   'verticalScrollDecelerationScale': 0.4,

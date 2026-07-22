@@ -586,6 +586,9 @@ static int get rcmdRefreshCount {
   static bool get openInBrowser =>
       _setting.get(SettingBoxKey.openInBrowser, defaultValue: false);
 
+  static bool get videoDetailUseAv =>
+      _setting.get(SettingBoxKey.videoDetailUseAv, defaultValue: false);
+
   static bool get externalVideoLinkOpenInDetail => _setting.get(
     SettingBoxKey.externalVideoLinkOpenInDetail,
     defaultValue: false,
