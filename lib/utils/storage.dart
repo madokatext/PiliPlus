@@ -8,6 +8,7 @@ import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/accounts/account_adapter.dart';
 import 'package:PiliPlus/utils/accounts/account_type_adapter.dart';
 import 'package:PiliPlus/utils/accounts/cookie_jar_adapter.dart';
+import 'package:PiliPlus/utils/default_settings.dart';
 import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/set_int_adapter.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
@@ -64,6 +65,11 @@ abstract final class GStorage {
       ).then((res) => watchProgress = res),
     ]);
 
+    await Future.wait([
+      _putMissingDefaults(setting, defaultSettingValues),
+      _putMissingDefaults(video, defaultVideoValues),
+    ]);
+
     if (Pref.saveReply) {
       reply = await Hive.openBox<Uint8List>(
         'reply',
@@ -74,6 +80,19 @@ abstract final class GStorage {
       );
     } else {
       reply = null;
+    }
+  }
+
+  static Future<void> _putMissingDefaults(
+    Box<dynamic> box,
+    Map<String, Object> defaults,
+  ) async {
+    final missingDefaults = <String, Object>{
+      for (final entry in defaults.entries)
+        if (!box.containsKey(entry.key)) entry.key: entry.value,
+    };
+    if (missingDefaults.isNotEmpty) {
+      await box.putAll(missingDefaults);
     }
   }
 
