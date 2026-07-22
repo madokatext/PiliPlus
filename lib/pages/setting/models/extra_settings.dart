@@ -248,6 +248,13 @@ List<SettingsModel> get extraSettings => [
     setKey: SettingBoxKey.openInBrowser,
     defaultVal: false,
   ),
+  const SwitchModel(
+    title: '全屏接收外部视频跳转时打开竖屏详情',
+    subtitle: '开启后退出全屏并打开视频详情，不自动播放；关闭则保持当前全屏行为',
+    leading: Icon(Icons.stay_current_portrait_outlined),
+    setKey: SettingBoxKey.externalVideoLinkOpenInDetail,
+    defaultVal: false,
+  ),
   NormalModel(
     title: '横向滑动阈值',
     getSubtitle: () => '当前:「${Pref.touchSlopH}」，系统默认值: $deviceTouchSlop',

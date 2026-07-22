@@ -569,6 +569,7 @@ abstract final class PageUtils {
     bool off = false,
     bool isVertical = false,
     Dimension? dimension,
+    bool? autoplay,
   }) {
     final arguments = {
       'aid': aid ?? IdUtils.bv2av(bvid!),
@@ -582,6 +583,7 @@ abstract final class PageUtils {
       'progress': ?progress,
       'videoType': videoType,
       'isVertical': dimension?.isVertical ?? isVertical,
+      'autoplay': ?autoplay,
       'heroTag': Utils.makeHeroTag(cid),
       ...?extraArguments,
     };

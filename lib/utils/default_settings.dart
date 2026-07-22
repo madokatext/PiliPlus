@@ -80,6 +80,7 @@ const Map<String, Object> defaultSettingValues = {
   'enableSlideFS': false,
   'enableSponsorBlock': false,
   'enableTapDm': false,
+  'externalVideoLinkOpenInDetail': false,
   'fontWeight': 4,
   'fullScreenMode': 0,
   'homeTabBarHeight': 36.0,

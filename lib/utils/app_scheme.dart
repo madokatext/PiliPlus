@@ -17,9 +17,11 @@ import 'package:PiliPlus/pages/live/view.dart';
 import 'package:PiliPlus/pages/rank/view.dart';
 import 'package:PiliPlus/pages/subscription_detail/view.dart';
 import 'package:PiliPlus/pages/video/reply_reply/view.dart';
+import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/request_utils.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/url_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:app_links/app_links.dart';
@@ -40,7 +42,9 @@ abstract final class PiliScheme {
     appLinks = AppLinks();
 
     listener?.cancel();
-    listener = appLinks.uriLinkStream.listen(routePush);
+    listener = appLinks.uriLinkStream.listen(
+      (uri) => routePush(uri, external: true),
+    );
   }
 
   static int? _videoProgress(Map<String, String> queryParameters) {
@@ -90,6 +94,7 @@ abstract final class PiliScheme {
     Map? parameters,
     int? businessId,
     int? oid,
+    bool external = false,
   }) async {
     // if (kDebugMode) debugPrint('onAppLink: $uri');
 
@@ -158,12 +163,15 @@ abstract final class PiliScheme {
             if (aid != null || bvid != null) {
               final cid = queryParameters['cid'];
               if (cid != null) {
+                final openInDetail =
+                    await _prepareExternalVideoNavigation(external);
                 bvid ??= IdUtils.av2bv(int.parse(aid!));
                 PageUtils.toVideoPage(
                   bvid: bvid,
                   cid: int.parse(cid),
                   progress: _videoProgress(queryParameters),
                   off: off,
+                  autoplay: openInDetail ? false : null,
                 );
               } else {
                 videoPush(
@@ -171,6 +179,7 @@ abstract final class PiliScheme {
                   bvid,
                   off: off,
                   progress: _videoProgress(queryParameters),
+                  external: external,
                 );
               }
               return true;
@@ -416,6 +425,7 @@ abstract final class PiliScheme {
           selfHandle: selfHandle,
           off: off,
           parameters: parameters,
+          external: external,
         );
       default:
         String? aid = IdUtils.avRegexExact.matchAsPrefix(path)?.group(1);
@@ -425,6 +435,7 @@ abstract final class PiliScheme {
             aid != null ? int.parse(aid) : null,
             bvid,
             off: off,
+            external: external,
           );
           return true;
         }
@@ -450,6 +461,7 @@ abstract final class PiliScheme {
     bool selfHandle = false,
     bool off = false,
     Map? parameters,
+    bool external = false,
   }) async {
     // https://m.bilibili.com/bangumi/play/ss39708
     // https | m.bilibili.com | /bangumi/play/ss39708
@@ -647,7 +659,7 @@ abstract final class PiliScheme {
               );
             }
           } else {
-            videoPush(null, bvid, off: off);
+            videoPush(null, bvid, off: off, external: external);
           }
           return true;
         }
@@ -688,6 +700,7 @@ abstract final class PiliScheme {
             off: off,
             progress: _videoProgress(queryParameters),
             part: part,
+            external: external,
           );
           return true;
         }
@@ -840,6 +853,7 @@ abstract final class PiliScheme {
             res.av,
             res.bv,
             off: off,
+            external: external,
           );
           return true;
         }
@@ -877,6 +891,15 @@ abstract final class PiliScheme {
     );
   }
 
+  static Future<bool> _prepareExternalVideoNavigation(bool external) {
+    if (!external || !Pref.externalVideoLinkOpenInDetail) {
+      return Future.value(false);
+    }
+    return PlPlayerController.exitFullscreenAndPauseIfActive(
+      forcePortrait: true,
+    );
+  }
+
   // 投稿跳转
   static Future<void> videoPush(
     int? aid,
@@ -885,8 +908,10 @@ abstract final class PiliScheme {
     bool off = false,
     int? progress, // milliseconds
     String? part,
+    bool external = false,
   }) async {
     try {
+      final openInDetail = await _prepareExternalVideoNavigation(external);
       aid ??= IdUtils.bv2av(bvid!);
       bvid ??= IdUtils.av2bv(aid);
       if (showDialog) {
@@ -909,6 +934,7 @@ abstract final class PiliScheme {
           progress: progress,
           off: off,
           dimension: res!.dimension,
+          autoplay: openInDetail ? false : null,
         );
       }
     } catch (e) {

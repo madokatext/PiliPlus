@@ -613,6 +613,21 @@ class PlPlayerController with BlockConfigMixin {
       .._playerCount += 1;
   }
 
+  static Future<bool> exitFullscreenAndPauseIfActive({
+    bool forcePortrait = false,
+  }) async {
+    final instance = _instance;
+    if (instance == null || !instance.isFullScreen.value) {
+      return false;
+    }
+    await instance.pause();
+    await instance.triggerFullScreen(status: false);
+    if (forcePortrait && PlatformUtils.isMobile) {
+      await portraitUpMode();
+    }
+    return true;
+  }
+
   bool _processing = false;
   bool get processing => _processing;
 
