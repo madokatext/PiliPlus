@@ -1,29 +1,81 @@
+> **PiliPlus-max 是 [PiliPlus](https://github.com/bggRGjQaUbCoE/PiliPlus) 经过深度自定义和细节优化的分支版本。**
+
 <div align="center">
     <img width="200" height="200" src="assets/images/logo/logo.png">
 </div>
 
-
-
 <div align="center">
     <h1>PiliPlus-max</h1>
-<div align="center">
-    
+
 ![GitHub repo size](https://img.shields.io/github/repo-size/madokatext/PiliPlus-Max)
 ![GitHub Repo stars](https://img.shields.io/github/stars/madokatext/PiliPlus-Max)
 ![GitHub all releases](https://img.shields.io/github/downloads/madokatext/PiliPlus-Max/total)
-</div>
-    <p>使用Flutter开发的BiliBili第三方客户端</p>
-    
+
+<p>使用 Flutter 开发的 BiliBili 第三方客户端</p>
+
 <img src="assets/screenshots/510shots_so.png" width="32%" alt="home" />
 <img src="assets/screenshots/174shots_so.png" width="32%" alt="home" />
 <img src="assets/screenshots/850shots_so.png" width="32%" alt="home" />
 <br/>
 <img src="assets/screenshots/main_screen.png" width="96%" alt="home" />
-<br/>
 </div>
 
+## 与 main 分支的区别
 
-<br/>
+以下按当前 [`main...mod2`](https://github.com/madokatext/PiliPlus-Max/compare/main...mod2) 的最终代码差异整理，已排除后来完全回滚的中间方案。
+
+### 项目与设置
+
+- 应用改名为 `PiliPlus-max`，包名改为 `com.max.piliplus`，版本标识改为 `2.1a`。
+- 源码、更新、Release、问题反馈和构建链接均指向本仓库。
+- 关闭 Android 主题色图标，固定使用默认绿色图标和白色背景。
+- 内置一套深度调校的首次启动默认配置，仅填充尚不存在的设置。
+- 新增所有设置 JSON 导入导出，文件保存到公共 Download 目录并带导出时间。
+- 登录信息导入导出移至设置首页，关于页不再重复显示导入导出入口。
+
+### 主题、首页与交互
+
+- 新增动态取色、预设单种子和自定义三种子三种配色模式。
+- 支持分别设置主、次、第三种子色及透明度。
+- 支持分别调整亮色和暗色主题各语义区域的 HCT 明暗层级。
+- 首页卡片左右间隔、上下间隔、左右边距和全局卡片圆角均可调。
+- 首页顶部分类栏高度和传统底栏底部留白均可调。
+- 首页手动刷新卡片数量可调，App 推荐模式会自动合并多个请求批次。
+- 推荐卡片时长可与统计信息同行，播放量与弹幕数间距可调。
+- 推荐卡片新增与标题对齐的 `UP` 标识，并统一作者信息间距。
+- 优化“上次看到这里”和“上次观看”的文字间距与排版。
+- 横向标签页可分别设置快滑速度阈值和慢滑翻页距离。
+- 页面纵向滚动的惯性倍率和减速度可调，顶底栏可跟随惯性滚动。
+- 设置搜索支持完整结果、搜索历史、快捷重搜和历史清空。
+- 评论正文大小、行距和折叠回复字号比例均可调。
+- 评论操作区改为左对齐，并优化点赞、点踩、回复、翻译等项目的顺序与间距。
+- 评论点赞数为零时隐藏数字但保留布局宽度。
+
+### 播放器与字幕
+
+- 新增半屏独立默认画质，首次进入全屏后再切换到原有画质策略。
+- 新增自定义 mpv 启动参数，用户参数覆盖内置重复项并应用于视频、音频和 Live Photo。
+- 新增 mpv 日志等级设置和最近一次播放日志查看页面。
+- AI 入口优先显示网页版 AI 小助手字幕；仅有总结时回退播放器字幕并优先中文。
+- AI 字幕显示时间戳并支持点击跳转，新增复制全部且扩大入口触摸范围。
+- 播放控件显示时间和长按倍速触发延迟均可调。
+- 新增 B 站官方式进度时间布局，将当前时间和总时长放到进度条两侧。
+- 进度条手柄大小和垂直触摸范围可调，并修正扩展区域点击跳转偏移。
+- 播放器按钮横向边距、上下栏厚度和渐变弥散范围均可调。
+- 竖屏全屏底栏可选择避让系统导航栏，并可单独设置避让高度。
+- 全屏倍速和画面比例入口移至顶栏，弹幕开关移至底栏，并移除控制栏超分辨率入口。
+- 拖动进度条与横滑快进可分别控制预览浮窗显示及是否跟随手柄。
+- 预览浮窗大小、与进度条间距及非全屏显示均可调，位置跟随当前可见进度条。
+- 预览雪碧图按视频比例校正并用黑边补齐；竖屏视频保持原始雪碧图比例。
+- 优化预览图缓存、加载任务复用和视频切换清理，减少长时间转圈与旧图残留。
+- 当前时间可集成到预览浮窗，进度与长按倍速浮窗的字号和垂直位置可分别设置。
+- 音量、亮度手势的识别角度和调节速度可分别设置，并可改用主题色图形进度条。
+- 横滑快进的识别角度与触发距离可调，双指缩放也可设置识别角度。
+- 优先识别双指播放器手势，减少竖向缩放被页面滚动抢占的问题。
+- 新增弹幕字体选择，并统一应用到普通弹幕与高级弹幕渲染。
+- 重构章节、屏蔽段和弹幕趋势层级，避免遮挡播放进度条触摸。
+- 章节文字固定字号并按章节范围截断，当前章节变化时自动更新显示。
+- 修复同一 UP 视频切换后进入全屏仍显示上一视频的问题。
 
 ## 适配平台
 
@@ -35,219 +87,35 @@
 
 [![Packaging status](https://repology.org/badge/vertical-allrepos/piliplus.svg)](https://repology.org/project/piliplus/versions)
 
-## refactor
+## 原项目功能
 
-- [ ] gRPC [wip]
-- [x] 用户界面
-- [x] 其他
-
-## feat
-
-- [x] 编辑动态
-- [x] DLNA 投屏
-- [x] 离线缓存/播放
-- [x] 移动端支持点击弹幕悬停，点赞、复制、举报 by [@My-Responsitories](https://github.com/My-Responsitories)
-- [x] 播放音频
-- [x] 跳过番剧片头/片尾
-- [x] 安卓端 `loudnorm` 适配 by [@My-Responsitories](https://github.com/My-Responsitories)
-- [x] Win/Mac 支持极验、短信登录 by [@My-Responsitories](https://github.com/My-Responsitories)
-- [x] 视频截取动图 by [@My-Responsitories](https://github.com/My-Responsitories)
-- [x] AI 原声翻译
-- [x] SuperChat
-- [x] 播放课堂视频
-- [x] 发起投票
-- [x] 发布动态/评论支持`富文本编辑`/`表情显示`/`@用户`
-- [x] 修改消息设置
-- [x] 修改聊天设置
-- [x] 展示折叠消息
-- [x] 查看用户图文
-- [x] 动态话题
-- [x] 直播分区
-- [x] 分享`视频`/`番剧`/`动态`/`专栏`/`直播`至消息
-- [x] 创建/修改/删除关注分组
-- [x] 移除粉丝
-- [x] 直播弹幕发送表情
-- [x] 收藏夹排序
-- [x] 稍后再看 ~~`未看`~~ / `未看完` / ~~`已看完`~~ 分类
-- [x] WebDAV 备份/恢复设置
-- [x] 保存评论/动态
-- [x] 高级弹幕 by [@My-Responsitories](https://github.com/My-Responsitories)
-- [x] 取消/置顶评论
-- [x] 记笔记
-- [x] 多账号支持 by [@My-Responsitories](https://github.com/My-Responsitories)
-- [x] 屏蔽带货动态/评论
-- [x] 互动视频
-- [x] 发评/动态反诈
-- [x] 高能进度条
-- [x] 滑动跳转预览视频缩略图
-- [x] Live Photo
-- [x] 复制/移动/排序收藏夹/稍后再看视频
-- [x] 超分辨率
-- [x] 合并弹幕
-- [x] 会员彩色弹幕
-- [x] 播放全部/继续播放/倒序播放
-- [x] Cookie登录
-- [x] 显示视频分段信息
-- [x] 调节字幕大小
-- [x] 调节全屏弹幕大小
-- [x] 收藏夹/稍后再看多选删除
-- [x] 搜索用户动态
-- [x] 直播弹幕
-- [x] 修改头像/用户名/签名/性别/生日
-- [x] 创建/编辑/删除收藏夹
-- [x] 评论楼中楼查看对话
-- [x] 评论楼中楼定位点击查看的评论
-- [x] 评论楼中楼按热度/时间排序
-- [x] 评论点踩
-- [x] 私信发图
-- [x] 投币动画
-- [x] 取消/追番，更新追番状态
-- [x] 取消/订阅合集
-- [x] SponsorBlock
-- [x] 显示视频完整合集
-- [x] 三连动画
-- [x] 番剧三连
-- [x] 带图评论
-- [x] 视频TAG
-- [x] 筛选搜索
-- [x] 转发动态
-- [x] 合集图片
-- [x] 删除/置顶/撤回私信
-- [x] 举报用户/评论/视频/动态
-- [x] 删除/发布/置顶文本/图片动态
-- [x] 其他
-
-## opt
-
-- [x] 专栏界面
-- [x] 私信界面
-- [x] 收藏面板
-- [x] PIP
-- [x] 视频封面
-- [x] 回复界面
-- [x] 系统通知
-- [x] 评论显示
-- [x] 亮度调节
-- [x] 视频播放
-- [x] 视频staff
-- [x] 防止bottomsheet遮挡全屏视频
-- [x] 其他
-
-## fix
-
-- [x] 番剧分集点赞/投币/收藏
-- [x] bugs
-
-<br/>
-
-## 功能
-
-- [x] 推荐视频列表(app端)
-- [x] 最热视频列表
-- [x] 热门直播
-- [x] 番剧列表
-- [x] 屏蔽黑名单内用户视频
-- [x] 无痕模式（播放视为未登录）
-- [x] 游客模式（推荐视为未登录）
-
-- [x] 用户相关
-  - [x] 粉丝、关注用户、拉黑用户查看
-  - [x] 用户主页查看
-  - [x] 关注/取关用户
-  - [x] 离线缓存
-  - [x] 稍后再看
-  - [x] 观看记录
-  - [x] 我的收藏
-  - [x] 站内私信
-  
-- [x] 动态相关
-  - [x] 全部、投稿、番剧分类查看
-  - [x] 动态评论查看
-  - [x] 动态评论回复功能
-
-- [x] 视频播放相关
-  - [x] 双击快进/快退
-  - [x] 双击播放/暂停
-  - [x] 垂直方向调节亮度/音量
-  - [x] 垂直方向上滑全屏、下滑退出全屏
-  - [x] 水平方向手势快进/快退
-  - [x] 全屏方向设置
-  - [x] 倍速选择/长按2倍速
-  - [x] 硬件加速（视机型而定）
-  - [x] 画质选择（高清画质未解锁）
-  - [x] 音质选择（视视频而定）
-  - [x] 解码格式选择（视视频而定）
-  - [x] 弹幕
-  - [x] 字幕
-  - [x] 记忆播放
-  - [x] 视频比例：高度/宽度适应、填充、包含等
-     
-- [x] 搜索相关
-  - [x] 热搜
-  - [x] 搜索历史
-  - [x] 默认搜索词
-  - [x] 投稿、番剧、直播间、用户搜索
-  - [x] 视频搜索排序、按时长筛选
-    
-- [x] 视频详情页相关
-  - [x] 视频选集(分p)切换
-  - [x] 点赞、投币、收藏/取消收藏
-  - [x] 相关视频查看
-  - [x] 评论用户身份标识
-  - [x] 评论(排序)查看、二楼评论查看
-  - [x] 主楼、二楼评论回复功能
-  - [x] 评论点赞
-  - [x] 评论笔记图片查看、保存
-
-- [x] 设置相关
-  - [x] 画质、音质、解码方式预设      
-  - [x] 图片质量设定
-  - [x] 主题模式：亮色/暗色/跟随系统
-  - [x] 震动反馈(可选)
-  - [x] 高帧率
-  - [x] 自动全屏
-  - [x] 横屏适配
-- [ ] 等等
-
-<br/>
+本分支完整继承 PiliPlus 的基础功能。原 README 中的 `refactor`、`feat`、`opt`、`fix` 与“功能”清单不再重复，详见 [PiliPlus 原项目](https://github.com/bggRGjQaUbCoE/PiliPlus#readme)。
 
 ## 下载
 
-可以通过右侧release进行下载或拉取代码到本地进行编译
-
-<br/>
+可以通过右侧 Release 下载，或拉取代码到本地编译。
 
 ## 声明
 
-此项目（PiliPlus-max）是个人为了兴趣而开发，仅用于学习和测试，请于下载后24小时内删除。
-所用API皆从官方网站收集，不提供任何破解内容。
+此项目（PiliPlus-max）是个人为了兴趣而开发，仅用于学习和测试，请于下载后 24 小时内删除。
+
+所用 API 皆从官方网站收集，不提供任何破解内容。
+
+本项目基于 [PiliPlus](https://github.com/bggRGjQaUbCoE/PiliPlus) 进行深度自定义，感谢 PiliPlus 的长期维护与开源贡献。
+
 在此致敬原作者：[guozhigq/pilipala](https://github.com/guozhigq/pilipala)
+
 在此致敬上游作者：[orz12/PiliPalaX](https://github.com/orz12/PiliPalaX)
-本仓库做了更激进的修改，感谢原作者的开源精神。
 
-感谢使用
+本仓库做了更激进的修改，感谢各上游项目与贡献者的开源精神。
 
-
-<br/>
+感谢使用。
 
 ## 致谢
 
+- [PiliPlus](https://github.com/bggRGjQaUbCoE/PiliPlus)
 - [bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect)
 - [flutter_meedu_videoplayer](https://github.com/zezo357/flutter_meedu_videoplayer)
 - [media-kit](https://github.com/media-kit/media-kit)
 - [dio](https://pub.dev/packages/dio)
 - 等等
-
-<br/>
-<br/>
-<br/>
-
-## Star History
-
-<a href="https://www.star-history.com/#madokatext/PiliPlus-Max&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=madokatext/PiliPlus-Max&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=madokatext/PiliPlus-Max&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=madokatext/PiliPlus-Max&type=Date" />
- </picture>
-</a>
