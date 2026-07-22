@@ -87,7 +87,7 @@ Widget buildSeekPreviewWidget(
         final maxPreviewWidth = maxWidth - horizontalMargin * 2;
         final videoWidth = plPlayerController.width ?? 0;
         final videoHeight = plPlayerController.height ?? 0;
-        final fallbackAspectRatio = videoWidth > 0 && videoHeight > 0
+        final videoAspectRatio = videoWidth > 0 && videoHeight > 0
             ? videoWidth / videoHeight
             : Style.aspectRatio;
 
@@ -151,7 +151,7 @@ if (globalX != null) {
             data.image.isEmpty ||
             data.imgXLen <= 0 ||
             data.imgYLen <= 0) {
-          return loadingPreview(fallbackAspectRatio);
+          return loadingPreview(videoAspectRatio);
         }
 
         final imgXLen = data.imgXLen;
@@ -165,7 +165,7 @@ if (globalX != null) {
             imgYSize > 0;
         final aspectRatio = hasValidCellSize
             ? imgXSize / imgYSize
-            : fallbackAspectRatio;
+            : videoAspectRatio;
         height = fitHeight(height, aspectRatio);
 
         final pageIndex = (index ~/ totalPerImage).clamp(
@@ -190,7 +190,7 @@ if (globalX != null) {
             imgYLen: imgYLen,
             height: height,
             maxWidth: maxPreviewWidth,
-            fallbackAspectRatio: fallbackAspectRatio,
+            videoAspectRatio: videoAspectRatio,
             generation: plPlayerController.previewGeneration,
             imageCache: plPlayerController.previewCache,
             imageLoadTasks: plPlayerController.previewLoadTasks,
@@ -270,7 +270,7 @@ class VideoShotImage extends StatefulWidget {
     required this.imgYLen,
     required this.height,
     required this.maxWidth,
-    required this.fallbackAspectRatio,
+    required this.videoAspectRatio,
     required this.generation,
     required this.imageLoadTasks,
     required this.onSetSize,
@@ -288,7 +288,7 @@ class VideoShotImage extends StatefulWidget {
   final int imgYLen;
   final double height;
   final double maxWidth;
-  final double fallbackAspectRatio;
+  final double videoAspectRatio;
   final int generation;
   final Function(double imgXSize, double imgYSize) onSetSize;
   final ValueGetter<bool> isMounted;
@@ -340,10 +340,13 @@ class _VideoShotImageState extends State<VideoShotImage> {
       widget.imgXSize > 0 &&
       widget.imgYSize > 0;
 
-  double get _fallbackAspectRatio =>
-      widget.fallbackAspectRatio.isFinite && widget.fallbackAspectRatio > 0
-      ? widget.fallbackAspectRatio
+  double get _videoAspectRatio =>
+      widget.videoAspectRatio.isFinite && widget.videoAspectRatio > 0
+      ? widget.videoAspectRatio
       : Style.aspectRatio;
+
+  bool _hasSameAspectRatio(double first, double second) =>
+      (first - second).abs() / math.max(first, second) <= 0.01;
 
   Size? get _cellSize {
     if (_hasValidMetadata) {
@@ -360,18 +363,29 @@ class _VideoShotImageState extends State<VideoShotImage> {
 
   void _initSize() {
     final cellSize = _cellSize;
-    final aspectRatio = cellSize == null
-        ? _fallbackAspectRatio
+    final frameAspectRatio = cellSize == null
+        ? _videoAspectRatio
         : cellSize.width / cellSize.height;
+    // The server may stretch a video frame to the sprite cell's aspect ratio.
+    // Keep that ratio for cropping and the outer frame, but restore the video's
+    // aspect ratio inside it so any remaining space becomes letterboxing.
+    final contentAspectRatio = cellSize != null &&
+            !_hasSameAspectRatio(frameAspectRatio, _videoAspectRatio)
+        ? _videoAspectRatio
+        : frameAspectRatio;
     var height = widget.height.isFinite && widget.height > 0
         ? widget.height
         : 0.0;
     if (widget.maxWidth.isFinite &&
         widget.maxWidth > 0 &&
-        aspectRatio > 0) {
-      height = math.min(height, widget.maxWidth / aspectRatio);
+        frameAspectRatio > 0) {
+      height = math.min(height, widget.maxWidth / frameAspectRatio);
     }
-    _setRect(height * aspectRatio, height);
+    _setRect(
+      height * frameAspectRatio,
+      height,
+      contentAspectRatio,
+    );
 
     if (cellSize != null) {
       _setSrcRect(cellSize.width, cellSize.height);
@@ -383,10 +397,35 @@ class _VideoShotImageState extends State<VideoShotImage> {
     }
   }
 
-  void _setRect(double width, double height) {
+  void _setRect(double width, double height, double contentAspectRatio) {
     _size = Size(width, height);
-    _dstRect = Rect.fromLTRB(0, 0, width, height);
-    _rrect = RRect.fromRectAndRadius(_dstRect, const Radius.circular(10));
+    final frameRect = Rect.fromLTRB(0, 0, width, height);
+    if (width > 0 &&
+        height > 0 &&
+        contentAspectRatio.isFinite &&
+        contentAspectRatio > 0) {
+      final frameAspectRatio = width / height;
+      if (contentAspectRatio > frameAspectRatio) {
+        final contentHeight = width / contentAspectRatio;
+        _dstRect = Rect.fromLTWH(
+          0,
+          (height - contentHeight) / 2,
+          width,
+          contentHeight,
+        );
+      } else {
+        final contentWidth = height * contentAspectRatio;
+        _dstRect = Rect.fromLTWH(
+          (width - contentWidth) / 2,
+          0,
+          contentWidth,
+          height,
+        );
+      }
+    } else {
+      _dstRect = frameRect;
+    }
+    _rrect = RRect.fromRectAndRadius(frameRect, const Radius.circular(10));
   }
 
   void _setSrcRect(double imgXSize, double imgYSize) {
@@ -457,7 +496,7 @@ class _VideoShotImageState extends State<VideoShotImage> {
         oldWidget.imgYLen != widget.imgYLen ||
         oldWidget.height != widget.height ||
         oldWidget.maxWidth != widget.maxWidth ||
-        oldWidget.fallbackAspectRatio != widget.fallbackAspectRatio) {
+        oldWidget.videoAspectRatio != widget.videoAspectRatio) {
       _initSize();
     }
     if (_image == null) {
@@ -474,14 +513,20 @@ class _VideoShotImageState extends State<VideoShotImage> {
   @override
   Widget build(BuildContext context) {
     if (_image != null && _srcRect.width > 0 && _srcRect.height > 0) {
-      return CroppedImage(
+      return SizedBox.fromSize(
         size: _size,
-        image: _image!,
-        srcRect: _srcRect,
-        dstRect: _dstRect,
-        rrect: _rrect,
-        imgPaint: _imgPaint,
-        borderPaint: _borderPaint,
+        child: ColoredBox(
+          color: Colors.black,
+          child: CroppedImage(
+            size: _size,
+            image: _image!,
+            srcRect: _srcRect,
+            dstRect: _dstRect,
+            rrect: _rrect,
+            imgPaint: _imgPaint,
+            borderPaint: _borderPaint,
+          ),
+        ),
       );
     }
     return SizedBox.fromSize(
