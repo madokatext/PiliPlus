@@ -25,6 +25,7 @@ import 'package:PiliPlus/common/widgets/flutter/text_field/controller.dart';
 import 'package:PiliPlus/common/widgets/flutter/text_field/editable.dart';
 import 'package:PiliPlus/common/widgets/flutter/text_field/spell_check.dart';
 import 'package:PiliPlus/common/widgets/flutter/text_field/text_selection.dart';
+import 'package:PiliPlus/utils/clipboard_link_suppression.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -2508,7 +2509,11 @@ class EditableTextState extends State<EditableText>
         selection.textInside(textEditingValue.text);
     Clipboard.setData(
       ClipboardData(text: text),
-    ).catchError(_reportClipboardError('while copying selection to clipboard'));
+    )
+        .then((_) => ClipboardLinkSuppression.markAppGeneratedText(text))
+        .catchError(
+          _reportClipboardError('while copying selection to clipboard'),
+        );
     if (cause == SelectionChangedCause.toolbar) {
       bringIntoView(textEditingValue.selection.extent);
       hideToolbar(false);
@@ -2552,7 +2557,11 @@ class EditableTextState extends State<EditableText>
         selection.textInside(textEditingValue.text);
     Clipboard.setData(
       ClipboardData(text: text),
-    ).catchError(_reportClipboardError('while cutting selection to clipboard'));
+    )
+        .then((_) => ClipboardLinkSuppression.markAppGeneratedText(text))
+        .catchError(
+          _reportClipboardError('while cutting selection to clipboard'),
+        );
     _replaceText(ReplaceTextIntent(textEditingValue, '', selection, cause));
     if (cause == SelectionChangedCause.toolbar) {
       // Schedule a call to bringIntoView() after renderEditable updates.

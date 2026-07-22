@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 
+import 'package:PiliPlus/utils/clipboard_link_suppression.dart';
 import 'package:PiliPlus/utils/device_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
@@ -31,8 +32,10 @@ abstract final class ShareUtils {
       return;
     }
     try {
+      final origin = await sharePositionOrigin;
+      ClipboardLinkSuppression.markAppGeneratedText(text);
       await SharePlus.instance.share(
-        ShareParams(text: text, sharePositionOrigin: await sharePositionOrigin),
+        ShareParams(text: text, sharePositionOrigin: origin),
       );
     } catch (e) {
       SmartDialog.showToast(e.toString());

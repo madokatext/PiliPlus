@@ -264,7 +264,7 @@ List<SettingsModel> get extraSettings => [
   ),
   const SwitchModel(
     title: '返回前台时打开剪贴板链接',
-    subtitle: '从后台返回时读取剪贴板首条文本，提取并打开其中第一个链接；相同链接仅处理一次',
+    subtitle: '提取并打开剪贴板首条文本中的第一个链接；相同链接及本 App 刚复制或分享的链接不处理',
     leading: Icon(Icons.content_paste_outlined),
     setKey: SettingBoxKey.openClipboardLinkOnResume,
     defaultVal: false,

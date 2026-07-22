@@ -2,6 +2,7 @@ import 'dart:async' show unawaited;
 
 import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/clipboard_link_parser.dart';
+import 'package:PiliPlus/utils/clipboard_link_suppression.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
@@ -61,7 +62,15 @@ final class ClipboardLinkHandler with WidgetsBindingObserver {
 
       final data = await Clipboard.getData(Clipboard.kTextPlain);
       final link = ClipboardLinkParser.firstLink(data?.text ?? '');
-      if (!_started || link == null) return;
+      if (!_started) return;
+      final suppressAppGenerated = ClipboardLinkSuppression.consumeIfMatches(
+        link,
+      );
+      if (link == null) return;
+      if (suppressAppGenerated) {
+        await GStorage.localCache.put(LocalCacheKey.lastClipboardLink, link);
+        return;
+      }
 
       final lastLink = GStorage.localCache.get(LocalCacheKey.lastClipboardLink);
       if (lastLink == link) return;
