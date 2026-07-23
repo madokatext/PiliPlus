@@ -243,7 +243,7 @@ Row(
         initialValue:
             DanmakuOptions.highLikeDanmakuThreshold.toString(),
         keyboardType: TextInputType.number,
-        inputFormatters: const [
+        inputFormatters: [
           FilteringTextInputFormatter.digitsOnly,
         ],
         textAlign: TextAlign.center,
