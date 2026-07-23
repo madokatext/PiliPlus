@@ -1040,6 +1040,11 @@ final dataSourceGeneration = ++_dataSourceGeneration;
     }
     return null;
   }
+void _resetMediaOpenRetry() {
+  _mediaOpenRetryTimer?.cancel();
+  _mediaOpenRetryTimer = null;
+  _mediaOpenRetryAttempt = 0;
+}
 bool _isRetryableMediaOpenError(String event) {
   return event.startsWith('Failed to open https://') ||
       event.startsWith('Can not open external file https://') ||
