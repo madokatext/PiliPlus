@@ -52,7 +52,6 @@ import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:archive/archive.dart' show getCrc32;
 import 'package:canvas_danmaku/canvas_danmaku.dart';
-import 'package:easy_debounce/easy_throttle.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback, DeviceOrientation;
@@ -74,7 +73,12 @@ class PlPlayerController with BlockConfigMixin {
   Player? _videoPlayerController;
   VideoController? _videoController;
   Future<Player>? _playerInitTask;
+Timer? _mediaOpenRetryTimer;
+int _mediaOpenRetryAttempt = 0;
 
+static const int _maxMediaOpenRetryAttempts = 3;
+static const Duration _mediaOpenRetryDelay =
+    Duration(seconds: 2);
   static PlPlayerController? _instance;
 
   final playerStatus = PlPlayerStatus(.playing);
@@ -683,7 +687,9 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       return;
     }
     cancelVideoPlayerSwitch();
-    final dataSourceGeneration = ++_dataSourceGeneration;
+_resetMediaOpenRetry();
+
+final dataSourceGeneration = ++_dataSourceGeneration;
     bool isCurrentDataSource() =>
         dataSourceGeneration == _dataSourceGeneration &&
         (videoPageTag == null || isVideoPageActive(videoPageTag));
@@ -1034,7 +1040,62 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     }
     return null;
   }
+bool _isRetryableMediaOpenError(String event) {
+  return event.startsWith('Failed to open https://') ||
+      event.startsWith('Can not open external file https://') ||
+      event.startsWith('tcp: ffurl_read returned ');
+}
 
+void _scheduleMediaOpenRetry() {
+  if (_playerCount == 0 ||
+      isLive ||
+      dataSource is FileSource ||
+      _mediaOpenRetryTimer != null ||
+      _mediaOpenRetryAttempt >=
+          _maxMediaOpenRetryAttempts) {
+    return;
+  }
+
+  final generation = _dataSourceGeneration;
+  final attempt = ++_mediaOpenRetryAttempt;
+
+  _mediaOpenRetryTimer = Timer(
+    _mediaOpenRetryDelay,
+    () async {
+      _mediaOpenRetryTimer = null;
+
+      if (_playerCount == 0 ||
+          generation != _dataSourceGeneration) {
+        return;
+      }
+
+      SmartDialog.showToast(
+        '视频或音频加载失败，重试中'
+        '（$attempt/$_maxMediaOpenRetryAttempts）',
+        displayTime:
+            const Duration(milliseconds: 800),
+      );
+
+      try {
+        final task = refreshPlayer();
+        if (task != null) {
+          await task;
+        }
+      } catch (err, stackTrace) {
+        if (kDebugMode) {
+          debugPrint(
+            'media open retry failed: $err',
+          );
+          debugPrint(stackTrace.toString());
+        }
+
+        if (generation == _dataSourceGeneration) {
+          _scheduleMediaOpenRetry();
+        }
+      }
+    },
+  );
+}
   void _bumpVideoOutputRevision() {
     videoOutputRevision.value = videoOutputRevision.value + 1;
   }
@@ -1643,33 +1704,10 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
           }
           return;
         }
-        if (event.startsWith("Failed to open https://") ||
-            event.startsWith("Can not open external file https://") ||
-            //tcp: ffurl_read returned 0xdfb9b0bb
-            //tcp: ffurl_read returned 0xffffff99
-            event.startsWith('tcp: ffurl_read returned ')) {
-          EasyThrottle.throttle(
-            'controllerStream.error.listen',
-            const Duration(milliseconds: 10000),
-            () {
-              Future.delayed(const Duration(milliseconds: 3000), () {
-                // if (kDebugMode) {
-                //   debugPrint("isBuffering.value: ${isBuffering.value}");
-                // }
-                // if (kDebugMode) {
-                //   debugPrint("_buffered.value: ${_buffered.value}");
-                // }
-                if (isBuffering.value && buffered.value == 0) {
-                  SmartDialog.showToast(
-                    '视频链接打开失败，重试中',
-                    displayTime: const Duration(milliseconds: 500),
-                  );
-                  refreshPlayer();
-                }
-              });
-            },
-          );
-        } else if (event.startsWith('Could not open codec')) {
+        if (_isRetryableMediaOpenError(event)) {
+  _scheduleMediaOpenRetry();
+  return;
+} else if (event.startsWith('Could not open codec')) {
           SmartDialog.showToast('无法加载解码器, $event，可能会切换至软解');
         } else if (!onlyPlayAudio.value) {
           if (event.startsWith("error running") ||
@@ -2198,6 +2236,7 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
     resetScreenRotation();
     cancelLongPressTimer();
     _cancelSubForSeek();
+      _resetMediaOpenRetry();
     if (!_isCloseAll && _playerCount > 1) {
       _playerCount -= 1;
       _heartDuration = 0;
