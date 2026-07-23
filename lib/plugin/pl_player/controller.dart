@@ -88,7 +88,7 @@ static const Duration _mediaOpenRetryDelay =
   Duration? seekToPos;
   bool hasToasted = false;
   final RxBool isSeeking = false.obs;
-    final RxBool isSeeking = false.obs;
+    final RxBool isGestureSeeking = false.obs;
 final RxInt seekStartPosition = 0.obs;
   final RxInt position = RxInt(0);
 
