@@ -61,8 +61,10 @@ abstract final class MpvLogService {
     });
   }
 
-  static void add(Player player, PlayerLog log) {
-    if (!identical(player, _activePlayer) || _truncated) return;
+    static void add(Player player, PlayerLog log) {
+    if (!identical(player, _activePlayer) || _truncated) {
+      return;
+    }
 
     final session = _session;
     final line =
@@ -73,29 +75,55 @@ abstract final class MpvLogService {
     if (_writtenBytes + bytes > _maxBytes) {
       _truncated = true;
       const marker = '\n# 日志已达到 4 MiB，后续内容不再写入。\n';
-      if (session == _session) _sink?.write(marker);
-      _flushSilently();
+
+      _run(() async {
+        if (session != _session) {
+          return;
+        }
+
+        final sink = _sink;
+        if (sink == null) {
+          return;
+        }
+
+        sink.write(marker);
+        await sink.flush();
+      });
+
       return;
     }
 
     _writtenBytes += bytes;
     _pendingBytes += bytes;
-    if (session == _session) _sink?.write(line);
-    if (_pendingBytes >= 64 * 1024 ||
+
+    final shouldFlush =
+        _pendingBytes >= 64 * 1024 ||
         log.level == 'error' ||
-        log.level == 'fatal') {
+        log.level == 'fatal';
+
+    if (shouldFlush) {
       _pendingBytes = 0;
-      _flushSilently();
     }
-  }
 
-  static void _flushSilently() {
-    final sink = _sink;
-    if (sink != null) {
-      sink.flush().then<void>((_) {}, onError: (_, _) {});
-    }
-  }
+    // 所有 write 与 flush 都进入同一异步队列。
+    // IOSink.flush 执行期间不能再次直接调用 write。
+    _run(() async {
+      if (session != _session) {
+        return;
+      }
 
+      final sink = _sink;
+      if (sink == null) {
+        return;
+      }
+
+      sink.write(line);
+
+      if (shouldFlush) {
+        await sink.flush();
+      }
+    });
+  }
   static Future<String> readLastLog() async {
     await _operation;
     await _sink?.flush();
