@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:PiliPlus/utils/latin_font_subset.dart';
 import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
@@ -53,6 +54,9 @@ enum LocalFontSlot {
   final String fileKey;
   final String nameKey;
   final String sample;
+
+  bool get usesLatinSubset =>
+      this == LocalFontSlot.appEnglish || this == LocalFontSlot.danmakuEnglish;
 }
 
 typedef LocalFontFamilies = ({
@@ -62,6 +66,7 @@ typedef LocalFontFamilies = ({
 
 abstract final class LocalFontManager {
   static const _fontDirectoryName = 'local_fonts';
+  static const _latinSubsetCacheVersion = 'latin_v1';
   static const _allowedExtensions = <String>{'.ttf', '.otf', '.ttc'};
 
   static final Map<LocalFontSlot, String> _loadedFamilies = {};
@@ -77,13 +82,15 @@ abstract final class LocalFontManager {
         continue;
       }
       try {
-        await _loadFont(slot, _fontFile(fileName));
+        final fontFile = await _prepareSavedFont(slot, fileName);
+        await _loadFont(slot, fontFile);
       } catch (e) {
         if (kDebugMode) {
           debugPrint('Failed to load ${slot.label}: $e');
         }
       }
     }
+    await _cleanupUnusedFontFilesQuietly();
   }
 
   static Future<bool> pickAndInstall(LocalFontSlot slot) async {
@@ -106,16 +113,25 @@ abstract final class LocalFontManager {
       throw const FormatException('字体文件为空');
     }
 
+    final cacheBytes = slot.usesLatinSubset
+        ? await compute(createLatinFontSubset, bytes)
+        : bytes;
     final digest = sha256.convert(bytes).toString();
-    final fileName = '${slot.filePrefix}_$digest$extension';
+    final cacheExtension = slot.usesLatinSubset
+        ? latinSubsetFileExtension(cacheBytes)
+        : extension;
+    final cacheMarker = slot.usesLatinSubset
+        ? '_${_latinSubsetCacheVersion}_'
+        : '_';
+    final fileName = '${slot.filePrefix}$cacheMarker$digest$cacheExtension';
     final fontFile = _fontFile(fileName);
     final oldFileName = _storedFileName(slot);
     final oldFamily = _loadedFamilies[slot];
     await fontFile.parent.create(recursive: true);
-    await fontFile.writeAsBytes(bytes, flush: true);
+    await fontFile.writeAsBytes(cacheBytes, flush: true);
 
     try {
-      await _loadFont(slot, fontFile, bytes: bytes);
+      await _loadFont(slot, fontFile, bytes: cacheBytes);
     } catch (_) {
       if (oldFileName != fileName) {
         await _deleteFileQuietly(fontFile, slot.label);
@@ -142,6 +158,38 @@ abstract final class LocalFontManager {
 
     await _cleanupUnusedFontFilesQuietly();
     return true;
+  }
+
+  static Future<File> _prepareSavedFont(
+    LocalFontSlot slot,
+    String fileName,
+  ) async {
+    final savedFile = _fontFile(fileName);
+    if (!slot.usesLatinSubset ||
+        fileName.startsWith(
+          '${slot.filePrefix}_${_latinSubsetCacheVersion}_',
+        )) {
+      return savedFile;
+    }
+    if (!await savedFile.exists()) {
+      throw const FileSystemException('字体文件不存在');
+    }
+
+    final sourceBytes = await savedFile.readAsBytes();
+    final subsetBytes = await compute(createLatinFontSubset, sourceBytes);
+    final digest = sha256.convert(sourceBytes).toString();
+    final subsetFileName =
+        '${slot.filePrefix}_${_latinSubsetCacheVersion}_$digest'
+        '${latinSubsetFileExtension(subsetBytes)}';
+    final subsetFile = _fontFile(subsetFileName);
+    await subsetFile.writeAsBytes(subsetBytes, flush: true);
+    try {
+      await GStorage.setting.put(slot.fileKey, subsetFileName);
+    } catch (_) {
+      await _deleteFileQuietly(subsetFile, slot.label);
+      rethrow;
+    }
+    return subsetFile;
   }
 
   static Future<void> reset(LocalFontSlot slot) async {

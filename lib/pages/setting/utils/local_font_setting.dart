@@ -35,8 +35,10 @@ Future<void> showLocalFontSetting(
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            '支持 TTF、OTF、TTC；选中的文件会复制到应用目录。',
+          Text(
+            slot.usesLatinSubset
+                ? '支持 TTF、OTF、TTC；选择后会立即生成拉丁字符子集缓存。'
+                : '支持 TTF、OTF、TTC；选中的文件会复制到应用目录。',
           ),
         ],
       ),
