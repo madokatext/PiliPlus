@@ -731,11 +731,19 @@ class VideoDetailController extends GetxController
   
     final targetVideo = findVideoByQa(targetQuality);
     final targetVideoUrl = VideoUtils.getCdnUrl(targetVideo.playUrls);
+    final segmentBase = targetVideo.segmentBase;
     final switched = await plPlayerController.switchVideoTrack(
       source: targetVideoUrl,
       bandwidth: targetVideo.bandWidth,
       width: targetVideo.width,
       height: targetVideo.height,
+      initializationRange:
+          (segmentBase?['Initialization'] ??
+                  segmentBase?['initialization'])
+              ?.toString(),
+      indexRange:
+          (segmentBase?['indexRange'] ?? segmentBase?['index_range'])
+              ?.toString(),
     );
     if (!switched || !isPageActive) {
       return;

@@ -1087,14 +1087,16 @@ class PlPlayerController with BlockConfigMixin {
 
   /// 在当前 mpv 实例中替换视频轨，音轨、播放位置和播放状态均保持不变。
   ///
-  /// mpv 不会为未选中的外部视频轨持续预读，也不公开该 demuxer 的缓存时长。
-  /// 因此新轨经过 [VideoTrackProxy]：按码率累计与 cache-pause-wait 等价的
-  /// 数据量后才放行。选轨期间 VO 保留旧帧，门槛满足并产出新帧后才完成切换。
+  /// 新轨先经过 [VideoTrackProxy] 解析 SegmentBase/SIDX，并按当前播放时间
+  /// 预热初始化段、索引和媒体 Range。预热期间旧 vid 始终选中；达到门槛后
+  /// 才添加并选择新轨，新轨产出首帧后再清理旧轨。
   Future<bool> switchVideoTrack({
     required String source,
     required int? bandwidth,
     required int? width,
     required int? height,
+    String? initializationRange,
+    String? indexRange,
   }) async {
     final player = _videoPlayerController;
     final currentSource = dataSource;
@@ -1124,6 +1126,7 @@ class PlPlayerController with BlockConfigMixin {
     final title = '$_videoTrackTitlePrefix$generation';
     VideoTrack? newTrack;
     StreamSubscription<VideoParams>? newFrameSubscription;
+    StreamSubscription<Track>? trackSelectionSubscription;
     VideoTrackProxy? proxy;
     var selectedNewTrack = false;
     var committed = false;
@@ -1161,15 +1164,40 @@ class PlPlayerController with BlockConfigMixin {
         source: source,
         requiredBytes: requiredBufferBytes,
         upstreamProxy: originalHttpProxy,
+        headers: const {
+          'user-agent': BrowserUa.pc,
+          'referer': HttpString.baseUrl,
+        },
       );
       proxy = pendingProxy;
       if (!isCurrentSwitch()) {
         return false;
       }
 
+      // 代理先独立连接 CDN。此阶段不向 mpv 添加新轨，旧画面和旧音频
+      // 按原状态继续播放；索引下载完成后再读取一次最新播放位置。
+      final isPrewarmed = await Future.any([
+        pendingProxy
+            .prewarm(
+              position: player.state.position,
+              currentPosition: () => player.state.position,
+              initializationRange: initializationRange,
+              indexRange: indexRange,
+            )
+            .then((_) => true),
+        cancellation.future.then((_) => false),
+        Future<bool>.delayed(
+          Duration(seconds: timeoutSeconds),
+          () => false,
+        ),
+      ]);
+      if (!isPrewarmed || !isCurrentSwitch()) {
+        return false;
+      }
+
       _videoTrackSwitchPlayer = player;
       _videoTrackSwitchOriginalOptions = originalOptions;
-      // 新轨访问回环地址；上游请求由 VideoTrackProxy 按应用代理设置发出。
+      // 此时初始化段、SIDX 和当前媒体 Range 已在回环代理内存中。
       player.setProperty('http-proxy', '');
       await player.command([
         'video-add',
@@ -1198,32 +1226,50 @@ class PlPlayerController with BlockConfigMixin {
 
       _silenceVideoTrackBuffering = true;
       player
-        ..setProperty('cache-pause', 'yes')
-        ..setProperty('cache-pause-initial', 'yes')
-        ..setProperty(
-          'cache-pause-wait',
-          requiredBufferSeconds.toStringAsFixed(3),
-        );
+        // 代理已经达到门槛，切换窗口内不再让 mpv 的全局缓存暂停旧音频。
+        ..setProperty('cache-pause', 'no')
+        ..setProperty('cache-pause-initial', 'no');
 
       // 先订阅新的视频输出参数，避免极快的本地/CDN 响应使事件先于等待发生。
       final firstNewFrame = Completer<bool>();
-      newFrameSubscription = player.stream.videoParams.listen((params) {
-        if (params.w != null &&
+      var waitingForNewFrame = false;
+      VideoParams? pendingVideoParams;
+      void completeFirstNewFrame() {
+        final params = pendingVideoParams;
+        if (params == null) {
+          return;
+        }
+        final matchesWidth =
+            width == null || params.w == width || params.dw == width;
+        final matchesHeight =
+            height == null || params.h == height || params.dh == height;
+        if (waitingForNewFrame &&
+            player.state.track.video.id == newTrack?.id &&
+            params.w != null &&
             params.h != null &&
+            matchesWidth &&
+            matchesHeight &&
             !firstNewFrame.isCompleted) {
           firstNewFrame.complete(true);
         }
-      });
+      }
 
-      pendingProxy.arm();
+      newFrameSubscription = player.stream.videoParams.listen((params) {
+        if (waitingForNewFrame) {
+          pendingVideoParams = params;
+          completeFirstNewFrame();
+        }
+      });
+      trackSelectionSubscription = player.stream.track.listen(
+        (_) => completeFirstNewFrame(),
+      );
+
       player.setProperty('vid', newTrack.id);
+      waitingForNewFrame = true;
       selectedNewTrack = true;
 
       final isTrackReady = await Future.any([
-        Future.wait([
-          firstNewFrame.future,
-          pendingProxy.ready,
-        ]).then((_) => true),
+        firstNewFrame.future,
         cancellation.future.then((_) => false),
         Future<bool>.delayed(
           Duration(seconds: timeoutSeconds),
@@ -1234,7 +1280,7 @@ class PlPlayerController with BlockConfigMixin {
         return false;
       }
 
-      // cache-pause-wait 解除后才提交业务层画质状态；界面不会看到中间缓冲。
+      // 新轨首帧输出且播放器未进入缓冲后才提交业务层画质状态。
       final bufferDeadline = DateTime.now().add(
         Duration(seconds: timeoutSeconds),
       );
@@ -1251,6 +1297,26 @@ class PlPlayerController with BlockConfigMixin {
           player.state.track.video.id != newTrack.id ||
           player.state.buffering ||
           player.getProperty('paused-for-cache') == 'yes') {
+        return false;
+      }
+
+      // video-out-params 在解码器开始输出时更新；再保留旧轨约两个显示帧，
+      // 让渲染线程提交新画面后才执行 video-remove。
+      final fps = newTrack.fps;
+      final renderSettleMs = min(
+        120,
+        max(50, fps != null && fps > 0 ? (2000 / fps).ceil() : 80),
+      );
+      final renderSettled = await Future.any([
+        Future<bool>.delayed(
+          Duration(milliseconds: renderSettleMs),
+          () => true,
+        ),
+        cancellation.future.then((_) => false),
+      ]);
+      if (!renderSettled ||
+          !isCurrentSwitch() ||
+          player.state.track.video.id != newTrack.id) {
         return false;
       }
 
@@ -1291,6 +1357,7 @@ class PlPlayerController with BlockConfigMixin {
       return false;
     } finally {
       await newFrameSubscription?.cancel();
+      await trackSelectionSubscription?.cancel();
       newTrack ??= _findVideoTrackByTitle(player, title);
       final isSamePlayback =
           dataSourceGeneration == _dataSourceGeneration &&
