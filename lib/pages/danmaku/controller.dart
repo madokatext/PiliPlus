@@ -1,6 +1,6 @@
 import 'dart:collection';
 import 'dart:io' show File;
-
+import 'package:PiliPlus/models/common/danmaku_merge_mode.dart';
 import 'package:PiliPlus/grpc/bilibili/community/service/dm/v1.pb.dart';
 import 'package:PiliPlus/grpc/dm.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -13,29 +13,32 @@ import 'package:path/path.dart' as path;
 
 class PlDanmakuController {
   PlDanmakuController(
-    this._cid,
-    this._plPlayerController,
-    this._isFileSource,
-  ) : _mergeDanmaku = _plPlayerController.mergeDanmaku;
+  this._cid,
+  this._plPlayerController,
+  this._isFileSource,
+);
 
-  final int _cid;
-  final PlPlayerController _plPlayerController;
-  final bool _mergeDanmaku;
-  final bool _isFileSource;
+final int _cid;
+final PlPlayerController _plPlayerController;
+final bool _isFileSource;
 
   late final _isLogin = Accounts.main.isLogin;
 
-  final Map<int, List<DanmakuElem>> _dmSegMap = HashMap();
+  // 完整原始弹幕，用于“不合并”和“高频置顶合并”。
+final Map<int, List<DanmakuElem>> _rawDmSegMap = HashMap();
+
+// 按旧逻辑预合并后的弹幕。
+final Map<int, List<DanmakuElem>> _segmentMergedDmSegMap = HashMap();
   // 已请求的段落标记
   late final Set<int> _requestedSeg = HashSet();
 
   static const int segmentLength = 60 * 6 * 1000;
 
   void dispose() {
-    _dmSegMap.clear();
-    _requestedSeg.clear();
-  }
-
+  _rawDmSegMap.clear();
+  _segmentMergedDmSegMap.clear();
+  _requestedSeg.clear();
+}
   static int calcSegment(int progress) {
     return progress ~/ segmentLength;
   }
@@ -64,49 +67,82 @@ class PlDanmakuController {
   }
 
   void handleDanmaku(List<DanmakuElem> elems) {
-    if (elems.isEmpty) return;
-    final uniques = HashMap<String, DanmakuElem>();
-
-    final filters = _plPlayerController.filters;
-    final shouldFilter = filters.count != 0;
-    for (final element in elems) {
-      if (_isLogin) {
-        element.isSelf = element.midHash == _plPlayerController.midHash;
-      }
-
-      if (!element.isSelf) {
-        if (_mergeDanmaku) {
-          final elem = uniques[element.content];
-          if (elem == null) {
-            uniques[element.content] = element..count = 1;
-          } else {
-            elem.count++;
-            continue;
-          }
-        }
-
-        if (shouldFilter && filters.remove(element)) {
-          continue;
-        }
-      }
-
-      final int pos = element.progress ~/ 100; //每0.1秒存储一次
-      (_dmSegMap[pos] ??= []).add(element);
-    }
+  if (elems.isEmpty) {
+    return;
   }
 
-  List<DanmakuElem>? getCurrentDanmaku(int progress) {
-    if (_isFileSource) {
-      initFileDmIfNeeded();
+  // 每次 handleDanmaku 对应一个弹幕分段，因此这里仍保持
+  // 原有“每个分段内按正文合并”的旧功能语义。
+  final mergedByContent = HashMap<String, DanmakuElem>();
+
+  final filters = _plPlayerController.filters;
+  final shouldFilter = filters.count != 0;
+
+  for (final element in elems) {
+    if (_isLogin) {
+      element.isSelf =
+          element.midHash == _plPlayerController.midHash;
+    }
+
+    if (!element.isSelf &&
+        shouldFilter &&
+        filters.remove(element)) {
+      continue;
+    }
+
+    _addToMap(_rawDmSegMap, element);
+
+    // 自己发送的弹幕不参与重复合并。
+    if (element.isSelf) {
+      _addToMap(_segmentMergedDmSegMap, element);
+      continue;
+    }
+
+    final merged = mergedByContent[element.content];
+
+    if (merged == null) {
+      // 必须复制，不能直接修改原始 element.count，
+      // 否则 raw 表也会变成旧式合并数据。
+      final first = element.deepCopy()
+        ..count = 1;
+
+      mergedByContent[element.content] = first;
+      _addToMap(_segmentMergedDmSegMap, first);
     } else {
-      final int segmentIndex = calcSegment(progress);
-      if (!_requestedSeg.contains(segmentIndex)) {
-        queryDanmaku(segmentIndex);
-        return null;
-      }
+      merged.count++;
     }
-    return _dmSegMap[progress ~/ 100];
   }
+}
+
+void _addToMap(
+  Map<int, List<DanmakuElem>> target,
+  DanmakuElem element,
+) {
+  final positionKey = element.progress ~/ 100;
+  (target[positionKey] ??= <DanmakuElem>[]).add(element);
+}
+
+  List<DanmakuElem>? getCurrentDanmaku(
+  int progress,
+  DanmakuMergeMode mergeMode,
+) {
+  if (_isFileSource) {
+    initFileDmIfNeeded();
+  } else {
+    final int segmentIndex = calcSegment(progress);
+
+    if (!_requestedSeg.contains(segmentIndex)) {
+      queryDanmaku(segmentIndex);
+      return null;
+    }
+  }
+
+  final sourceMap = mergeMode == DanmakuMergeMode.segment
+      ? _segmentMergedDmSegMap
+      : _rawDmSegMap;
+
+  return sourceMap[progress ~/ 100];
+}
 
   bool _fileDmLoaded = false;
 
