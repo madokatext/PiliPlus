@@ -30,7 +30,6 @@ import 'package:PiliPlus/plugin/pl_player/models/play_repeat.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
 import 'package:PiliPlus/plugin/pl_player/models/video_fit_type.dart';
 import 'package:PiliPlus/plugin/pl_player/utils/fullscreen.dart';
-import 'package:PiliPlus/plugin/pl_player/utils/video_track_proxy.dart';
 import 'package:PiliPlus/services/mpv_log_service.dart';
 import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/utils/accounts.dart';
@@ -105,15 +104,11 @@ class PlPlayerController with BlockConfigMixin {
   int _playerCount = 0;
   String? _activeVideoPageTag;
   int _dataSourceGeneration = 0;
-  int _videoTrackSwitchGeneration = 0;
-  Completer<void>? _videoTrackSwitchCancellation;
-  NativePlayer? _videoTrackSwitchPlayer;
-  Map<String, String>? _videoTrackSwitchOriginalOptions;
-  bool _silenceVideoTrackBuffering = false;
-  final Set<String> _managedExternalVideoTrackIds = {};
-  VideoTrackProxy? _activeVideoTrackProxy;
-  String? _activeVideoTrackSource;
-  String? _activeVideoTrackHttpProxy;
+  int _videoPlayerSwitchGeneration = 0;
+  Completer<void>? _videoPlayerSwitchCancellation;
+  Player? _standbyVideoPlayerController;
+  VideoController? _standbyVideoController;
+  final RxInt videoOutputRevision = 0.obs;
 
   void setVideoPageActive(String pageTag, bool isActive) {
     if (isActive) {
@@ -192,6 +187,10 @@ class PlPlayerController with BlockConfigMixin {
 
   /// [videoController] instance of Player
   VideoController? get videoController => _videoController;
+
+  /// 预缓冲中的备用视频输出。界面将它绘制在当前输出下方，确保切换前
+  /// 已经建立纹理并渲染首帧。
+  VideoController? get standbyVideoController => _standbyVideoController;
 
   bool isMuted = false;
 
@@ -680,20 +679,7 @@ class PlPlayerController with BlockConfigMixin {
     if (videoPageTag != null && !isVideoPageActive(videoPageTag)) {
       return;
     }
-    cancelVideoTrackSwitch();
-    _managedExternalVideoTrackIds.clear();
-    final activeVideoTrackProxy = _activeVideoTrackProxy;
-    final activeVideoTrackHttpProxy = _activeVideoTrackHttpProxy;
-    _activeVideoTrackProxy = null;
-    _activeVideoTrackSource = null;
-    _activeVideoTrackHttpProxy = null;
-    if (activeVideoTrackHttpProxy != null) {
-      _videoPlayerController?.setProperty(
-        'http-proxy',
-        activeVideoTrackHttpProxy,
-      );
-    }
-    unawaited(activeVideoTrackProxy?.close());
+    cancelVideoPlayerSwitch();
     final dataSourceGeneration = ++_dataSourceGeneration;
     bool isCurrentDataSource() =>
         dataSourceGeneration == _dataSourceGeneration &&
@@ -838,22 +824,29 @@ class PlPlayerController with BlockConfigMixin {
 
   static final loudnormRegExp = RegExp('loudnorm=([^,]+)');
 
-  Future<Player> _initPlayer() async {
-    assert(_videoPlayerController == null);
+  Future<({Player player, VideoController videoController})> _createPlayerPair({
+    bool muted = false,
+  }) async {
     final customOptions = MpvUtils.customOptions;
     final builtInOptions = <String, String>{
       'video-sync': Pref.videoSync,
       if (Platform.isAndroid) 'ao': Pref.audioOutput,
-      'volume':
-          (PlatformUtils.isMobile ? Pref.playerVolume : volume.value * 100)
-              .toString(),
+      'volume': muted
+          ? '0'
+          : (PlatformUtils.isMobile ? Pref.playerVolume : volume.value * 100)
+                .toString(),
+      if (muted) 'mute': 'yes',
       'volume-max': kMaxVolume.toString(),
     };
     final autosync = Pref.autosync;
     if (autosync != '0') {
       builtInOptions['autosync'] = autosync;
     }
-    final options = {...builtInOptions, ...customOptions};
+    final options = {
+      ...builtInOptions,
+      ...customOptions,
+      if (muted) ...{'volume': '0', 'mute': 'yes'},
+    };
 
     final player = await Player.create(
       configuration: PlayerConfiguration(
@@ -862,26 +855,39 @@ class PlPlayerController with BlockConfigMixin {
       ),
     );
 
+    try {
+      final customHwdec = customOptions['hwdec'];
+      final videoController = await VideoController.create(
+        player,
+        configuration: VideoControllerConfiguration(
+          vo: customOptions['vo'],
+          enableHardwareAcceleration: customHwdec != null
+              ? customHwdec != 'no'
+              : hwdec != null,
+          androidAttachSurfaceAfterVideoParameters: false,
+          hwdec: customHwdec ?? hwdec,
+        ),
+      );
+
+      player.setMediaHeader(
+        userAgent: BrowserUa.pc,
+        referer: HttpString.baseUrl,
+      );
+
+      return (player: player, videoController: videoController);
+    } catch (_) {
+      await player.dispose();
+      rethrow;
+    }
+  }
+
+  Future<Player> _initPlayer() async {
+    assert(_videoPlayerController == null);
     assert(_videoController == null);
-
-    final customHwdec = customOptions['hwdec'];
-    _videoController = await VideoController.create(
-      player,
-      configuration: VideoControllerConfiguration(
-        vo: customOptions['vo'],
-        enableHardwareAcceleration: customHwdec != null
-            ? customHwdec != 'no'
-            : hwdec != null,
-        androidAttachSurfaceAfterVideoParameters: false,
-        hwdec: customHwdec ?? hwdec,
-      ),
-    );
-
-    player.setMediaHeader(userAgent: BrowserUa.pc, referer: HttpString.baseUrl);
-
-    _startListeners(player);
-
-    return player;
+    final pair = await _createPlayerPair();
+    _videoController = pair.videoController;
+    _startListeners(pair.player);
+    return pair.player;
   }
 
   Map<String, String>? _buffer;
@@ -1004,9 +1010,6 @@ class PlPlayerController with BlockConfigMixin {
     // player.open 会先卸载旧媒体；每次打开（包括网络错误重试）前
     // 都重新应用用户参数，避免重试路径绕过自定义设置。
     MpvUtils.applyRuntimeOverrides(player);
-    if (_activeVideoTrackProxy?.uri.toString() == media.uri) {
-      player.setProperty('http-proxy', '');
-    }
     await player.open(media, play: play);
   }
 
@@ -1029,371 +1032,374 @@ class PlPlayerController with BlockConfigMixin {
     return null;
   }
 
-  static const _videoTrackTitlePrefix = 'PiliPlus quality switch ';
-
-  VideoTrack? _findVideoTrackByTitle(NativePlayer player, String title) {
-    for (final track in player.state.tracks.video) {
-      if (track.title == title) {
-        return track;
-      }
-    }
-    return null;
+  void _bumpVideoOutputRevision() {
+    videoOutputRevision.value = videoOutputRevision.value + 1;
   }
 
-  void _restoreVideoTrackSwitchOptions(
-    NativePlayer player,
-    Map<String, String> options,
-  ) {
-    if (!identical(_videoTrackSwitchPlayer, player) ||
-        !identical(_videoTrackSwitchOriginalOptions, options)) {
-      return;
-    }
-    _videoTrackSwitchPlayer = null;
-    _videoTrackSwitchOriginalOptions = null;
-    _silenceVideoTrackBuffering = false;
-
-    try {
-      for (final entry in options.entries) {
-        if (entry.value.isNotEmpty) {
-          player.setProperty(entry.key, entry.value);
-        }
-      }
-
-      final buffering = player.state.buffering;
-      isBuffering.value = buffering;
-      videoPlayerServiceHandler?.onStatusChange(
-        playerStatus.value,
-        buffering,
-        isLive,
-      );
-    } catch (_) {
-      // Player 已释放时只需清除切轨状态。
-    }
+  Future<void> _waitForVideoOutputFrame() {
+    return Future.any<void>([
+      WidgetsBinding.instance.endOfFrame,
+      Future<void>.delayed(const Duration(milliseconds: 250)),
+    ]);
   }
 
-  void cancelVideoTrackSwitch() {
-    _videoTrackSwitchGeneration++;
-    final cancellation = _videoTrackSwitchCancellation;
-    _videoTrackSwitchCancellation = null;
+  void _disposePlayerAfterOutputFrame(Player player) {
+    unawaited(() async {
+      await _waitForVideoOutputFrame();
+      try {
+        await player.dispose();
+      } catch (_) {
+        // 切换取消或页面关闭时，播放器可能已由其它生命周期路径释放。
+      }
+    }());
+  }
+
+  void cancelVideoPlayerSwitch() {
+    _videoPlayerSwitchGeneration++;
+    final cancellation = _videoPlayerSwitchCancellation;
+    _videoPlayerSwitchCancellation = null;
     if (cancellation != null && !cancellation.isCompleted) {
       cancellation.complete();
     }
-    final player = _videoTrackSwitchPlayer;
-    final options = _videoTrackSwitchOriginalOptions;
-    if (player != null && options != null) {
-      _restoreVideoTrackSwitchOptions(player, options);
+
+    final standbyPlayer = _standbyVideoPlayerController;
+    final hadStandbyOutput = _standbyVideoController != null;
+    _standbyVideoPlayerController = null;
+    _standbyVideoController = null;
+    if (hadStandbyOutput) {
+      _bumpVideoOutputRevision();
+    }
+    if (standbyPlayer != null) {
+      _disposePlayerAfterOutputFrame(standbyPlayer);
     }
   }
 
-  /// 在当前 mpv 实例中替换视频轨，音轨、播放位置和播放状态均保持不变。
+  /// 使用第二个 mpv 实例预缓冲目标画质。
   ///
-  /// 新轨先经过 [VideoTrackProxy] 解析 SegmentBase/SIDX，并按当前播放时间
-  /// 预热初始化段、索引和媒体 Range。预热期间旧 vid 始终选中；达到门槛后
-  /// 才添加并选择新轨，新轨产出首帧后再清理旧轨。
-  Future<bool> switchVideoTrack({
+  /// 备用实例加载与当前实例相同的音频和媒体参数，静音播放并在当前画面
+  /// 下方预先挂载纹理。只有首帧、前向缓存与时间同步均达到门槛后，才将
+  /// 播放控制和画面一次性交给备用实例；旧实例随后在界面完成一帧重建后
+  /// 释放，避免切换期间出现黑屏或两个实例同时出声。
+  Future<bool> switchVideoPlayer({
     required String source,
-    required int? bandwidth,
     required int? width,
     required int? height,
-    String? initializationRange,
-    String? indexRange,
   }) async {
-    final player = _videoPlayerController;
+    final activePlayer = _videoPlayerController;
     final currentSource = dataSource;
-    if (player == null ||
+    if (activePlayer == null ||
         currentSource is! NetworkSource ||
-        _activeVideoTrackSource == source ||
-        currentSource.videoSource == source ||
+        activePlayer.current.isEmpty ||
+        onlyPlayAudio.value ||
         _playerCount == 0) {
-      return currentSource is NetworkSource &&
-          (_activeVideoTrackSource == source ||
-              currentSource.videoSource == source);
+      return false;
+    }
+    if (currentSource.videoSource == source) {
+      return true;
     }
 
-    cancelVideoTrackSwitch();
-    final generation = ++_videoTrackSwitchGeneration;
+    cancelVideoPlayerSwitch();
+    final generation = ++_videoPlayerSwitchGeneration;
     final dataSourceGeneration = _dataSourceGeneration;
     final cancellation = Completer<void>();
-    _videoTrackSwitchCancellation = cancellation;
+    _videoPlayerSwitchCancellation = cancellation;
 
     bool isCurrentSwitch() =>
-        generation == _videoTrackSwitchGeneration &&
+        generation == _videoPlayerSwitchGeneration &&
         dataSourceGeneration == _dataSourceGeneration &&
-        identical(player, _videoPlayerController) &&
+        identical(activePlayer, _videoPlayerController) &&
+        _playerCount > 0 &&
+        !onlyPlayAudio.value &&
         !cancellation.isCompleted;
 
-    final oldTrackId = player.state.track.video.id;
-    final title = '$_videoTrackTitlePrefix$generation';
-    VideoTrack? newTrack;
-    StreamSubscription<VideoParams>? newFrameSubscription;
-    StreamSubscription<Track>? trackSelectionSubscription;
-    VideoTrackProxy? proxy;
-    var selectedNewTrack = false;
+    late final Player standbyPlayer;
+    late final VideoController standbyController;
+    var standbyCreated = false;
+    var standbyRegistered = false;
     var committed = false;
-
-    final originalOptions = <String, String>{
-      'cache-pause': player.getProperty('cache-pause'),
-      'cache-pause-initial': player.getProperty('cache-pause-initial'),
-      'cache-pause-wait': player.getProperty('cache-pause-wait'),
-      'http-proxy': player.getProperty('http-proxy'),
-    };
-    final originalHttpProxy =
-        _activeVideoTrackHttpProxy ?? originalOptions['http-proxy']!;
+    var activeListenersDetached = false;
+    var resumeActiveOnFailure = false;
 
     try {
+      final pair = await _createPlayerPair(muted: true);
+      standbyPlayer = pair.player;
+      standbyController = pair.videoController;
+      standbyCreated = true;
+      if (!isCurrentSwitch()) {
+        return false;
+      }
+
+      _standbyVideoPlayerController = standbyPlayer;
+      _standbyVideoController = standbyController;
+      standbyRegistered = true;
+      _bumpVideoOutputRevision();
+
+      if (isAnim && superResolutionType.value != .disable) {
+        await setShader(null, standbyPlayer);
+        if (!isCurrentSwitch()) {
+          return false;
+        }
+      }
+
+      final currentMedia = activePlayer.current.last;
+      final startPosition = activePlayer.state.position;
+      MpvUtils.applyRuntimeOverrides(standbyPlayer);
+      standbyPlayer
+        ..setProperty('mute', 'yes')
+        ..setProperty('volume', '0');
+      await standbyPlayer.open(
+        currentMedia.copyWith(uri: source, start: startPosition),
+        play: false,
+      );
+      if (!isCurrentSwitch()) {
+        return false;
+      }
+
+      // 先在暂停态完成媒体打开，再强制静音并开始解码，避免用户的自定义
+      // mpv 参数或逐文件参数让备用实例在预缓冲阶段短暂出声。
+      standbyPlayer
+        ..setProperty('mute', 'yes')
+        ..setProperty('volume', '0');
+      await standbyPlayer.setRate(activePlayer.state.rate);
+      await standbyPlayer.play();
+
+      var firstFrameRendered = false;
+      var firstFrameFailed = false;
+      unawaited(
+        standbyController.waitUntilFirstFrameRendered.then<void>(
+          (_) => firstFrameRendered = true,
+          onError: (_) {
+            firstFrameFailed = true;
+          },
+        ),
+      );
+
       final configuredWait =
-          double.tryParse(originalOptions['cache-pause-wait'] ?? '') ?? 1.0;
+          double.tryParse(activePlayer.getProperty('cache-pause-wait')) ?? 1.0;
       final requiredBufferSeconds =
-          max(1.0, configuredWait) * _playbackSpeed.value;
-      final timeoutSeconds = max(
-        30,
-        (requiredBufferSeconds * 3).ceil(),
+          max(1.0, configuredWait) * max(1.0, activePlayer.state.rate);
+      final deadline = DateTime.now().add(
+        Duration(seconds: max(30, (requiredBufferSeconds * 4).ceil())),
       );
-      final cacheLimitBytes = max(
-        64 * 1024,
-        (Pref.bufferSize * 0x100000).round(),
-      );
-      final bytesPerSecond = bandwidth != null && bandwidth > 0
-          ? bandwidth / 8
-          : 0x100000;
-      final requiredBufferBytes = min(
-        cacheLimitBytes,
-        max(64 * 1024, (bytesPerSecond * requiredBufferSeconds).ceil()),
-      );
-      final pendingProxy = await VideoTrackProxy.create(
-        source: source,
-        requiredBytes: requiredBufferBytes,
-        upstreamProxy: originalHttpProxy,
-        headers: const {
-          'user-agent': BrowserUa.pc,
-          'referer': HttpString.baseUrl,
-        },
-      );
-      proxy = pendingProxy;
+
+      double requiredBufferAt(Duration target) {
+        final mediaDuration = activePlayer.state.duration;
+        if (mediaDuration <= Duration.zero) {
+          return requiredBufferSeconds;
+        }
+        final remaining =
+            (mediaDuration - target).inMilliseconds /
+            Duration.millisecondsPerSecond;
+        return max(0.25, min(requiredBufferSeconds, remaining));
+      }
+
+      var bufferReady = false;
+      while (isCurrentSwitch() && DateTime.now().isBefore(deadline)) {
+        if (firstFrameFailed) {
+          return false;
+        }
+        final target = activePlayer.state.position;
+        final bufferedAhead =
+            (standbyPlayer.state.buffer - target).inMilliseconds /
+            Duration.millisecondsPerSecond;
+        if (firstFrameRendered &&
+            standbyPlayer.state.width > 0 &&
+            standbyPlayer.state.height > 0 &&
+            !standbyPlayer.state.buffering &&
+            standbyPlayer.getProperty('paused-for-cache') != 'yes' &&
+            bufferedAhead >= requiredBufferAt(target)) {
+          bufferReady = true;
+          break;
+        }
+
+        final keepWaiting = await Future.any<bool>([
+          Future<bool>.delayed(const Duration(milliseconds: 40), () => true),
+          cancellation.future.then((_) => false),
+        ]);
+        if (!keepWaiting) {
+          return false;
+        }
+      }
+      if (!bufferReady || !isCurrentSwitch()) {
+        return false;
+      }
+
+      // 缓冲达标后，以当前实例的实时位置做最终对齐。播放中的两个实例
+      // 保持相同倍速；暂停态则先暂停备用实例再精确跳到当前帧。
+      var aligned = false;
+      for (
+        var attempt = 0;
+        attempt < 8 && isCurrentSwitch() && DateTime.now().isBefore(deadline);
+        attempt++
+      ) {
+        final shouldPlay = activePlayer.state.playing;
+        final target = activePlayer.state.position;
+        final rate = activePlayer.state.rate;
+
+        if (standbyPlayer.state.rate != rate) {
+          await standbyPlayer.setRate(rate);
+        }
+        if (!shouldPlay && standbyPlayer.state.playing) {
+          await standbyPlayer.pause();
+        }
+        await standbyPlayer.seek(target);
+        if (shouldPlay && !standbyPlayer.state.playing) {
+          await standbyPlayer.play();
+        }
+
+        final settled = await Future.any<bool>([
+          Future<bool>.delayed(const Duration(milliseconds: 80), () => true),
+          cancellation.future.then((_) => false),
+        ]);
+        if (!settled || !isCurrentSwitch()) {
+          return false;
+        }
+
+        final currentTarget = activePlayer.state.position;
+        final drift = (standbyPlayer.state.position - currentTarget)
+            .inMilliseconds
+            .abs();
+        final bufferedAhead =
+            (standbyPlayer.state.buffer - currentTarget).inMilliseconds /
+            Duration.millisecondsPerSecond;
+        aligned =
+            !standbyPlayer.state.buffering &&
+            standbyPlayer.getProperty('paused-for-cache') != 'yes' &&
+            drift <= 180 &&
+            bufferedAhead >= min(0.5, requiredBufferAt(currentTarget));
+        if (aligned) {
+          break;
+        }
+      }
+      if (!aligned || !isCurrentSwitch()) {
+        return false;
+      }
+
+      final handoffPlaying = activePlayer.state.playing;
+      final handoffRate = activePlayer.state.rate;
+      final activeVolumeProperty = activePlayer.getProperty('volume');
+      final activeMuteProperty = activePlayer.getProperty('mute');
+      final handoffVolume = activeVolumeProperty.isEmpty
+          ? activePlayer.state.volume.toString()
+          : activeVolumeProperty;
+      final handoffMute = activeMuteProperty.isEmpty
+          ? (isMuted ? 'yes' : 'no')
+          : activeMuteProperty;
+
+      if (standbyPlayer.state.rate != handoffRate) {
+        await standbyPlayer.setRate(handoffRate);
+      }
+      if (!handoffPlaying && standbyPlayer.state.playing) {
+        await standbyPlayer.pause();
+      } else if (handoffPlaying && !standbyPlayer.state.playing) {
+        await standbyPlayer.play();
+      }
       if (!isCurrentSwitch()) {
         return false;
       }
 
-      // 代理先独立连接 CDN。此阶段不向 mpv 添加新轨，旧画面和旧音频
-      // 按原状态继续播放；索引下载完成后再读取一次最新播放位置。
-      final isPrewarmed = await Future.any([
-        pendingProxy
-            .prewarm(
-              position: player.state.position,
-              currentPosition: () => player.state.position,
-              initializationRange: initializationRange,
-              indexRange: indexRange,
-            )
-            .then((_) => true),
-        cancellation.future.then((_) => false),
-        Future<bool>.delayed(
-          Duration(seconds: timeoutSeconds),
-          () => false,
-        ),
-      ]);
-      if (!isPrewarmed || !isCurrentSwitch()) {
+      final handoffDrift =
+          (standbyPlayer.state.position - activePlayer.state.position)
+              .inMilliseconds
+              .abs();
+      if (handoffDrift > 180 || standbyPlayer.state.buffering) {
         return false;
       }
 
-      _videoTrackSwitchPlayer = player;
-      _videoTrackSwitchOriginalOptions = originalOptions;
-      // 此时初始化段、SIDX 和当前媒体 Range 已在回环代理内存中。
-      player.setProperty('http-proxy', '');
-      await player.command([
-        'video-add',
-        pendingProxy.uri.toString(),
-        'auto',
-        title,
-      ]);
-      if (!isCurrentSwitch()) {
-        return false;
-      }
+      // 备用实例始终静音运行。先停止旧实例，再恢复备用实例的实际音量，
+      // 可避免交接点产生双重音频；两个实例各自加载同一 DASH 音轨，由 mpv
+      // 在实例内部继续负责音视频时间戳同步。
+      resumeActiveOnFailure = handoffPlaying;
+      _removeListeners();
+      activeListenersDetached = true;
+      await activePlayer.pause();
+      standbyPlayer
+        ..setProperty('volume', handoffVolume)
+        ..setProperty('mute', handoffMute);
 
-      newTrack = _findVideoTrackByTitle(player, title);
-      for (var attempt = 0;
-          newTrack == null && attempt < 200 && isCurrentSwitch();
-          attempt++) {
-        await Future.any([
-          Future<void>.delayed(const Duration(milliseconds: 25)),
-          cancellation.future,
-        ]);
-        newTrack = _findVideoTrackByTitle(player, title);
-      }
-      if (newTrack == null || !isCurrentSwitch()) {
-        return false;
-      }
-      _managedExternalVideoTrackIds.add(newTrack.id);
-
-      _silenceVideoTrackBuffering = true;
-      player
-        // 代理已经达到门槛，切换窗口内不再让 mpv 的全局缓存暂停旧音频。
-        ..setProperty('cache-pause', 'no')
-        ..setProperty('cache-pause-initial', 'no');
-
-      // 先订阅新的视频输出参数，避免极快的本地/CDN 响应使事件先于等待发生。
-      final firstNewFrame = Completer<bool>();
-      var waitingForNewFrame = false;
-      VideoParams? pendingVideoParams;
-      void completeFirstNewFrame() {
-        final params = pendingVideoParams;
-        if (params == null) {
-          return;
-        }
-        final matchesWidth =
-            width == null || params.w == width || params.dw == width;
-        final matchesHeight =
-            height == null || params.h == height || params.dh == height;
-        if (waitingForNewFrame &&
-            player.state.track.video.id == newTrack?.id &&
-            params.w != null &&
-            params.h != null &&
-            matchesWidth &&
-            matchesHeight &&
-            !firstNewFrame.isCompleted) {
-          firstNewFrame.complete(true);
-        }
-      }
-
-      newFrameSubscription = player.stream.videoParams.listen((params) {
-        if (waitingForNewFrame) {
-          pendingVideoParams = params;
-          completeFirstNewFrame();
-        }
-      });
-      trackSelectionSubscription = player.stream.track.listen(
-        (_) => completeFirstNewFrame(),
-      );
-
-      player.setProperty('vid', newTrack.id);
-      waitingForNewFrame = true;
-      selectedNewTrack = true;
-
-      final isTrackReady = await Future.any([
-        firstNewFrame.future,
-        cancellation.future.then((_) => false),
-        Future<bool>.delayed(
-          Duration(seconds: timeoutSeconds),
-          () => false,
-        ),
-      ]);
-      if (!isTrackReady || !isCurrentSwitch()) {
-        return false;
-      }
-
-      // 新轨首帧输出且播放器未进入缓冲后才提交业务层画质状态。
-      final bufferDeadline = DateTime.now().add(
-        Duration(seconds: timeoutSeconds),
-      );
-      while (isCurrentSwitch() &&
-          DateTime.now().isBefore(bufferDeadline) &&
-          (player.state.buffering ||
-              player.getProperty('paused-for-cache') == 'yes')) {
-        await Future.any([
-          Future<void>.delayed(const Duration(milliseconds: 25)),
-          cancellation.future,
-        ]);
-      }
-      if (!isCurrentSwitch() ||
-          player.state.track.video.id != newTrack.id ||
-          player.state.buffering ||
-          player.getProperty('paused-for-cache') == 'yes') {
-        return false;
-      }
-
-      // video-out-params 在解码器开始输出时更新；再保留旧轨约两个显示帧，
-      // 让渲染线程提交新画面后才执行 video-remove。
-      final fps = newTrack.fps;
-      final renderSettleMs = min(
-        120,
-        max(50, fps != null && fps > 0 ? (2000 / fps).ceil() : 80),
-      );
-      final renderSettled = await Future.any([
-        Future<bool>.delayed(
-          Duration(milliseconds: renderSettleMs),
-          () => true,
-        ),
-        cancellation.future.then((_) => false),
-      ]);
-      if (!renderSettled ||
-          !isCurrentSwitch() ||
-          player.state.track.video.id != newTrack.id) {
-        return false;
-      }
-
-      final oldProxy = _activeVideoTrackProxy;
-      _activeVideoTrackProxy = pendingProxy;
-      _activeVideoTrackSource = source;
-      _activeVideoTrackHttpProxy = originalHttpProxy;
+      _standbyVideoPlayerController = null;
+      _standbyVideoController = null;
+      _videoPlayerController = standbyPlayer;
+      _videoController = standbyController;
+      activeListenersDetached = false;
       dataSource = NetworkSource(
-        videoSource: pendingProxy.uri.toString(),
+        videoSource: source,
         audioSource: currentSource.audioSource,
       );
       this.width = width;
       this.height = height;
       committed = true;
 
-      final obsoleteTrackIds = _managedExternalVideoTrackIds
-          .where((id) => id != newTrack!.id)
-          .toList();
-      for (final id in obsoleteTrackIds) {
-        try {
-          await player.command(['video-remove', id]);
-          _managedExternalVideoTrackIds.remove(id);
-        } catch (_) {
-          // 清理旧的备用轨失败不影响已经完成的新轨切换。
-        }
-      }
+      isBuffering.value = standbyPlayer.state.buffering;
+      position.value = standbyPlayer.state.position.inSeconds;
+      buffered.value = standbyPlayer.state.buffer.inSeconds;
+      updateDuration(standbyPlayer.state.duration);
+      playerStatus.value = handoffPlaying ? .playing : .paused;
+      unawaited(
+        MpvLogService.beginSession(
+          standbyPlayer,
+          source: 'video quality switch',
+        ),
+      );
+      _startListeners(standbyPlayer);
+      videoPlayerServiceHandler
+        ?..onPositionChange(standbyPlayer.state.position)
+        ..onStatusChange(playerStatus.value, isBuffering.value, isLive);
+      _bumpVideoOutputRevision();
+
+      await _waitForVideoOutputFrame();
       try {
-        await oldProxy?.close();
+        await activePlayer.dispose();
       } catch (_) {
-        // 旧轨已经不再使用，关闭失败不回滚新轨。
+        // 新实例已经接管播放，旧实例释放失败不应回滚已完成的切换。
       }
       return true;
     } catch (err, stackTrace) {
       if (kDebugMode) {
-        debugPrint('switch video track failed: $err');
+        debugPrint('switch video player failed: $err');
         debugPrint(stackTrace.toString());
       }
-      return false;
-    } finally {
-      await newFrameSubscription?.cancel();
-      await trackSelectionSubscription?.cancel();
-      newTrack ??= _findVideoTrackByTitle(player, title);
-      final isSamePlayback =
-          dataSourceGeneration == _dataSourceGeneration &&
-          identical(player, _videoPlayerController);
       if (!committed &&
-          selectedNewTrack &&
-          isSamePlayback &&
-          player.state.track.video.id == newTrack?.id) {
-        player.setProperty('vid', oldTrackId);
-      }
-      if (!committed && newTrack != null && isSamePlayback) {
+          activeListenersDetached &&
+          identical(activePlayer, _videoPlayerController)) {
         try {
-          await player.command(['video-remove', newTrack.id]);
+          if (standbyCreated) {
+            standbyPlayer
+              ..setProperty('mute', 'yes')
+              ..setProperty('volume', '0');
+          }
+          _startListeners(activePlayer);
+          if (resumeActiveOnFailure && !activePlayer.state.playing) {
+            await activePlayer.play();
+          }
+          playerStatus.value = resumeActiveOnFailure ? .playing : .paused;
         } catch (_) {
-          // Player 已释放时无需继续清理轨道。
-        }
-        _managedExternalVideoTrackIds.remove(newTrack.id);
-      }
-      if (!committed) {
-        try {
-          await proxy?.close();
-        } catch (_) {
-          // 失败路径只需确保不再保留代理引用。
+          // 交接失败时尽力恢复旧实例；页面销毁路径无需继续恢复。
         }
       }
-      if (identical(_videoTrackSwitchCancellation, cancellation)) {
-        _videoTrackSwitchCancellation = null;
-      }
-      _restoreVideoTrackSwitchOptions(player, originalOptions);
-      if (committed) {
-        // 活跃视频轨仍通过回环代理读取，不能恢复 mpv 的远端 HTTP 代理。
-        try {
-          player.setProperty('http-proxy', '');
-        } catch (_) {
-          // Player 释放后无需恢复运行时属性。
+      return committed;
+    } finally {
+      if (!committed && standbyCreated) {
+        if (identical(_standbyVideoPlayerController, standbyPlayer)) {
+          _standbyVideoPlayerController = null;
+          _standbyVideoController = null;
+          _bumpVideoOutputRevision();
+          await _waitForVideoOutputFrame();
+          try {
+            await standbyPlayer.dispose();
+          } catch (_) {
+            // 失败路径只需确保备用播放器不再占用资源。
+          }
+        } else if (!standbyRegistered) {
+          try {
+            await standbyPlayer.dispose();
+          } catch (_) {
+            // 创建完成但尚未挂载时直接释放。
+          }
         }
+      }
+      if (identical(_videoPlayerSwitchCancellation, cancellation)) {
+        _videoPlayerSwitchCancellation = null;
       }
     }
   }
@@ -1507,9 +1513,6 @@ class PlPlayerController with BlockConfigMixin {
         buffered.value = buffer.inSeconds;
       }),
       stream.buffering.listen((bool buffering) {
-        if (_silenceVideoTrackBuffering) {
-          return;
-        }
         isBuffering.value = buffering;
         videoPlayerServiceHandler?.onStatusChange(
           playerStatus.value,
@@ -2094,20 +2097,7 @@ class PlPlayerController with BlockConfigMixin {
 
     _playerCount = 0;
     _activeVideoPageTag = null;
-    cancelVideoTrackSwitch();
-    _managedExternalVideoTrackIds.clear();
-    final activeVideoTrackProxy = _activeVideoTrackProxy;
-    final activeVideoTrackHttpProxy = _activeVideoTrackHttpProxy;
-    _activeVideoTrackProxy = null;
-    _activeVideoTrackSource = null;
-    _activeVideoTrackHttpProxy = null;
-    if (activeVideoTrackHttpProxy != null) {
-      _videoPlayerController?.setProperty(
-        'http-proxy',
-        activeVideoTrackHttpProxy,
-      );
-    }
-    unawaited(activeVideoTrackProxy?.close());
+    cancelVideoPlayerSwitch();
     _dataSourceGeneration++;
     if (removeSafeArea) {
       showSystemBar();

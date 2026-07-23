@@ -131,7 +131,6 @@ class PLVideoPlayer extends StatefulWidget {
 class _PLVideoPlayerState extends State<PLVideoPlayer>
     with WidgetsBindingObserver, TickerProviderStateMixin {
   late AnimationController _animationController;
-  late VideoController videoController;
   late final CommonIntroController introController = widget.introController!;
   late final VideoDetailController videoDetailController =
       widget.videoDetailController!;
@@ -273,7 +272,6 @@ ui.PointerDeviceKind? _gesturePointerKind;
       vsync: this,
       duration: const Duration(milliseconds: 100),
     );
-    videoController = plPlayerController.videoController!;
 
     if (PlatformUtils.isMobile) {
       Future.microtask(() {
@@ -1641,12 +1639,17 @@ backgroundColor: gestureProgressColor.withValues(alpha: 0.24),
             child: IgnorePointer(
               ignoring: !plPlayerController.enableDragSubtitle,
               child: Obx(
-                () => SubtitleView(
-                  controller: videoController,
-                  configuration: plPlayerController.subtitleConfig.value,
-                  enableDragSubtitle: plPlayerController.enableDragSubtitle,
-                  onUpdatePadding: plPlayerController.onUpdatePadding,
-                ),
+                () {
+                  plPlayerController.videoOutputRevision.value;
+                  final controller = plPlayerController.videoController!;
+                  return SubtitleView(
+                    key: ValueKey(controller),
+                    controller: controller,
+                    configuration: plPlayerController.subtitleConfig.value,
+                    enableDragSubtitle: plPlayerController.enableDragSubtitle,
+                    onUpdatePadding: plPlayerController.onUpdatePadding,
+                  );
+                },
               ),
             ),
           ),
@@ -2257,17 +2260,33 @@ backgroundColor: gestureProgressColor.withValues(alpha: 0.24),
             key: _videoKey,
             child: Obx(
               () {
+                plPlayerController.videoOutputRevision.value;
                 final videoFit = plPlayerController.videoFit.value;
+                final controller = plPlayerController.videoController!;
+                final standbyController =
+                    plPlayerController.standbyVideoController;
                 return Transform.flip(
                   flipX: plPlayerController.flipX.value,
                   flipY: plPlayerController.flipY.value,
                   child: FittedBox(
                     fit: videoFit.boxFit,
                     alignment: widget.alignment,
-                    child: SimpleVideo(
-                      controller: plPlayerController.videoController!,
-                      fill: widget.fill,
-                      aspectRatio: videoFit.aspectRatio,
+                    child: Stack(
+                      children: [
+                        if (standbyController != null)
+                          SimpleVideo(
+                            key: ValueKey(standbyController),
+                            controller: standbyController,
+                            fill: widget.fill,
+                            aspectRatio: videoFit.aspectRatio,
+                          ),
+                        SimpleVideo(
+                          key: ValueKey(controller),
+                          controller: controller,
+                          fill: widget.fill,
+                          aspectRatio: videoFit.aspectRatio,
+                        ),
+                      ],
                     ),
                   ),
                 );
