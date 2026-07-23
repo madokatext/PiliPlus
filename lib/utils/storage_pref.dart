@@ -1152,9 +1152,6 @@ static bool get seekPreviewFollowGesture => _setting.get(
   static double get danmakuOpacity =>
       _setting.get(SettingBoxKey.danmakuOpacity, defaultValue: 1.0);
 
-  static String get danmakuFontFamily =>
-      _setting.get(SettingBoxKey.danmakuFontFamily, defaultValue: '');
-
   static double get danmakuFontScale => _setting.get(
     SettingBoxKey.danmakuFontScale,
     defaultValue: PlatformUtils.isMobile ? 1.0 : 1.4,

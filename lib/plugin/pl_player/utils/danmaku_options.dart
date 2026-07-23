@@ -1,4 +1,5 @@
 import 'package:PiliPlus/utils/extension/box_ext.dart';
+import 'package:PiliPlus/utils/local_font_manager.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
@@ -27,10 +28,12 @@ abstract final class DanmakuOptions {
     required bool notFullscreen,
     double speed = 1.0,
   }) {
+    final fontFamilies = LocalFontManager.danmakuFontFamilies;
     return DanmakuOption(
       fontSize: 15 * (notFullscreen ? danmakuFontScale : danmakuFontScaleFS),
       fontWeight: danmakuFontWeight,
-      fontFamily: Pref.danmakuFontFamily,
+      fontFamily: fontFamilies.primary ?? '',
+      fontFamilyFallback: fontFamilies.fallback,
       area: danmakuShowArea,
       duration: danmakuDuration / speed,
       staticDuration: danmakuStaticDuration / speed,

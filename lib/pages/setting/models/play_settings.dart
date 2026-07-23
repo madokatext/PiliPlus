@@ -6,14 +6,15 @@ import 'package:PiliPlus/models/common/video/subtitle_pref_type.dart';
 import 'package:PiliPlus/pages/main/controller.dart';
 import 'package:PiliPlus/pages/setting/models/model.dart';
 import 'package:PiliPlus/pages/setting/pages/fullscreen_sc_size.dart';
+import 'package:PiliPlus/pages/setting/utils/local_font_setting.dart';
 import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
 import 'package:PiliPlus/pages/setting/widgets/slider_dialog.dart';
 import 'package:PiliPlus/plugin/pl_player/models/bottom_progress_behavior.dart';
-import 'package:PiliPlus/plugin/pl_player/models/danmaku_font_family.dart';
 import 'package:PiliPlus/plugin/pl_player/models/fullscreen_mode.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_repeat.dart';
 import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
+import 'package:PiliPlus/utils/local_font_manager.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
@@ -32,11 +33,26 @@ List<SettingsModel> get playSettings => [
     defaultVal: true,
   ),
   NormalModel(
-    title: '弹幕字体',
+    title: '弹幕中文字体',
     getSubtitle: () =>
-        '当前：${DanmakuFontFamily.fromValue(Pref.danmakuFontFamily).label}；缺失时自动回退',
+        '当前：${LocalFontManager.selectionLabel(.danmakuChinese)}',
+    leading: const Icon(Icons.translate),
+    onTap: (context, setState) => showLocalFontSetting(
+      context,
+      slot: .danmakuChinese,
+      onChanged: setState,
+    ),
+  ),
+  NormalModel(
+    title: '弹幕英文字体',
+    getSubtitle: () =>
+        '当前：${LocalFontManager.selectionLabel(.danmakuEnglish)}',
     leading: const Icon(Icons.font_download_outlined),
-    onTap: _showDanmakuFontFamilyDialog,
+    onTap: (context, setState) => showLocalFontSetting(
+      context,
+      slot: .danmakuEnglish,
+      onChanged: setState,
+    ),
   ),
   if (PlatformUtils.isMobile)
     const SwitchModel(
@@ -417,37 +433,6 @@ List<SettingsModel> get playSettings => [
     defaultVal: false,
   ),
 ];
-
-Future<void> _showDanmakuFontFamilyDialog(
-  BuildContext context,
-  VoidCallback setState,
-) async {
-  final fontFamilies = DanmakuFontFamily.values;
-  final res = await showDialog<DanmakuFontFamily>(
-    context: context,
-    builder: (context) => SelectDialog<DanmakuFontFamily>(
-      title: '弹幕字体',
-      value: DanmakuFontFamily.fromValue(Pref.danmakuFontFamily),
-      values: fontFamilies.map((item) => (item, item.label)).toList(),
-      subtitleBuilder: (context, index) {
-        final fontFamily = fontFamilies[index].value;
-        return Text(
-          '弹幕字体预览 Aa 123',
-          style: TextStyle(
-            fontFamily: fontFamily.isEmpty ? null : fontFamily,
-          ),
-        );
-      },
-    ),
-  );
-  if (res != null) {
-    await GStorage.setting.put(
-      SettingBoxKey.danmakuFontFamily,
-      res.value,
-    );
-    setState();
-  }
-}
 
 Future<void> _showLongPressSpeedTriggerDelayDialog(
   BuildContext context,

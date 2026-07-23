@@ -23,12 +23,14 @@ import 'package:PiliPlus/pages/setting/widgets/dual_slider_dialog.dart';
 import 'package:PiliPlus/pages/setting/widgets/multi_select_dialog.dart';
 import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
 import 'package:PiliPlus/pages/setting/widgets/slider_dialog.dart';
+import 'package:PiliPlus/pages/setting/utils/local_font_setting.dart';
 import 'package:PiliPlus/plugin/pl_player/utils/fullscreen.dart';
 import 'package:PiliPlus/utils/extension/file_ext.dart';
 import 'package:PiliPlus/utils/extension/get_ext.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/global_data.dart';
+import 'package:PiliPlus/utils/local_font_manager.dart';
 import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
@@ -93,6 +95,34 @@ List<SettingsModel> get styleSettings => [
       setKey: SettingBoxKey.appFontWeight,
       onChanged: (_) => Get.updateMyAppTheme(),
       onTap: _showFontWeightDialog,
+    ),
+  ),
+  NormalModel(
+    title: 'App 中文字体',
+    getSubtitle: () =>
+        '当前：${LocalFontManager.selectionLabel(.appChinese)}',
+    leading: const Icon(Icons.translate),
+    onTap: (context, setState) => showLocalFontSetting(
+      context,
+      slot: .appChinese,
+      onChanged: () {
+        setState();
+        Get.updateMyAppTheme();
+      },
+    ),
+  ),
+  NormalModel(
+    title: 'App 英文字体',
+    getSubtitle: () =>
+        '当前：${LocalFontManager.selectionLabel(.appEnglish)}',
+    leading: const Icon(Icons.font_download_outlined),
+    onTap: (context, setState) => showLocalFontSetting(
+      context,
+      slot: .appEnglish,
+      onChanged: () {
+        setState();
+        Get.updateMyAppTheme();
+      },
     ),
   ),
   NormalModel(

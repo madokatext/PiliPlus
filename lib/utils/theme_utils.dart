@@ -1,5 +1,6 @@
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
+import 'package:PiliPlus/utils/local_font_manager.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flutter/cupertino.dart' show CupertinoThemeData;
 import 'package:flutter/foundation.dart' show PlatformDispatcher;
@@ -39,11 +40,22 @@ abstract final class ThemeUtils {
     final fontWeight = appFontWeight == -1
         ? null
         : FontWeight.values[appFontWeight];
-    late final textStyle = TextStyle(fontWeight: fontWeight);
+    final fontFamilies = LocalFontManager.appFontFamilies;
+    final fontFamilyFallback = fontFamilies.fallback.isEmpty
+        ? null
+        : fontFamilies.fallback;
+    final hasCustomTextStyle =
+        fontWeight != null || fontFamilies.primary != null;
+    final textStyle = TextStyle(
+      fontWeight: fontWeight,
+      fontFamily: fontFamilies.primary,
+      fontFamilyFallback: fontFamilyFallback,
+    );
     ThemeData themeData = ThemeData(
       colorScheme: colorScheme,
       useMaterial3: true,
-      textTheme: fontWeight == null
+      fontFamily: fontFamilies.primary,
+      textTheme: !hasCustomTextStyle
           ? null
           : TextTheme(
               displayLarge: textStyle,
@@ -62,7 +74,7 @@ abstract final class ThemeUtils {
               labelMedium: textStyle,
               labelSmall: textStyle,
             ),
-      tabBarTheme: fontWeight == null
+      tabBarTheme: !hasCustomTextStyle
           ? null
           : TabBarThemeData(labelStyle: textStyle),
       appBarTheme: AppBarTheme(
@@ -75,6 +87,8 @@ abstract final class ThemeUtils {
           fontSize: 16,
           color: colorScheme.onSurface,
           fontWeight: fontWeight,
+          fontFamily: fontFamilies.primary,
+          fontFamilyFallback: fontFamilyFallback,
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
@@ -84,7 +98,11 @@ abstract final class ThemeUtils {
         actionTextColor: colorScheme.primary,
         backgroundColor: colorScheme.secondaryContainer,
         closeIconColor: colorScheme.secondary,
-        contentTextStyle: TextStyle(color: colorScheme.onSecondaryContainer),
+        contentTextStyle: TextStyle(
+          color: colorScheme.onSecondaryContainer,
+          fontFamily: fontFamilies.primary,
+          fontFamilyFallback: fontFamilyFallback,
+        ),
         elevation: 20,
       ),
       popupMenuTheme: PopupMenuThemeData(
@@ -111,6 +129,8 @@ abstract final class ThemeUtils {
           fontSize: 18,
           color: colorScheme.onSurface,
           fontWeight: fontWeight,
+          fontFamily: fontFamilies.primary,
+          fontFamilyFallback: fontFamilyFallback,
         ),
         backgroundColor: colorScheme.surface,
         constraints: const BoxConstraints(minWidth: 280, maxWidth: 420),
@@ -124,9 +144,11 @@ abstract final class ThemeUtils {
       // ignore: deprecated_member_use
       sliderTheme: const SliderThemeData(year2023: false),
       tooltipTheme: TooltipThemeData(
-        textStyle: const TextStyle(
+        textStyle: TextStyle(
           color: Colors.white,
           fontSize: 14,
+          fontFamily: fontFamilies.primary,
+          fontFamilyFallback: fontFamilyFallback,
         ),
         decoration: BoxDecoration(
           color: Colors.grey[700]!.withValues(alpha: 0.9),

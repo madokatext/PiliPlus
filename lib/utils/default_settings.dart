@@ -44,7 +44,6 @@ const Map<String, Object> defaultSettingValues = {
   'danmakuBlockType': <int>[],
   'danmakuDuration': 7.0,
   'danmakuFixedV': false,
-  'danmakuFontFamily': 'serif',
   'danmakuFontScale': 0.6,
   'danmakuFontScaleFS': 0.8,
   'danmakuLineHeight': 1.3,
