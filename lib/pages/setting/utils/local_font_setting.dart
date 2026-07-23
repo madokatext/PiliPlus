@@ -1,6 +1,5 @@
 import 'package:PiliPlus/utils/local_font_manager.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 
 Future<void> showLocalFontSetting(
   BuildContext context, {
@@ -8,97 +7,175 @@ Future<void> showLocalFontSetting(
   required VoidCallback onChanged,
 }) async {
   var isBusy = false;
+  var pendingReset = false;
+  String? errorText;
+  LocalFontCandidate? pendingCandidate;
+
   await showDialog<void>(
     context: context,
+    barrierDismissible: false,
     builder: (dialogContext) => StatefulBuilder(
       builder: (context, setDialogState) {
-        final family = LocalFontManager.familyFor(slot);
+        final previewFamily = pendingReset
+            ? null
+            : pendingCandidate?.family ??
+                  LocalFontManager.familyFor(slot);
+
+        final pendingLabel = pendingReset
+            ? '系统默认'
+            : pendingCandidate?.sourceName;
 
         Future<void> selectFont() async {
-          setDialogState(() => isBusy = true);
+          setDialogState(() {
+            isBusy = true;
+            errorText = null;
+          });
+
           try {
-            if (await LocalFontManager.pickAndInstall(slot)) {
-              onChanged();
-              if (dialogContext.mounted) {
-                setDialogState(() {});
-              }
-              SmartDialog.showToast('${slot.label}已更新，请确认预览效果');
+            final candidate = await LocalFontManager.pickCandidate(slot);
+
+            if (candidate != null && dialogContext.mounted) {
+              setDialogState(() {
+                pendingCandidate = candidate;
+                pendingReset = false;
+              });
             }
           } catch (e) {
-            SmartDialog.showToast('字体加载失败：$e');
+            if (dialogContext.mounted) {
+              setDialogState(() {
+                errorText = '字体加载失败：$e';
+              });
+            }
           } finally {
             if (dialogContext.mounted) {
-              setDialogState(() => isBusy = false);
+              setDialogState(() {
+                isBusy = false;
+              });
             }
           }
         }
 
-        Future<void> resetFont() async {
-          setDialogState(() => isBusy = true);
+        void stageReset() {
+          setDialogState(() {
+            pendingCandidate = null;
+            pendingReset = true;
+            errorText = null;
+          });
+        }
+
+        Future<void> confirm() async {
+          final candidate = pendingCandidate;
+          final hasPendingChange = pendingReset || candidate != null;
+
+          // 没有选择新字体时，确认只关闭弹窗。
+          if (!hasPendingChange) {
+            Navigator.of(dialogContext).pop();
+            return;
+          }
+
+          setDialogState(() {
+            isBusy = true;
+            errorText = null;
+          });
+
           try {
-            await LocalFontManager.reset(slot);
+            if (pendingReset) {
+              await LocalFontManager.reset(slot);
+            } else {
+              await LocalFontManager.commitCandidate(candidate!);
+            }
+
+            // 只有提交成功后才刷新 App 或弹幕字体。
             onChanged();
+
             if (dialogContext.mounted) {
-              setDialogState(() {});
+              Navigator.of(dialogContext).pop();
             }
-            SmartDialog.showToast('${slot.label}已恢复系统默认');
           } catch (e) {
-            SmartDialog.showToast('字体加载失败：$e');
-          } finally {
             if (dialogContext.mounted) {
-              setDialogState(() => isBusy = false);
+              setDialogState(() {
+                errorText = '字体应用失败：$e';
+                isBusy = false;
+              });
             }
           }
         }
 
-        return AlertDialog(
-          title: Text(slot.label),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text('当前：${LocalFontManager.selectionLabel(slot)}'),
-              const SizedBox(height: 16),
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
-                  borderRadius: const BorderRadius.all(Radius.circular(8)),
+        return PopScope(
+          canPop: !isBusy,
+          child: AlertDialog(
+            title: Text(slot.label),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  '当前：${LocalFontManager.selectionLabel(slot)}',
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Text(
-                    slot.sample,
-                    style: TextStyle(fontFamily: family),
+                if (pendingLabel != null) ...[
+                  const SizedBox(height: 4),
+                  Text('待确认：$pendingLabel'),
+                ],
+                const SizedBox(height: 16),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                    borderRadius: const BorderRadius.all(
+                      Radius.circular(8),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Text(
+                      slot.sample,
+                      style: TextStyle(
+                        fontFamily: previewFamily,
+                      ),
+                    ),
                   ),
                 ),
+                const SizedBox(height: 8),
+                Text(
+                  slot.usesLatinSubset
+                      ? '支持 TTF、OTF、TTC；选择后仅在此处预览拉丁字符子集，点击“确认”后应用。'
+                      : '支持 TTF、OTF、TTC；选择后仅在此处预览，点击“确认”后应用。',
+                ),
+                if (errorText != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    errorText!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              if (LocalFontManager.isConfigured(slot) ||
+                  pendingCandidate != null)
+                TextButton(
+                  onPressed: isBusy ? null : stageReset,
+                  child: const Text('恢复系统默认'),
+                ),
+              TextButton(
+                onPressed: isBusy ? null : selectFont,
+                child: const Text('选择字体文件'),
               ),
-              const SizedBox(height: 8),
-              Text(
-                slot.usesLatinSubset
-                    ? '支持 TTF、OTF、TTC；选择后会立即生成拉丁字符子集缓存。'
-                    : '支持 TTF、OTF、TTC；选中的文件会复制到应用目录。',
+              TextButton(
+                onPressed: isBusy
+                    ? null
+                    : () => Navigator.of(dialogContext).pop(),
+                child: const Text('取消'),
+              ),
+              TextButton(
+                onPressed: isBusy ? null : confirm,
+                child: const Text('确认'),
               ),
             ],
           ),
-          actions: [
-            if (LocalFontManager.isConfigured(slot))
-              TextButton(
-                onPressed: isBusy ? null : resetFont,
-                child: const Text('恢复系统默认'),
-              ),
-            TextButton(
-              onPressed: isBusy ? null : selectFont,
-              child: const Text('选择字体文件'),
-            ),
-            TextButton(
-              onPressed: isBusy
-                  ? null
-                  : () => Navigator.of(dialogContext).pop(),
-              child: const Text('确认'),
-            ),
-          ],
         );
       },
     ),
