@@ -404,17 +404,69 @@ class _BurstDanmakuOverlay extends StatelessWidget {
             )
             .toInt();
 
-    final shadows =
-        DanmakuOptions.danmakuStrokeWidth > 0
-            ? <Shadow>[
-                Shadow(
-                  color: Colors.black,
-                  blurRadius:
-                      DanmakuOptions
-                          .danmakuStrokeWidth,
-                ),
-              ]
-            : null;
+    final strokeWidth = option.strokeWidth;
+
+final strokePaint = strokeWidth > 0
+    ? (Paint()
+      ..color = Colors.black
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth)
+    : null;
+
+TextSpan buildSpan(
+  BurstDanmakuSnapshot snapshot, {
+  required bool stroke,
+}) {
+  return TextSpan(
+    style: TextStyle(
+      color: stroke ? null : snapshot.color,
+      foreground: stroke ? strokePaint : null,
+      fontSize: fontSize,
+      fontWeight: FontWeight.values[fontWeightIndex],
+      fontStyle: FontStyle.normal,
+      fontFamily: fontFamilies.primary,
+      fontFamilyFallback: fontFamilies.fallback,
+    ),
+    children: [
+      TextSpan(
+        text: snapshot.text,
+      ),
+      const TextSpan(
+        // U+00D7：真正的乘号，不是字母 x。
+        text: ' × ',
+        style: TextStyle(
+          fontWeight: FontWeight.normal,
+          fontStyle: FontStyle.normal,
+        ),
+      ),
+      TextSpan(
+        text: snapshot.count.toString(),
+        style: TextStyle(
+          fontFamily: englishFontFamily,
+          fontFamilyFallback: fontFamilies.fallback,
+          fontWeight: FontWeight.bold,
+          fontStyle: FontStyle.italic,
+        ),
+      ),
+    ],
+  );
+}
+
+Widget buildText(
+  BurstDanmakuSnapshot snapshot, {
+  required bool stroke,
+}) {
+  return Text.rich(
+    buildSpan(
+      snapshot,
+      stroke: stroke,
+    ),
+    textAlign: TextAlign.center,
+    maxLines: 1,
+    softWrap: false,
+    overflow: TextOverflow.fade,
+  );
+}
 
     return IgnorePointer(
       child: Align(
@@ -432,57 +484,25 @@ class _BurstDanmakuOverlay extends StatelessWidget {
                         const EdgeInsets.symmetric(
                       vertical: 2,
                     ),
-                    child: Text.rich(
-                      TextSpan(
-                        style: TextStyle(
-                          color: snapshot.color,
-                          fontSize: fontSize,
-                          fontWeight:
-                              FontWeight.values[
-                                fontWeightIndex
-                              ],
-                          fontStyle: FontStyle.normal,
-                          fontFamily:
-                              fontFamilies.primary,
-                          fontFamilyFallback:
-                              fontFamilies.fallback,
-                          shadows: shadows,
-                        ),
-                        children: [
-                          TextSpan(
-                            text: snapshot.text,
-                          ),
-                          const TextSpan(
-                            // U+00D7：真正的乘号，不是字母 x。
-                            text: ' × ',
-                            style: TextStyle(
-                              fontWeight:
-                                  FontWeight.normal,
-                              fontStyle:
-                                  FontStyle.normal,
-                            ),
-                          ),
-                          TextSpan(
-                            text:
-                                snapshot.count.toString(),
-                            style: TextStyle(
-                              fontFamily:
-                                  englishFontFamily,
-                              fontFamilyFallback:
-                                  fontFamilies.fallback,
-                              fontWeight:
-                                  FontWeight.bold,
-                              fontStyle:
-                                  FontStyle.italic,
-                            ),
-                          ),
-                        ],
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      softWrap: false,
-                      overflow: TextOverflow.fade,
-                    ),
+                    child: Padding(
+  // 普通弹幕会给描边预留 strokeWidth / 2 的外扩空间。
+  padding: EdgeInsets.all(strokeWidth / 2),
+  child: Stack(
+    alignment: Alignment.center,
+    clipBehavior: Clip.none,
+    children: [
+      if (strokePaint != null)
+        buildText(
+          snapshot,
+          stroke: true,
+        ),
+      buildText(
+        snapshot,
+        stroke: false,
+      ),
+    ],
+  ),
+),
                   ),
               ],
             ),
