@@ -6,6 +6,7 @@ import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/theme_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 mixin HeaderMixin<T extends StatefulWidget> on State<T> {
@@ -150,7 +151,15 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
           DanmakuOptions.danmakuWeight = val.toInt();
           setState(() {});
         }
+void updateHighLikeThreshold(String value) {
+  final parsed = int.tryParse(value);
+  if (parsed == null) {
+    return;
+  }
 
+  DanmakuOptions.highLikeDanmakuThreshold =
+      parsed.clamp(0, 999999).toInt();
+}
         void onUpdateBlockType(int blockType, bool blocked) {
           if (blocked) {
             DanmakuOptions.blockTypes.remove(blockType);
@@ -222,6 +231,37 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 6),
+Row(
+  children: [
+    const Expanded(
+      child: Text('高赞弹幕标识阈值'),
+    ),
+    SizedBox(
+      width: 120,
+      child: TextFormField(
+        initialValue:
+            DanmakuOptions.highLikeDanmakuThreshold.toString(),
+        keyboardType: TextInputType.number,
+        inputFormatters: const [
+          FilteringTextInputFormatter.digitsOnly,
+        ],
+        textAlign: TextAlign.center,
+        decoration: const InputDecoration(
+          isDense: true,
+          suffixText: '赞',
+          helperText: '0 为关闭',
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: 10,
+          ),
+        ),
+        onChanged: updateHighLikeThreshold,
+      ),
+    ),
+  ],
+),
+const SizedBox(height: 8),
                   ],
                   const Text('按类型屏蔽'),
                   SingleChildScrollView(
