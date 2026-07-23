@@ -135,7 +135,18 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
       .onDanmakuMergeSettingsChanged
       ?.call(false);
 }
+void updateShadowRadius(double val) {
+  DanmakuOptions.danmakuShadowRadius =
+      val.toPrecision(1);
 
+  setState(() {});
+  setOptions();
+
+  // 仅重建高频置顶层，不重置已经统计的高频弹幕。
+  plPlayerController
+      .onDanmakuMergeSettingsChanged
+      ?.call(false);
+}
         void updateFontWeight(double val) {
           DanmakuOptions.danmakuFontWeight = val.toInt();
           setState(() {});
@@ -491,6 +502,40 @@ const Text('按类型屏蔽'),
                       ),
                     ),
                   ),
+                  Row(
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+    Text(
+      '阴影大小 '
+      '${DanmakuOptions.danmakuShadowRadius.toStringAsFixed(1)}',
+    ),
+    resetBtn(
+      theme,
+      0.0,
+      () => updateShadowRadius(0.0),
+    ),
+  ],
+),
+Padding(
+  padding: const EdgeInsets.only(
+    top: 0,
+    bottom: 6,
+    left: 10,
+    right: 10,
+  ),
+  child: SliderTheme(
+    data: sliderTheme,
+    child: Slider(
+      min: 0,
+      max: 10,
+      value: DanmakuOptions.danmakuShadowRadius,
+      divisions: 20,
+      label: DanmakuOptions.danmakuShadowRadius
+          .toStringAsFixed(1),
+      onChanged: updateShadowRadius,
+    ),
+  ),
+),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
