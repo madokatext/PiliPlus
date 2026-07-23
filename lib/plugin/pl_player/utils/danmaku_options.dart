@@ -4,12 +4,26 @@ import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:canvas_danmaku/canvas_danmaku.dart';
+import 'package:PiliPlus/models/common/danmaku_merge_mode.dart';
 
 abstract final class DanmakuOptions {
   static final Set<int> blockTypes = Pref.danmakuBlockType;
   static bool blockColorful = blockTypes.contains(6);
 
   static int danmakuWeight = Pref.danmakuWeight;
+  static DanmakuMergeMode mergeMode = Pref.danmakuMergeMode;
+
+static int burstDanmakuTriggerCount =
+    Pref.burstDanmakuTriggerCount;
+
+static double burstDanmakuWindowSeconds =
+    Pref.burstDanmakuWindowSeconds;
+
+static double burstDanmakuCooldownSeconds =
+    Pref.burstDanmakuCooldownSeconds;
+
+static double burstDanmakuFontScale =
+    Pref.burstDanmakuFontScale;
   static int highLikeDanmakuThreshold = Pref.highLikeDanmakuThreshold;
   static double danmakuFontScaleFS = Pref.danmakuFontScaleFS;
   static double danmakuFontScale = Pref.danmakuFontScale;
@@ -50,7 +64,28 @@ abstract final class DanmakuOptions {
       lineHeight: danmakuLineHeight,
     );
   }
+static Future<void> saveMergeSettings() async {
+  final future = GStorage.setting.putAllNE({
+    SettingBoxKey.danmakuMergeMode: mergeMode.index,
 
+    // 同步旧键，保证降级到旧版本时行为尽可能合理。
+    SettingBoxKey.mergeDanmaku:
+        mergeMode == DanmakuMergeMode.segment,
+
+    SettingBoxKey.burstDanmakuTriggerCount:
+        burstDanmakuTriggerCount,
+    SettingBoxKey.burstDanmakuWindowSeconds:
+        burstDanmakuWindowSeconds,
+    SettingBoxKey.burstDanmakuCooldownSeconds:
+        burstDanmakuCooldownSeconds,
+    SettingBoxKey.burstDanmakuFontScale:
+        burstDanmakuFontScale,
+  });
+
+  if (future != null) {
+    await future;
+  }
+}
   static Future<void>? save(double danmakuOpacity) {
     return GStorage.setting.putAllNE({
       SettingBoxKey.danmakuBlockType: blockTypes.toList(),
@@ -67,6 +102,17 @@ abstract final class DanmakuOptions {
       SettingBoxKey.danmakuFixedV: danmakuFixedV,
       SettingBoxKey.danmakuWeight: danmakuWeight,
       SettingBoxKey.highLikeDanmakuThreshold: highLikeDanmakuThreshold,
+      SettingBoxKey.danmakuMergeMode: mergeMode.index,
+SettingBoxKey.mergeDanmaku:
+    mergeMode == DanmakuMergeMode.segment,
+SettingBoxKey.burstDanmakuTriggerCount:
+    burstDanmakuTriggerCount,
+SettingBoxKey.burstDanmakuWindowSeconds:
+    burstDanmakuWindowSeconds,
+SettingBoxKey.burstDanmakuCooldownSeconds:
+    burstDanmakuCooldownSeconds,
+SettingBoxKey.burstDanmakuFontScale:
+    burstDanmakuFontScale,
       SettingBoxKey.danmakuOpacity: danmakuOpacity,
     });
   }
