@@ -1,5 +1,6 @@
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/pages/video/introduction/ugc/widgets/menu_row.dart';
+import 'package:PiliPlus/pages/setting/widgets/danmaku_merge_settings_dialog.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/utils/danmaku_options.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
@@ -241,7 +242,8 @@ Row(
       width: 120,
       child: TextFormField(
         initialValue:
-            DanmakuOptions.highLikeDanmakuThreshold.toString(),
+            DanmakuOptions.highLikeDanmakuThreshold
+                .toString(),
         keyboardType: TextInputType.number,
         inputFormatters: [
           FilteringTextInputFormatter.digitsOnly,
@@ -262,8 +264,62 @@ Row(
   ],
 ),
 const SizedBox(height: 8),
-                  ],
-                  const Text('按类型屏蔽'),
+ListTile(
+  contentPadding: EdgeInsets.zero,
+  dense: true,
+  leading: const Icon(Icons.compress_outlined),
+  title: const Text('重复弹幕合并'),
+  subtitle: Text(
+    '当前：${DanmakuOptions.mergeMode.label}',
+  ),
+  trailing: const Icon(Icons.chevron_right),
+  onTap: () async {
+    final oldMode = DanmakuOptions.mergeMode;
+    final oldTriggerCount =
+        DanmakuOptions.burstDanmakuTriggerCount;
+    final oldWindowSeconds =
+        DanmakuOptions.burstDanmakuWindowSeconds;
+    final oldCooldownSeconds =
+        DanmakuOptions.burstDanmakuCooldownSeconds;
+    final oldFontScale =
+        DanmakuOptions.burstDanmakuFontScale;
+
+    final changed =
+        await showDanmakuMergeSettingsDialog(
+      context,
+    );
+
+    if (!changed) {
+      return;
+    }
+
+    final shouldReset =
+        oldMode != DanmakuOptions.mergeMode ||
+        oldTriggerCount !=
+            DanmakuOptions.burstDanmakuTriggerCount ||
+        oldWindowSeconds !=
+            DanmakuOptions.burstDanmakuWindowSeconds ||
+        oldCooldownSeconds !=
+            DanmakuOptions
+                .burstDanmakuCooldownSeconds;
+
+    final onlyStyleChanged =
+        !shouldReset &&
+        oldFontScale !=
+            DanmakuOptions.burstDanmakuFontScale;
+
+    if (shouldReset || onlyStyleChanged) {
+      plPlayerController
+          .onDanmakuMergeSettingsChanged
+          ?.call(shouldReset);
+    }
+
+    setState(() {});
+  },
+),
+const SizedBox(height: 8),
+],
+const Text('按类型屏蔽'),
                   SingleChildScrollView(
                     scrollDirection: .horizontal,
                     padding: const .symmetric(vertical: 10),
