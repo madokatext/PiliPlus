@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'package:PiliPlus/models/common/danmaku_merge_mode.dart';
 import 'package:PiliPlus/common/widgets/gesture/horizontal_drag_gesture_recognizer.dart'
     show deviceTouchSlop;
 import 'package:PiliPlus/common/widgets/pair.dart';
@@ -610,8 +610,62 @@ static int get rcmdRefreshCount {
   static bool get showVipDanmaku =>
       _setting.get(SettingBoxKey.showVipDanmaku, defaultValue: true);
 
-  static bool get mergeDanmaku =>
-      _setting.get(SettingBoxKey.mergeDanmaku, defaultValue: false);
+  static DanmakuMergeMode get danmakuMergeMode {
+  final value = _setting.get(SettingBoxKey.danmakuMergeMode);
+
+  if (value is int &&
+      value >= 0 &&
+      value < DanmakuMergeMode.values.length) {
+    return DanmakuMergeMode.values[value];
+  }
+
+  // 新键不存在时迁移旧版布尔设置。
+  final legacyMerge = _setting.get(
+    SettingBoxKey.mergeDanmaku,
+    defaultValue: false,
+  );
+
+  return legacyMerge == true
+      ? DanmakuMergeMode.segment
+      : DanmakuMergeMode.off;
+}
+
+// 保留旧 getter，避免其它尚未调整的代码报错。
+// 它现在只代表旧式分段合并。
+static bool get mergeDanmaku =>
+    danmakuMergeMode == DanmakuMergeMode.segment;
+
+static int get burstDanmakuTriggerCount {
+  final value = _setting.get(
+    SettingBoxKey.burstDanmakuTriggerCount,
+    defaultValue: 100,
+  );
+
+  return (value is num ? value.toInt() : 100)
+      .clamp(2, 9999)
+      .toInt();
+}
+
+static double get burstDanmakuWindowSeconds => _getClampedDouble(
+  SettingBoxKey.burstDanmakuWindowSeconds,
+  5.0,
+  0.5,
+  60.0,
+);
+
+static double get burstDanmakuCooldownSeconds => _getClampedDouble(
+  SettingBoxKey.burstDanmakuCooldownSeconds,
+  3.0,
+  0.5,
+  60.0,
+);
+
+static double get burstDanmakuFontScale => _getClampedDouble(
+  SettingBoxKey.burstDanmakuFontScale,
+  1.2,
+  1.0,
+  2.0,
+);
 
   static bool get showHotRcmd =>
       _setting.get(SettingBoxKey.showHotRcmd, defaultValue: false);
