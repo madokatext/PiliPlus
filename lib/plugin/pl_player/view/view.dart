@@ -958,7 +958,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
   }
 
   void _onHorizontalDragStart() {
-  plPlayerController.onSeekStart();
+  plPlayerController.onSeekStart(fromGesture: true);
 }
 RenderProgressBar? _visibleProgressBarRenderObject() {
   final key = plPlayerController.showControls.value
@@ -1583,7 +1583,8 @@ Widget buildRelativeSeekToast() {
   return Obx(() {
     final visible =
         plPlayerController.seekTimeInPreview &&
-        plPlayerController.isSeeking.value;
+        plPlayerController.isSeeking.value &&
+        plPlayerController.isGestureSeeking.value;
 
     final deltaSeconds =
         plPlayerController.position.value -
