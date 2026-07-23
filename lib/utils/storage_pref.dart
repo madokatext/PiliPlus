@@ -328,7 +328,16 @@ static double get verticalScrollDecelerationScale => _getClampedDouble(
     SettingBoxKey.defaultVideoQaHalfScreen,
     defaultValue: defaultVideoQa,
   );
+static int get videoPlayerSwitchForceTimeoutSeconds {
+  final value = _setting.get(
+    SettingBoxKey.videoPlayerSwitchForceTimeoutSeconds,
+    defaultValue: 10,
+  );
 
+  return (value is num ? value.toInt() : 10)
+      .clamp(0, 60)
+      .toInt();
+}
   static int get defaultAudioQa => _setting.get(
     SettingBoxKey.defaultAudioQa,
     defaultValue: AudioQuality.hiRes.code,
