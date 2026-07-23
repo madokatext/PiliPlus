@@ -49,12 +49,68 @@ class RcmdVideoItemAppModel extends BaseRcmdVideoItemModel {
         : null;
     desc = json['desc'];
   }
+
+  RcmdVideoItemAppModel.fromCacheJson(Map<String, dynamic> json) {
+    aid = (json['aid'] as num?)?.toInt();
+    bvid = json['bvid'] as String?;
+    cid = (json['cid'] as num?)?.toInt();
+    cover = json['cover'] as String?;
+    title = json['title'] as String;
+    duration = (json['duration'] as num).toInt();
+    owner = RcmdOwner.fromCacheJson(
+      Map<String, dynamic>.from(json['owner'] as Map),
+    );
+    stat = RcmdStat.fromCacheJson(
+      Map<String, dynamic>.from(json['stat'] as Map),
+    );
+    desc = json['desc'] as String?;
+    isFollowed = json['isFollowed'] as bool;
+    goto = json['goto'] as String?;
+    uri = json['uri'] as String?;
+    rcmdReason = json['rcmdReason'] as String?;
+    param = (json['param'] as num?)?.toInt();
+    pgcBadge = json['pgcBadge'] as String?;
+    talkBack = json['talkBack'] as String?;
+    cardType = json['cardType'] as String?;
+    threePoint = json['threePoint'] == null
+        ? null
+        : ThreePoint.fromCacheJson(
+            Map<String, dynamic>.from(json['threePoint'] as Map),
+          );
+  }
+
+  Map<String, dynamic> toCacheJson() => {
+    'aid': aid,
+    'bvid': bvid,
+    'cid': cid,
+    'cover': cover,
+    'title': title,
+    'duration': duration,
+    'owner': {'mid': owner.mid, 'name': owner.name},
+    'stat': {'view': stat.view, 'like': stat.like, 'danmu': stat.danmu},
+    'desc': desc,
+    'isFollowed': isFollowed,
+    'goto': goto,
+    'uri': uri,
+    'rcmdReason': rcmdReason,
+    'param': param,
+    'pgcBadge': pgcBadge,
+    'talkBack': talkBack,
+    'cardType': cardType,
+    'threePoint': threePoint?.toCacheJson(),
+  };
 }
 
 class RcmdStat extends BaseStat {
   RcmdStat.fromJson(Map<String, dynamic> json) {
     view = NumUtils.parseNum(json["cover_left_text_1"] ?? '');
     danmu = NumUtils.parseNum(json["cover_left_text_2"] ?? '');
+  }
+
+  RcmdStat.fromCacheJson(Map<String, dynamic> json) {
+    view = (json['view'] as num?)?.toInt();
+    like = (json['like'] as num?)?.toInt();
+    danmu = (json['danmu'] as num?)?.toInt();
   }
 }
 
@@ -64,6 +120,11 @@ class RcmdOwner extends BaseOwner {
         ? (json['args']?['up_name'] ?? '')
         : (json['desc_button']?['text'] ?? '');
     mid = json['args']?['up_id'] ?? 0;
+  }
+
+  RcmdOwner.fromCacheJson(Map<String, dynamic> json) {
+    mid = (json['mid'] as num?)?.toInt();
+    name = json['name'] as String?;
   }
 }
 
@@ -91,6 +152,20 @@ class ThreePoint {
       }
     }
   }
+
+  ThreePoint.fromCacheJson(Map<String, dynamic> json) {
+    dislikeReasons = (json['dislikeReasons'] as List?)
+        ?.map((item) => Reason.fromJson(Map<String, dynamic>.from(item as Map)))
+        .toList();
+    feedbacks = (json['feedbacks'] as List?)
+        ?.map((item) => Reason.fromJson(Map<String, dynamic>.from(item as Map)))
+        .toList();
+  }
+
+  Map<String, dynamic> toCacheJson() => {
+    'dislikeReasons': dislikeReasons?.map((item) => item.toJson()).toList(),
+    'feedbacks': feedbacks?.map((item) => item.toJson()).toList(),
+  };
 }
 
 class Reason {
@@ -103,4 +178,6 @@ class Reason {
     name = json['name'];
     toast = json['toast'];
   }
+
+  Map<String, dynamic> toJson() => {'id': id, 'name': name, 'toast': toast};
 }

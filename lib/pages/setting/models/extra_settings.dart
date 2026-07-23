@@ -173,7 +173,7 @@ List<SettingsModel> get extraSettings => [
     defaultVal: false,
     onChanged: (value) => ImageGridView.horizontalPreview = value,
   ),
-  NormalModel(
+      NormalModel(
     title: '评论折叠行数',
     subtitle: '0行为不折叠',
     leading: const Icon(Icons.compress),
@@ -275,7 +275,7 @@ List<SettingsModel> get extraSettings => [
     onTap: _showTouchSlopDialog,
     leading: const Icon(Icons.pan_tool_alt_outlined),
   ),
-      NormalModel(
+  NormalModel(
     title: '横向标签页快滑速度阈值',
     getSubtitle: () =>
         '当前：${Pref.tabSwipeVelocityThreshold.toStringAsFixed(0)} dp/s'
@@ -495,6 +495,14 @@ List<SettingsModel> get extraSettings => [
     subtitle: '热门页面显示每周必看等推荐内容入口',
     leading: Icon(Icons.local_fire_department_outlined),
     setKey: SettingBoxKey.showHotRcmd,
+    defaultVal: false,
+    needReboot: true,
+  ),
+  const SwitchModel(
+    title: '重启 App 时刷新首页',
+    subtitle: '关闭时恢复上次退出前的首页推荐内容与加载进度',
+    leading: Icon(Icons.restart_alt),
+    setKey: SettingBoxKey.refreshHomeOnRestart,
     defaultVal: false,
     needReboot: true,
   ),

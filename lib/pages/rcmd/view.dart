@@ -37,17 +37,32 @@ class _RcmdPageState extends State<RcmdPage>
       decoration: const BoxDecoration(borderRadius: Style.mdRadius),
       child: refreshIndicator(
         onRefresh: controller.onRefresh,
-        child: CustomScrollView(
-          controller: controller.scrollController,
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverPadding(
-              padding: const .only(top: Style.cardSpace, bottom: 100),
-              sliver: Obx(
-                () => _buildBody(colorScheme, controller.loadingState.value),
+        child: NotificationListener<ScrollNotification>(
+          onNotification: (notification) {
+            final towardEnd = switch (notification) {
+              ScrollUpdateNotification(:final scrollDelta?) => scrollDelta > 0,
+              OverscrollNotification(:final overscroll) => overscroll > 0,
+              _ => false,
+            };
+            if (towardEnd) {
+              controller.onUserScrollTowardEnd(
+                atEnd: notification.metrics.extentAfter <= 0,
+              );
+            }
+            return false;
+          },
+          child: CustomScrollView(
+            controller: controller.scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverPadding(
+                padding: const .only(top: Style.cardSpace, bottom: 100),
+                sliver: Obx(
+                  () => _buildBody(colorScheme, controller.loadingState.value),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -73,9 +88,7 @@ class _RcmdPageState extends State<RcmdPage>
             ? SliverGrid.builder(
                 gridDelegate: gridDelegate,
                 itemBuilder: (context, index) {
-                  if (index == response.length - 1) {
-                    controller.onLoadMore();
-                  }
+                  controller.requestLoadMore(index, response.length);
                   if (controller.lastRefreshAt != null) {
                     if (controller.lastRefreshAt == index) {
                       return GestureDetector(
@@ -102,23 +115,12 @@ class _RcmdPageState extends State<RcmdPage>
                         : index;
                     return VideoCardV(
                       videoItem: response[actualIndex],
-                      onRemove: () {
-                        if (controller.lastRefreshAt != null &&
-                            actualIndex < controller.lastRefreshAt!) {
-                          controller.lastRefreshAt =
-                              controller.lastRefreshAt! - 1;
-                        }
-                        controller.loadingState
-                          ..value.data!.removeAt(actualIndex)
-                          ..refresh();
-                      },
+                      onRemove: () => controller.removeItemAt(actualIndex),
                     );
                   } else {
                     return VideoCardV(
                       videoItem: response[index],
-                      onRemove: () => controller.loadingState
-                        ..value.data!.removeAt(index)
-                        ..refresh(),
+                      onRemove: () => controller.removeItemAt(index),
                     );
                   }
                 },

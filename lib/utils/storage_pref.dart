@@ -599,6 +599,11 @@ static int get rcmdRefreshCount {
     defaultValue: false,
   );
 
+  static bool get refreshHomeOnRestart => _setting.get(
+    SettingBoxKey.refreshHomeOnRestart,
+    defaultValue: false,
+  );
+
   static bool get savedRcmdTip =>
       _setting.get(SettingBoxKey.savedRcmdTip, defaultValue: true);
 
