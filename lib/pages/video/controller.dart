@@ -126,8 +126,12 @@ class VideoDetailController extends GetxController
   bool get isPageActive => _isPageActive && !isClosed;
 
   void setPageActive(bool isActive) {
+    final wasActive = plPlayerController.isVideoPageActive(heroTag);
     _isPageActive = isActive;
     plPlayerController.setVideoPageActive(heroTag, isActive);
+    if (!isActive && wasActive) {
+      plPlayerController.cancelVideoTrackSwitch();
+    }
   }
 
   // 是否开始自动播放 存在多p的情况下，第二p需要为true
@@ -401,8 +405,11 @@ class VideoDetailController extends GetxController
     _fullScreenQualityWorker = ever<bool>(
       plPlayerController.isFullScreen,
       (isFullScreen) {
+        if (!isFullScreen) {
+          plPlayerController.cancelVideoTrackSwitch();
+          return;
+        }
         if (isPageActive &&
-            isFullScreen &&
             _usingInitialHalfScreenQuality) {
           unawaited(_switchFromInitialHalfScreenQuality());
         }
@@ -687,7 +694,9 @@ class VideoDetailController extends GetxController
   }
   
   Future<void> _switchFromInitialHalfScreenQuality() async {
-    if (!isPageActive || !_usingInitialHalfScreenQuality) {
+    if (!isPageActive ||
+        !plPlayerController.isFullScreen.value ||
+        !_usingInitialHalfScreenQuality) {
       return;
     }
   
@@ -696,14 +705,11 @@ class VideoDetailController extends GetxController
     if (!isPageActive) {
       return;
     }
-    _usingInitialHalfScreenQuality = false;
     _videoQualityOnWiFi = isWiFi;
   
     final preferredQuality = isWiFi
         ? Pref.defaultVideoQa
         : Pref.defaultVideoQaCellular;
-  
-    plPlayerController.cacheVideoQa = preferredQuality;
   
     if (currentVideoQa.value == null) {
       return;
@@ -718,11 +724,32 @@ class VideoDetailController extends GetxController
     );
   
     if (currentVideoQa.value!.code == targetQuality) {
+      _usingInitialHalfScreenQuality = false;
+      plPlayerController.cacheVideoQa = preferredQuality;
       return;
     }
   
+    final targetVideo = findVideoByQa(targetQuality);
+    final targetVideoUrl = VideoUtils.getCdnUrl(targetVideo.playUrls);
+    final switched = await plPlayerController.switchVideoTrack(
+      source: targetVideoUrl,
+      bandwidth: targetVideo.bandWidth,
+      width: targetVideo.width,
+      height: targetVideo.height,
+    );
+    if (!switched || !isPageActive) {
+      return;
+    }
+
+    _usingInitialHalfScreenQuality = false;
+    plPlayerController.cacheVideoQa = preferredQuality;
+    firstVideo = targetVideo;
+    videoUrl = targetVideoUrl;
+    currentDecodeFormats = VideoDecodeFormatType.fromString(
+      targetVideo.codecs!,
+    );
     currentVideoQa.value = VideoQuality.fromCode(targetQuality);
-    updatePlayer();
+    _setVideoHeight();
   }
 
   VideoItem findVideoByQa(int qa, {bool setCodecs = false}) {

@@ -1,4 +1,4 @@
-import 'dart:async' show StreamSubscription, Timer;
+import 'dart:async' show Completer, StreamSubscription, Timer, unawaited;
 import 'dart:convert' show ascii;
 import 'dart:io' show Platform;
 import 'dart:math' show max, min;
@@ -30,6 +30,7 @@ import 'package:PiliPlus/plugin/pl_player/models/play_repeat.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
 import 'package:PiliPlus/plugin/pl_player/models/video_fit_type.dart';
 import 'package:PiliPlus/plugin/pl_player/utils/fullscreen.dart';
+import 'package:PiliPlus/plugin/pl_player/utils/video_track_proxy.dart';
 import 'package:PiliPlus/services/mpv_log_service.dart';
 import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/utils/accounts.dart';
@@ -104,6 +105,15 @@ class PlPlayerController with BlockConfigMixin {
   int _playerCount = 0;
   String? _activeVideoPageTag;
   int _dataSourceGeneration = 0;
+  int _videoTrackSwitchGeneration = 0;
+  Completer<void>? _videoTrackSwitchCancellation;
+  NativePlayer? _videoTrackSwitchPlayer;
+  Map<String, String>? _videoTrackSwitchOriginalOptions;
+  bool _silenceVideoTrackBuffering = false;
+  final Set<String> _managedExternalVideoTrackIds = {};
+  VideoTrackProxy? _activeVideoTrackProxy;
+  String? _activeVideoTrackSource;
+  String? _activeVideoTrackHttpProxy;
 
   void setVideoPageActive(String pageTag, bool isActive) {
     if (isActive) {
@@ -670,6 +680,20 @@ class PlPlayerController with BlockConfigMixin {
     if (videoPageTag != null && !isVideoPageActive(videoPageTag)) {
       return;
     }
+    cancelVideoTrackSwitch();
+    _managedExternalVideoTrackIds.clear();
+    final activeVideoTrackProxy = _activeVideoTrackProxy;
+    final activeVideoTrackHttpProxy = _activeVideoTrackHttpProxy;
+    _activeVideoTrackProxy = null;
+    _activeVideoTrackSource = null;
+    _activeVideoTrackHttpProxy = null;
+    if (activeVideoTrackHttpProxy != null) {
+      _videoPlayerController?.setProperty(
+        'http-proxy',
+        activeVideoTrackHttpProxy,
+      );
+    }
+    unawaited(activeVideoTrackProxy?.close());
     final dataSourceGeneration = ++_dataSourceGeneration;
     bool isCurrentDataSource() =>
         dataSourceGeneration == _dataSourceGeneration &&
@@ -980,6 +1004,9 @@ class PlPlayerController with BlockConfigMixin {
     // player.open 会先卸载旧媒体；每次打开（包括网络错误重试）前
     // 都重新应用用户参数，避免重试路径绕过自定义设置。
     MpvUtils.applyRuntimeOverrides(player);
+    if (_activeVideoTrackProxy?.uri.toString() == media.uri) {
+      player.setProperty('http-proxy', '');
+    }
     await player.open(media, play: play);
   }
 
@@ -988,14 +1015,320 @@ class PlPlayerController with BlockConfigMixin {
       return null;
     }
     if (_videoPlayerController case final ctr? when (ctr.current.isNotEmpty)) {
+      final source = dataSource as NetworkSource;
       return _openVideoMedia(
         ctr,
-        ctr.current.last.copyWith(start: ctr.state.position),
+        ctr.current.last.copyWith(
+          uri: source.videoSource,
+          start: ctr.state.position,
+        ),
         play: true,
         beginLogSession: false,
       );
     }
     return null;
+  }
+
+  static const _videoTrackTitlePrefix = 'PiliPlus quality switch ';
+
+  VideoTrack? _findVideoTrackByTitle(NativePlayer player, String title) {
+    for (final track in player.state.tracks.video) {
+      if (track.title == title) {
+        return track;
+      }
+    }
+    return null;
+  }
+
+  void _restoreVideoTrackSwitchOptions(
+    NativePlayer player,
+    Map<String, String> options,
+  ) {
+    if (!identical(_videoTrackSwitchPlayer, player) ||
+        !identical(_videoTrackSwitchOriginalOptions, options)) {
+      return;
+    }
+    _videoTrackSwitchPlayer = null;
+    _videoTrackSwitchOriginalOptions = null;
+    _silenceVideoTrackBuffering = false;
+
+    try {
+      for (final entry in options.entries) {
+        if (entry.value.isNotEmpty) {
+          player.setProperty(entry.key, entry.value);
+        }
+      }
+
+      final buffering = player.state.buffering;
+      isBuffering.value = buffering;
+      videoPlayerServiceHandler?.onStatusChange(
+        playerStatus.value,
+        buffering,
+        isLive,
+      );
+    } catch (_) {
+      // Player 已释放时只需清除切轨状态。
+    }
+  }
+
+  void cancelVideoTrackSwitch() {
+    _videoTrackSwitchGeneration++;
+    final cancellation = _videoTrackSwitchCancellation;
+    _videoTrackSwitchCancellation = null;
+    if (cancellation != null && !cancellation.isCompleted) {
+      cancellation.complete();
+    }
+    final player = _videoTrackSwitchPlayer;
+    final options = _videoTrackSwitchOriginalOptions;
+    if (player != null && options != null) {
+      _restoreVideoTrackSwitchOptions(player, options);
+    }
+  }
+
+  /// 在当前 mpv 实例中替换视频轨，音轨、播放位置和播放状态均保持不变。
+  ///
+  /// mpv 不会为未选中的外部视频轨持续预读，也不公开该 demuxer 的缓存时长。
+  /// 因此新轨经过 [VideoTrackProxy]：按码率累计与 cache-pause-wait 等价的
+  /// 数据量后才放行。选轨期间 VO 保留旧帧，门槛满足并产出新帧后才完成切换。
+  Future<bool> switchVideoTrack({
+    required String source,
+    required int? bandwidth,
+    required int? width,
+    required int? height,
+  }) async {
+    final player = _videoPlayerController;
+    final currentSource = dataSource;
+    if (player == null ||
+        currentSource is! NetworkSource ||
+        _activeVideoTrackSource == source ||
+        currentSource.videoSource == source ||
+        _playerCount == 0) {
+      return currentSource is NetworkSource &&
+          (_activeVideoTrackSource == source ||
+              currentSource.videoSource == source);
+    }
+
+    cancelVideoTrackSwitch();
+    final generation = ++_videoTrackSwitchGeneration;
+    final dataSourceGeneration = _dataSourceGeneration;
+    final cancellation = Completer<void>();
+    _videoTrackSwitchCancellation = cancellation;
+
+    bool isCurrentSwitch() =>
+        generation == _videoTrackSwitchGeneration &&
+        dataSourceGeneration == _dataSourceGeneration &&
+        identical(player, _videoPlayerController) &&
+        !cancellation.isCompleted;
+
+    final oldTrackId = player.state.track.video.id;
+    final title = '$_videoTrackTitlePrefix$generation';
+    VideoTrack? newTrack;
+    StreamSubscription<VideoParams>? newFrameSubscription;
+    VideoTrackProxy? proxy;
+    var selectedNewTrack = false;
+    var committed = false;
+
+    final originalOptions = <String, String>{
+      'cache-pause': player.getProperty('cache-pause'),
+      'cache-pause-initial': player.getProperty('cache-pause-initial'),
+      'cache-pause-wait': player.getProperty('cache-pause-wait'),
+      'http-proxy': player.getProperty('http-proxy'),
+    };
+    final originalHttpProxy =
+        _activeVideoTrackHttpProxy ?? originalOptions['http-proxy']!;
+
+    try {
+      final configuredWait =
+          double.tryParse(originalOptions['cache-pause-wait'] ?? '') ?? 1.0;
+      final requiredBufferSeconds =
+          max(1.0, configuredWait) * _playbackSpeed.value;
+      final timeoutSeconds = max(
+        30,
+        (requiredBufferSeconds * 3).ceil(),
+      );
+      final cacheLimitBytes = max(
+        64 * 1024,
+        (Pref.bufferSize * 0x100000).round(),
+      );
+      final bytesPerSecond = bandwidth != null && bandwidth > 0
+          ? bandwidth / 8
+          : 0x100000;
+      final requiredBufferBytes = min(
+        cacheLimitBytes,
+        max(64 * 1024, (bytesPerSecond * requiredBufferSeconds).ceil()),
+      );
+      final pendingProxy = await VideoTrackProxy.create(
+        source: source,
+        requiredBytes: requiredBufferBytes,
+        upstreamProxy: originalHttpProxy,
+      );
+      proxy = pendingProxy;
+      if (!isCurrentSwitch()) {
+        return false;
+      }
+
+      _videoTrackSwitchPlayer = player;
+      _videoTrackSwitchOriginalOptions = originalOptions;
+      // 新轨访问回环地址；上游请求由 VideoTrackProxy 按应用代理设置发出。
+      player.setProperty('http-proxy', '');
+      await player.command([
+        'video-add',
+        pendingProxy.uri.toString(),
+        'auto',
+        title,
+      ]);
+      if (!isCurrentSwitch()) {
+        return false;
+      }
+
+      newTrack = _findVideoTrackByTitle(player, title);
+      for (var attempt = 0;
+          newTrack == null && attempt < 200 && isCurrentSwitch();
+          attempt++) {
+        await Future.any([
+          Future<void>.delayed(const Duration(milliseconds: 25)),
+          cancellation.future,
+        ]);
+        newTrack = _findVideoTrackByTitle(player, title);
+      }
+      if (newTrack == null || !isCurrentSwitch()) {
+        return false;
+      }
+      _managedExternalVideoTrackIds.add(newTrack.id);
+
+      _silenceVideoTrackBuffering = true;
+      player
+        ..setProperty('cache-pause', 'yes')
+        ..setProperty('cache-pause-initial', 'yes')
+        ..setProperty(
+          'cache-pause-wait',
+          requiredBufferSeconds.toStringAsFixed(3),
+        );
+
+      // 先订阅新的视频输出参数，避免极快的本地/CDN 响应使事件先于等待发生。
+      final firstNewFrame = Completer<bool>();
+      newFrameSubscription = player.stream.videoParams.listen((params) {
+        if (params.w != null &&
+            params.h != null &&
+            !firstNewFrame.isCompleted) {
+          firstNewFrame.complete(true);
+        }
+      });
+
+      pendingProxy.arm();
+      player.setProperty('vid', newTrack.id);
+      selectedNewTrack = true;
+
+      final isTrackReady = await Future.any([
+        Future.wait([
+          firstNewFrame.future,
+          pendingProxy.ready,
+        ]).then((_) => true),
+        cancellation.future.then((_) => false),
+        Future<bool>.delayed(
+          Duration(seconds: timeoutSeconds),
+          () => false,
+        ),
+      ]);
+      if (!isTrackReady || !isCurrentSwitch()) {
+        return false;
+      }
+
+      // cache-pause-wait 解除后才提交业务层画质状态；界面不会看到中间缓冲。
+      final bufferDeadline = DateTime.now().add(
+        Duration(seconds: timeoutSeconds),
+      );
+      while (isCurrentSwitch() &&
+          DateTime.now().isBefore(bufferDeadline) &&
+          (player.state.buffering ||
+              player.getProperty('paused-for-cache') == 'yes')) {
+        await Future.any([
+          Future<void>.delayed(const Duration(milliseconds: 25)),
+          cancellation.future,
+        ]);
+      }
+      if (!isCurrentSwitch() ||
+          player.state.track.video.id != newTrack.id ||
+          player.state.buffering ||
+          player.getProperty('paused-for-cache') == 'yes') {
+        return false;
+      }
+
+      final oldProxy = _activeVideoTrackProxy;
+      _activeVideoTrackProxy = pendingProxy;
+      _activeVideoTrackSource = source;
+      _activeVideoTrackHttpProxy = originalHttpProxy;
+      dataSource = NetworkSource(
+        videoSource: pendingProxy.uri.toString(),
+        audioSource: currentSource.audioSource,
+      );
+      this.width = width;
+      this.height = height;
+      committed = true;
+
+      final obsoleteTrackIds = _managedExternalVideoTrackIds
+          .where((id) => id != newTrack!.id)
+          .toList();
+      for (final id in obsoleteTrackIds) {
+        try {
+          await player.command(['video-remove', id]);
+          _managedExternalVideoTrackIds.remove(id);
+        } catch (_) {
+          // 清理旧的备用轨失败不影响已经完成的新轨切换。
+        }
+      }
+      try {
+        await oldProxy?.close();
+      } catch (_) {
+        // 旧轨已经不再使用，关闭失败不回滚新轨。
+      }
+      return true;
+    } catch (err, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('switch video track failed: $err');
+        debugPrint(stackTrace.toString());
+      }
+      return false;
+    } finally {
+      await newFrameSubscription?.cancel();
+      newTrack ??= _findVideoTrackByTitle(player, title);
+      final isSamePlayback =
+          dataSourceGeneration == _dataSourceGeneration &&
+          identical(player, _videoPlayerController);
+      if (!committed &&
+          selectedNewTrack &&
+          isSamePlayback &&
+          player.state.track.video.id == newTrack?.id) {
+        player.setProperty('vid', oldTrackId);
+      }
+      if (!committed && newTrack != null && isSamePlayback) {
+        try {
+          await player.command(['video-remove', newTrack.id]);
+        } catch (_) {
+          // Player 已释放时无需继续清理轨道。
+        }
+        _managedExternalVideoTrackIds.remove(newTrack.id);
+      }
+      if (!committed) {
+        try {
+          await proxy?.close();
+        } catch (_) {
+          // 失败路径只需确保不再保留代理引用。
+        }
+      }
+      if (identical(_videoTrackSwitchCancellation, cancellation)) {
+        _videoTrackSwitchCancellation = null;
+      }
+      _restoreVideoTrackSwitchOptions(player, originalOptions);
+      if (committed) {
+        // 活跃视频轨仍通过回环代理读取，不能恢复 mpv 的远端 HTTP 代理。
+        try {
+          player.setProperty('http-proxy', '');
+        } catch (_) {
+          // Player 释放后无需恢复运行时属性。
+        }
+      }
+    }
   }
 
   // 开始播放
@@ -1107,6 +1440,9 @@ class PlPlayerController with BlockConfigMixin {
         buffered.value = buffer.inSeconds;
       }),
       stream.buffering.listen((bool buffering) {
+        if (_silenceVideoTrackBuffering) {
+          return;
+        }
         isBuffering.value = buffering;
         videoPlayerServiceHandler?.onStatusChange(
           playerStatus.value,
@@ -1691,6 +2027,20 @@ class PlPlayerController with BlockConfigMixin {
 
     _playerCount = 0;
     _activeVideoPageTag = null;
+    cancelVideoTrackSwitch();
+    _managedExternalVideoTrackIds.clear();
+    final activeVideoTrackProxy = _activeVideoTrackProxy;
+    final activeVideoTrackHttpProxy = _activeVideoTrackHttpProxy;
+    _activeVideoTrackProxy = null;
+    _activeVideoTrackSource = null;
+    _activeVideoTrackHttpProxy = null;
+    if (activeVideoTrackHttpProxy != null) {
+      _videoPlayerController?.setProperty(
+        'http-proxy',
+        activeVideoTrackHttpProxy,
+      );
+    }
+    unawaited(activeVideoTrackProxy?.close());
     _dataSourceGeneration++;
     if (removeSafeArea) {
       showSystemBar();
