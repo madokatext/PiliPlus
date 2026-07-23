@@ -32,6 +32,7 @@ static double burstDanmakuFontScale =
   static double danmakuDuration = Pref.danmakuDuration;
   static double danmakuStaticDuration = Pref.danmakuStaticDuration;
   static double danmakuStrokeWidth = Pref.danmakuStrokeWidth;
+  static double danmakuShadowRadius = Pref.danmakuShadowRadius;
   static bool danmakuFixedV = Pref.danmakuFixedV;
   static bool danmakuStatic2Scroll = Pref.danmakuStatic2Scroll;
   static bool danmakuMassiveMode = Pref.danmakuMassiveMode;
@@ -57,6 +58,7 @@ static double burstDanmakuFontScale =
       hideTop: blockTypes.contains(5),
       hideSpecial: blockTypes.contains(7),
       strokeWidth: danmakuStrokeWidth,
+      shadowRadius: danmakuShadowRadius,
       scrollFixedVelocity: danmakuFixedV,
       massiveMode: danmakuMassiveMode,
       static2Scroll: danmakuStatic2Scroll,
@@ -95,6 +97,7 @@ static Future<void> saveMergeSettings() async {
       SettingBoxKey.danmakuDuration: danmakuDuration,
       SettingBoxKey.danmakuStaticDuration: danmakuStaticDuration,
       SettingBoxKey.danmakuStrokeWidth: danmakuStrokeWidth,
+      SettingBoxKey.danmakuShadowRadius: danmakuShadowRadius,
       SettingBoxKey.danmakuFontWeight: danmakuFontWeight,
       SettingBoxKey.danmakuLineHeight: danmakuLineHeight,
       SettingBoxKey.danmakuMassiveMode: danmakuMassiveMode,
