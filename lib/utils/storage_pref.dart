@@ -1150,7 +1150,16 @@ static bool get seekPreviewFollowGesture => _setting.get(
 
   static int get danmakuWeight =>
       _setting.get(SettingBoxKey.danmakuWeight, defaultValue: 0);
+static int get highLikeDanmakuThreshold {
+  final value = _setting.get(
+    SettingBoxKey.highLikeDanmakuThreshold,
+    defaultValue: 100,
+  );
 
+  return (value is num ? value.toInt() : 100)
+      .clamp(0, 999999)
+      .toInt();
+}
   static double get danmakuShowArea =>
       _setting.get(SettingBoxKey.danmakuShowArea, defaultValue: 0.5);
 
