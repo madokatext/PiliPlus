@@ -7,6 +7,7 @@ on:
     types:
       - opened
       - synchronize
+      - reopened
 
 permissions:
   contents: write
@@ -28,52 +29,31 @@ jobs:
 
           path = Path('lib/plugin/pl_player/view/view.dart')
           text = path.read_text(encoding='utf-8')
-          old = '''                final controller = plPlayerController.videoController!;
-                final standbyController =
-                    plPlayerController.standbyVideoController;
-                return Transform.flip(
-                  flipX: plPlayerController.flipX.value,
-                  flipY: plPlayerController.flipY.value,
-                  child: FittedBox(
-                    fit: videoFit.boxFit,
-                    alignment: widget.alignment,
-                    child: Stack(
-                      children: [
-                        if (standbyController != null)
-                          SimpleVideo(
-                            key: ValueKey(standbyController),
-                            controller: standbyController,
-                            fill: widget.fill,
-                            aspectRatio: videoFit.aspectRatio,
-                          ),
-                        SimpleVideo(
-                          key: ValueKey(controller),
-                          controller: controller,
-                          fill: widget.fill,
-                          aspectRatio: videoFit.aspectRatio,
-                        ),
-                      ],
-                    ),
-                  ),
-                );'''
-          new = '''                final controller = plPlayerController.videoController!;
-                return Transform.flip(
-                  flipX: plPlayerController.flipX.value,
-                  flipY: plPlayerController.flipY.value,
-                  child: FittedBox(
-                    fit: videoFit.boxFit,
-                    alignment: widget.alignment,
-                    child: SimpleVideo(
-                      key: ValueKey(controller),
-                      controller: controller,
-                      fill: widget.fill,
-                      aspectRatio: videoFit.aspectRatio,
-                    ),
-                  ),
-                );'''
-          if old not in text:
-              raise SystemExit('Expected video output block not found')
-          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          start_marker = (
+              '                final controller = '
+              'plPlayerController.videoController!;\n'
+              '                final standbyController ='
+          )
+          start = text.index(start_marker)
+          end = text.index('\n              },', start)
+          replacement = '\n'.join([
+              '                final controller = plPlayerController.videoController!;',
+              '                return Transform.flip(',
+              '                  flipX: plPlayerController.flipX.value,',
+              '                  flipY: plPlayerController.flipY.value,',
+              '                  child: FittedBox(',
+              '                    fit: videoFit.boxFit,',
+              '                    alignment: widget.alignment,',
+              '                    child: SimpleVideo(',
+              '                      key: ValueKey(controller),',
+              '                      controller: controller,',
+              '                      fill: widget.fill,',
+              '                      aspectRatio: videoFit.aspectRatio,',
+              '                    ),',
+              '                  ),',
+              '                );',
+          ])
+          path.write_text(text[:start] + replacement + text[end:], encoding='utf-8')
           Path('.github/workflows/apply-fullscreen-video-output-fix.yml').unlink()
 
       - name: Commit patch
