@@ -405,7 +405,17 @@ class _BurstDanmakuOverlay extends StatelessWidget {
             .toInt();
 
     final strokeWidth = option.strokeWidth;
+final shadowRadius = option.shadowRadius;
 
+final shadows = shadowRadius > 0
+    ? <Shadow>[
+        Shadow(
+          color: Colors.black,
+          offset: Offset.zero,
+          blurRadius: shadowRadius,
+        ),
+      ]
+    : null;
 final strokePaint = strokeWidth > 0
     ? (Paint()
       ..color = Colors.black
@@ -426,6 +436,7 @@ TextSpan buildSpan(
       fontStyle: FontStyle.normal,
       fontFamily: fontFamilies.primary,
       fontFamilyFallback: fontFamilies.fallback,
+      shadows: stroke ? null : shadows,
     ),
     children: [
       TextSpan(
