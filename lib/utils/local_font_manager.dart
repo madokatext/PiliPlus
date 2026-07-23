@@ -140,9 +140,7 @@ abstract final class LocalFontManager {
       rethrow;
     }
 
-    if (oldFileName.isNotEmpty && oldFileName != fileName) {
-      await _deleteManagedFile(slot, oldFileName);
-    }
+    await _cleanupUnusedFontFilesQuietly();
     return true;
   }
 
@@ -262,6 +260,35 @@ abstract final class LocalFontManager {
       return;
     }
     await _deleteFileQuietly(_fontFile(safeName), slot.label);
+  }
+
+  static Future<void> _cleanupUnusedFontFilesQuietly() async {
+    final activeFileNames = LocalFontSlot.values
+        .map(_storedFileName)
+        .where((fileName) => fileName.isNotEmpty)
+        .toSet();
+    try {
+      if (!await _fontDirectory.exists()) {
+        return;
+      }
+      await for (final entity in _fontDirectory.list(followLinks: false)) {
+        if (entity is! File) {
+          continue;
+        }
+        final fileName = path.basename(entity.path);
+        if (activeFileNames.contains(fileName) ||
+            !_allowedExtensions.contains(
+              path.extension(fileName).toLowerCase(),
+            )) {
+          continue;
+        }
+        await _deleteFileQuietly(entity, '字体缓存');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Failed to scan old font cache: $e');
+      }
+    }
   }
 
   static Future<void> _deleteFileQuietly(
