@@ -1235,7 +1235,12 @@ static int get highLikeDanmakuThreshold {
     SettingBoxKey.danmakuStrokeWidth,
     defaultValue: PlatformUtils.isMobile ? 1.5 : 2.5,
   );
-
+static double get danmakuShadowRadius => _getClampedDouble(
+  SettingBoxKey.danmakuShadowRadius,
+  0.0,
+  0.0,
+  10.0,
+);
   static int get danmakuFontWeight => _setting.get(
     SettingBoxKey.danmakuFontWeight,
     defaultValue: PlatformUtils.isMobile ? 5 : 6,
