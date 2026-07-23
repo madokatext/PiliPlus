@@ -126,10 +126,15 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
         }
 
         void updateStrokeWidth(double val) {
-          DanmakuOptions.danmakuStrokeWidth = val;
-          setState(() {});
-          setOptions();
-        }
+  DanmakuOptions.danmakuStrokeWidth = val;
+  setState(() {});
+  setOptions();
+
+  // false 表示只刷新样式，不重置高频弹幕统计状态。
+  plPlayerController
+      .onDanmakuMergeSettingsChanged
+      ?.call(false);
+}
 
         void updateFontWeight(double val) {
           DanmakuOptions.danmakuFontWeight = val.toInt();
