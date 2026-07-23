@@ -280,6 +280,7 @@ danmakuWeight = 'danmakuWeight',
       danmakuStatic2Scroll = 'danmakuStatic2Scroll',
       danmakuLineHeight = 'danmakuLineHeight',
       danmakuStrokeWidth = 'strokeWidth',
+  danmakuShadowRadius = 'danmakuShadowRadius',
       danmakuFontWeight = 'fontWeight';
 
   static const String systemProxyHost = 'systemProxyHost',
