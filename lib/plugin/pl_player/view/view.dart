@@ -2263,30 +2263,17 @@ backgroundColor: gestureProgressColor.withValues(alpha: 0.24),
                 plPlayerController.videoOutputRevision.value;
                 final videoFit = plPlayerController.videoFit.value;
                 final controller = plPlayerController.videoController!;
-                final standbyController =
-                    plPlayerController.standbyVideoController;
                 return Transform.flip(
                   flipX: plPlayerController.flipX.value,
                   flipY: plPlayerController.flipY.value,
                   child: FittedBox(
                     fit: videoFit.boxFit,
                     alignment: widget.alignment,
-                    child: Stack(
-                      children: [
-                        if (standbyController != null)
-                          SimpleVideo(
-                            key: ValueKey(standbyController),
-                            controller: standbyController,
-                            fill: widget.fill,
-                            aspectRatio: videoFit.aspectRatio,
-                          ),
-                        SimpleVideo(
-                          key: ValueKey(controller),
-                          controller: controller,
-                          fill: widget.fill,
-                          aspectRatio: videoFit.aspectRatio,
-                        ),
-                      ],
+                    child: SimpleVideo(
+                      key: ValueKey(controller),
+                      controller: controller,
+                      fill: widget.fill,
+                      aspectRatio: videoFit.aspectRatio,
                     ),
                   ),
                 );
