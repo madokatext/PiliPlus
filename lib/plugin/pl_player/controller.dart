@@ -325,9 +325,12 @@ class PlPlayerController with BlockConfigMixin {
   late RuleFilter filters = Pref.danmakuFilterRule;
   // 关联弹幕控制器
   DanmakuController<DanmakuExtra>? danmakuController;
+    /// bool 参数为 true 时重置当前高频弹幕统计；
+/// false 时只要求刷新显示样式。
+ValueChanged<bool>? onDanmakuMergeSettingsChanged;
   bool showDanmaku = true;
   Set<int> dmState = <int>{};
-  late final mergeDanmaku = Pref.mergeDanmaku;
+  
   late final String midHash = getCrc32(
     ascii.encode(Accounts.main.mid.toString()),
     0,
