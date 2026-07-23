@@ -35,19 +35,22 @@ class BottomControl extends StatelessWidget {
       (isFullScreen || controller.showSeekPreviewInNonFullscreen);
 
   void onDragStart(ThumbDragDetails duration) {
-    feedBack();
-    controller
-      ..position.value = duration.seconds
-      ..isSeeking.value = true;
-    if (_canShowPreview) {
-      controller.updatePreviewIndex(
-        duration.seconds,
-        globalX: controller.seekPreviewFollowSlider
-    ? duration.globalPosition.dx
-    : null,
-      );
-    }
+  feedBack();
+
+  // 必须先记录原始播放位置，再把 position 改成拖动目标位置。
+  controller
+    ..onSeekStart()
+    ..position.value = duration.seconds;
+
+  if (_canShowPreview) {
+    controller.updatePreviewIndex(
+      duration.seconds,
+      globalX: controller.seekPreviewFollowSlider
+          ? duration.globalPosition.dx
+          : null,
+    );
   }
+}
 
   void onDragUpdate(ThumbDragDetails duration) {
     if (_canShowPreview) {
