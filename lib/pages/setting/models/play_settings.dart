@@ -347,6 +347,19 @@ if (PlatformUtils.isMobile)
     setKey: SettingBoxKey.enableAutoEnter,
     defaultVal: false,
   ),
+  NormalModel(
+  title: '全屏画质切换强制接管',
+  getSubtitle: () {
+    final seconds =
+        Pref.videoPlayerSwitchForceTimeoutSeconds;
+
+    return seconds == 0
+        ? '当前：关闭；仅在完全同步后切换'
+        : '当前：${seconds}秒；超时后切换并进入缓冲';
+  },
+  leading: const Icon(Icons.sync_problem_outlined),
+  onTap: _showVideoPlayerSwitchForceTimeoutDialog,
+),
   const SwitchModel(
     title: '自动退出全屏',
     subtitle: '视频结束播放时退出全屏',
@@ -509,7 +522,35 @@ Future<void> _showPlayerControlDisplayDurationDialog(
 
   setState();
 }
+Future<void> _showVideoPlayerSwitchForceTimeoutDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final result = await showDialog<double>(
+    context: context,
+    builder: (context) => SliderDialog(
+      title: const Text('全屏画质切换强制接管'),
+      value:
+          Pref.videoPlayerSwitchForceTimeoutSeconds.toDouble(),
+      min: 0,
+      max: 60,
+      divisions: 60,
+      precise: 0,
+      suffix: '秒',
+    ),
+  );
 
+  if (result == null) {
+    return;
+  }
+
+  await GStorage.setting.put(
+    SettingBoxKey.videoPlayerSwitchForceTimeoutSeconds,
+    result.round(),
+  );
+
+  setState();
+}
 Future<void> _showPinchGestureAngleThresholdDialog(
   BuildContext context,
   VoidCallback setState,
