@@ -9,6 +9,7 @@ import 'package:PiliPlus/pages/setting/pages/fullscreen_sc_size.dart';
 import 'package:PiliPlus/pages/setting/utils/local_font_setting.dart';
 import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
 import 'package:PiliPlus/pages/setting/widgets/slider_dialog.dart';
+import 'package:PiliPlus/pages/setting/widgets/danmaku_merge_settings_dialog.dart';
 import 'package:PiliPlus/plugin/pl_player/models/bottom_progress_behavior.dart';
 import 'package:PiliPlus/plugin/pl_player/models/fullscreen_mode.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_repeat.dart';
@@ -44,18 +45,34 @@ List<SettingsModel> get playSettings => [
     ),
   ),
   NormalModel(
-    title: '弹幕英文字体',
-    getSubtitle: () =>
-        '当前：${LocalFontManager.selectionLabel(.danmakuEnglish)}',
-    leading: const Icon(Icons.font_download_outlined),
-    onTap: (context, setState) => showLocalFontSetting(
-      context,
-      slot: .danmakuEnglish,
-      onChanged: setState,
-    ),
+  title: '弹幕英文字体',
+  getSubtitle: () =>
+      '当前：${LocalFontManager.selectionLabel(.danmakuEnglish)}',
+  leading: const Icon(Icons.font_download_outlined),
+  onTap: (context, setState) => showLocalFontSetting(
+    context,
+    slot: .danmakuEnglish,
+    onChanged: setState,
   ),
-  if (PlatformUtils.isMobile)
-    const SwitchModel(
+),
+NormalModel(
+  title: '重复弹幕合并',
+  getSubtitle: () =>
+      '当前：${Pref.danmakuMergeMode.label}',
+  leading: const Icon(Icons.compress_outlined),
+  onTap: (context, setState) async {
+    final changed =
+        await showDanmakuMergeSettingsDialog(
+      context,
+    );
+
+    if (changed) {
+      setState();
+    }
+  },
+),
+if (PlatformUtils.isMobile)
+  const SwitchModel(
       title: '启用点击弹幕',
       subtitle: '点击弹幕悬停，支持点赞、复制、举报操作',
       leading: Icon(Icons.touch_app_outlined),
