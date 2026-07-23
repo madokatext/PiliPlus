@@ -173,7 +173,7 @@ List<SettingsModel> get extraSettings => [
     defaultVal: false,
     onChanged: (value) => ImageGridView.horizontalPreview = value,
   ),
-      NormalModel(
+  NormalModel(
     title: '评论折叠行数',
     subtitle: '0行为不折叠',
     leading: const Icon(Icons.compress),
@@ -275,7 +275,7 @@ List<SettingsModel> get extraSettings => [
     onTap: _showTouchSlopDialog,
     leading: const Icon(Icons.pan_tool_alt_outlined),
   ),
-  NormalModel(
+      NormalModel(
     title: '横向标签页快滑速度阈值',
     getSubtitle: () =>
         '当前：${Pref.tabSwipeVelocityThreshold.toStringAsFixed(0)} dp/s'
