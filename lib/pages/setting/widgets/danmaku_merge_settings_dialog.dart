@@ -147,13 +147,13 @@ Future<bool> showDanmakuMergeSettingsDialog(
                         },
                       ),
                       buildSlider(
-                        title: '置顶弹幕字号倍率',
-                        value: fontScale,
-                        min: 1,
-                        max: 2,
-                        divisions: 20,
-                        valueText:
-                            '${fontScale.toStringAsFixed(2)}×',
+  title: '置顶弹幕字号倍率',
+  value: fontScale,
+  min: 1,
+  max: 5,
+  divisions: 80,
+  valueText:
+      '${fontScale.toStringAsFixed(2)}×',
                         onChanged: (value) {
                           setDialogState(() {
                             fontScale = value;
