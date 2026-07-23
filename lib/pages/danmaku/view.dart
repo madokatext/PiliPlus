@@ -70,11 +70,27 @@ int? _lastBurstPositionMs;
         );
       }
     }
-    playerController
+        playerController
       ..addStatusLister(playerListener)
       ..addPositionListener(videoPositionListen);
+
     playerController.onDanmakuMergeSettingsChanged =
-    _handleDanmakuMergeSettingsChanged;
+        _handleDanmakuMergeSettingsChanged;
+  }
+
+  void _handleDanmakuMergeSettingsChanged(bool reset) {
+    if (reset) {
+      _burstAggregator.reset();
+      _lastBurstPositionMs = null;
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _burstSnapshots = _burstAggregator.activeSnapshots;
+    });
   }
 
   @override
