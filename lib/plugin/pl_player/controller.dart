@@ -88,7 +88,7 @@ static const Duration _mediaOpenRetryDelay =
   Duration? seekToPos;
   bool hasToasted = false;
   final RxBool isSeeking = false.obs;
-
+final RxInt seekStartPosition = 0.obs;
   final RxInt position = RxInt(0);
 
   int get positionInMilliseconds =>
@@ -1880,7 +1880,18 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
       _timer = null;
     });
   }
+void onSeekStart() {
+  final currentPosition =
+      videoPlayerController?.state.position.inSeconds ?? position.value;
 
+  seekStartPosition.value = duration.value > 0
+      ? currentPosition.clamp(0, duration.value).toInt()
+      : currentPosition < 0
+      ? 0
+      : currentPosition;
+
+  isSeeking.value = true;
+}
   void onSeekEnd() {
     if (seekToPos != null) {
       feedBack();
