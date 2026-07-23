@@ -1,17 +1,19 @@
 name: Apply fullscreen video output fix
 
 on:
-  push:
+  pull_request:
     branches:
-      - agent/fix-fullscreen-video-output
-    paths:
-      - .github/workflows/apply-fullscreen-video-output-fix.yml
+      - mod
+    types:
+      - opened
+      - synchronize
 
 permissions:
   contents: write
 
 jobs:
   patch:
+    if: github.head_ref == 'agent/fix-fullscreen-video-output'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -72,14 +74,12 @@ jobs:
           if old not in text:
               raise SystemExit('Expected video output block not found')
           path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          Path('.github/workflows/apply-fullscreen-video-output-fix.yml').unlink()
 
       - name: Commit patch
         run: |
-          if git diff --quiet; then
-            exit 0
-          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add lib/plugin/pl_player/view/view.dart
+          git add lib/plugin/pl_player/view/view.dart .github/workflows/apply-fullscreen-video-output-fix.yml
           git commit -m "修复全屏切画质时左上角缩小画面"
           git push origin HEAD:agent/fix-fullscreen-video-output
