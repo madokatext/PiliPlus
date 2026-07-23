@@ -138,35 +138,27 @@ class _FavPanelState extends State<FavPanel> {
           height: 1,
           color: theme.outline.withValues(alpha: 0.1),
         ),
-        Padding(
-          padding: .only(
-            left: 20,
-            right: 20,
-            top: 12,
-            bottom: MediaQuery.viewPaddingOf(context).bottom + 12,
-          ),
-          child: Row(
-            spacing: 25,
-            mainAxisAlignment: .end,
-            children: [
-              FilledButton.tonal(
-                onPressed: Get.back,
-                style: FilledButton.styleFrom(
-                  visualDensity: .compact,
-                  foregroundColor: theme.outline,
-                  backgroundColor: theme.onInverseSurface,
+        InkWell(
+          onTap: () {
+            feedBack();
+            widget.ctr.actionFavVideo();
+          },
+          child: SizedBox(
+            width: double.infinity,
+            child: Padding(
+              padding: .only(
+                top: 16,
+                bottom: MediaQuery.viewPaddingOf(context).bottom + 16,
+              ),
+              child: Text(
+                '完成',
+                textAlign: .center,
+                style: TextStyle(
+                  color: theme.primary,
+                  fontWeight: FontWeight.w500,
                 ),
-                child: const Text('取消'),
               ),
-              FilledButton.tonal(
-                onPressed: () {
-                  feedBack();
-                  widget.ctr.actionFavVideo();
-                },
-                style: const ButtonStyle(visualDensity: .compact),
-                child: const Text('完成'),
-              ),
-            ],
+            ),
           ),
         ),
       ],
