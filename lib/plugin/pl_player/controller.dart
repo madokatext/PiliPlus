@@ -88,6 +88,7 @@ static const Duration _mediaOpenRetryDelay =
   Duration? seekToPos;
   bool hasToasted = false;
   final RxBool isSeeking = false.obs;
+    final RxBool isSeeking = false.obs;
 final RxInt seekStartPosition = 0.obs;
   final RxInt position = RxInt(0);
 
@@ -1880,7 +1881,7 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
       _timer = null;
     });
   }
-void onSeekStart() {
+void onSeekStart({bool fromGesture = false}) {
   final currentPosition =
       videoPlayerController?.state.position.inSeconds ?? position.value;
 
@@ -1890,6 +1891,7 @@ void onSeekStart() {
       ? 0
       : currentPosition;
 
+  isGestureSeeking.value = fromGesture;
   isSeeking.value = true;
 }
   void onSeekEnd() {
@@ -1902,6 +1904,7 @@ void onSeekStart() {
       _pendingPreviewSeconds = null;
     }
     hasToasted = false;
+      isGestureSeeking.value = false;
     isSeeking.value = false;
     hideTaskControls();
   }
