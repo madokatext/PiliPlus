@@ -1,0 +1,85 @@
+name: Apply fullscreen video output fix
+
+on:
+  push:
+    branches:
+      - agent/fix-fullscreen-video-output
+    paths:
+      - .github/workflows/apply-fullscreen-video-output-fix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/fix-fullscreen-video-output
+          fetch-depth: 0
+
+      - name: Patch video output composition
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('lib/plugin/pl_player/view/view.dart')
+          text = path.read_text(encoding='utf-8')
+          old = '''                final controller = plPlayerController.videoController!;
+                final standbyController =
+                    plPlayerController.standbyVideoController;
+                return Transform.flip(
+                  flipX: plPlayerController.flipX.value,
+                  flipY: plPlayerController.flipY.value,
+                  child: FittedBox(
+                    fit: videoFit.boxFit,
+                    alignment: widget.alignment,
+                    child: Stack(
+                      children: [
+                        if (standbyController != null)
+                          SimpleVideo(
+                            key: ValueKey(standbyController),
+                            controller: standbyController,
+                            fill: widget.fill,
+                            aspectRatio: videoFit.aspectRatio,
+                          ),
+                        SimpleVideo(
+                          key: ValueKey(controller),
+                          controller: controller,
+                          fill: widget.fill,
+                          aspectRatio: videoFit.aspectRatio,
+                        ),
+                      ],
+                    ),
+                  ),
+                );'''
+          new = '''                final controller = plPlayerController.videoController!;
+                return Transform.flip(
+                  flipX: plPlayerController.flipX.value,
+                  flipY: plPlayerController.flipY.value,
+                  child: FittedBox(
+                    fit: videoFit.boxFit,
+                    alignment: widget.alignment,
+                    child: SimpleVideo(
+                      key: ValueKey(controller),
+                      controller: controller,
+                      fill: widget.fill,
+                      aspectRatio: videoFit.aspectRatio,
+                    ),
+                  ),
+                );'''
+          if old not in text:
+              raise SystemExit('Expected video output block not found')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+      - name: Commit patch
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/plugin/pl_player/view/view.dart
+          git commit -m "修复全屏切画质时左上角缩小画面"
+          git push origin HEAD:agent/fix-fullscreen-video-output
