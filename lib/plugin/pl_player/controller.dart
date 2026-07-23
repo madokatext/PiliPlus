@@ -1253,7 +1253,14 @@ var firstFrameRendered = false;
           },
         ),
       );
+bool canForceHandoff() {
+  final state = standbyPlayer.state;
 
+  return !firstFrameFailed &&
+      (firstFrameRendered ||
+          (state.width > 0 && state.height > 0) ||
+          state.duration > Duration.zero);
+}
       final configuredWait =
           double.tryParse(activePlayer.getProperty('cache-pause-wait')) ?? 1.0;
       final requiredBufferSeconds =
@@ -1289,11 +1296,18 @@ while (isCurrentSwitch()) {
   }
 
   // 开启强制接管后，以用户设置的总等待时间为准。
-  if (forceDeadline != null &&
-      !now.isBefore(forceDeadline)) {
-    forceHandoff = true;
-    break;
+  // 到达强制接管时间后，必须先确认备用实例已经识别到媒体。
+// 如果连首帧、分辨率和时长都没有获得，说明它可能根本没有打开成功，
+// 此时保留仍能播放的旧实例。
+if (forceDeadline != null &&
+    !now.isBefore(forceDeadline)) {
+  if (!canForceHandoff()) {
+    return false;
   }
+
+  forceHandoff = true;
+  break;
+}
 
   // 设置为 0 时维持原来的严格超时逻辑。
   if (forceDeadline == null &&
@@ -1461,7 +1475,13 @@ if (!aligned &&
         standbyPlayer.getProperty('paused-for-cache') == 'yes')) {
   return false;
 }
-
+// 真正停止旧实例前再次确认切换仍有效。
+// 强制等待期间页面、数据源或备用实例状态都可能已经发生变化。
+if (!isCurrentSwitch() ||
+    firstFrameFailed ||
+    (forceHandoff && !canForceHandoff())) {
+  return false;
+}
       // 备用实例始终静音运行。先停止旧实例，再恢复备用实例的实际音量，
       // 可避免交接点产生双重音频；两个实例各自加载同一 DASH 音轨，由 mpv
       // 在实例内部继续负责音视频时间戳同步。
