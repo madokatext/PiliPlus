@@ -32,7 +32,7 @@ android {
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
-        versionName = "2.1a"
+        versionName = "2.1b"
     }
 
     packagingOptions.jniLibs.useLegacyPackaging = true
