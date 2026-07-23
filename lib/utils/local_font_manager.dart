@@ -63,7 +63,21 @@ typedef LocalFontFamilies = ({
   String? primary,
   List<String> fallback,
 });
+class LocalFontCandidate {
+  const LocalFontCandidate({
+    required this.slot,
+    required this.fileName,
+    required this.sourceName,
+    required this.family,
+    required this.bytes,
+  });
 
+  final LocalFontSlot slot;
+  final String fileName;
+  final String sourceName;
+  final String family;
+  final Uint8List bytes;
+}
 abstract final class LocalFontManager {
   static const _fontDirectoryName = 'local_fonts';
   static const _latinSubsetCacheVersion = 'latin_v1';
@@ -93,70 +107,106 @@ abstract final class LocalFontManager {
     await _cleanupUnusedFontFilesQuietly();
   }
 
-  static Future<bool> pickAndInstall(LocalFontSlot slot) async {
+    /// 选择并解析字体，但不修改当前配置。
+  ///
+  /// 返回的字体只用于设置弹窗内预览；只有调用 [commitCandidate]
+  /// 后才会写入文件、保存设置并成为当前字体。
+  static Future<LocalFontCandidate?> pickCandidate(
+    LocalFontSlot slot,
+  ) async {
     final result = await FilePicker.pickFile(
       type: .custom,
       allowedExtensions: const ['ttf', 'otf', 'ttc'],
     );
+
     if (result == null) {
-      return false;
+      return null;
     }
 
     final sourceName = path.basename(result.xFile.name);
     final extension = path.extension(sourceName).toLowerCase();
+
     if (!_allowedExtensions.contains(extension)) {
       throw const FormatException('仅支持 TTF、OTF 和 TTC 字体文件');
     }
 
-    final bytes = await result.xFile.readAsBytes();
-    if (bytes.isEmpty) {
+    final sourceBytes = await result.xFile.readAsBytes();
+
+    if (sourceBytes.isEmpty) {
       throw const FormatException('字体文件为空');
     }
 
-    final cacheBytes = slot.usesLatinSubset
-        ? await compute(createLatinFontSubset, bytes)
-        : bytes;
-    final digest = sha256.convert(bytes).toString();
+    final fontBytes = slot.usesLatinSubset
+        ? await compute(createLatinFontSubset, sourceBytes)
+        : sourceBytes;
+
+    final digest = sha256.convert(sourceBytes).toString();
     final cacheExtension = slot.usesLatinSubset
-        ? latinSubsetFileExtension(cacheBytes)
+        ? latinSubsetFileExtension(fontBytes)
         : extension;
     final cacheMarker = slot.usesLatinSubset
         ? '_${_latinSubsetCacheVersion}_'
         : '_';
-    final fileName = '${slot.filePrefix}$cacheMarker$digest$cacheExtension';
-    final fontFile = _fontFile(fileName);
-    final oldFileName = _storedFileName(slot);
-    final oldFamily = _loadedFamilies[slot];
-    await fontFile.parent.create(recursive: true);
-    await fontFile.writeAsBytes(cacheBytes, flush: true);
 
-    try {
-      await _loadFont(slot, fontFile, bytes: cacheBytes);
-    } catch (_) {
-      if (oldFileName != fileName) {
-        await _deleteFileQuietly(fontFile, slot.label);
-      }
-      rethrow;
-    }
+    final fileName =
+        '${slot.filePrefix}$cacheMarker$digest$cacheExtension';
+
+    // 注册字体只为了弹窗预览，不写入 _loadedFamilies，
+    // 因此不会影响 App 或弹幕当前使用的字体。
+    final family = await _registerFontBytes(
+      slot,
+      fileName,
+      fontBytes,
+    );
+
+    return LocalFontCandidate(
+      slot: slot,
+      fileName: fileName,
+      sourceName: sourceName,
+      family: family,
+      bytes: fontBytes,
+    );
+  }
+
+  /// 确认使用候选字体。
+  static Future<void> commitCandidate(
+    LocalFontCandidate candidate,
+  ) async {
+    final slot = candidate.slot;
+    final oldFileName = _storedFileName(slot);
+    final fontFile = _fontFile(candidate.fileName);
+
+    await fontFile.parent.create(recursive: true);
+    await fontFile.writeAsBytes(candidate.bytes, flush: true);
 
     try {
       await GStorage.setting.putAll({
-        slot.fileKey: fileName,
-        slot.nameKey: sourceName,
+        slot.fileKey: candidate.fileName,
+        slot.nameKey: candidate.sourceName,
       });
     } catch (_) {
-      if (oldFamily == null) {
-        _loadedFamilies.remove(slot);
-      } else {
-        _loadedFamilies[slot] = oldFamily;
-      }
-      if (oldFileName != fileName) {
+      // 配置保存失败时保留旧配置，并删除本次新写入的文件。
+      if (oldFileName != candidate.fileName) {
         await _deleteFileQuietly(fontFile, slot.label);
       }
       rethrow;
     }
 
+    // 只有设置成功写入后，才切换当前活动字体。
+    _loadedFamilies[slot] = candidate.family;
+
     await _cleanupUnusedFontFilesQuietly();
+  }
+
+  /// 保留旧接口，供其它可能存在的调用位置使用。
+  static Future<bool> pickAndInstall(LocalFontSlot slot) async {
+    final candidate = await pickCandidate(slot);
+
+    if (candidate == null) {
+      return false;
+    }
+
+    await commitCandidate(candidate);
     return true;
   }
 
@@ -263,7 +313,7 @@ abstract final class LocalFontManager {
     return 'sans-serif';
   }
 
-  static Future<void> _loadFont(
+    static Future<void> _loadFont(
     LocalFontSlot slot,
     File file, {
     Uint8List? bytes,
@@ -271,21 +321,43 @@ abstract final class LocalFontManager {
     if (!await file.exists()) {
       throw const FileSystemException('字体文件不存在');
     }
+
     final fileName = path.basename(file.path);
+    final fontBytes = bytes ?? await file.readAsBytes();
+
+    _loadedFamilies[slot] = await _registerFontBytes(
+      slot,
+      fileName,
+      fontBytes,
+    );
+  }
+
+  /// 把字体注册到 Flutter 字体系统，但不设置为当前活动字体。
+  static Future<String> _registerFontBytes(
+    LocalFontSlot slot,
+    String fileName,
+    Uint8List bytes,
+  ) async {
     if (!fileName.startsWith('${slot.filePrefix}_')) {
       throw const FormatException('字体文件名无效');
     }
-    final family = 'PiliPlusLocalFont_${path.basenameWithoutExtension(fileName)}';
+
+    final family =
+        'PiliPlusLocalFont_${path.basenameWithoutExtension(fileName)}';
+
     if (!_registeredFamilies.contains(family)) {
-      final fontBytes = bytes ?? await file.readAsBytes();
       final loader = FontLoader(family)
         ..addFont(
-          Future<ByteData>.value(ByteData.sublistView(fontBytes)),
+          Future<ByteData>.value(
+            ByteData.sublistView(bytes),
+          ),
         );
+
       await loader.load();
       _registeredFamilies.add(family);
     }
-    _loadedFamilies[slot] = family;
+
+    return family;
   }
 
   static String _storedFileName(LocalFontSlot slot) {
