@@ -1224,53 +1224,76 @@ class PlPlayerController with BlockConfigMixin {
         return false;
       }
 
-      // 缓冲达标后，以当前实例的实时位置做最终对齐。播放中的两个实例
-      // 保持相同倍速；暂停态则先暂停备用实例再精确跳到当前帧。
-      var aligned = false;
-      for (
-        var attempt = 0;
-        attempt < 8 && isCurrentSwitch() && DateTime.now().isBefore(deadline);
-        attempt++
-      ) {
-        final shouldPlay = activePlayer.state.playing;
-        final target = activePlayer.state.position;
-        final rate = activePlayer.state.rate;
+            // 备用实例已经从旧实例当时的位置开始播放，并使用相同倍速。
+      // 正常情况下两个实例会自然保持同步，不能在短时间内循环 seek。
+      // AV1/HEVC 连续 seek 会反复清空解码与缓存队列，导致备用实例
+      // 一直处于 buffering，最终无法完成交接。
+      final shouldPlay = activePlayer.state.playing;
+      final targetRate = activePlayer.state.rate;
 
-        if (standbyPlayer.state.rate != rate) {
-          await standbyPlayer.setRate(rate);
-        }
-        if (!shouldPlay && standbyPlayer.state.playing) {
-          await standbyPlayer.pause();
-        }
+      if (standbyPlayer.state.rate != targetRate) {
+        await standbyPlayer.setRate(targetRate);
+      }
+
+      if (!shouldPlay && standbyPlayer.state.playing) {
+        await standbyPlayer.pause();
+      }
+
+      var target = activePlayer.state.position;
+      var drift =
+          (standbyPlayer.state.position - target).inMilliseconds.abs();
+
+      // 播放状态下只有偏差明显时才执行一次 seek。
+      // 暂停状态下则必须回到旧播放器当前的静止位置。
+      if (!shouldPlay || drift > 400) {
         await standbyPlayer.seek(target);
+
         if (shouldPlay && !standbyPlayer.state.playing) {
           await standbyPlayer.play();
         }
+      }
 
-        final settled = await Future.any<bool>([
-          Future<bool>.delayed(const Duration(milliseconds: 80), () => true),
-          cancellation.future.then((_) => false),
-        ]);
-        if (!settled || !isCurrentSwitch()) {
-          return false;
-        }
+      final alignmentDeadline = DateTime.now().add(
+        const Duration(seconds: 3),
+      );
 
-        final currentTarget = activePlayer.state.position;
-        final drift = (standbyPlayer.state.position - currentTarget)
-            .inMilliseconds
-            .abs();
+      var aligned = false;
+
+      while (isCurrentSwitch() &&
+          DateTime.now().isBefore(alignmentDeadline)) {
+        target = activePlayer.state.position;
+        drift =
+            (standbyPlayer.state.position - target).inMilliseconds.abs();
+
         final bufferedAhead =
-            (standbyPlayer.state.buffer - currentTarget).inMilliseconds /
+            (standbyPlayer.state.buffer - target).inMilliseconds /
             Duration.millisecondsPerSecond;
-        aligned =
-            !standbyPlayer.state.buffering &&
+
+        // media_kit/mpv 的 position 状态并不是逐帧更新。
+        // 播放状态下使用 450 ms 容差，避免状态采样延迟导致永远不交接。
+        final allowedDrift = shouldPlay ? 450 : 150;
+
+        if (!standbyPlayer.state.buffering &&
             standbyPlayer.getProperty('paused-for-cache') != 'yes' &&
-            drift <= 180 &&
-            bufferedAhead >= min(0.5, requiredBufferAt(currentTarget));
-        if (aligned) {
+            drift <= allowedDrift &&
+            bufferedAhead >= min(0.25, requiredBufferAt(target))) {
+          aligned = true;
           break;
         }
+
+        final keepWaiting = await Future.any<bool>([
+          Future<bool>.delayed(
+            const Duration(milliseconds: 40),
+            () => true,
+          ),
+          cancellation.future.then((_) => false),
+        ]);
+
+        if (!keepWaiting) {
+          return false;
+        }
       }
+
       if (!aligned || !isCurrentSwitch()) {
         return false;
       }
@@ -1298,11 +1321,16 @@ class PlPlayerController with BlockConfigMixin {
         return false;
       }
 
-      final handoffDrift =
+            final handoffDrift =
           (standbyPlayer.state.position - activePlayer.state.position)
               .inMilliseconds
               .abs();
-      if (handoffDrift > 180 || standbyPlayer.state.buffering) {
+
+      final allowedHandoffDrift = handoffPlaying ? 450 : 150;
+
+      if (handoffDrift > allowedHandoffDrift ||
+          standbyPlayer.state.buffering ||
+          standbyPlayer.getProperty('paused-for-cache') == 'yes') {
         return false;
       }
 
