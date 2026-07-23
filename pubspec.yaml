@@ -55,7 +55,7 @@ dependencies:
   canvas_danmaku:
     git:
       url: https://github.com/madokatext/canvas_danmaku.git
-      ref: 65675afd66f13c22fae6d6facf9b86ce75760e95
+          ref: 299bdcce1c3144698a6559a3d13d7a4b25d47fc0
   catcher_2:
     git:
       url: https://github.com/My-Responsitories/catcher_2.git
