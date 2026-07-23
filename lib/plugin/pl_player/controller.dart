@@ -1166,7 +1166,18 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       await standbyPlayer.setRate(activePlayer.state.rate);
       await standbyPlayer.play();
 
-      var firstFrameRendered = false;
+final forceTimeoutSeconds =
+    Pref.videoPlayerSwitchForceTimeoutSeconds;
+
+final forceDeadline = forceTimeoutSeconds > 0
+    ? DateTime.now().add(
+        Duration(seconds: forceTimeoutSeconds),
+      )
+    : null;
+
+var forceHandoff = false;
+
+var firstFrameRendered = false;
       var firstFrameFailed = false;
       unawaited(
         standbyController.waitUntilFirstFrameRendered.then<void>(
@@ -1181,9 +1192,14 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
           double.tryParse(activePlayer.getProperty('cache-pause-wait')) ?? 1.0;
       final requiredBufferSeconds =
           max(1.0, configuredWait) * max(1.0, activePlayer.state.rate);
-      final deadline = DateTime.now().add(
-        Duration(seconds: max(30, (requiredBufferSeconds * 4).ceil())),
-      );
+      final strictDeadline = DateTime.now().add(
+  Duration(
+    seconds: max(
+      30,
+      (requiredBufferSeconds * 4).ceil(),
+    ),
+  ),
+);
 
       double requiredBufferAt(Duration target) {
         final mediaDuration = activePlayer.state.duration;
@@ -1197,35 +1213,60 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       }
 
       var bufferReady = false;
-      while (isCurrentSwitch() && DateTime.now().isBefore(deadline)) {
-        if (firstFrameFailed) {
-          return false;
-        }
-        final target = activePlayer.state.position;
-        final bufferedAhead =
-            (standbyPlayer.state.buffer - target).inMilliseconds /
-            Duration.millisecondsPerSecond;
-        if (firstFrameRendered &&
-            standbyPlayer.state.width > 0 &&
-            standbyPlayer.state.height > 0 &&
-            !standbyPlayer.state.buffering &&
-            standbyPlayer.getProperty('paused-for-cache') != 'yes' &&
-            bufferedAhead >= requiredBufferAt(target)) {
-          bufferReady = true;
-          break;
-        }
 
-        final keepWaiting = await Future.any<bool>([
-          Future<bool>.delayed(const Duration(milliseconds: 40), () => true),
-          cancellation.future.then((_) => false),
-        ]);
-        if (!keepWaiting) {
-          return false;
-        }
-      }
-      if (!bufferReady || !isCurrentSwitch()) {
-        return false;
-      }
+while (isCurrentSwitch()) {
+  final now = DateTime.now();
+
+  // 明确的渲染错误属于硬失败，不能强制接管。
+  if (firstFrameFailed) {
+    return false;
+  }
+
+  // 开启强制接管后，以用户设置的总等待时间为准。
+  if (forceDeadline != null &&
+      !now.isBefore(forceDeadline)) {
+    forceHandoff = true;
+    break;
+  }
+
+  // 设置为 0 时维持原来的严格超时逻辑。
+  if (forceDeadline == null &&
+      !now.isBefore(strictDeadline)) {
+    break;
+  }
+
+  final target = activePlayer.state.position;
+  final bufferedAhead =
+      (standbyPlayer.state.buffer - target).inMilliseconds /
+      Duration.millisecondsPerSecond;
+
+  if (firstFrameRendered &&
+      standbyPlayer.state.width > 0 &&
+      standbyPlayer.state.height > 0 &&
+      !standbyPlayer.state.buffering &&
+      standbyPlayer.getProperty('paused-for-cache') != 'yes' &&
+      bufferedAhead >= requiredBufferAt(target)) {
+    bufferReady = true;
+    break;
+  }
+
+  final keepWaiting = await Future.any<bool>([
+    Future<bool>.delayed(
+      const Duration(milliseconds: 40),
+      () => true,
+    ),
+    cancellation.future.then((_) => false),
+  ]);
+
+  if (!keepWaiting) {
+    return false;
+  }
+}
+
+if ((!bufferReady && !forceHandoff) ||
+    !isCurrentSwitch()) {
+  return false;
+}
 
             // 备用实例已经从旧实例当时的位置开始播放，并使用相同倍速。
       // 正常情况下两个实例会自然保持同步，不能在短时间内循环 seek。
@@ -1248,22 +1289,34 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
 
       // 播放状态下只有偏差明显时才执行一次 seek。
       // 暂停状态下则必须回到旧播放器当前的静止位置。
-      if (!shouldPlay || drift > 400) {
-        await standbyPlayer.seek(target);
+      if (forceHandoff || !shouldPlay || drift > 400) {
+  try {
+    // 强制接管时将备用实例跳到旧实例的最新位置。
+    // 之后即使缓存不足，也由新实例走正常 buffering 流程。
+    await standbyPlayer.seek(target);
+  } catch (_) {
+    // 严格模式下 seek 失败仍然中止。
+    // 强制模式下允许交接，让播放器后续自行恢复。
+    if (!forceHandoff) {
+      rethrow;
+    }
+  }
 
-        if (shouldPlay && !standbyPlayer.state.playing) {
-          await standbyPlayer.play();
-        }
-      }
+  if (shouldPlay && !standbyPlayer.state.playing) {
+    await standbyPlayer.play();
+  }
+}
 
-      final alignmentDeadline = DateTime.now().add(
-        const Duration(seconds: 3),
-      );
+      final alignmentDeadline = forceDeadline ??
+    DateTime.now().add(
+      const Duration(seconds: 3),
+    );
 
-      var aligned = false;
+var aligned = forceHandoff;
 
-      while (isCurrentSwitch() &&
-          DateTime.now().isBefore(alignmentDeadline)) {
+      while (!forceHandoff &&
+    isCurrentSwitch() &&
+    DateTime.now().isBefore(alignmentDeadline)) {
         target = activePlayer.state.position;
         drift =
             (standbyPlayer.state.position - target).inMilliseconds.abs();
@@ -1296,7 +1349,12 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
           return false;
         }
       }
-
+if (!aligned &&
+    forceDeadline != null &&
+    !DateTime.now().isBefore(forceDeadline)) {
+  forceHandoff = true;
+  aligned = true;
+}
       if (!aligned || !isCurrentSwitch()) {
         return false;
       }
@@ -1331,11 +1389,12 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
 
       final allowedHandoffDrift = handoffPlaying ? 450 : 150;
 
-      if (handoffDrift > allowedHandoffDrift ||
-          standbyPlayer.state.buffering ||
-          standbyPlayer.getProperty('paused-for-cache') == 'yes') {
-        return false;
-      }
+      if (!forceHandoff &&
+    (handoffDrift > allowedHandoffDrift ||
+        standbyPlayer.state.buffering ||
+        standbyPlayer.getProperty('paused-for-cache') == 'yes')) {
+  return false;
+}
 
       // 备用实例始终静音运行。先停止旧实例，再恢复备用实例的实际音量，
       // 可避免交接点产生双重音频；两个实例各自加载同一 DASH 音轨，由 mpv
@@ -1361,7 +1420,9 @@ await activePlayer.pause();
       this.height = height;
       committed = true;
 
-      isBuffering.value = standbyPlayer.state.buffering;
+      isBuffering.value =
+    standbyPlayer.state.buffering ||
+    standbyPlayer.getProperty('paused-for-cache') == 'yes';
       position.value = standbyPlayer.state.position.inSeconds;
       buffered.value = standbyPlayer.state.buffer.inSeconds;
       updateDuration(standbyPlayer.state.duration);
