@@ -404,7 +404,9 @@ class _BurstDanmakuOverlay extends StatelessWidget {
             )
             .toInt();
 
-    final strokeWidth = option.strokeWidth;
+    final strokeWidth =
+    option.strokeWidth *
+    DanmakuOptions.burstDanmakuFontScale;
 final shadowRadius = option.shadowRadius;
 
 final shadows = shadowRadius > 0
