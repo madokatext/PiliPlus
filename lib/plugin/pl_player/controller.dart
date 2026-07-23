@@ -734,7 +734,7 @@ class PlPlayerController with BlockConfigMixin {
 
       if (_playerCount == 0 || !isCurrentDataSource()) {
         if (_playerCount == 0) {
-          _removeListeners();
+          await _removeListeners();
           _videoPlayerController?.dispose();
           _videoPlayerController = null;
           _videoController = null;
@@ -920,7 +920,7 @@ class PlPlayerController with BlockConfigMixin {
         }
       }
       if (_playerCount == 0) {
-        _removeListeners();
+        await _removeListeners();
         player.dispose();
         _videoController = null;
         return;
@@ -1338,9 +1338,9 @@ class PlPlayerController with BlockConfigMixin {
       // 可避免交接点产生双重音频；两个实例各自加载同一 DASH 音轨，由 mpv
       // 在实例内部继续负责音视频时间戳同步。
       resumeActiveOnFailure = handoffPlaying;
-      _removeListeners();
-      activeListenersDetached = true;
-      await activePlayer.pause();
+await _removeListeners();
+activeListenersDetached = true;
+await activePlayer.pause();
       standbyPlayer
         ..setProperty('volume', handoffVolume)
         ..setProperty('mute', handoffMute);
@@ -1362,14 +1362,17 @@ class PlPlayerController with BlockConfigMixin {
       position.value = standbyPlayer.state.position.inSeconds;
       buffered.value = standbyPlayer.state.buffer.inSeconds;
       updateDuration(standbyPlayer.state.duration);
-      playerStatus.value = handoffPlaying ? .playing : .paused;
       unawaited(
-        MpvLogService.beginSession(
-          standbyPlayer,
-          source: 'video quality switch',
-        ),
-      );
-      _startListeners(standbyPlayer);
+  MpvLogService.beginSession(
+    standbyPlayer,
+    source: 'video quality switch',
+  ),
+);
+_startListeners(standbyPlayer);
+
+// 必须在新播放器监听器挂载后再确定最终的界面状态，
+// 避免监听器订阅时的初始事件覆盖该状态。
+playerStatus.value = handoffPlaying ? .playing : .paused;
       videoPlayerServiceHandler
         ?..onPositionChange(standbyPlayer.state.position)
         ..onStatusChange(playerStatus.value, isBuffering.value, isLive);
@@ -1474,7 +1477,12 @@ class PlPlayerController with BlockConfigMixin {
     _subscriptions = [
       /// playing
       stream.playing.listen((bool playing) {
-        WakelockPlus.toggle(enable: playing);
+  // 双播放器交接后，旧实例的延迟事件不得再修改全局播放状态。
+  if (!identical(player, _videoPlayerController)) {
+    return;
+  }
+
+  WakelockPlus.toggle(enable: playing);
         if (playing) {
           if (_isAutoEnterPip) {
             if (_isCurrVideoPage) {
@@ -1614,11 +1622,20 @@ class PlPlayerController with BlockConfigMixin {
   }
 
   /// 移除事件监听
-  void _removeListeners() {
-    _subscriptions?.forEach((e) => e.cancel());
-    _subscriptions?.clear();
-    _subscriptions = null;
+  Future<void> _removeListeners() async {
+  final subscriptions = _subscriptions;
+  _subscriptions = null;
+
+  if (subscriptions == null) {
+    return;
   }
+
+  await Future.wait<void>(
+    subscriptions.map((subscription) => subscription.cancel()),
+  );
+
+  subscriptions.clear();
+}
 
   void _cancelSubForSeek() {
     if (_subForSeek != null) {
@@ -2160,7 +2177,7 @@ class PlPlayerController with BlockConfigMixin {
       windowManager.setAlwaysOnTop(false);
     }
 
-    _removeListeners();
+   unawaited(_removeListeners());
     _positionListeners.clear();
     _statusListeners.clear();
     if (playerStatus.isPlaying) {
