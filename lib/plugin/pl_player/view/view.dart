@@ -958,8 +958,8 @@ ui.PointerDeviceKind? _gesturePointerKind;
   }
 
   void _onHorizontalDragStart() {
-    plPlayerController.isSeeking.value = true;
-  }
+  plPlayerController.onSeekStart();
+}
 RenderProgressBar? _visibleProgressBarRenderObject() {
   final key = plPlayerController.showControls.value
       ? _progressBarKey
@@ -1003,7 +1003,15 @@ double? _progressBarThumbGlobalX(int seconds) {
   );
     }
   }
+String _formatSignedSeekDelta(int deltaSeconds) {
+  final sign = deltaSeconds < 0 ? '-' : '+';
+  final absoluteSeconds = deltaSeconds.abs();
+  final minutes = absoluteSeconds ~/ Duration.secondsPerMinute;
+  final seconds = absoluteSeconds % Duration.secondsPerMinute;
 
+  return '$sign${minutes.toString().padLeft(2, '0')}:'
+      '${seconds.toString().padLeft(2, '0')}';
+}
   void _onHorizontalDragEnd() {
     plPlayerController.onSeekEnd();
     if (plPlayerController.seekToPos case final seekToPos?) {
@@ -1515,6 +1523,18 @@ void _handleProgressBarExpandedPointerDown(
     final longPressSpeedToastBorderRadius = BorderRadius.all(
       Radius.circular(longPressSpeedToastFontSize * 2.5),
     );
+      Widget buildLongPressSpeedStyleToast({
+  required Widget child,
+}) {
+  return Container(
+    padding: longPressSpeedToastPadding,
+    decoration: BoxDecoration(
+      color: const Color(0x88000000),
+      borderRadius: longPressSpeedToastBorderRadius,
+    ),
+    child: child,
+  );
+}
     final isLive = plPlayerController.isLive;
 
     Widget buildSeekTimeToast({required bool insidePreview}) {
@@ -1559,7 +1579,29 @@ void _handleProgressBarExpandedPointerDown(
         );
       });
     }
+Widget buildRelativeSeekToast() {
+  return Obx(() {
+    final visible =
+        plPlayerController.seekTimeInPreview &&
+        plPlayerController.isSeeking.value;
 
+    final deltaSeconds =
+        plPlayerController.position.value -
+        plPlayerController.seekStartPosition.value;
+
+    return AnimatedOpacity(
+      curve: Curves.easeInOut,
+      opacity: visible ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 150),
+      child: buildLongPressSpeedStyleToast(
+        child: Text(
+          _formatSignedSeekDelta(deltaSeconds),
+          style: longPressSpeedToastTextStyle,
+        ),
+      ),
+    );
+  });
+}
     final verticalFullscreenBottomPadding =
         PlatformUtils.isMobile &&
             isFullScreen &&
@@ -1679,24 +1721,28 @@ backgroundColor: gestureProgressColor.withValues(alpha: 0.24),
                   curve: Curves.easeInOut,
                   opacity: plPlayerController.longPressStatus.value ? 1.0 : 0.0,
                   duration: const Duration(milliseconds: 150),
-                  child: Container(
-                    padding: longPressSpeedToastPadding,
-                    decoration: BoxDecoration(
-                      color: const Color(0x88000000),
-                      borderRadius: longPressSpeedToastBorderRadius,
-                    ),
-                    child: Obx(
-                      () => Text(
-                        '${plPlayerController.enableAutoLongPressSpeed ? (plPlayerController.longPressStatus.value ? plPlayerController.lastPlaybackSpeed : plPlayerController.playbackSpeed) * 2 : plPlayerController.longPressSpeed}倍速中',
-                        style: longPressSpeedToastTextStyle,
-                      ),
-                    ),
-                  ),
+                  child: buildLongPressSpeedStyleToast(
+  child: Obx(
+    () => Text(
+      '${plPlayerController.enableAutoLongPressSpeed ? (plPlayerController.longPressStatus.value ? plPlayerController.lastPlaybackSpeed : plPlayerController.playbackSpeed) * 2 : plPlayerController.longPressSpeed}倍速中',
+      style: longPressSpeedToastTextStyle,
+    ),
+  ),
+),
                 ),
               ),
             ),
           ),
-
+/// 相对快进/快退时间 toast。
+/// 仅在“当前时间浮窗集成到预览窗”开启时显示。
+if (!isLive)
+  IgnorePointer(
+    ignoring: true,
+    child: Align(
+      alignment: longPressSpeedToastAlignment,
+      child: buildRelativeSeekToast(),
+    ),
+  ),
         /// 独立时间进度 toast
         /// 集成模式下，仅在本次操作没有预览窗时作为回退显示。
         if (!isLive)
