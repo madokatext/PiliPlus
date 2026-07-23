@@ -5,6 +5,8 @@ abstract final class SettingBoxKey {
       defaultVideoQa = 'defaultVideoQa',
       defaultVideoQaCellular = 'defaultVideoQaCellular',
       defaultVideoQaHalfScreen = 'defaultVideoQaHalfScreen',
+  videoPlayerSwitchForceTimeoutSeconds =
+    'videoPlayerSwitchForceTimeoutSeconds',
       defaultAudioQa = 'defaultAudioQa',
       defaultAudioQaCellular = 'defaultAudioQaCellular',
       autoPlayEnable = 'autoPlayEnable',
