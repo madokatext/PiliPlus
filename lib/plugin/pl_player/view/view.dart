@@ -2260,21 +2260,36 @@ backgroundColor: gestureProgressColor.withValues(alpha: 0.24),
             key: _videoKey,
             child: Obx(
               () {
-                plPlayerController.videoOutputRevision.value;
+                                plPlayerController.videoOutputRevision.value;
                 final videoFit = plPlayerController.videoFit.value;
                 final controller = plPlayerController.videoController!;
-                return Transform.flip(
-                  flipX: plPlayerController.flipX.value,
-                  flipY: plPlayerController.flipY.value,
-                  child: FittedBox(
+                final standbyController =
+                    plPlayerController.standbyVideoController;
+
+                Widget buildVideoOutput(VideoController targetController) {
+                  return FittedBox(
                     fit: videoFit.boxFit,
                     alignment: widget.alignment,
                     child: SimpleVideo(
-                      key: ValueKey(controller),
-                      controller: controller,
+                      key: ValueKey(targetController),
+                      controller: targetController,
                       fill: widget.fill,
                       aspectRatio: videoFit.aspectRatio,
                     ),
+                  );
+                }
+
+                return Transform.flip(
+                  flipX: plPlayerController.flipX.value,
+                  flipY: plPlayerController.flipY.value,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    clipBehavior: Clip.none,
+                    children: [
+                      if (standbyController != null)
+                        buildVideoOutput(standbyController),
+                      buildVideoOutput(controller),
+                    ],
                   ),
                 );
               },
