@@ -111,50 +111,61 @@ class _PlDanmakuState extends State<PlDanmaku> {
     latestAddedPosition = currentPosition;
 
     List<DanmakuElem>? currentDanmakuList = _plDanmakuController
-        .getCurrentDanmaku(currentPosition);
-    if (currentDanmakuList != null) {
-      final blockColorful = DanmakuOptions.blockColorful;
-      final danmakuWeight = DanmakuOptions.danmakuWeight;
-      for (DanmakuElem e in currentDanmakuList) {
-        if (e.weight < danmakuWeight) return;
-        if (e.mode == 7) {
-          try {
-            _controller!.addDanmaku(
-              SpecialDanmakuContentItem.fromList(
-                DmUtils.decimalToColor(e.color),
-                e.fontsize.toDouble(),
-                jsonDecode(e.content.replaceAll('\n', '\\n')),
-                extra: VideoDanmaku(
-                  id: e.id.toInt(),
-                  mid: e.midHash,
-                  like: e.likeCount.toInt(),
-                ),
-              ),
-            );
-          } catch (_) {}
-        } else {
-          _controller!.addDanmaku(
-            DanmakuContentItem(
-              e.content,
-              color: blockColorful
-                  ? Colors.white
-                  : DmUtils.decimalToColor(e.color),
-              type: DmUtils.getPosition(e.mode),
-              isColorful:
-                  playerController.showVipDanmaku &&
-                  e.colorful == DmColorfulType.VipGradualColor,
-              count: e.count > 1 ? e.count : null,
-              selfSend: e.isSelf,
-              extra: VideoDanmaku(
-                id: e.id.toInt(),
-                mid: e.midHash,
-                like: e.likeCount.toInt(),
-              ),
+    .getCurrentDanmaku(currentPosition);
+
+if (currentDanmakuList != null) {
+  final blockColorful = DanmakuOptions.blockColorful;
+  final danmakuWeight = DanmakuOptions.danmakuWeight;
+  final highLikeThreshold =
+      DanmakuOptions.highLikeDanmakuThreshold;
+
+  for (DanmakuElem e in currentDanmakuList) {
+    if (e.weight < danmakuWeight) return;
+
+    final likeCount = e.likeCount.toInt();
+    final showLikeIcon =
+        highLikeThreshold > 0 && likeCount >= highLikeThreshold;
+
+    if (e.mode == 7) {
+      try {
+        _controller!.addDanmaku(
+          SpecialDanmakuContentItem.fromList(
+            DmUtils.decimalToColor(e.color),
+            e.fontsize.toDouble(),
+            jsonDecode(e.content.replaceAll('\n', '\\n')),
+            showLikeIcon: showLikeIcon,
+            extra: VideoDanmaku(
+              id: e.id.toInt(),
+              mid: e.midHash,
+              like: likeCount,
             ),
-          );
-        }
-      }
+          ),
+        );
+      } catch (_) {}
+    } else {
+      _controller!.addDanmaku(
+        DanmakuContentItem(
+          e.content,
+          color: blockColorful
+              ? Colors.white
+              : DmUtils.decimalToColor(e.color),
+          type: DmUtils.getPosition(e.mode),
+          isColorful:
+              playerController.showVipDanmaku &&
+              e.colorful == DmColorfulType.VipGradualColor,
+          count: e.count > 1 ? e.count : null,
+          selfSend: e.isSelf,
+          showLikeIcon: showLikeIcon,
+          extra: VideoDanmaku(
+            id: e.id.toInt(),
+            mid: e.midHash,
+            like: likeCount,
+          ),
+        ),
+      );
     }
+  }
+}
   }
 
   @override
