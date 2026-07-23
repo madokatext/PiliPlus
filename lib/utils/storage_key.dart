@@ -249,8 +249,20 @@ seekPreviewScale = 'seekPreviewScale',
       enableShowLiveDanmaku = 'enableShowLiveDanmaku',
       pipNoDanmaku = 'pipNoDanmaku',
       showVipDanmaku = 'showVipDanmaku',
-      mergeDanmaku = 'mergeDanmaku',
-      danmakuWeight = 'danmakuWeight',
+
+// 旧布尔键继续保留，只用于兼容旧配置。
+mergeDanmaku = 'mergeDanmaku',
+
+// 新版重复弹幕合并模式。
+danmakuMergeMode = 'danmakuMergeMode',
+
+// 高频置顶合并参数。
+burstDanmakuTriggerCount = 'burstDanmakuTriggerCount',
+burstDanmakuWindowSeconds = 'burstDanmakuWindowSeconds',
+burstDanmakuCooldownSeconds = 'burstDanmakuCooldownSeconds',
+burstDanmakuFontScale = 'burstDanmakuFontScale',
+
+danmakuWeight = 'danmakuWeight',
   highLikeDanmakuThreshold = 'highLikeDanmakuThreshold',
       danmakuBlockType = 'danmakuBlockType',
       danmakuShowArea = 'danmakuShowArea',
