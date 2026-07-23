@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
+import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
 import 'package:flutter/material.dart';
-import 'package:media_kit/media_kit.dart';
 
 class PlayOrPauseButton extends StatefulWidget {
   final PlPlayerController plPlayerController;
@@ -26,26 +26,43 @@ class PlayOrPauseButton extends StatefulWidget {
 class PlayOrPauseButtonState extends State<PlayOrPauseButton>
     with SingleTickerProviderStateMixin {
   late final AnimationController controller;
-  late final StreamSubscription<bool> subscription;
-  late Player player;
+late final StreamSubscription<PlayerStatus> subscription;
+late bool _isPlaying;
 
-  @override
-  void initState() {
-    super.initState();
-    player = widget.plPlayerController.videoPlayerController!;
-    controller = AnimationController(
-      vsync: this,
-      value: player.state.playing ? 1 : 0,
-      duration: const Duration(milliseconds: 200),
-    );
-    subscription = player.stream.playing.listen((playing) {
-      if (playing) {
-        controller.forward();
-      } else {
-        controller.reverse();
-      }
-    });
-  }
+@override
+void initState() {
+  super.initState();
+
+  _isPlaying = widget.plPlayerController.playerStatus.isPlaying;
+
+  controller = AnimationController(
+    vsync: this,
+    value: _isPlaying ? 1 : 0,
+    duration: const Duration(milliseconds: 200),
+  );
+
+  // 不直接监听某一个 Player 实例。
+  // 双播放器切换后 Player 会被替换，但 playerStatus 始终属于同一个控制器。
+  subscription = widget.plPlayerController.playerStatus.listen((status) {
+    final isPlaying = status.isPlaying;
+
+    if (_isPlaying == isPlaying) {
+      return;
+    }
+
+    _isPlaying = isPlaying;
+
+    if (isPlaying) {
+      controller.forward();
+    } else {
+      controller.reverse();
+    }
+
+    if (mounted) {
+      setState(() {});
+    }
+  });
+}
 
   @override
   void dispose() {
@@ -64,7 +81,7 @@ class PlayOrPauseButtonState extends State<PlayOrPauseButton>
         onTap: widget.plPlayerController.onDoubleTapCenter,
         child: Center(
           child: AnimatedIcon(
-            semanticLabel: player.state.playing ? '暂停' : '播放',
+            semanticLabel: _isPlaying ? '暂停' : '播放',
             progress: controller,
             icon: AnimatedIcons.play_pause,
             color: Colors.white,
