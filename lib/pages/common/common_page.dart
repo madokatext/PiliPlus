@@ -45,18 +45,20 @@ double get collapsibleExtent => Style.topBarHeight;
   bool onNotificationType1(UserScrollNotification notification) {
   if (!_mainController.useBottomNav ||
       notification.depth > 1 ||
-      notification.metrics.axis == Axis.horizontal) {
+      notification.metrics.axis == .horizontal) {
     return false;
   }
 
   switch (notification.direction) {
-    case ScrollDirection.forward:
+    case .forward:
       _showTopBar?.value = true;
       _showBottomBar?.value = true;
-    case ScrollDirection.reverse:
+
+    case .reverse:
       _showTopBar?.value = false;
       _showBottomBar?.value = false;
-    case ScrollDirection.idle:
+
+    case _:
       break;
   }
 
