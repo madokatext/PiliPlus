@@ -1,6 +1,7 @@
 import 'package:PiliPlus/common/widgets/scroll_physics.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models/common/dynamic/dynamics_type.dart';
+import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/models/common/dynamic/up_panel_position.dart';
 import 'package:PiliPlus/models/dynamics/up.dart';
 import 'package:PiliPlus/pages/common/common_page.dart';
@@ -76,7 +77,50 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
       ),
     );
   }
+Widget _collapsibleTopUpPanel(ThemeData theme) {
+  final barOffset = _mainController.barOffset;
 
+  // sync 模式：头像栏随滚动进度连续收起
+  if (barOffset != null) {
+    return Obx(() {
+      final heightFactor =
+          (1.0 - barOffset.value / Style.topBarHeight)
+              .clamp(0.0, 1.0)
+              .toDouble();
+
+      return ClipRect(
+        child: Align(
+          alignment: Alignment.topCenter,
+          heightFactor: heightFactor,
+          child: upPanelPart(theme),
+        ),
+      );
+    });
+  }
+
+  final showBottomBar = _mainController.showBottomBar;
+
+  // instant 模式：头像栏与底栏同时动画收起
+  if (showBottomBar != null) {
+    return Obx(
+      () => AnimatedSize(
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOutCubicEmphasized,
+        alignment: Alignment.topCenter,
+        child: ClipRect(
+          child: Align(
+            alignment: Alignment.topCenter,
+            heightFactor: showBottomBar.value ? 1.0 : 0.0,
+            child: upPanelPart(theme),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 未开启底栏滑动收起
+  return upPanelPart(theme);
+}
   Widget _buildUpPanel(LoadingState<FollowUpModel> upState) {
     return switch (upState) {
       Loading() => const SizedBox.shrink(),
@@ -133,13 +177,13 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
 
     switch (upPanelPosition) {
       case UpPanelPosition.top:
-        child = Column(
-          children: [
-            upPanelPart(theme),
-            Expanded(child: child),
-          ],
-        );
-        actions = [_createDynamicBtn(theme)];
+  child = Column(
+    children: [
+      _collapsibleTopUpPanel(theme),
+      Expanded(child: child),
+    ],
+  );
+  actions = [_createDynamicBtn(theme)];
       case UpPanelPosition.leftFixed:
         child = Row(
           children: [
