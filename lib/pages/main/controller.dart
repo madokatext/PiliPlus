@@ -289,15 +289,9 @@ class MainController extends GetxController
 
   final currentNav = navigationBars[value];
 
-  if (currentNav == NavigationBarType.mine) {
-    // sync 模式
-    barOffset?.value = 0.0;
-
-    // instant 模式
-    showBottomBar?.value = true;
-  }
-
   if (value != selectedIndex.value) {
+      barOffset?.value = 0.0;
+    showBottomBar?.value = true;
       selectedIndex.value = value;
       if (mainTabBarView) {
         controller.animateTo(value);
