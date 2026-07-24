@@ -43,25 +43,27 @@ class _MediaPageState extends CommonPageState<MinePage>
   @override
   bool get wantKeepAlive => true;
 
-  bool get checkPage =>
-      _mainController.navigationBars[0] != NavigationBarType.mine &&
-      _mainController.selectedIndex.value == 0;
+  bool get _isCurrentMinePage =>
+    _mainController.navigationBars[_mainController.selectedIndex.value] ==
+    NavigationBarType.mine;
 
-  @override
-  bool onNotificationType1(UserScrollNotification notification) {
-    if (checkPage) {
-      return false;
-    }
-    return super.onNotificationType1(notification);
+@override
+bool onNotificationType1(UserScrollNotification notification) {
+  if (_isCurrentMinePage) {
+    // instant 模式：始终保持底栏显示
+    _mainController.showBottomBar?.value = true;
   }
+  return false;
+}
 
-  @override
-  bool onNotificationType2(ScrollNotification notification) {
-    if (checkPage) {
-      return false;
-    }
-    return super.onNotificationType2(notification);
+@override
+bool onNotificationType2(ScrollNotification notification) {
+  if (_isCurrentMinePage) {
+    // sync 模式：始终把底栏恢复到完整显示位置
+    _mainController.barOffset?.value = 0.0;
   }
+  return false;
+}
 
   @override
   Widget build(BuildContext context) {
