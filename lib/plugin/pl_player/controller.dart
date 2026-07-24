@@ -1075,13 +1075,7 @@ void _scheduleMediaOpenRetry() {
         return;
       }
 
-      SmartDialog.showToast(
-        '视频或音频加载失败，重试中'
-        '（$attempt/$_maxMediaOpenRetryAttempts）',
-        displayTime:
-            const Duration(milliseconds: 800),
-      );
-
+      
       try {
         final task = refreshPlayer();
         if (task != null) {
