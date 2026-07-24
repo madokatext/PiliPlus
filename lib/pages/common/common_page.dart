@@ -13,6 +13,9 @@ abstract class CommonPageState<T extends StatefulWidget> extends State<T> {
 
   bool get needsCorrection => false;
 
+/// 当前页面中会随 barOffset 改变布局高度的区域实际高度。
+double get collapsibleExtent => Style.topBarHeight;
+
   @override
   void initState() {
     super.initState();
@@ -40,8 +43,11 @@ abstract class CommonPageState<T extends StatefulWidget> extends State<T> {
   }
 
   bool onNotificationType1(UserScrollNotification notification) {
-    if (!_mainController.useBottomNav) return false;
-    if (notification.metrics.axis == .horizontal) return false;
+  if (!_mainController.useBottomNav ||
+      notification.depth != 0 ||
+      notification.metrics.axis == .horizontal) {
+    return false;
+  }
     switch (notification.direction) {
       case .forward:
         _showTopBar?.value = true;
@@ -62,47 +68,47 @@ abstract class CommonPageState<T extends StatefulWidget> extends State<T> {
     );
   }
 
-  bool onNotificationType2(ScrollNotification notification) {
-  if (!_mainController.useBottomNav) return false;
+bool onNotificationType2(ScrollNotification notification) {
+  if (!_mainController.useBottomNav ||
+      notification.depth != 0 ||
+      notification.metrics.axis == .horizontal) {
+    return false;
+  }
 
   final metrics = notification.metrics;
-  if (metrics.axis == .horizontal) return false;
 
   if (notification is ScrollUpdateNotification) {
     final pixel = metrics.pixels;
     final scrollDelta = notification.scrollDelta ?? 0.0;
     final isDirectDrag = notification.dragDetails != null;
 
-    // 顶部弹性区域向内容范围回弹时，不反向推动栏位移。
+    // 顶部弹性区域回弹时，不把回弹方向当作新的向下滚动。
     if (pixel < 0.0 && scrollDelta > 0.0) {
       return false;
     }
 
     if (needsCorrection && isDirectDrag) {
-      // 手指直接拖动时，顶栏高度改变会同时改变滚动视口位置。
-      // 继续修正 ScrollPosition，保证内容与手指保持 1:1 跟随。
-      final value = _barOffset!.value;
+      final oldValue = _barOffset!.value;
       final newValue = clampDouble(
-        value + scrollDelta,
+        oldValue + scrollDelta,
         0.0,
         Style.topBarHeight,
       );
-      final correction = value - newValue;
+
+      // barOffset 的范围固定为 0~52，但页面实际收起高度可能不是 52。
+      final correction =
+          (oldValue - newValue) *
+          collapsibleExtent /
+          Style.topBarHeight;
 
       if (correction != 0.0) {
         _barOffset!.value = newValue;
-
-        if (pixel < 0.0 && scrollDelta < 0.0 && value > 0.0) {
-          return false;
-        }
 
         Scrollable.of(
           notification.context!,
         ).position.correctBy(correction);
       }
     } else {
-      // 惯性滚动、程序化滚动，以及不需要布局修正的页面：
-      // 只让顶/底栏跟随实际滚动增量，不干扰正在运行的 simulation。
       _updateOffset(scrollDelta);
     }
 
@@ -110,12 +116,20 @@ abstract class CommonPageState<T extends StatefulWidget> extends State<T> {
   }
 
   if (notification is OverscrollNotification) {
-    _updateOffset(notification.overscroll);
+    // ClampingScrollPhysics 到达边界时，位移表现为 overscroll，
+    // 此时也要按真实收起高度换算，否则动态头像栏仍会移动过快。
+    final offsetDelta = needsCorrection
+        ? notification.overscroll *
+              Style.topBarHeight /
+              collapsibleExtent
+        : notification.overscroll;
+
+    _updateOffset(offsetDelta);
     return false;
   }
 
   return false;
-  }
+}
 
   @override
   void dispose() {
