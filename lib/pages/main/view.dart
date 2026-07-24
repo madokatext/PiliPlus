@@ -377,8 +377,8 @@ class _MainAppState extends PopScopeState<MainApp>
         if (_mainController.showBottomBar case final showBottomBar?) {
           return Obx(
             () => AnimatedSlide(
-              curve: Curves.easeInOutCubicEmphasized,
-              duration: const Duration(milliseconds: 500),
+  curve: Curves.easeOutCubic,
+  duration: const Duration(milliseconds: 220),
               offset: Offset(0, showBottomBar.value ? 0 : 1),
               child: bottomNav,
             ),
