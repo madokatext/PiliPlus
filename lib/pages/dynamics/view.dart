@@ -27,7 +27,13 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
   final _dynamicsController = Get.putOrFind(DynamicsController.new);
   UpPanelPosition get upPanelPosition => _dynamicsController.upPanelPosition;
   late final MainController _mainController = Get.find<MainController>();
+static const double _topUpPanelHeight = 76.0;
 
+@override
+bool get needsCorrection => upPanelPosition == .top;
+
+@override
+double get collapsibleExtent => _topUpPanelHeight;
   @override
   bool get wantKeepAlive => true;
 
@@ -62,7 +68,7 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
       color: needBg ? theme.colorScheme.surface : null,
       child: SizedBox(
         width: isTop ? null : 64,
-        height: isTop ? 76 : null,
+        height: isTop ? _topUpPanelHeight : null,
         child: NotificationListener<ScrollEndNotification>(
           onNotification: (notification) {
             final metrics = notification.metrics;
@@ -79,21 +85,26 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
     );
   }
 Widget _collapsibleTopUpPanel(ThemeData theme) {
+  // 放在 Obx 外，避免每一个滚动像素都重新创建整个头像栏组件树。
+  final panel = upPanelPart(theme);
+
   final barOffset = _mainController.barOffset;
 
-  // sync 模式：头像栏随滚动进度连续收起
+  // sync 模式
   if (barOffset != null) {
     return Obx(() {
-      final heightFactor =
-          (1.0 - barOffset.value / Style.topBarHeight)
-              .clamp(0.0, 1.0)
+      final offset =
+          (barOffset.value /
+                  Style.topBarHeight *
+                  _topUpPanelHeight)
+              .clamp(0.0, _topUpPanelHeight)
               .toDouble();
 
       return ClipRect(
-        child: Align(
-          alignment: Alignment.topCenter,
-          heightFactor: heightFactor,
-          child: upPanelPart(theme),
+        child: CustomHeightWidget(
+          height: _topUpPanelHeight - offset,
+          offset: Offset(0.0, -offset),
+          child: panel,
         ),
       );
     });
@@ -101,26 +112,32 @@ Widget _collapsibleTopUpPanel(ThemeData theme) {
 
   final showBottomBar = _mainController.showBottomBar;
 
-  // instant 模式：头像栏与底栏同时动画收起
+  // instant 模式
   if (showBottomBar != null) {
     return Obx(
-      () => AnimatedSize(
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOutCubicEmphasized,
-        alignment: Alignment.topCenter,
-        child: ClipRect(
-          child: Align(
-            alignment: Alignment.topCenter,
-            heightFactor: showBottomBar.value ? 1.0 : 0.0,
-            child: upPanelPart(theme),
-          ),
+      () => TweenAnimationBuilder<double>(
+        tween: Tween<double>(
+          end: showBottomBar.value
+              ? 0.0
+              : _topUpPanelHeight,
         ),
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        child: panel,
+        builder: (context, offset, child) {
+          return ClipRect(
+            child: CustomHeightWidget(
+              height: _topUpPanelHeight - offset,
+              offset: Offset(0.0, -offset),
+              child: child!,
+            ),
+          );
+        },
       ),
     );
   }
 
-  // 未开启底栏滑动收起
-  return upPanelPart(theme);
+  return panel;
 }
   Widget _buildUpPanel(LoadingState<FollowUpModel> upState) {
     return switch (upState) {
@@ -138,25 +155,31 @@ Widget _collapsibleTopUpPanel(ThemeData theme) {
     };
   }
 
-  bool get checkPage =>
-      _mainController.navigationBars[0] != .dynamics &&
-      _mainController.selectedIndex.value == 0;
+  bool get _isCurrentPage =>
+    _mainController.navigationBars[
+        _mainController.selectedIndex.value
+    ] ==
+    .dynamics;
 
   @override
-  bool onNotificationType1(UserScrollNotification notification) {
-    if (checkPage) {
-      return false;
-    }
-    return super.onNotificationType1(notification);
+bool onNotificationType1(
+  UserScrollNotification notification,
+) {
+  if (!_isCurrentPage) {
+    return false;
   }
+  return super.onNotificationType1(notification);
+}
 
-  @override
-  bool onNotificationType2(ScrollNotification notification) {
-    if (checkPage) {
-      return false;
-    }
-    return super.onNotificationType2(notification);
+@override
+bool onNotificationType2(
+  ScrollNotification notification,
+) {
+  if (!_isCurrentPage) {
+    return false;
   }
+  return super.onNotificationType2(notification);
+}
 
   @override
   Widget build(BuildContext context) {
