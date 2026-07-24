@@ -74,9 +74,7 @@ class PlPlayerController with BlockConfigMixin {
   VideoController? _videoController;
   Future<Player>? _playerInitTask;
 Timer? _mediaOpenRetryTimer;
-int _mediaOpenRetryAttempt = 0;
 
-static const int _maxMediaOpenRetryAttempts = 3;
 static const Duration _mediaOpenRetryDelay =
     Duration(seconds: 2);
   static PlPlayerController? _instance;
@@ -1044,7 +1042,6 @@ final dataSourceGeneration = ++_dataSourceGeneration;
 void _resetMediaOpenRetry() {
   _mediaOpenRetryTimer?.cancel();
   _mediaOpenRetryTimer = null;
-  _mediaOpenRetryAttempt = 0;
 }
 bool _isRetryableMediaOpenError(String event) {
   return event.startsWith('Failed to open https://') ||
@@ -1056,14 +1053,12 @@ void _scheduleMediaOpenRetry() {
   if (_playerCount == 0 ||
       isLive ||
       dataSource is FileSource ||
-      _mediaOpenRetryTimer != null ||
-      _mediaOpenRetryAttempt >=
-          _maxMediaOpenRetryAttempts) {
+      _mediaOpenRetryTimer != null) {
     return;
   }
 
   final generation = _dataSourceGeneration;
-  final attempt = ++_mediaOpenRetryAttempt;
+
 
   _mediaOpenRetryTimer = Timer(
     _mediaOpenRetryDelay,
