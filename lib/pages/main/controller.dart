@@ -284,11 +284,20 @@ class MainController extends GetxController
     }
   }
 
-  void setIndex(int value) {
-    feedBack();
+ void setIndex(int value) {
+  feedBack();
 
-    final currentNav = navigationBars[value];
-    if (value != selectedIndex.value) {
+  final currentNav = navigationBars[value];
+
+  if (currentNav == NavigationBarType.mine) {
+    // sync 模式
+    barOffset?.value = 0.0;
+
+    // instant 模式
+    showBottomBar?.value = true;
+  }
+
+  if (value != selectedIndex.value) {
       selectedIndex.value = value;
       if (mainTabBarView) {
         controller.animateTo(value);
