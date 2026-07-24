@@ -55,6 +55,7 @@ abstract final class ThemeUtils {
       highlightColor: colorScheme.onSurface.withValues(alpha: 0.04),
       colorScheme: colorScheme,
       useMaterial3: true,
+      splashFactory: NoSplash.splashFactory,
       fontFamily: fontFamilies.primary,
       textTheme: !hasCustomTextStyle
           ? null
