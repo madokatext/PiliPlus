@@ -72,13 +72,21 @@ double get collapsibleExtent => Style.topBarHeight;
       Style.topBarHeight,
     );
   }
+double _convertScrollDelta(double scrollDelta) {
+  if (!needsCorrection) {
+    return scrollDelta;
+  }
 
+  return scrollDelta *
+      Style.topBarHeight /
+      collapsibleExtent;
+}
 bool onNotificationType2(ScrollNotification notification) {
   if (!_mainController.useBottomNav ||
-    notification.depth > 1 ||
-    notification.metrics.axis == .horizontal) {
-  return false;
-}
+      notification.depth > 1 ||
+      notification.metrics.axis == .horizontal) {
+    return false;
+  }
 
   final metrics = notification.metrics;
 
@@ -87,20 +95,22 @@ bool onNotificationType2(ScrollNotification notification) {
     final scrollDelta = notification.scrollDelta ?? 0.0;
     final isDirectDrag = notification.dragDetails != null;
 
-    // 顶部弹性区域回弹时，不把回弹方向当作新的向下滚动。
+    // 顶部弹性区域向内容范围回弹时，不反向推动栏位移。
     if (pixel < 0.0 && scrollDelta > 0.0) {
       return false;
     }
 
+    final barDelta = _convertScrollDelta(scrollDelta);
+
     if (needsCorrection && isDirectDrag) {
       final oldValue = _barOffset!.value;
       final newValue = clampDouble(
-        oldValue + scrollDelta,
+        oldValue + barDelta,
         0.0,
         Style.topBarHeight,
       );
 
-      // barOffset 的范围固定为 0~52，但页面实际收起高度可能不是 52。
+      // 将 barOffset 的变化量换算回实际布局高度变化量。
       final correction =
           (oldValue - newValue) *
           collapsibleExtent /
@@ -114,22 +124,17 @@ bool onNotificationType2(ScrollNotification notification) {
         ).position.correctBy(correction);
       }
     } else {
-      _updateOffset(scrollDelta);
+      // 惯性滚动、程序化滚动也必须使用同一套比例换算。
+      _updateOffset(barDelta);
     }
 
     return false;
   }
 
   if (notification is OverscrollNotification) {
-    // ClampingScrollPhysics 到达边界时，位移表现为 overscroll，
-    // 此时也要按真实收起高度换算，否则动态头像栏仍会移动过快。
-    final offsetDelta = needsCorrection
-        ? notification.overscroll *
-              Style.topBarHeight /
-              collapsibleExtent
-        : notification.overscroll;
-
-    _updateOffset(offsetDelta);
+    _updateOffset(
+      _convertScrollDelta(notification.overscroll),
+    );
     return false;
   }
 
