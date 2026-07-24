@@ -41,7 +41,10 @@ class _VideoReplyPanelState extends State<VideoReplyPanel>
         FabMixin {
   late ColorScheme colorScheme;
   late VideoReplyController _videoReplyController;
+static const double _fabRevealDistance = 72.0;
 
+double _fabUpwardDistance = 0.0;
+bool _fabHiddenByScroll = false;
   String get heroTag => widget.heroTag;
 
   @override
@@ -64,21 +67,48 @@ class _VideoReplyPanelState extends State<VideoReplyPanel>
   }
 
   late double bottom;
+bool _handleFabScroll(ScrollNotification notification) {
+  if (notification.depth != 0 ||
+      notification.metrics.axis != Axis.vertical) {
+    return false;
+  }
 
+  if (notification is! ScrollUpdateNotification) {
+    return false;
+  }
+
+  final delta = notification.scrollDelta ?? 0.0;
+
+  if (delta > 0) {
+    // 向下浏览：立即隐藏，并清空上滑累计距离
+    _fabUpwardDistance = 0.0;
+
+    if (!_fabHiddenByScroll) {
+      _fabHiddenByScroll = true;
+      hideFab();
+    }
+  } else if (delta < 0 && _fabHiddenByScroll) {
+    // 向上返回：累计上滑距离
+    _fabUpwardDistance += -delta;
+
+    final reachedTop =
+        notification.metrics.pixels <=
+        notification.metrics.minScrollExtent + 0.5;
+
+    if (_fabUpwardDistance >= _fabRevealDistance || reachedTop) {
+      _fabUpwardDistance = 0.0;
+      _fabHiddenByScroll = false;
+      showFab();
+    }
+  }
+
+  return false;
+}
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final child = NotificationListener<UserScrollNotification>(
-      onNotification: (notification) {
-        switch (notification.direction) {
-          case .forward:
-            showFab();
-          case .reverse:
-            hideFab();
-          case _:
-        }
-        return false;
-      },
+    final child = NotificationListener<ScrollNotification>(
+  onNotification: _handleFabScroll,
       child: refreshIndicator(
         onRefresh: _videoReplyController.onRefresh,
         isClampingScrollPhysics: widget.isNested,
