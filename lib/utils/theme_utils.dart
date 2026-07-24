@@ -52,6 +52,7 @@ abstract final class ThemeUtils {
       fontFamilyFallback: fontFamilyFallback,
     );
     ThemeData themeData = ThemeData(
+      highlightColor: colorScheme.onSurface.withValues(alpha: 0.04),
       colorScheme: colorScheme,
       useMaterial3: true,
       fontFamily: fontFamilies.primary,
