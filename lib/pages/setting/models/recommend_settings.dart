@@ -49,19 +49,19 @@ List<SettingsModel> get recommendSettings => [
     },
   ),
   getVideoFilterSelectModel(
-  title: '首页每次刷新卡片数',
-  key: SettingBoxKey.rcmdRefreshCount,
-  values: [4, 6, 8, 10, 12, 16, 20, 24, 30],
-  defaultValue: 20,
-  isFilter: false,
-  onChanged: (value) {
-    try {
-      Get.find<RcmdController>().refreshItemCount = value;
-    } catch (e) {
-      if (kDebugMode) debugPrint('$e');
+    title: '首页每次刷新卡片数',
+    key: SettingBoxKey.rcmdRefreshCount,
+    values: [4, 6, 8, 10, 12, 16, 20, 24, 30],
+    defaultValue: 20,
+    isFilter: false,
+    onChanged: (value) {
+      try {
+        Get.find<RcmdController>().refreshItemCount = value;
+      } catch (e) {
+        if (kDebugMode) debugPrint('$e');
+      }
     },
-  },
-),
+  ),
   NormalModel(
     title: '近期推荐历史过滤',
     leading: const Icon(Icons.history_toggle_off_outlined),
