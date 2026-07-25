@@ -9,6 +9,7 @@ import 'package:PiliPlus/models/common/dynamic/dynamic_badge_mode.dart';
 import 'package:PiliPlus/models/common/dynamic/dynamics_type.dart';
 import 'package:PiliPlus/models/common/dynamic/up_panel_position.dart';
 import 'package:PiliPlus/models/common/follow_order_type.dart';
+import 'package:PiliPlus/models/common/home_card_aspect_ratio.dart';
 import 'package:PiliPlus/models/common/member/tab_type.dart';
 import 'package:PiliPlus/models/common/msg/msg_unread_type.dart';
 import 'package:PiliPlus/models/common/nav_bar_config.dart';
@@ -223,6 +224,11 @@ abstract final class Pref {
 
   static double get recommendCardWidth =>
       _setting.get(SettingBoxKey.recommendCardWidth, defaultValue: 240.0);
+
+  static HomeCardAspectRatio get homeCardAspectRatio =>
+      HomeCardAspectRatio.fromStorage(
+        _setting.get(SettingBoxKey.homeCardAspectRatio),
+      );
 
   static bool get recommendDurationInStatRow => _setting.get(
     SettingBoxKey.recommendDurationInStatRow,

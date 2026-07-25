@@ -135,7 +135,7 @@ class _RcmdPageState extends State<RcmdPage>
         mainAxisSpacing: HomeCardLayoutPrefs.verticalSpacing,
         crossAxisSpacing: HomeCardLayoutPrefs.horizontalSpacing,
         maxCrossAxisExtent: Pref.recommendCardWidth,
-        childAspectRatio: Style.aspectRatio,
+        childAspectRatio: Pref.homeCardAspectRatio.ratio,
         mainAxisExtent: MediaQuery.textScalerOf(context).scale(90),
       );
 
@@ -194,7 +194,9 @@ class _RcmdPageState extends State<RcmdPage>
 
   Widget get _buildSkeleton => SliverGrid.builder(
     gridDelegate: gridDelegate,
-    itemBuilder: (context, index) => const VideoCardVSkeleton(),
+    itemBuilder: (context, index) => VideoCardVSkeleton(
+      aspectRatio: Pref.homeCardAspectRatio.ratio,
+    ),
     itemCount: 10,
   );
 
@@ -202,6 +204,7 @@ class _RcmdPageState extends State<RcmdPage>
     final item = rawItem as BaseRcmdVideoItemModel;
     final card = VideoCardV(
       videoItem: item,
+      aspectRatio: Pref.homeCardAspectRatio.ratio,
       onRemove: () => controller.removeItemAt(index),
     );
     final occurrenceId = item.historyOccurrenceId;

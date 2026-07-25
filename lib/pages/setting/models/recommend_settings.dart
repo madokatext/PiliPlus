@@ -1,4 +1,5 @@
 import 'package:PiliPlus/http/video.dart';
+import 'package:PiliPlus/models/common/home_card_aspect_ratio.dart';
 import 'package:PiliPlus/models/common/recommend_history_filter_settings.dart';
 import 'package:PiliPlus/pages/rcmd/controller.dart';
 import 'package:PiliPlus/pages/setting/models/model.dart';
@@ -60,6 +61,20 @@ List<SettingsModel> get recommendSettings => [
       } catch (e) {
         if (kDebugMode) debugPrint('$e');
       }
+    },
+  ),
+  PopupModel<HomeCardAspectRatio>(
+    title: '首页卡片尺寸',
+    leading: const Icon(Icons.aspect_ratio_outlined),
+    value: () => Pref.homeCardAspectRatio,
+    items: HomeCardAspectRatio.values,
+    onSelected: (value, setState) {
+      GStorage.setting
+          .put(SettingBoxKey.homeCardAspectRatio, value.name)
+          .whenComplete(() {
+            setState();
+            Get.appUpdate();
+          });
     },
   ),
   NormalModel(

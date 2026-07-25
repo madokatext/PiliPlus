@@ -87,6 +87,7 @@ const Map<String, Object> defaultSettingValues = {
   'fontWeight': 4,
   'fullScreenMode': 0,
   'highLikeDanmakuThreshold': 100,
+  'homeCardAspectRatio': 'sixteenTen',
   'homeTabBarHeight': 36.0,
   'horizontalScreen': false,
   'horizontalSeekGestureAngleThreshold': 45.0,
