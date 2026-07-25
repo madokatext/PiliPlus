@@ -21,11 +21,13 @@ class VideoCardHMemberVideo extends StatelessWidget {
     super.key,
     required this.videoItem,
     this.onTap,
+    this.onView,
     this.bvid,
     this.fromViewAid,
   });
   final SpaceArchiveItem videoItem;
   final VoidCallback? onTap;
+  final VoidCallback? onView;
   final dynamic bvid;
   final String? fromViewAid;
 
@@ -55,6 +57,7 @@ class VideoCardHMemberVideo extends StatelessWidget {
                       videoItem.uri!,
                       isPgc: isPgc,
                     )) {
+                      onView?.call();
                       return;
                     }
                   }
@@ -65,6 +68,7 @@ class VideoCardHMemberVideo extends StatelessWidget {
                   if (videoItem.uri case final uri?) {
                     isVertical = uri.isVerticalFromUri;
                   }
+                  onView?.call();
                   PageUtils.toVideoPage(
                     bvid: videoItem.bvid,
                     cid: videoItem.cid!,

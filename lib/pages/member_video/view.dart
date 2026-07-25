@@ -51,6 +51,39 @@ class _MemberVideoState extends State<MemberVideo>
   bool get wantKeepAlive => true;
 
   late final MemberVideoCtr _controller;
+  static const double _fabRevealDistance = 72.0;
+
+  double _fabUpwardDistance = 0.0;
+  bool _fabHiddenByScroll = false;
+
+  bool _handleFabScroll(ScrollNotification notification) {
+    if (notification.depth != 0 ||
+        notification.metrics.axis != Axis.vertical ||
+        notification is! ScrollUpdateNotification) {
+      return false;
+    }
+
+    final delta = notification.scrollDelta ?? 0.0;
+    if (delta > 0) {
+      _fabUpwardDistance = 0.0;
+      if (!_fabHiddenByScroll) {
+        _fabHiddenByScroll = true;
+        hideFab();
+      }
+    } else if (delta < 0 && _fabHiddenByScroll) {
+      _fabUpwardDistance += -delta;
+      final reachedTop =
+          notification.metrics.pixels <=
+          notification.metrics.minScrollExtent + 0.5;
+      if (_fabUpwardDistance >= _fabRevealDistance || reachedTop) {
+        _fabUpwardDistance = 0.0;
+        _fabHiddenByScroll = false;
+        showFab();
+      }
+    }
+
+    return false;
+  }
 
   void _jumpToIndex(int index) {
     final scrollOffset = gridDelegate.layoutCache!
@@ -119,16 +152,8 @@ class _MemberVideoState extends State<MemberVideo>
       return Stack(
         clipBehavior: Clip.none,
         children: [
-          NotificationListener<UserScrollNotification>(
-            onNotification: (notification) {
-              final direction = notification.direction;
-              if (direction == .forward) {
-                showFab();
-              } else if (direction == .reverse) {
-                hideFab();
-              }
-              return false;
-            },
+          NotificationListener<ScrollNotification>(
+            onNotification: _handleFabScroll,
             child: child,
           ),
           Obx(
@@ -143,6 +168,8 @@ class _MemberVideoState extends State<MemberVideo>
                           bottom: padding.bottom + kFloatingActionButtonMargin,
                         ),
                         child: FloatingActionButton.extended(
+                          backgroundColor: theme.colorScheme.primary,
+                          foregroundColor: theme.colorScheme.onPrimary,
                           onPressed: () {
                             final fromViewAid = _controller.fromViewAid;
                             _controller.isLocating.value = true;
@@ -203,6 +230,13 @@ class _MemberVideoState extends State<MemberVideo>
                       return VideoCardHMemberVideo(
                         videoItem: response[index],
                         fromViewAid: _controller.fromViewAid,
+                        onView: () {
+                          final aid = response[index].param;
+                          if (aid?.isNotEmpty == true &&
+                              aid != _controller.fromViewAid) {
+                            setState(() => _controller.fromViewAid = aid);
+                          }
+                        },
                       );
                     },
                     itemCount: response.length,
