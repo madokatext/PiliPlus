@@ -76,6 +76,15 @@ class MemberVideoCtr
     queryData();
   }
 
+  bool updateFromViewAid(String? aid) {
+    if (!isVideo || aid?.isNotEmpty != true) {
+      return false;
+    }
+    fromViewAid = aid;
+    isLocating.value = false;
+    return true;
+  }
+
   @override
   bool customHandleResponse(
     bool isRefresh,

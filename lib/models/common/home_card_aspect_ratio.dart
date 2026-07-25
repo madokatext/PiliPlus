@@ -20,6 +20,6 @@ enum HomeCardAspectRatio implements EnumWithLabel {
         }
       }
     }
-    return sixteenTen;
+    return fourThree;
   }
 }

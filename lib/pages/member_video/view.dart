@@ -231,10 +231,13 @@ class _MemberVideoState extends State<MemberVideo>
                         videoItem: response[index],
                         fromViewAid: _controller.fromViewAid,
                         onView: () {
-                          final aid = response[index].param;
-                          if (aid?.isNotEmpty == true &&
-                              aid != _controller.fromViewAid) {
-                            setState(() => _controller.fromViewAid = aid);
+                          if (_controller.updateFromViewAid(
+                            response[index].param,
+                          )) {
+                            _fabUpwardDistance = 0.0;
+                            _fabHiddenByScroll = false;
+                            showFab();
+                            setState(() {});
                           }
                         },
                       );

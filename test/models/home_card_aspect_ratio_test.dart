@@ -12,18 +12,18 @@ void main() {
       expect(HomeCardAspectRatio.fourThree.ratio, closeTo(4 / 3, 0.0001));
     });
 
-    test('restores a persisted ratio and falls back to 16:10', () {
+    test('restores a persisted ratio and falls back to 4:3', () {
       expect(
         HomeCardAspectRatio.fromStorage('sixteenNine'),
         HomeCardAspectRatio.sixteenNine,
       );
       expect(
         HomeCardAspectRatio.fromStorage('unknown'),
-        HomeCardAspectRatio.sixteenTen,
+        HomeCardAspectRatio.fourThree,
       );
       expect(
         HomeCardAspectRatio.fromStorage(null),
-        HomeCardAspectRatio.sixteenTen,
+        HomeCardAspectRatio.fourThree,
       );
     });
   });

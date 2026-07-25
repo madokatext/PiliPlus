@@ -5,10 +5,10 @@ class RecommendHistoryFilterSettings {
   static const int maxLookbackMinutes = 30 * 24 * 60;
   static const RecommendHistoryFilterSettings defaults =
       RecommendHistoryFilterSettings(
-        enabled: false,
+        enabled: true,
         lookbackMinutes: 7 * 24 * 60,
-        exposureThreshold: 2,
-        watchThreshold: 1,
+        exposureThreshold: 1,
+        watchThreshold: 0,
         minWatchSeconds: 30,
       );
 

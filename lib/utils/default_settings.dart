@@ -17,7 +17,7 @@ const Map<String, Object> defaultSettingValues = {
   'btmProgressBehavior': 3,
   'bufferSec': 60.0,
   'bufferSize': 128.0,
-  'burstDanmakuCooldownSeconds': 3.0,
+  'burstDanmakuCooldownSeconds': 2.0,
   'burstDanmakuFontScale': 2.0,
   'burstDanmakuTriggerCount': 20,
   'burstDanmakuWindowSeconds': 6.0,
@@ -35,7 +35,7 @@ const Map<String, Object> defaultSettingValues = {
       '--deband-threshold=12\n'
       '--deband\n'
       '--audio-delay=-0.1',
-  'customPrimarySeed': 4278216191,
+  'customPrimarySeed': 4278205695,
   'customSecondarySeed': 4294946760,
   'customTertiarySeed': 2566913792,
   'customThemeTone.light.card': 4.0,
@@ -87,7 +87,7 @@ const Map<String, Object> defaultSettingValues = {
   'fontWeight': 4,
   'fullScreenMode': 0,
   'highLikeDanmakuThreshold': 100,
-  'homeCardAspectRatio': 'sixteenTen',
+  'homeCardAspectRatio': 'fourThree',
   'homeTabBarHeight': 36.0,
   'horizontalScreen': false,
   'horizontalSeekGestureAngleThreshold': 45.0,
@@ -116,10 +116,10 @@ const Map<String, Object> defaultSettingValues = {
   'preferCodecs': <String>['AV1', 'HEVC', 'AVC'],
   'rcmdRefreshCount': 9,
   'recommendHistoryFilterSettings': <String, Object>{
-    'enabled': false,
+    'enabled': true,
     'lookbackMinutes': 10080,
-    'exposureThreshold': 2,
-    'watchThreshold': 1,
+    'exposureThreshold': 1,
+    'watchThreshold': 0,
     'minWatchSeconds': 30,
   },
   'recommendCardHorizontalPadding': 5.0,
@@ -168,8 +168,9 @@ const Map<String, Object> defaultSettingValues = {
   'themeMode': 2,
   'touchSlopH': 8.0,
   'upPanelPosition': 0,
-  'useRelativeSlide': true,
+  'useRelativeSlide': false,
   'videoDetailUseAv': true,
+  'videoPlayerSwitchForceTimeoutSeconds': 5,
   'verticalFullscreenBottomBarSafeArea': true,
   'verticalFullscreenBottomBarSafeHeight': 30.0,
   'verticalScrollDecelerationScale': 0.4,
@@ -180,6 +181,7 @@ const Map<String, Object> defaultSettingValues = {
 };
 
 const Map<String, Object> defaultVideoValues = {
+  'cacheVideoFit': 1,
   'longPressSpeedDefault': 3.0,
   'speedsList': <double>[0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 3.0, 4.0],
 };

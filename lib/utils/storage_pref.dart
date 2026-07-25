@@ -338,10 +338,10 @@ static double get verticalScrollDecelerationScale => _getClampedDouble(
 static int get videoPlayerSwitchForceTimeoutSeconds {
   final value = _setting.get(
     SettingBoxKey.videoPlayerSwitchForceTimeoutSeconds,
-    defaultValue: 10,
+    defaultValue: 5,
   );
 
-  return (value is num ? value.toInt() : 10)
+  return (value is num ? value.toInt() : 5)
       .clamp(0, 60)
       .toInt();
 }
@@ -676,7 +676,7 @@ static double get burstDanmakuWindowSeconds => _getClampedDouble(
 
 static double get burstDanmakuCooldownSeconds => _getClampedDouble(
   SettingBoxKey.burstDanmakuCooldownSeconds,
-  3.0,
+  2.0,
   0.5,
   60.0,
 );
