@@ -11,30 +11,6 @@ import 'package:media_kit_video/media_kit_video.dart';
 
 typedef MpvVideoTransform = ({double zoom, double panX, double panY});
 
-class _MpvOutputResizeScheduler<T> {
-  _MpvOutputResizeScheduler({
-    required this.delay,
-    required this.onResize,
-  });
-
-  final Duration delay;
-  final ValueChanged<T> onResize;
-  Timer? _timer;
-
-  void schedule(T value) {
-    _timer?.cancel();
-    _timer = Timer(delay, () {
-      _timer = null;
-      onResize(value);
-    });
-  }
-
-  void cancel() {
-    _timer?.cancel();
-    _timer = null;
-  }
-}
-
 @visibleForTesting
 MpvVideoTransform calculateMpvVideoTransform({
   required Matrix4 matrix,
@@ -84,7 +60,6 @@ class MpvVideoOutput extends StatefulWidget {
 }
 
 class _MpvVideoOutputState extends State<MpvVideoOutput> {
-  static const _resizeDebounceDuration = Duration(milliseconds: 120);
   static const _androidVideoChannel = MethodChannel(
     'com.alexmercerind/media_kit_video',
   );
@@ -97,20 +72,10 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
   Rect? _lastMismatchedRect;
   bool _pendingResize = false;
   bool _configurationScheduled = false;
-  late final _MpvOutputResizeScheduler<_MpvOutputConfiguration>
-  _resizeScheduler;
 
   @override
   void initState() {
     super.initState();
-    _resizeScheduler = _MpvOutputResizeScheduler(
-      delay: _resizeDebounceDuration,
-      onResize: (configuration) {
-        if (mounted) {
-          unawaited(_applyConfiguration(configuration, resize: true));
-        }
-      },
-    );
     _listenToController();
     widget.transformationController.addListener(_onTransformationChanged);
   }
@@ -120,7 +85,6 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
     super.didUpdateWidget(oldWidget);
     if (widget.controller != oldWidget.controller) {
       _sizeSubscription?.cancel();
-      _resizeScheduler.cancel();
       _lastRequestedConfiguration = null;
       _lastMismatchedRect = null;
       _listenToController();
@@ -154,7 +118,6 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
   @override
   void dispose() {
     widget.transformationController.removeListener(_onTransformationChanged);
-    _resizeScheduler.cancel();
     _sizeSubscription?.cancel();
     super.dispose();
   }
@@ -245,17 +208,7 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
     _lastRequestedConfiguration = configuration;
     _lastMismatchedRect = matches ? null : rect;
     _pendingConfiguration = configuration;
-    if (matches) {
-      _resizeScheduler.cancel();
-    } else if (rect == null) {
-      // Initialize the output immediately; later resizes can retain this texture.
-      _resizeScheduler.cancel();
-      _pendingResize = true;
-    } else {
-      // Animated layouts may report a new size every frame. Recreating Android's
-      // SurfaceTexture for every intermediate size causes visible black flashes.
-      _resizeScheduler.schedule(configuration);
-    }
+    _pendingResize = _pendingResize || !matches;
     if (_configurationScheduled) return;
     _configurationScheduled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
