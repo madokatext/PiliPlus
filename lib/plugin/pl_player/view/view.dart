@@ -49,6 +49,7 @@ import 'package:PiliPlus/plugin/pl_player/widgets/bottom_control.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/common_btn.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/display_controls.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/forward_seek.dart';
+import 'package:PiliPlus/plugin/pl_player/widgets/mpv_video_output.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/mpv_convert_webp.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/play_pause_btn.dart';
 import 'package:PiliPlus/utils/android/bindings.g.dart';
@@ -2302,6 +2303,7 @@ if (!isLive)
               : .zero,
           panAxis: .aligned,
           transformationController: _transformationController,
+          transformChild: false,
           childKey: _videoKey,
           child: RepaintBoundary(
             key: _videoKey,
@@ -2314,15 +2316,13 @@ if (!isLive)
                     plPlayerController.standbyVideoController;
 
                 Widget buildVideoOutput(VideoController targetController) {
-                  return FittedBox(
-                    fit: videoFit.boxFit,
+                  return MpvVideoOutput(
+                    key: ValueKey(targetController),
+                    controller: targetController,
+                    fit: videoFit,
+                    fill: widget.fill,
                     alignment: widget.alignment,
-                    child: SimpleVideo(
-                      key: ValueKey(targetController),
-                      controller: targetController,
-                      fill: widget.fill,
-                      aspectRatio: videoFit.aspectRatio,
-                    ),
+                    transformationController: _transformationController,
                   );
                 }
 

@@ -39,6 +39,7 @@ class MouseInteractiveViewer extends StatefulWidget {
     required this.transformationController,
     this.alignment,
     this.trackpadScrollCausesScale = false,
+    this.transformChild = true,
     required this.childKey,
     required this.child,
     required this.scaleGestureRecognizer,
@@ -60,6 +61,7 @@ class MouseInteractiveViewer extends StatefulWidget {
   final bool panEnabled;
   final bool scaleEnabled;
   final bool trackpadScrollCausesScale;
+  final bool transformChild;
   final double scaleFactor;
   final double pinchGestureAngleThreshold;
   final double maxScale;
@@ -714,7 +716,7 @@ class _MouseInteractiveViewerState extends State<MouseInteractiveViewer>
         childKey: widget.childKey,
         clipBehavior: widget.clipBehavior,
         constrained: widget.constrained,
-        matrix: _transformer.value,
+        matrix: widget.transformChild ? _transformer.value : Matrix4.identity(),
         alignment: widget.alignment,
         child: widget.child,
       ),
