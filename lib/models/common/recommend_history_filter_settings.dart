@@ -49,10 +49,10 @@ class RecommendHistoryFilterSettings {
       exposureThreshold: readInt(
         'exposureThreshold',
         defaults.exposureThreshold,
-        1,
+        0,
         5,
       ),
-      watchThreshold: readInt('watchThreshold', defaults.watchThreshold, 1, 5),
+      watchThreshold: readInt('watchThreshold', defaults.watchThreshold, 0, 5),
       minWatchSeconds: readInt(
         'minWatchSeconds',
         defaults.minWatchSeconds,

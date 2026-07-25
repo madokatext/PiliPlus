@@ -213,7 +213,9 @@ class RecommendHistoryRepository {
     required RecommendHistoryFilterSettings settings,
     DateTime? now,
   }) async {
-    if (!settings.enabled || candidateVideoKeys.isEmpty) {
+    if (!settings.enabled ||
+        candidateVideoKeys.isEmpty ||
+        (settings.exposureThreshold == 0 && settings.watchThreshold == 0)) {
       return <String>{};
     }
 
@@ -227,38 +229,42 @@ class RecommendHistoryRepository {
       final days = _daysInWindow(cutoffMs, current.millisecondsSinceEpoch);
       final blocked = <String>{};
 
-      for (final videoKey in candidateVideoKeys) {
-        var count = 0;
-        for (final day in days) {
-          final events = _intMap(
-            exposureBox.get(_videoDataKey('e', scopeId, day, videoKey)),
-          );
-          count += events.values
-              .where((timestamp) => timestamp >= cutoffMs)
-              .length;
-          if (count >= settings.exposureThreshold) {
-            blocked.add(videoKey);
-            break;
+      if (settings.exposureThreshold > 0) {
+        for (final videoKey in candidateVideoKeys) {
+          var count = 0;
+          for (final day in days) {
+            final events = _intMap(
+              exposureBox.get(_videoDataKey('e', scopeId, day, videoKey)),
+            );
+            count += events.values
+                .where((timestamp) => timestamp >= cutoffMs)
+                .length;
+            if (count >= settings.exposureThreshold) {
+              blocked.add(videoKey);
+              break;
+            }
           }
         }
       }
 
-      final minWatchMs = settings.minWatchSeconds * 1000;
-      for (final videoKey in candidateVideoKeys.difference(blocked)) {
-        var count = 0;
-        for (final day in days) {
-          final sessions = _sessionMap(
-            watchBox.get(_videoDataKey('w', scopeId, day, videoKey)),
-          );
-          count += sessions.values.where((session) {
-            return session.isNotEmpty &&
-                session[0] >= cutoffMs &&
-                session.length > 1 &&
-                session[1] >= minWatchMs;
-          }).length;
-          if (count >= settings.watchThreshold) {
-            blocked.add(videoKey);
-            break;
+      if (settings.watchThreshold > 0) {
+        final minWatchMs = settings.minWatchSeconds * 1000;
+        for (final videoKey in candidateVideoKeys.difference(blocked)) {
+          var count = 0;
+          for (final day in days) {
+            final sessions = _sessionMap(
+              watchBox.get(_videoDataKey('w', scopeId, day, videoKey)),
+            );
+            count += sessions.values.where((session) {
+              return session.isNotEmpty &&
+                  session[0] >= cutoffMs &&
+                  session.length > 1 &&
+                  session[1] >= minWatchMs;
+            }).length;
+            if (count >= settings.watchThreshold) {
+              blocked.add(videoKey);
+              break;
+            }
           }
         }
       }

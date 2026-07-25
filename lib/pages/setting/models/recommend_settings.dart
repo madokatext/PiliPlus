@@ -155,6 +155,12 @@ String _historyFilterSummary(RecommendHistoryFilterSettings value) {
     if (hours > 0) '$hours 小时',
     if (minutes > 0) '$minutes 分钟',
   ];
-  return '${parts.join(' ')}内；推荐 ${value.exposureThreshold} 次或观看 '
-      '${value.watchThreshold} 次（至少 ${value.minWatchSeconds} 秒）';
+  final rules = <String>[
+    if (value.exposureThreshold > 0) '推荐 ${value.exposureThreshold} 次',
+    if (value.watchThreshold > 0)
+      '观看 ${value.watchThreshold} 次（至少 ${value.minWatchSeconds} 秒）',
+  ];
+  return rules.isEmpty
+      ? '${parts.join(' ')}内；不按次数过滤'
+      : '${parts.join(' ')}内；${rules.join(' 或 ')}';
 }

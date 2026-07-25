@@ -174,7 +174,7 @@ class _RecommendHistoryFilterDialogState
           width: 92,
           child: _plainSelect(
             value: value,
-            values: List.generate(5, (index) => index + 1),
+            values: List.generate(6, (index) => index),
             suffix: '次',
             onChanged: onChanged,
           ),

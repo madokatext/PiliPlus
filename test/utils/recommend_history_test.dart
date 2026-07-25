@@ -25,7 +25,7 @@ void main() {
         value.lookbackMinutes,
         RecommendHistoryFilterSettings.maxLookbackMinutes,
       );
-      expect(value.exposureThreshold, 1);
+      expect(value.exposureThreshold, 0);
       expect(value.watchThreshold, 5);
       expect(value.minWatchSeconds, 0);
     });
@@ -148,6 +148,52 @@ void main() {
         expect(blocked, {'ugc:3'});
       },
     );
+
+    test('zero disables each history metric independently', () async {
+      final now = DateTime(2026, 7, 25, 12);
+      await repository.recordExposure(
+        scopeId: 'uid:1',
+        occurrenceId: 'response-a:0:ugc:5',
+        videoKey: 'ugc:5',
+        exposedAt: now,
+      );
+      await repository.createPlaySession(
+        scopeId: 'uid:1',
+        sessionId: 'session-2',
+        videoKey: 'ugc:5',
+        firstFrameAt: now,
+      );
+      await repository.updatePlaySession(
+        sessionId: 'session-2',
+        activePlayedMs: 300000,
+        ended: true,
+        updatedAt: now,
+      );
+
+      var blocked = await repository.findBlockedVideos(
+        scopeId: 'uid:1',
+        candidateVideoKeys: {'ugc:5'},
+        settings: _settings(exposureThreshold: 0, watchThreshold: 0),
+        now: now,
+      );
+      expect(blocked, isEmpty);
+
+      blocked = await repository.findBlockedVideos(
+        scopeId: 'uid:1',
+        candidateVideoKeys: {'ugc:5'},
+        settings: _settings(exposureThreshold: 0, watchThreshold: 1),
+        now: now,
+      );
+      expect(blocked, {'ugc:5'});
+
+      blocked = await repository.findBlockedVideos(
+        scopeId: 'uid:1',
+        candidateVideoKeys: {'ugc:5'},
+        settings: _settings(exposureThreshold: 1, watchThreshold: 0),
+        now: now,
+      );
+      expect(blocked, {'ugc:5'});
+    });
 
     test(
       'daily cleanup removes expired data without touching current data',
