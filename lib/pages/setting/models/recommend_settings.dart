@@ -1,8 +1,12 @@
 import 'package:PiliPlus/http/video.dart';
+import 'package:PiliPlus/models/common/recommend_history_filter_settings.dart';
 import 'package:PiliPlus/pages/rcmd/controller.dart';
 import 'package:PiliPlus/pages/setting/models/model.dart';
+import 'package:PiliPlus/pages/setting/widgets/recommend_history_filter_dialog.dart';
 import 'package:PiliPlus/utils/recommend_filter.dart';
+import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -55,9 +59,16 @@ List<SettingsModel> get recommendSettings => [
       Get.find<RcmdController>().refreshItemCount = value;
     } catch (e) {
       if (kDebugMode) debugPrint('$e');
-    }
+    },
   },
 ),
+  NormalModel(
+    title: '近期推荐历史过滤',
+    leading: const Icon(Icons.history_toggle_off_outlined),
+    getSubtitle: () =>
+        _historyFilterSummary(Pref.recommendHistoryFilterSettings),
+    onTap: _showHistoryFilterDialog,
+  ),
   getVideoFilterSelectModel(
     title: '点赞率',
     suffix: '%',
@@ -111,3 +122,39 @@ List<SettingsModel> get recommendSettings => [
     onChanged: (value) => RecommendFilter.applyFilterToRelatedVideos = value,
   ),
 ];
+
+Future<void> _showHistoryFilterDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final result = await showDialog<RecommendHistoryFilterSettings>(
+    context: context,
+    builder: (context) => RecommendHistoryFilterDialog(
+      initialValue: Pref.recommendHistoryFilterSettings,
+    ),
+  );
+  if (result == null) {
+    return;
+  }
+  await GStorage.setting.put(
+    SettingBoxKey.recommendHistoryFilterSettings,
+    result.toStorage(),
+  );
+  setState();
+}
+
+String _historyFilterSummary(RecommendHistoryFilterSettings value) {
+  if (!value.enabled) {
+    return '未开启；仍保留最近 30 天记录';
+  }
+  final days = value.lookbackMinutes ~/ (24 * 60);
+  final hours = value.lookbackMinutes % (24 * 60) ~/ 60;
+  final minutes = value.lookbackMinutes % 60;
+  final parts = <String>[
+    if (days > 0) '$days 天',
+    if (hours > 0) '$hours 小时',
+    if (minutes > 0) '$minutes 分钟',
+  ];
+  return '${parts.join(' ')}内；推荐 ${value.exposureThreshold} 次或观看 '
+      '${value.watchThreshold} 次（至少 ${value.minWatchSeconds} 秒）';
+}

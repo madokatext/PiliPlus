@@ -46,6 +46,8 @@ import 'package:PiliPlus/utils/mpv_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
+import 'package:PiliPlus/utils/playback_history_tracker.dart';
+import 'package:PiliPlus/utils/recommend_history.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
@@ -162,6 +164,7 @@ final RxInt seekStartPosition = 0.obs;
   int? _seasonId;
   int? _pgcType;
   VideoType _videoType = VideoType.ugc;
+  bool _historySessionStarted = false;
   int _heartDuration = 0;
   int? width;
   int? height;
@@ -685,6 +688,8 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     if (videoPageTag != null && !isVideoPageActive(videoPageTag)) {
       return;
     }
+    unawaited(PlaybackHistoryTracker.instance.end());
+    _historySessionStarted = false;
     cancelVideoPlayerSwitch();
 _resetMediaOpenRetry();
 
@@ -1632,9 +1637,18 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
             }
           }
           playerStatus.value = .playing;
+          _maybeStartPlaybackHistory(player);
         } else {
           _disableAutoEnterPip();
           playerStatus.value = .paused;
+        }
+
+        if (_historySessionStarted) {
+          unawaited(
+            PlaybackHistoryTracker.instance.setActive(
+              playing && !isBuffering.value,
+            ),
+          );
         }
 
         videoPlayerServiceHandler?.onStatusChange(
@@ -1663,6 +1677,8 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
           }
 
           makeHeartBeat(-1, type: .completed);
+          _historySessionStarted = false;
+          unawaited(PlaybackHistoryTracker.instance.end());
         }
       }),
 
@@ -1683,6 +1699,7 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
         for (final element in _positionListeners) {
           element(position);
         }
+        _maybeStartPlaybackHistory(player);
       }),
       stream.duration.listen(updateDuration),
       stream.buffer.listen((Duration buffer) {
@@ -1690,6 +1707,16 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
       }),
       stream.buffering.listen((bool buffering) {
         isBuffering.value = buffering;
+        if (!buffering) {
+          _maybeStartPlaybackHistory(player);
+        }
+        if (_historySessionStarted) {
+          unawaited(
+            PlaybackHistoryTracker.instance.setActive(
+              player.state.playing && !buffering,
+            ),
+          );
+        }
         videoPlayerServiceHandler?.onStatusChange(
           playerStatus.value,
           buffering,
@@ -1736,6 +1763,66 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
         }
       }),
     ];
+  }
+
+  void _maybeStartPlaybackHistory(Player player) {
+    if (_historySessionStarted ||
+        !identical(player, _videoPlayerController) ||
+        isLive ||
+        isFileSource) {
+      return;
+    }
+    final state = player.state;
+    if (!state.playing || state.buffering) {
+      return;
+    }
+    if (state.position <= Duration.zero &&
+        state.duration <= Duration.zero &&
+        (state.width <= 0 || state.height <= 0)) {
+      return;
+    }
+
+    final videoKey = playbackVideoKey(
+      aid: _aid,
+      epId: _epid,
+      isPgc: _videoType != VideoType.ugc,
+    );
+    if (videoKey == null) {
+      return;
+    }
+
+    _historySessionStarted = true;
+    final generation = _dataSourceGeneration;
+    unawaited(
+      _beginPlaybackHistory(
+        generation: generation,
+        videoKey: videoKey,
+        active: state.playing && !state.buffering,
+      ),
+    );
+  }
+
+  Future<void> _beginPlaybackHistory({
+    required int generation,
+    required String videoKey,
+    required bool active,
+  }) async {
+    try {
+      await PlaybackHistoryTracker.instance.begin(
+        scopeId: currentRecommendHistoryScope(),
+        videoKey: videoKey,
+        active: active,
+      );
+      if (generation == _dataSourceGeneration && _historySessionStarted) {
+        await PlaybackHistoryTracker.instance.setActive(
+          playerStatus.isPlaying && !isBuffering.value,
+        );
+      }
+    } catch (_) {
+      if (generation == _dataSourceGeneration) {
+        _historySessionStarted = false;
+      }
+    }
   }
 
   /// 移除事件监听
@@ -2272,6 +2359,8 @@ void onSeekStart({bool fromGesture = false}) {
     }
 
     _playerCount = 0;
+    _historySessionStarted = false;
+    unawaited(PlaybackHistoryTracker.instance.end());
     _activeVideoPageTag = null;
     cancelVideoPlayerSwitch();
     _dataSourceGeneration++;

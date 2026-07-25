@@ -1,15 +1,20 @@
 import 'dart:async';
+import 'dart:math' show max;
 
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/video.dart';
 import 'package:PiliPlus/models/common/account_type.dart';
 import 'package:PiliPlus/models/home/rcmd/cache.dart';
+import 'package:PiliPlus/models/common/recommend_history_filter_settings.dart';
 import 'package:PiliPlus/models/model_rec_video_item.dart';
 import 'package:PiliPlus/pages/common/common_list_controller.dart';
 import 'package:PiliPlus/utils/accounts.dart';
+import 'package:PiliPlus/utils/playback_history_tracker.dart';
+import 'package:PiliPlus/utils/recommend_history.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 
 class RcmdController
     extends
@@ -37,6 +42,9 @@ class RcmdController
   bool _lastRequestSucceeded = false;
   bool _allowLoadMore = true;
   Future<void>? _activeQuery;
+  bool _historyFillFailed = false;
+  double _historyPassRate = 1.0;
+  int _responseSerial = 0;
 
   @override
   bool get isEnd => false;
@@ -54,13 +62,21 @@ class RcmdController
 
   @override
   Future<LoadingState<List<BaseRcmdVideoItemModel>>> customGetData() async {
+    _historyFillFailed = false;
+    final historySettings = Pref.recommendHistoryFilterSettings;
     final LoadingState<List<BaseRcmdVideoItemModel>> result;
-    if (!appRcmd) {
+    if (historySettings.enabled) {
+      await PlaybackHistoryTracker.instance.flush();
+      result = await _getHistoryFilteredData(historySettings);
+    } else if (!appRcmd) {
       result = await VideoHttp.rcmdVideoList(
         freshIdx: page,
         // 首次加载和触底加载仍保持原来的 20 项。
         ps: _manualRefreshing ? refreshItemCount : 20,
       );
+      if (result case Success(:final response)) {
+        _stampOccurrences(response, _nextResponseId());
+      }
     } else if (_manualRefreshing) {
       result = await _getAppRefreshData();
     } else {
@@ -75,7 +91,8 @@ class RcmdController
   Future<LoadingState<List<BaseRcmdVideoItemModel>>> _getSingleAppData() async {
     final result = await VideoHttp.rcmdVideoListApp(freshIdx: _appFreshIdx);
 
-    if (result is Success) {
+    if (result case Success(:final response)) {
+      _stampOccurrences(response, _nextResponseId());
       _appFreshIdx++;
     }
 
@@ -102,6 +119,7 @@ class RcmdController
           break;
         }
 
+        _stampOccurrences(response, _nextResponseId());
         data.addAll(response);
       } else {
         // 第一次请求就失败时保留原始错误。
@@ -117,8 +135,162 @@ class RcmdController
     return Success(data.take(refreshItemCount).toList());
   }
 
+  Future<LoadingState<List<BaseRcmdVideoItemModel>>> _getHistoryFilteredData(
+    RecommendHistoryFilterSettings settings,
+  ) async {
+    final targetCount = _manualRefreshing ? refreshItemCount : 20;
+    final oldItems = switch (loadingState.value) {
+      Success(:final response?) when response.isNotEmpty => response,
+      _ => null,
+    };
+    final preserveOldFeed = oldItems != null;
+    final data = <BaseRcmdVideoItemModel>[];
+    final existingIdentities = page > 0 && oldItems != null
+        ? oldItems.map(_itemIdentity).toSet()
+        : <Object>{};
+    final responseSignatures = <String>{};
+    var webCursor = page;
+    var appCursor = _appFreshIdx;
+    var requestCount = 0;
+
+    const maxRequestCount = 6;
+    while (data.length < targetCount && requestCount < maxRequestCount) {
+      final remaining = targetCount - data.length;
+      final LoadingState<List<BaseRcmdVideoItemModel>> result;
+      if (appRcmd) {
+        result = await VideoHttp.rcmdVideoListApp(freshIdx: appCursor);
+      } else {
+        result = await VideoHttp.rcmdVideoList(
+          freshIdx: webCursor,
+          ps: _adaptiveRequestCount(remaining),
+        );
+      }
+
+      if (result case Success(:final response)) {
+        requestCount++;
+        if (appRcmd) {
+          appCursor++;
+        } else {
+          webCursor++;
+        }
+        if (response.isEmpty) {
+          break;
+        }
+
+        final responseId = _nextResponseId();
+        _stampOccurrences(response, responseId);
+        final signature = response.map(_itemIdentity).join('|');
+        if (!responseSignatures.add(signature)) {
+          break;
+        }
+
+        final candidateKeys = response
+            .map(recommendVideoKey)
+            .whereType<String>()
+            .toSet();
+        Set<String> blocked;
+        try {
+          blocked = await RecommendHistoryRepository.instance.findBlockedVideos(
+            scopeId: currentRecommendHistoryScope(),
+            candidateVideoKeys: candidateKeys,
+            settings: settings,
+          );
+        } catch (_) {
+          // History failures must not blank or shorten the recommendation feed.
+          blocked = const <String>{};
+        }
+
+        final acceptedVideoKeys = <String>{};
+        for (final item in response) {
+          final videoKey = recommendVideoKey(item);
+          if (videoKey != null && blocked.contains(videoKey)) {
+            continue;
+          }
+          if (page > 0 && !existingIdentities.add(_itemIdentity(item))) {
+            continue;
+          }
+          data.add(item);
+          if (videoKey != null) {
+            acceptedVideoKeys.add(videoKey);
+          }
+          if (data.length == targetCount) {
+            break;
+          }
+        }
+
+        if (candidateKeys.isNotEmpty) {
+          final passRate = acceptedVideoKeys.length / candidateKeys.length;
+          _historyPassRate = _historyPassRate * 0.7 + passRate * 0.3;
+        }
+      } else {
+        if (data.isEmpty) {
+          return result;
+        }
+        break;
+      }
+    }
+
+    if (data.length < targetCount && preserveOldFeed) {
+      _historyFillFailed = true;
+      return const Error('暂时没有足够的新推荐，请重试');
+    }
+
+    if (appRcmd) {
+      _appFreshIdx = appCursor;
+    } else {
+      // CommonListController increments page after a successful response.
+      page = max(0, webCursor - 1);
+    }
+    return Success(data.take(targetCount).toList());
+  }
+
+  int _adaptiveRequestCount(int remaining) {
+    final passRate = max(_historyPassRate, 0.2);
+    return ((remaining / passRate) * 1.1).ceil().clamp(remaining, 50);
+  }
+
+  String _nextResponseId() =>
+      '${DateTime.now().microsecondsSinceEpoch}-${_responseSerial++}';
+
+  void _stampOccurrences(
+    List<BaseRcmdVideoItemModel> items,
+    String responseId,
+  ) {
+    for (var index = 0; index < items.length; index++) {
+      final videoKey = recommendVideoKey(items[index]);
+      if (videoKey != null) {
+        items[index].historyOccurrenceId = '$responseId:$index:$videoKey';
+      }
+    }
+  }
+
+  void recordExposure(BaseRcmdVideoItemModel item) {
+    final occurrenceId = item.historyOccurrenceId;
+    final videoKey = recommendVideoKey(item);
+    if (occurrenceId == null || videoKey == null) {
+      return;
+    }
+    unawaited(_recordExposure(occurrenceId, videoKey));
+  }
+
+  Future<void> _recordExposure(String occurrenceId, String videoKey) async {
+    try {
+      await RecommendHistoryRepository.instance.recordExposure(
+        scopeId: currentRecommendHistoryScope(),
+        occurrenceId: occurrenceId,
+        videoKey: videoKey,
+      );
+    } catch (_) {
+      // Exposure persistence is best-effort and must not interrupt scrolling.
+    }
+  }
+
   @override
   bool handleError(String? errMsg) {
+    if (_historyFillFailed) {
+      SmartDialog.showToast(errMsg ?? '暂时没有足够的新推荐，请重试');
+      return true;
+    }
     return enableSaveLastData;
   }
 
@@ -268,6 +440,14 @@ class RcmdController
       _appFreshIdx = snapshot.appFreshIdx;
       lastRefreshAt = savedRcmdTip ? snapshot.lastRefreshAt : null;
       loadingState.value = Success(snapshot.items);
+      for (var index = 0; index < snapshot.items.length; index++) {
+        final item = snapshot.items[index];
+        final videoKey = recommendVideoKey(item);
+        if (item.historyOccurrenceId == null && videoKey != null) {
+          item.historyOccurrenceId =
+              'cache-${snapshot.lastRefreshAt ?? 0}:$index:$videoKey';
+        }
+      }
       _allowLoadMore = false;
       return true;
     } catch (_) {

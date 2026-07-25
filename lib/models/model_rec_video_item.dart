@@ -5,6 +5,7 @@ abstract class BaseRcmdVideoItemModel extends BaseVideoItemModel {
   String? goto;
   String? uri;
   String? rcmdReason;
+  String? historyOccurrenceId;
 
   // app推荐专属
   int? param;
@@ -50,6 +51,7 @@ class RcmdVideoItemModel extends BaseRcmdVideoItemModel {
     });
     isFollowed = json['isFollowed'] as bool;
     rcmdReason = json['rcmdReason'] as String?;
+    historyOccurrenceId = json['historyOccurrenceId'] as String?;
   }
 
   Map<String, dynamic> toCacheJson() => {
@@ -66,6 +68,7 @@ class RcmdVideoItemModel extends BaseRcmdVideoItemModel {
     'stat': {'view': stat.view, 'like': stat.like, 'danmu': stat.danmu},
     'isFollowed': isFollowed,
     'rcmdReason': rcmdReason,
+    'historyOccurrenceId': historyOccurrenceId,
   };
 
   // @override

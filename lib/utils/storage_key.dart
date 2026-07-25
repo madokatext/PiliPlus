@@ -62,6 +62,7 @@ abstract final class SettingBoxKey {
       continuePlayInBackground = 'continuePlayInBackground',
       appRcmd = 'appRcmd',
 rcmdRefreshCount = 'rcmdRefreshCount',
+recommendHistoryFilterSettings = 'recommendHistoryFilterSettings',
 enableSaveLastData = 'enableSaveLastData',
       minDurationForRcmd = 'minDurationForRcmd',
       minPlayForRcmd = 'minPlayForRcmd',

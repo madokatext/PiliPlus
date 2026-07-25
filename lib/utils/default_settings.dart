@@ -114,6 +114,13 @@ const Map<String, Object> defaultSettingValues = {
   'preInitPlayer': true,
   'preferCodecs': <String>['AV1', 'HEVC', 'AVC'],
   'rcmdRefreshCount': 9,
+  'recommendHistoryFilterSettings': <String, Object>{
+    'enabled': false,
+    'lookbackMinutes': 10080,
+    'exposureThreshold': 2,
+    'watchThreshold': 1,
+    'minWatchSeconds': 30,
+  },
   'recommendCardHorizontalPadding': 5.0,
   'recommendCardHorizontalSpacing': 5.0,
   'recommendCardVerticalSpacing': 5.0,

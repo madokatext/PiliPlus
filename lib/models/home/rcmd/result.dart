@@ -68,6 +68,7 @@ class RcmdVideoItemAppModel extends BaseRcmdVideoItemModel {
     goto = json['goto'] as String?;
     uri = json['uri'] as String?;
     rcmdReason = json['rcmdReason'] as String?;
+    historyOccurrenceId = json['historyOccurrenceId'] as String?;
     param = (json['param'] as num?)?.toInt();
     pgcBadge = json['pgcBadge'] as String?;
     talkBack = json['talkBack'] as String?;
@@ -93,6 +94,7 @@ class RcmdVideoItemAppModel extends BaseRcmdVideoItemModel {
     'goto': goto,
     'uri': uri,
     'rcmdReason': rcmdReason,
+    'historyOccurrenceId': historyOccurrenceId,
     'param': param,
     'pgcBadge': pgcBadge,
     'talkBack': talkBack,

@@ -10,6 +10,7 @@ import 'package:PiliPlus/utils/accounts/account_type_adapter.dart';
 import 'package:PiliPlus/utils/accounts/cookie_jar_adapter.dart';
 import 'package:PiliPlus/utils/default_settings.dart';
 import 'package:PiliPlus/utils/path_utils.dart';
+import 'package:PiliPlus/utils/recommend_history.dart';
 import 'package:PiliPlus/utils/set_int_adapter.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
@@ -23,6 +24,8 @@ abstract final class GStorage {
   static late final Box<dynamic> setting;
   static late final Box<dynamic> video;
   static late final Box<int> watchProgress;
+  static late final Box<dynamic> recommendExposureHistory;
+  static late final Box<dynamic> recommendWatchHistory;
   static late final Box<Uint8List>? reply;
 
   static Future<void> init() async {
@@ -63,12 +66,28 @@ abstract final class GStorage {
           return deletedEntries > 4;
         },
       ).then((res) => watchProgress = res),
+      Hive.openBox(
+        'recommendExposureHistory',
+        compactionStrategy: (entries, deletedEntries) =>
+            deletedEntries > 1000 && deletedEntries > entries,
+      ).then((res) => recommendExposureHistory = res),
+      Hive.openBox(
+        'recommendWatchHistory',
+        compactionStrategy: (entries, deletedEntries) =>
+            deletedEntries > 1000 && deletedEntries > entries,
+      ).then((res) => recommendWatchHistory = res),
     ]);
 
     await Future.wait([
       _putMissingDefaults(setting, defaultSettingValues),
       _putMissingDefaults(video, defaultVideoValues),
     ]);
+
+    RecommendHistoryRepository.initialize(
+      exposureBox: recommendExposureHistory,
+      watchBox: recommendWatchHistory,
+    );
+    await RecommendHistoryRepository.instance.maybeCleanup();
 
     if (Pref.saveReply) {
       reply = await Hive.openBox<Uint8List>(
@@ -165,6 +184,8 @@ abstract final class GStorage {
       video.compact(),
       Accounts.account.compact(),
       watchProgress.compact(),
+      recommendExposureHistory.compact(),
+      recommendWatchHistory.compact(),
       ?reply?.compact(),
     ]);
   }
@@ -178,6 +199,8 @@ abstract final class GStorage {
       video.close(),
       Accounts.account.close(),
       watchProgress.close(),
+      recommendExposureHistory.close(),
+      recommendWatchHistory.close(),
       ?reply?.close(),
     ]);
   }
@@ -191,6 +214,8 @@ abstract final class GStorage {
       video.clear(),
       Accounts.clear(),
       watchProgress.clear(),
+      recommendExposureHistory.clear(),
+      recommendWatchHistory.clear(),
       ?reply?.clear(),
     ]);
   }

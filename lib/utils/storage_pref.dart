@@ -13,6 +13,7 @@ import 'package:PiliPlus/models/common/member/tab_type.dart';
 import 'package:PiliPlus/models/common/msg/msg_unread_type.dart';
 import 'package:PiliPlus/models/common/nav_bar_config.dart';
 import 'package:PiliPlus/models/common/reply/reply_sort_type.dart';
+import 'package:PiliPlus/models/common/recommend_history_filter_settings.dart';
 import 'package:PiliPlus/models/common/sponsor_block/segment_type.dart';
 import 'package:PiliPlus/models/common/sponsor_block/skip_type.dart';
 import 'package:PiliPlus/models/common/super_chat_type.dart';
@@ -431,6 +432,11 @@ static int get rcmdRefreshCount {
   );
   return (value is num ? value.toInt() : 20).clamp(4, 30).toInt();
 }
+
+  static RecommendHistoryFilterSettings get recommendHistoryFilterSettings =>
+      RecommendHistoryFilterSettings.fromStorage(
+        _setting.get(SettingBoxKey.recommendHistoryFilterSettings),
+      );
     
   static String get systemProxyHost =>
       _setting.get(SettingBoxKey.systemProxyHost, defaultValue: '');
