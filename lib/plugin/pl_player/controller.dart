@@ -1671,6 +1671,9 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
       stream.completed.listen((bool completed) {
         if (completed) {
           playerStatus.value = .completed;
+          if (playRepeat == PlayRepeat.pause) {
+            controls = true;
+          }
 
           for (final element in _statusListeners) {
             element(.completed);
