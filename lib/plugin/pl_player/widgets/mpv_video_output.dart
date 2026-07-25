@@ -72,6 +72,8 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
   Rect? _lastMismatchedRect;
   bool _pendingResize = false;
   bool _configurationScheduled = false;
+  _MpvOutputConfiguration? _pendingResizeConfiguration;
+  bool _resizeInProgress = false;
 
   @override
   void initState() {
@@ -85,6 +87,7 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
     super.didUpdateWidget(oldWidget);
     if (widget.controller != oldWidget.controller) {
       _sizeSubscription?.cancel();
+      _pendingResizeConfiguration = null;
       _lastRequestedConfiguration = null;
       _lastMismatchedRect = null;
       _listenToController();
@@ -218,9 +221,29 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
       _pendingConfiguration = null;
       _pendingResize = false;
       if (mounted && pending != null) {
-        unawaited(_applyConfiguration(pending, resize: resize));
+        unawaited(_applyConfiguration(pending, resize: false));
+        if (resize || _resizeInProgress) _requestOutputResize(pending);
       }
     });
+  }
+
+  void _requestOutputResize(_MpvOutputConfiguration configuration) {
+    _pendingResizeConfiguration = configuration;
+    if (!_resizeInProgress) unawaited(_drainOutputResizes());
+  }
+
+  Future<void> _drainOutputResizes() async {
+    _resizeInProgress = true;
+    try {
+      while (mounted) {
+        final configuration = _pendingResizeConfiguration;
+        if (configuration == null) break;
+        _pendingResizeConfiguration = null;
+        await _applyConfiguration(configuration, resize: true);
+      }
+    } finally {
+      _resizeInProgress = false;
+    }
   }
 
   Future<void> _applyConfiguration(
@@ -263,12 +286,16 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
           'android-surface-size',
           '${configuration.width}x${configuration.height}',
         );
-        controller.rect.value = Rect.fromLTWH(
-          0,
-          0,
-          configuration.width.toDouble(),
-          configuration.height.toDouble(),
-        );
+        // Do not publish an obsolete half-screen size while a newer full-screen
+        // resize is already queued. The latest resize runs immediately afterward.
+        if (_pendingResizeConfiguration == null) {
+          controller.rect.value = Rect.fromLTWH(
+            0,
+            0,
+            configuration.width.toDouble(),
+            configuration.height.toDouble(),
+          );
+        }
       } else {
         await controller.setSize(
           width: configuration.width,
