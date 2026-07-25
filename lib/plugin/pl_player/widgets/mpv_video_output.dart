@@ -4,9 +4,40 @@ import 'dart:math' as math;
 
 import 'package:PiliPlus/plugin/pl_player/models/video_fit_type.dart';
 import 'package:PiliPlus/utils/mpv_utils.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit_video/media_kit_video.dart';
+
+typedef MpvVideoTransform = ({double zoom, double panX, double panY});
+
+@visibleForTesting
+MpvVideoTransform calculateMpvVideoTransform({
+  required Matrix4 matrix,
+  required Size viewportSize,
+  required Size fittedVideoSize,
+  required Alignment alignment,
+}) {
+  final scale = matrix.getMaxScaleOnAxis().clamp(0.01, 100.0);
+  final translation = matrix.getTranslation();
+  final alignmentOrigin = Offset(
+    viewportSize.width * (alignment.x + 1) / 2,
+    viewportSize.height * (alignment.y + 1) / 2,
+  );
+  // InteractiveViewer scales from the viewport's top-left, while mpv zooms
+  // from the configured video alignment point.
+  final originCompensation = alignmentOrigin * (scale - 1);
+
+  return (
+    zoom: math.log(scale) / math.ln2,
+    panX:
+        (translation.x + originCompensation.dx) /
+        (fittedVideoSize.width * scale),
+    panY:
+        (translation.y + originCompensation.dy) /
+        (fittedVideoSize.height * scale),
+  );
+}
 
 class MpvVideoOutput extends StatefulWidget {
   const MpvVideoOutput({
@@ -103,13 +134,16 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
         (_sourceWidth > 0 && _sourceHeight > 0
             ? _sourceWidth / _sourceHeight
             : viewportAspectRatio);
-    final matrix = widget.transformationController.value;
-    final scale = matrix.getMaxScaleOnAxis().clamp(0.01, 100.0);
-    final translation = matrix.getTranslation();
     final baseVideoSize = _fittedVideoSize(
       logicalSize,
       devicePixelRatio,
       sourceAspectRatio,
+    );
+    final transform = calculateMpvVideoTransform(
+      matrix: widget.transformationController.value,
+      viewportSize: logicalSize,
+      fittedVideoSize: baseVideoSize,
+      alignment: widget.alignment,
     );
 
     return (
@@ -123,9 +157,9 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
       aspectOverride: widget.fit.mpvAspectOverride(viewportAspectRatio),
       alignX: widget.alignment.x.clamp(-1.0, 1.0).toString(),
       alignY: widget.alignment.y.clamp(-1.0, 1.0).toString(),
-      zoom: (math.log(scale) / math.ln2).toString(),
-      panX: (translation.x / (baseVideoSize.width * scale)).toString(),
-      panY: (translation.y / (baseVideoSize.height * scale)).toString(),
+      zoom: transform.zoom.toString(),
+      panX: transform.panX.toString(),
+      panY: transform.panY.toString(),
     );
   }
 
