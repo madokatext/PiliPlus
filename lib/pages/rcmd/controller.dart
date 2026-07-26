@@ -200,7 +200,6 @@ class RcmdController
           blocked = const <String>{};
         }
 
-        final acceptedVideoKeys = <String>{};
         for (final item in response) {
           final videoKey = recommendVideoKey(item);
           if (videoKey != null && blocked.contains(videoKey)) {
@@ -210,16 +209,14 @@ class RcmdController
             continue;
           }
           data.add(item);
-          if (videoKey != null) {
-            acceptedVideoKeys.add(videoKey);
-          }
           if (data.length == targetCount) {
             break;
           }
         }
 
         if (candidateKeys.isNotEmpty) {
-          final passRate = acceptedVideoKeys.length / candidateKeys.length;
+          final passRate =
+              candidateKeys.difference(blocked).length / candidateKeys.length;
           _historyPassRate = _historyPassRate * 0.7 + passRate * 0.3;
         }
       } else {
