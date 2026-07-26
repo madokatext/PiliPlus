@@ -1,4 +1,4 @@
-> **PiliPlus-max 是 [PiliPlus](https://github.com/bggRGjQaUbCoE/PiliPlus) 针对 Android 平台深度自定义和细节优化的分支版本。**
+> **PiliPlus-max 是 [PiliPlus](https://github.com/bggRGjQaUbCoE/PiliPlus) 针对 Android 平台深度自定义和细节优化的分支版本。致力于让每个用户都能自己定制顺畅无感的人机交互体验。**
 
 <div align="center">
     <img width="200" height="200" src="assets/images/logo/logo.png">
