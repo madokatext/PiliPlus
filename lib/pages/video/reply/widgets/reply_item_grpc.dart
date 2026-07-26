@@ -339,6 +339,7 @@ class ReplyItemGrpc extends StatelessWidget {
             padding: padding,
             child: _buildVoteOption(colorScheme, replyControl.voteOption),
           ),
+        if (replyControl.hasVoteOption()) const SizedBox(height: 4),
         Padding(
           padding: padding,
           child: custom_text.Text.rich(
