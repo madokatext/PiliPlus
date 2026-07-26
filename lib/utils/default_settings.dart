@@ -169,6 +169,7 @@ const Map<String, Object> defaultSettingValues = {
   'themeMode': 2,
   'touchSlopH': 8.0,
   'upPanelPosition': 0,
+  'useMpvVideoScaling': false,
   'useRelativeSlide': false,
   'videoDetailUseAv': true,
   'videoPlayerSwitchForceTimeoutSeconds': 5,

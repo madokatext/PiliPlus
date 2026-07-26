@@ -203,6 +203,13 @@ List<SettingsModel> get videoSettings => [
     getSubtitle: () => '当前：${Pref.hardwareDecoding}（此项即mpv的--hwdec）',
     onTap: _showHwDecDialog,
   ),
+  const SwitchModel(
+    title: '使用 mpv 进行分辨率缩放',
+    subtitle: '开启后画质更好，但会导致画面尺寸切换时闪烁',
+    leading: Icon(Icons.high_quality_outlined),
+    setKey: SettingBoxKey.useMpvVideoScaling,
+    defaultVal: false,
+  ),
   NormalModel(
     title: '自定义 mpv 启动参数',
     leading: const Icon(Icons.tune),

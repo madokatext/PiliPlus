@@ -7,6 +7,7 @@ void main() {
     expect(defaultSettingValues['customPrimarySeed'], 4278205695);
     expect(defaultSettingValues['homeCardAspectRatio'], 'fourThree');
     expect(defaultSettingValues['showAdvancedSettings'], isFalse);
+    expect(defaultSettingValues['useMpvVideoScaling'], isFalse);
     expect(defaultSettingValues['useRelativeSlide'], isFalse);
     expect(defaultSettingValues['videoPlayerSwitchForceTimeoutSeconds'], 5);
     expect(defaultSettingValues['rcmdRefreshCount'], 20);

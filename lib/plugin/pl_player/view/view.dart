@@ -65,6 +65,7 @@ import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:canvas_danmaku/canvas_danmaku.dart';
 import 'package:collection/collection.dart';
@@ -2275,6 +2276,7 @@ if (!isLive)
   }
 
   Widget get _videoWidget {
+    final useMpvVideoScaling = Pref.useMpvVideoScaling;
     return Container(
       clipBehavior: .none,
       width: maxWidth,
@@ -2303,7 +2305,7 @@ if (!isLive)
               : .zero,
           panAxis: .aligned,
           transformationController: _transformationController,
-          transformChild: false,
+          transformChild: !useMpvVideoScaling,
           childKey: _videoKey,
           child: RepaintBoundary(
             key: _videoKey,
@@ -2316,6 +2318,18 @@ if (!isLive)
                     plPlayerController.standbyVideoController;
 
                 Widget buildVideoOutput(VideoController targetController) {
+                  if (!useMpvVideoScaling) {
+                    return FittedBox(
+                      fit: videoFit.boxFit,
+                      alignment: widget.alignment,
+                      child: SimpleVideo(
+                        key: ValueKey(targetController),
+                        controller: targetController,
+                        fill: widget.fill,
+                        aspectRatio: videoFit.aspectRatio,
+                      ),
+                    );
+                  }
                   return MpvVideoOutput(
                     key: ValueKey(targetController),
                     controller: targetController,

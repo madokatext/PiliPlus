@@ -23,6 +23,7 @@ abstract final class SettingBoxKey {
       autosync = 'autosync',
       customMpvOptions = 'customMpvOptions',
       mpvLogLevel = 'mpvLogLevel',
+      useMpvVideoScaling = 'useMpvVideoScaling',
       p1080 = 'p1080',
       enableAutoEnter = 'enableAutoEnter',
       enableAutoExit = 'enableAutoExit',

@@ -401,6 +401,9 @@ static int get videoPlayerSwitchForceTimeoutSeconds {
   static String get customMpvOptions =>
       _setting.get(SettingBoxKey.customMpvOptions, defaultValue: '');
 
+  static bool get useMpvVideoScaling =>
+      _setting.get(SettingBoxKey.useMpvVideoScaling, defaultValue: false);
+
   static String get mpvLogLevel {
     final value = _setting.get(
       SettingBoxKey.mpvLogLevel,
