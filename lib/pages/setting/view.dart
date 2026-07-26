@@ -9,11 +9,13 @@ import 'package:PiliPlus/pages/mine/controller.dart';
 import 'package:PiliPlus/pages/setting/common_setting.dart';
 import 'package:PiliPlus/pages/setting/widgets/multi_select_dialog.dart';
 import 'package:PiliPlus/pages/setting/widgets/settings_import_export.dart';
+import 'package:PiliPlus/pages/setting/widgets/switch_item.dart';
 import 'package:PiliPlus/pages/webdav/view.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/accounts/account.dart';
 import 'package:PiliPlus/utils/extension/size_ext.dart';
 import 'package:PiliPlus/utils/login_utils.dart';
+import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/material.dart' hide ListTile;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -42,6 +44,7 @@ class SettingPage extends StatefulWidget {
 class _SettingPageState extends State<SettingPage> {
   late SettingType _type = SettingType.privacySetting;
   final RxBool _noAccount = Accounts.account.isEmpty.obs;
+  bool _advancedSettingsEnabled = advancedSettingsEnabled;
   late bool _isPortrait;
   late ThemeData theme;
 
@@ -124,6 +127,7 @@ class _SettingPageState extends State<SettingPage> {
                       .playSetting ||
                       .styleSetting ||
                       .extraSetting => CommonSetting(
+                        key: ValueKey((_type, _advancedSettingsEnabled)),
                         settingType: _type,
                         showAppBar: false,
                       ),
@@ -196,6 +200,18 @@ class _SettingPageState extends State<SettingPage> {
                     : Text(item.subtitle!, style: subTitleStyle),
               ),
             ),
+        SetSwitchItem(
+          title: '高级选项',
+          subtitle: '显示不常用的界面、手势、播放器与调试参数',
+          leading: const Icon(Icons.tune_outlined),
+          setKey: SettingBoxKey.showAdvancedSettings,
+          defaultVal: false,
+          titleStyle: titleStyle,
+          onChanged: (value) {
+            _advancedSettingsEnabled = value;
+            setState(() {});
+          },
+        ),
         ListTile(
           onTap: () => LoginPageController.switchAccountDialog(context),
           leading: const Icon(Icons.switch_account_outlined),

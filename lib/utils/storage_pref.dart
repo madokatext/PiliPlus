@@ -508,11 +508,11 @@ static int get rcmdRefreshCount {
 
   static double get danmakuFontScaleFS => _setting.get(
     SettingBoxKey.danmakuFontScaleFS,
-    defaultValue: PlatformUtils.isMobile ? 1.2 : 1.7,
+    defaultValue: 1.2,
   );
 
   static bool get danmakuMassiveMode =>
-      _setting.get(SettingBoxKey.danmakuMassiveMode, defaultValue: false);
+      _setting.get(SettingBoxKey.danmakuMassiveMode, defaultValue: true);
 
   static bool get danmakuFixedV =>
       _setting.get(SettingBoxKey.danmakuFixedV, defaultValue: false);
@@ -1243,7 +1243,7 @@ static int get highLikeDanmakuThreshold {
 
   static double get danmakuFontScale => _setting.get(
     SettingBoxKey.danmakuFontScale,
-    defaultValue: PlatformUtils.isMobile ? 1.0 : 1.4,
+    defaultValue: 0.9,
   );
 
   static double get danmakuDuration =>

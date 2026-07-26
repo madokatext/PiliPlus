@@ -516,9 +516,11 @@ Future<void> _showCustomMpvOptionsDialog(
   VoidCallback setState,
 ) async {
   var value = Pref.customMpvOptions;
+  final optionsScrollController = ScrollController();
   final result = await showDialog<String>(
     context: context,
     builder: (context) => AlertDialog(
+      scrollable: true,
       title: const Text('自定义 mpv 启动参数'),
       content: SizedBox(
         width: 520,
@@ -533,14 +535,19 @@ Future<void> _showCustomMpvOptionsDialog(
               '示例：\n--video-sync=audio\n--cache-secs=30\n--gpu-api=vulkan',
             ),
             const SizedBox(height: 12),
-            TextFormField(
-              initialValue: value,
-              autofocus: true,
-              minLines: 6,
-              maxLines: 12,
-              keyboardType: TextInputType.multiline,
-              textInputAction: TextInputAction.newline,
-              onChanged: (text) => value = text,
+            Scrollbar(
+              controller: optionsScrollController,
+              thumbVisibility: true,
+              child: TextFormField(
+                initialValue: value,
+                autofocus: true,
+                minLines: 6,
+                maxLines: 12,
+                scrollController: optionsScrollController,
+                keyboardType: TextInputType.multiline,
+                textInputAction: TextInputAction.newline,
+                onChanged: (text) => value = text,
+              ),
             ),
           ],
         ),
@@ -567,6 +574,7 @@ Future<void> _showCustomMpvOptionsDialog(
       ],
     ),
   );
+  optionsScrollController.dispose();
 
   if (result == null) return;
   if (result.isEmpty) {

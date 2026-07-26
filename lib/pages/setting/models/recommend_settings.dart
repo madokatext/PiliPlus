@@ -160,7 +160,7 @@ Future<void> _showHistoryFilterDialog(
 
 String _historyFilterSummary(RecommendHistoryFilterSettings value) {
   if (!value.enabled) {
-    return '未开启；仍保留最近 30 天记录';
+    return '仅针对首页；未开启；仍保留最近 30 天记录';
   }
   final days = value.lookbackMinutes ~/ (24 * 60);
   final hours = value.lookbackMinutes % (24 * 60) ~/ 60;
@@ -176,6 +176,6 @@ String _historyFilterSummary(RecommendHistoryFilterSettings value) {
       '观看 ${value.watchThreshold} 次（至少 ${value.minWatchSeconds} 秒）',
   ];
   return rules.isEmpty
-      ? '${parts.join(' ')}内；不按次数过滤'
-      : '${parts.join(' ')}内；${rules.join(' 或 ')}';
+      ? '仅针对首页；${parts.join(' ')}内；不按次数过滤'
+      : '仅针对首页；${parts.join(' ')}内；${rules.join(' 或 ')}';
 }

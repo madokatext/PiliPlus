@@ -6,11 +6,16 @@ void main() {
     expect(defaultSettingValues['burstDanmakuCooldownSeconds'], 2.0);
     expect(defaultSettingValues['customPrimarySeed'], 4278205695);
     expect(defaultSettingValues['homeCardAspectRatio'], 'fourThree');
+    expect(defaultSettingValues['showAdvancedSettings'], isFalse);
     expect(defaultSettingValues['useRelativeSlide'], isFalse);
     expect(defaultSettingValues['videoPlayerSwitchForceTimeoutSeconds'], 5);
+    expect(defaultSettingValues['rcmdRefreshCount'], 20);
+    expect(defaultSettingValues['danmakuFontScale'], 0.9);
+    expect(defaultSettingValues['danmakuFontScaleFS'], 1.2);
+    expect(defaultSettingValues['danmakuMassiveMode'], isTrue);
     expect(defaultVideoValues['cacheVideoFit'], 1);
     expect(defaultSettingValues['recommendHistoryFilterSettings'], {
-      'enabled': true,
+      'enabled': false,
       'lookbackMinutes': 10080,
       'exposureThreshold': 1,
       'watchThreshold': 0,

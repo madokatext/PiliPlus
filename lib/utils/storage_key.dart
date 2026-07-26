@@ -234,7 +234,8 @@ seekPreviewScale = 'seekPreviewScale',
       subtitleFontScaleFS = 'subtitleFontScaleFS',
       subtitleFontWeight = 'subtitleFontWeight';
 
-  static const String webdavUri = 'webdavUri',
+  static const String showAdvancedSettings = 'showAdvancedSettings',
+      webdavUri = 'webdavUri',
       webdavUsername = 'webdavUsername',
       webdavPassword = 'webdavPassword',
       webdavDirectory = 'webdavDirectory';
