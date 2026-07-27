@@ -44,6 +44,7 @@ class MpvVideoOutput extends StatefulWidget {
     required this.fill,
     required this.alignment,
     required this.transformationController,
+    this.waitForResizeFrame = false,
     super.key,
   });
 
@@ -52,6 +53,7 @@ class MpvVideoOutput extends StatefulWidget {
   final Color fill;
   final Alignment alignment;
   final TransformationController transformationController;
+  final bool waitForResizeFrame;
 
   @override
   State<MpvVideoOutput> createState() => _MpvVideoOutputState();
@@ -62,6 +64,7 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
   late int _sourceWidth;
   late int _sourceHeight;
   _MpvOutputConfiguration? _pendingConfiguration;
+  bool _pendingWaitForFrame = false;
   _MpvOutputConfiguration? _appliedConfiguration;
   _MpvOutputConfiguration? _applyingConfiguration;
   bool _configurationScheduled = false;
@@ -82,6 +85,7 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
       _sizeSubscription?.cancel();
       _configurationGeneration++;
       _pendingConfiguration = null;
+      _pendingWaitForFrame = false;
       _appliedConfiguration = null;
       _applyingConfiguration = null;
       _listenToController();
@@ -190,14 +194,22 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
       (rect.width - configuration.width).abs() < 0.5 &&
       (rect.height - configuration.height).abs() < 0.5;
 
-  void _requestConfiguration(_MpvOutputConfiguration configuration) {
+  void _requestConfiguration(
+    _MpvOutputConfiguration configuration, {
+    required bool waitForFrame,
+  }) {
     if (_appliedConfiguration == configuration ||
-        _applyingConfiguration == configuration ||
-        _pendingConfiguration == configuration) {
+        _applyingConfiguration == configuration) {
+      return;
+    }
+
+    if (_pendingConfiguration == configuration) {
+      _pendingWaitForFrame |= waitForFrame;
       return;
     }
 
     _pendingConfiguration = configuration;
+    _pendingWaitForFrame = waitForFrame;
     _scheduleConfiguration();
   }
 
@@ -216,7 +228,9 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
     try {
       while (mounted && _pendingConfiguration != null) {
         final configuration = _pendingConfiguration;
+        final waitForFrame = _pendingWaitForFrame;
         _pendingConfiguration = null;
+        _pendingWaitForFrame = false;
         if (configuration == null) continue;
 
         final controller = widget.controller;
@@ -228,6 +242,7 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
           controller,
           configuration,
           resize: !_rectMatches(rect, configuration),
+          waitForFrame: waitForFrame,
         );
         if (applied &&
             mounted &&
@@ -249,6 +264,7 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
     VideoController controller,
     _MpvOutputConfiguration configuration, {
     required bool resize,
+    required bool waitForFrame,
   }) async {
     final player = controller.player;
 
@@ -274,6 +290,7 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
         await controller.setSize(
           width: configuration.width,
           height: configuration.height,
+          waitForFrame: waitForFrame,
         );
       }
       return true;
@@ -301,7 +318,10 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
           listenable: widget.controller.rect,
           builder: (context, _) {
             final rect = widget.controller.rect.value;
-            _requestConfiguration(configuration);
+            _requestConfiguration(
+              configuration,
+              waitForFrame: widget.waitForResizeFrame,
+            );
             final outputWidth =
                 rect != null && rect.width > 1
                 ? rect.width / devicePixelRatio
