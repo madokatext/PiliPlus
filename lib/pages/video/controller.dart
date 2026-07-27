@@ -906,14 +906,20 @@ class VideoDetailController extends GetxController
 
   Volume? volume;
 
-  static const int _resumeEndGuardMilliseconds = 1000;
-
   Duration _resumePosition(int progress) {
     final timeLength = data.timeLength;
-    if (progress <= 0 ||
-        (timeLength != null &&
-            timeLength > 0 &&
-            progress >= timeLength - _resumeEndGuardMilliseconds)) {
+    if (progress <= 0) {
+      return Duration.zero;
+    }
+    if (timeLength == null || timeLength <= 0) {
+      return Duration(milliseconds: progress);
+    }
+
+    // Avoid reaching EOF while Android is still replacing vo=null with the
+    // real GPU surface. Scale the tail guard for short videos, capped at 5 s.
+    final endGuardMilliseconds = (timeLength ~/ 20).clamp(1000, 5000);
+    if (progress >= timeLength ||
+        timeLength - progress <= endGuardMilliseconds) {
       return Duration.zero;
     }
     return Duration(milliseconds: progress);
