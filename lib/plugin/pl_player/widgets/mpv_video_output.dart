@@ -1,12 +1,10 @@
 import 'dart:async';
-import 'dart:io' show Platform;
 import 'dart:math' as math;
 
 import 'package:PiliPlus/plugin/pl_player/models/video_fit_type.dart';
 import 'package:PiliPlus/utils/mpv_utils.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 typedef MpvVideoTransform = ({double zoom, double panX, double panY});
@@ -60,10 +58,6 @@ class MpvVideoOutput extends StatefulWidget {
 }
 
 class _MpvVideoOutputState extends State<MpvVideoOutput> {
-  static const _androidVideoChannel = MethodChannel(
-    'com.alexmercerind/media_kit_video',
-  );
-
   StreamSubscription<(int, int)>? _sizeSubscription;
   late int _sourceWidth;
   late int _sourceHeight;
@@ -272,40 +266,10 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
       setBuiltInProperty('video-pan-y', configuration.panY);
 
       if (!resize) return;
-      if (Platform.isAndroid) {
-        // media_kit does not implement VideoController.setSize on Android.
-        await _androidVideoChannel.invokeMethod<void>(
-          'VideoOutputManager.SetSurfaceTextureSize',
-          {
-            'handle': player.handle.toString(),
-            'width': configuration.width.toString(),
-            'height': configuration.height.toString(),
-          },
-        );
-        player.setProperty(
-          'android-surface-size',
-          '${configuration.width}x${configuration.height}',
-        );
-        // Do not publish an obsolete half-screen size while a newer full-screen
-        // resize is already queued. The latest resize runs immediately afterward.
-        if (_pendingResizeConfiguration == null) {
-          // media_kit 的 videoParams 异步回调可能在本次调整后再次把 rect
-          // 写回视频源尺寸。清除旧的 mismatch 记录，确保该外部回写能够
-          // 触发下一次纠正，而不是被当成已经处理过的重复状态。
-          _lastMismatchedRect = null;
-          controller.rect.value = Rect.fromLTWH(
-            0,
-            0,
-            configuration.width.toDouble(),
-            configuration.height.toDouble(),
-          );
-        }
-      } else {
-        await controller.setSize(
-          width: configuration.width,
-          height: configuration.height,
-        );
-      }
+      await controller.setSize(
+        width: configuration.width,
+        height: configuration.height,
+      );
     } catch (error, stackTrace) {
       assert(() {
         debugPrint('Failed to resize mpv video output: $error');
@@ -330,23 +294,68 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
           builder: (context, _) {
             final rect = widget.controller.rect.value;
             _requestConfiguration(configuration, rect);
+            final outputWidth =
+                rect != null && rect.width > 1
+                ? rect.width / devicePixelRatio
+                : logicalSize.width;
+            final outputHeight =
+                rect != null && rect.height > 1
+                ? rect.height / devicePixelRatio
+                : logicalSize.height;
+            final texture = SizedBox(
+              width: outputWidth,
+              height: outputHeight,
+              child: SimpleVideo(
+                controller: widget.controller,
+                fill: widget.fill,
+                filterQuality: FilterQuality.none,
+              ),
+            );
+            final outputMatches = _rectMatches(rect, configuration);
+            final sourceAspectRatio =
+                widget.fit.aspectRatio ??
+                (_sourceWidth > 0 && _sourceHeight > 0
+                    ? _sourceWidth / _sourceHeight
+                    : configuration.width / configuration.height);
+            final acknowledgedVideoSize = _fittedVideoSize(
+              Size(outputWidth, outputHeight),
+              devicePixelRatio,
+              sourceAspectRatio,
+            );
+            final targetVideoSize = _fittedVideoSize(
+              logicalSize,
+              devicePixelRatio,
+              sourceAspectRatio,
+            );
+            final transitionScale = acknowledgedVideoSize.width > 0
+                ? targetVideoSize.width / acknowledgedVideoSize.width
+                : 1.0;
+            final Widget output;
+            if (outputMatches) {
+              output = texture;
+            } else if (widget.fit == VideoFitType.fill) {
+              output = FittedBox(fit: BoxFit.fill, child: texture);
+            } else {
+              output = OverflowBox(
+                alignment: widget.alignment,
+                minWidth: 0,
+                maxWidth: double.infinity,
+                minHeight: 0,
+                maxHeight: double.infinity,
+                child: Transform.scale(
+                  scale: transitionScale,
+                  alignment: widget.alignment,
+                  child: texture,
+                ),
+              );
+            }
 
             return ColoredBox(
               color: widget.fill,
               child: ClipRect(
-                // The texture and this box share the same physical pixel size.
-                child: OverflowBox(
-                  alignment: Alignment.center,
-                  minWidth: configuration.width / devicePixelRatio,
-                  maxWidth: configuration.width / devicePixelRatio,
-                  minHeight: configuration.height / devicePixelRatio,
-                  maxHeight: configuration.height / devicePixelRatio,
-                  child: SimpleVideo(
-                    controller: widget.controller,
-                    fill: widget.fill,
-                    filterQuality: FilterQuality.none,
-                  ),
-                ),
+                // Keep the last acknowledged video geometry while Android is
+                // producing the first frame at the newly requested size.
+                child: output,
               ),
             );
           },
