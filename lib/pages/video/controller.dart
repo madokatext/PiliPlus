@@ -906,6 +906,19 @@ class VideoDetailController extends GetxController
 
   Volume? volume;
 
+  static const int _resumeEndGuardMilliseconds = 1000;
+
+  Duration _resumePosition(int progress) {
+    final timeLength = data.timeLength;
+    if (progress <= 0 ||
+        (timeLength != null &&
+            timeLength > 0 &&
+            progress >= timeLength - _resumeEndGuardMilliseconds)) {
+      return Duration.zero;
+    }
+    return Duration(milliseconds: progress);
+  }
+
   // 视频链接
   /// TODO: merge [DownloadHttp.getVideoUrl].
   Future<void> queryVideoUrl({
@@ -977,7 +990,7 @@ class VideoDetailController extends GetxController
         if (progress != null) {
           defaultST = Duration(milliseconds: progress);
         } else {
-          defaultST = Duration(milliseconds: data.lastPlayTime);
+          defaultST = _resumePosition(data.lastPlayTime);
         }
       }
 
