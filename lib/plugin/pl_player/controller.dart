@@ -158,6 +158,7 @@ final RxInt seekStartPosition = 0.obs;
   final RxBool controlsLock = false.obs;
 
   final RxBool isFullScreen = false.obs;
+  final RxBool frameSyncVideoResize = false.obs;
   bool isLive = false;
 
   bool _isVertical = false;
@@ -2579,6 +2580,7 @@ void onSeekStart({bool fromGesture = false}) {
 
     if (_fsProcessing) return;
     _fsProcessing = true;
+    frameSyncVideoResize.value = true;
     this.isManualFS = isManualFS;
     try {
       if (status) {
@@ -2606,7 +2608,17 @@ void onSeekStart({bool fromGesture = false}) {
       }
     } finally {
       _setFullScreen(status);
-      _fsProcessing = false;
+      try {
+        // Keep frame-backed resize confirmation enabled until Flutter has
+        // committed the fullscreen layout and one following stabilization
+        // frame. Android may report the orientation change before the final
+        // viewport/inset geometry reaches the video widget.
+        await WidgetsBinding.instance.endOfFrame;
+        await WidgetsBinding.instance.endOfFrame;
+      } finally {
+        frameSyncVideoResize.value = false;
+        _fsProcessing = false;
+      }
     }
   }
 
