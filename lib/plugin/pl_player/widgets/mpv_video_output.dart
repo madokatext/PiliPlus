@@ -289,6 +289,10 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
         // Do not publish an obsolete half-screen size while a newer full-screen
         // resize is already queued. The latest resize runs immediately afterward.
         if (_pendingResizeConfiguration == null) {
+          // media_kit 的 videoParams 异步回调可能在本次调整后再次把 rect
+          // 写回视频源尺寸。清除旧的 mismatch 记录，确保该外部回写能够
+          // 触发下一次纠正，而不是被当成已经处理过的重复状态。
+          _lastMismatchedRect = null;
           controller.rect.value = Rect.fromLTWH(
             0,
             0,
