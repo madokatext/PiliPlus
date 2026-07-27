@@ -2311,7 +2311,9 @@ if (!isLive)
             key: _videoKey,
             child: Obx(
               () {
-                                plPlayerController.videoOutputRevision.value;
+                plPlayerController.videoOutputRevision.value;
+                final waitForResizeFrame =
+                    plPlayerController.frameSyncVideoResize.value;
                 final videoFit = plPlayerController.videoFit.value;
                 final controller = plPlayerController.videoController!;
                 final standbyController =
@@ -2337,6 +2339,7 @@ if (!isLive)
                     fill: widget.fill,
                     alignment: widget.alignment,
                     transformationController: _transformationController,
+                    waitForResizeFrame: waitForResizeFrame,
                   );
                 }
 
