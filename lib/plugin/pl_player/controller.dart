@@ -81,10 +81,8 @@ class PlPlayerController with BlockConfigMixin {
   bool _videoNetworkFailed = false;
   bool _pausedForVideoStall = false;
   bool _resumeAfterVideoRecovery = false;
+  Duration? _videoStallPosition;
   Timer? _videoStallWatchdogTimer;
-  Duration? _lastObservedVideoPosition;
-  DateTime? _lastVideoProgressAt;
-  double? _audioPtsAtLastVideoProgress;
   DateTime? _videoStallSince;
 
   static const List<Duration> _mediaRecoveryDelays = [
@@ -1069,6 +1067,7 @@ final dataSourceGeneration = ++_dataSourceGeneration;
     _videoNetworkFailed = false;
     _pausedForVideoStall = false;
     _resumeAfterVideoRecovery = false;
+    _videoStallPosition = null;
     _resetVideoStallObservation();
   }
 
@@ -1088,9 +1087,6 @@ final dataSourceGeneration = ++_dataSourceGeneration;
   }
 
   void _resetVideoStallObservation() {
-    _lastObservedVideoPosition = null;
-    _lastVideoProgressAt = null;
-    _audioPtsAtLastVideoProgress = null;
     _videoStallSince = null;
   }
 
@@ -1147,57 +1143,16 @@ final dataSourceGeneration = ++_dataSourceGeneration;
     }
 
     final now = DateTime.now();
-    final audioPts = double.tryParse(
-      _readPlayerProperty(player, 'audio-pts') ?? '',
-    );
-    final previousPosition = _lastObservedVideoPosition;
+    // 主媒体是视频，外置 DASH 音频通过 audio-files 加载。
+    // 视频 EOF 后 mpv 会改用音频时钟推进 time-pos，因此 position 可以
+    // 继续增长，但主视频的 demuxer-cache-time（state.buffer）会停在
+    // 最后一帧附近。全局进度持续越过它，就是音频已越过视频缓存终点。
+    final playbackPastVideoBuffer =
+        state.buffer > Duration.zero &&
+        state.position >=
+            state.buffer + const Duration(milliseconds: 150);
 
-    if (previousPosition == null ||
-        (state.position - previousPosition).inMilliseconds.abs() >= 10) {
-      _lastObservedVideoPosition = state.position;
-      _lastVideoProgressAt = now;
-      _audioPtsAtLastVideoProgress = audioPts;
-      _videoStallSince = null;
-    }
-
-    final lastVideoProgressAt = _lastVideoProgressAt;
-    final audioPtsAtLastVideoProgress = _audioPtsAtLastVideoProgress;
-    final videoStoppedFor = lastVideoProgressAt == null
-        ? Duration.zero
-        : now.difference(lastVideoProgressAt);
-    final audioAdvancedWhileVideoStopped =
-        audioPts != null &&
-        audioPtsAtLastVideoProgress != null &&
-        audioPts - audioPtsAtLastVideoProgress >= 0.25;
-
-    final bufferedAhead = state.buffer - state.position;
-    final videoDepleted = bufferedAhead <= const Duration(milliseconds: 150);
-    final mainDemuxerUnderrun =
-        _readPlayerProperty(
-          player,
-          'demuxer-cache-state/underrun',
-        ) ==
-        'yes';
-    final mainDemuxerEof =
-        _readPlayerProperty(player, 'demuxer-cache-state/eof') == 'yes';
-    final pausedForCache =
-        _readPlayerProperty(player, 'paused-for-cache') == 'yes';
-
-    // time-pos 在视频轨存在时来自视频 PTS。视频断流而独立音轨仍在
-    // 播放时，它会停住；用周期轮询才能在 stream.position 不再发事件后
-    // 继续计时。demuxer 状态同时覆盖 mpv 改用音频时间轴的情况。
-    final videoTimelineStalled =
-        videoStoppedFor >= const Duration(milliseconds: 600) &&
-        audioAdvancedWhileVideoStopped;
-    final mainVideoCacheStalled =
-        videoDepleted &&
-        (mainDemuxerUnderrun ||
-            mainDemuxerEof ||
-            pausedForCache ||
-            state.buffering ||
-            _videoNetworkFailed);
-
-    if (!videoTimelineStalled && !mainVideoCacheStalled) {
+    if (!playbackPastVideoBuffer) {
       _videoStallSince = null;
       return;
     }
@@ -1205,9 +1160,55 @@ final dataSourceGeneration = ++_dataSourceGeneration;
     _videoStallSince ??= now;
 
     if (now.difference(_videoStallSince!) >=
-        const Duration(milliseconds: 250)) {
+        const Duration(milliseconds: 400)) {
       unawaited(_pauseForVideoStall(player));
     }
+  }
+
+  void _handleVideoPipelineLog(NativePlayer player, PlayerLog log) {
+    if (_pausedForVideoStall ||
+        !identical(player, _videoPlayerController) ||
+        _playerCount == 0 ||
+        isLive ||
+        dataSource is FileSource ||
+        onlyPlayAudio.value ||
+        isSeeking.value ||
+        !player.state.playing) {
+      return;
+    }
+
+    final state = player.state;
+    final nearNaturalEnd =
+        state.duration > Duration.zero &&
+        state.duration - state.position <= const Duration(seconds: 1);
+    if (nearNaturalEnd) {
+      return;
+    }
+
+    final prefix = log.prefix.toLowerCase();
+    final text = log.text.toLowerCase();
+    final videoFilterEnded =
+        prefix == 'vf' && text.contains('filter output eof');
+    final androidVideoOutputFailed =
+        prefix.contains('aimagereader') &&
+        (text.contains('waiting for frame timed out') ||
+            text.contains('acquirelatestimage failed'));
+
+    if (!videoFilterEnded && !androidVideoOutputFailed) {
+      return;
+    }
+
+    // vf output EOF 已经证明视频链没有后续帧。Android ImageReader 错误
+    // 可能由瞬时 Surface 变化引起，因此只在播放时钟已越过视频缓存后采用。
+    final playbackPastVideoBuffer =
+        state.buffer > Duration.zero &&
+        state.position >= state.buffer;
+    if (!videoFilterEnded && !playbackPastVideoBuffer) {
+      return;
+    }
+
+    _videoNetworkFailed = true;
+    unawaited(_pauseForVideoStall(player));
   }
 
   Future<void> _pauseForVideoStall(NativePlayer player) async {
@@ -1219,6 +1220,11 @@ final dataSourceGeneration = ++_dataSourceGeneration;
 
     _pausedForVideoStall = true;
     _resumeAfterVideoRecovery = player.state.playing;
+    final state = player.state;
+    _videoStallPosition =
+        state.buffer > Duration.zero && state.buffer < state.position
+        ? state.buffer
+        : state.position;
 
     // 暂停整个旧 mpv，保留最后一帧，并阻止独立音轨继续推进。
     try {
@@ -1227,6 +1233,7 @@ final dataSourceGeneration = ++_dataSourceGeneration;
       if (identical(player, _videoPlayerController)) {
         _pausedForVideoStall = false;
         _resumeAfterVideoRecovery = false;
+        _videoStallPosition = null;
         if (kDebugMode) {
           debugPrint('failed to pause stalled video player: $err');
           debugPrint(stackTrace.toString());
@@ -1432,6 +1439,11 @@ final dataSourceGeneration = ++_dataSourceGeneration;
         !onlyPlayAudio.value &&
         !cancellation.isCompleted;
 
+    Duration activeHandoffPosition() =>
+        _pausedForVideoStall && _videoStallPosition != null
+        ? _videoStallPosition!
+        : activePlayer.state.position;
+
     late final Player standbyPlayer;
     late final VideoController standbyController;
     var standbyCreated = false;
@@ -1462,7 +1474,7 @@ final dataSourceGeneration = ++_dataSourceGeneration;
       }
 
       final currentMedia = activePlayer.current.last;
-      final startPosition = activePlayer.state.position;
+      final startPosition = activeHandoffPosition();
       MpvUtils.applyRuntimeOverrides(standbyPlayer);
       standbyPlayer
         ..setProperty('mute', 'yes')
@@ -1567,7 +1579,7 @@ if (forceDeadline != null &&
     break;
   }
 
-  final target = activePlayer.state.position;
+  final target = activeHandoffPosition();
   final bufferedAhead =
       (standbyPlayer.state.buffer - target).inMilliseconds /
       Duration.millisecondsPerSecond;
@@ -1615,7 +1627,7 @@ if ((!bufferReady && !forceHandoff) ||
         await standbyPlayer.pause();
       }
 
-      var target = activePlayer.state.position;
+      var target = activeHandoffPosition();
       var drift =
           (standbyPlayer.state.position - target).inMilliseconds.abs();
 
@@ -1649,7 +1661,7 @@ var aligned = forceHandoff;
       while (!forceHandoff &&
     isCurrentSwitch() &&
     DateTime.now().isBefore(alignmentDeadline)) {
-        target = activePlayer.state.position;
+        target = activeHandoffPosition();
         drift =
             (standbyPlayer.state.position - target).inMilliseconds.abs();
 
@@ -1716,8 +1728,8 @@ if (!aligned &&
         return false;
       }
 
-            final handoffDrift =
-          (standbyPlayer.state.position - activePlayer.state.position)
+      final handoffDrift =
+          (standbyPlayer.state.position - activeHandoffPosition())
               .inMilliseconds
               .abs();
 
@@ -1777,6 +1789,7 @@ _startListeners(standbyPlayer);
 _videoNetworkFailed = false;
 _pausedForVideoStall = false;
 _videoStallSince = null;
+_videoStallPosition = null;
 
 // 必须在新播放器监听器挂载后再确定最终的界面状态，
 // 避免监听器订阅时的初始事件覆盖该状态。
@@ -1993,6 +2006,7 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
       }),
       stream.log.listen((PlayerLog log) {
         MpvLogService.add(player, log);
+        _handleVideoPipelineLog(player, log);
         if (kDebugMode) {
           if (log.level == 'error' || log.level == 'fatal') {
             Utils.reportError('${log.level}: ${log.prefix}: ${log.text}', null);
