@@ -81,6 +81,10 @@ class PlPlayerController with BlockConfigMixin {
   bool _videoNetworkFailed = false;
   bool _pausedForVideoStall = false;
   bool _resumeAfterVideoRecovery = false;
+  Timer? _videoStallWatchdogTimer;
+  Duration? _lastObservedVideoPosition;
+  DateTime? _lastVideoProgressAt;
+  double? _audioPtsAtLastVideoProgress;
   DateTime? _videoStallSince;
 
   static const List<Duration> _mediaRecoveryDelays = [
@@ -1065,7 +1069,7 @@ final dataSourceGeneration = ++_dataSourceGeneration;
     _videoNetworkFailed = false;
     _pausedForVideoStall = false;
     _resumeAfterVideoRecovery = false;
-    _videoStallSince = null;
+    _resetVideoStallObservation();
   }
 
   bool _isRetryableMediaOpenError(String event) {
@@ -1083,42 +1087,124 @@ final dataSourceGeneration = ++_dataSourceGeneration;
         text.contains('broken pipe');
   }
 
+  void _resetVideoStallObservation() {
+    _lastObservedVideoPosition = null;
+    _lastVideoProgressAt = null;
+    _audioPtsAtLastVideoProgress = null;
+    _videoStallSince = null;
+  }
+
+  String? _readPlayerProperty(NativePlayer player, String name) {
+    try {
+      return player.getProperty(name);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _startVideoStallWatchdog(NativePlayer player) {
+    _videoStallWatchdogTimer?.cancel();
+    _resetVideoStallObservation();
+    _videoStallWatchdogTimer = Timer.periodic(
+      const Duration(milliseconds: 200),
+      (_) => _checkVideoStall(player),
+    );
+  }
+
   void _checkVideoStall(NativePlayer player) {
-    if (!_videoNetworkFailed ||
-        _pausedForVideoStall ||
+    final seeking =
+        _readPlayerProperty(player, 'seeking') == 'yes';
+
+    if (_pausedForVideoStall ||
         !identical(player, _videoPlayerController) ||
         _playerCount == 0 ||
         isLive ||
         dataSource is FileSource ||
         onlyPlayAudio.value ||
         isSeeking.value ||
+        seeking ||
+        player.current.isEmpty ||
         !player.state.playing) {
-      _videoStallSince = null;
+      _resetVideoStallObservation();
       return;
     }
 
     final state = player.state;
+    if (state.position <= Duration.zero ||
+        state.width <= 0 ||
+        state.height <= 0) {
+      _resetVideoStallObservation();
+      return;
+    }
+
     final nearNaturalEnd =
         state.duration > Duration.zero &&
         state.duration - state.position <= const Duration(seconds: 1);
 
     if (nearNaturalEnd) {
-      _videoStallSince = null;
+      _resetVideoStallObservation();
       return;
     }
+
+    final now = DateTime.now();
+    final audioPts = double.tryParse(
+      _readPlayerProperty(player, 'audio-pts') ?? '',
+    );
+    final previousPosition = _lastObservedVideoPosition;
+
+    if (previousPosition == null ||
+        (state.position - previousPosition).inMilliseconds.abs() >= 10) {
+      _lastObservedVideoPosition = state.position;
+      _lastVideoProgressAt = now;
+      _audioPtsAtLastVideoProgress = audioPts;
+      _videoStallSince = null;
+    }
+
+    final lastVideoProgressAt = _lastVideoProgressAt;
+    final audioPtsAtLastVideoProgress = _audioPtsAtLastVideoProgress;
+    final videoStoppedFor = lastVideoProgressAt == null
+        ? Duration.zero
+        : now.difference(lastVideoProgressAt);
+    final audioAdvancedWhileVideoStopped =
+        audioPts != null &&
+        audioPtsAtLastVideoProgress != null &&
+        audioPts - audioPtsAtLastVideoProgress >= 0.25;
 
     final bufferedAhead = state.buffer - state.position;
-    final videoDepleted =
-        bufferedAhead <= const Duration(milliseconds: 150);
+    final videoDepleted = bufferedAhead <= const Duration(milliseconds: 150);
+    final mainDemuxerUnderrun =
+        _readPlayerProperty(
+          player,
+          'demuxer-cache-state/underrun',
+        ) ==
+        'yes';
+    final mainDemuxerEof =
+        _readPlayerProperty(player, 'demuxer-cache-state/eof') == 'yes';
+    final pausedForCache =
+        _readPlayerProperty(player, 'paused-for-cache') == 'yes';
 
-    if (!videoDepleted) {
+    // time-pos 在视频轨存在时来自视频 PTS。视频断流而独立音轨仍在
+    // 播放时，它会停住；用周期轮询才能在 stream.position 不再发事件后
+    // 继续计时。demuxer 状态同时覆盖 mpv 改用音频时间轴的情况。
+    final videoTimelineStalled =
+        videoStoppedFor >= const Duration(milliseconds: 600) &&
+        audioAdvancedWhileVideoStopped;
+    final mainVideoCacheStalled =
+        videoDepleted &&
+        (mainDemuxerUnderrun ||
+            mainDemuxerEof ||
+            pausedForCache ||
+            state.buffering ||
+            _videoNetworkFailed);
+
+    if (!videoTimelineStalled && !mainVideoCacheStalled) {
       _videoStallSince = null;
       return;
     }
 
-    _videoStallSince ??= DateTime.now();
+    _videoStallSince ??= now;
 
-    if (DateTime.now().difference(_videoStallSince!) >=
+    if (now.difference(_videoStallSince!) >=
         const Duration(milliseconds: 250)) {
       unawaited(_pauseForVideoStall(player));
     }
@@ -1135,7 +1221,25 @@ final dataSourceGeneration = ++_dataSourceGeneration;
     _resumeAfterVideoRecovery = player.state.playing;
 
     // 暂停整个旧 mpv，保留最后一帧，并阻止独立音轨继续推进。
-    await player.pause();
+    try {
+      await player.pause();
+    } catch (err, stackTrace) {
+      if (identical(player, _videoPlayerController)) {
+        _pausedForVideoStall = false;
+        _resumeAfterVideoRecovery = false;
+        if (kDebugMode) {
+          debugPrint('failed to pause stalled video player: $err');
+          debugPrint(stackTrace.toString());
+        }
+      }
+      return;
+    }
+
+    if (!_pausedForVideoStall ||
+        !identical(player, _videoPlayerController) ||
+        _playerCount == 0) {
+      return;
+    }
 
     isBuffering.value = true;
     _scheduleSeamlessMediaRecovery();
@@ -1778,6 +1882,7 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
   /// 播放事件监听
   void _startListeners(NativePlayer player) {
     assert(_subscriptions == null);
+    _startVideoStallWatchdog(player);
     final stream = player.stream;
     _subscriptions = [
       /// playing
@@ -1863,12 +1968,10 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
           element(position);
         }
         _maybeStartPlaybackHistory(player);
-        _checkVideoStall(player);
       }),
       stream.duration.listen(updateDuration),
       stream.buffer.listen((Duration buffer) {
         buffered.value = buffer.inSeconds;
-        _checkVideoStall(player);
       }),
       stream.buffering.listen((bool buffering) {
         isBuffering.value = buffering;
@@ -1887,7 +1990,6 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
           buffering,
           isLive,
         );
-        _checkVideoStall(player);
       }),
       stream.log.listen((PlayerLog log) {
         MpvLogService.add(player, log);
@@ -1999,6 +2101,10 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
 
   /// 移除事件监听
   Future<void> _removeListeners() async {
+  _videoStallWatchdogTimer?.cancel();
+  _videoStallWatchdogTimer = null;
+  _resetVideoStallObservation();
+
   final subscriptions = _subscriptions;
   _subscriptions = null;
 
