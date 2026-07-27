@@ -1413,8 +1413,10 @@ final dataSourceGeneration = ++_dataSourceGeneration;
     String logSource = 'video quality switch',
   }) async {
     final activePlayer = _videoPlayerController;
+    final activeController = _videoController;
     final currentSource = dataSource;
     if (activePlayer == null ||
+        activeController == null ||
         currentSource is! NetworkSource ||
         activePlayer.current.isEmpty ||
         onlyPlayAudio.value ||
@@ -1509,6 +1511,59 @@ var forceHandoff = false;
 
 var firstFrameRendered = false;
       var firstFrameFailed = false;
+      final requireConfiguredAndroidOutput =
+          Platform.isAndroid && Pref.useMpvVideoScaling;
+      Rect? configuredOutputRect;
+      Duration? positionWhenOutputConfigured;
+      var renderedAfterOutputConfiguration =
+          !requireConfiguredAndroidOutput;
+
+      bool standbyOutputReady() {
+        if (!requireConfiguredAndroidOutput) {
+          return true;
+        }
+
+        final targetRect = activeController.rect.value;
+        final standbyRect = standbyController.rect.value;
+        if (targetRect == null ||
+            targetRect.width <= 1 ||
+            targetRect.height <= 1) {
+          configuredOutputRect = null;
+          positionWhenOutputConfigured = null;
+          renderedAfterOutputConfiguration = false;
+          return false;
+        }
+
+        final rectMatches =
+            standbyRect != null &&
+            (standbyRect.width - targetRect.width).abs() < 0.5 &&
+            (standbyRect.height - targetRect.height).abs() < 0.5;
+
+        if (!rectMatches) {
+          configuredOutputRect = null;
+          positionWhenOutputConfigured = null;
+          renderedAfterOutputConfiguration = false;
+          return false;
+        }
+
+        if (configuredOutputRect != targetRect ||
+            positionWhenOutputConfigured == null) {
+          configuredOutputRect = targetRect;
+          positionWhenOutputConfigured = standbyPlayer.state.position;
+          renderedAfterOutputConfiguration = false;
+          return false;
+        }
+
+        if (!renderedAfterOutputConfiguration) {
+          final progress =
+              (standbyPlayer.state.position - positionWhenOutputConfigured!)
+                  .inMilliseconds
+                  .abs();
+          renderedAfterOutputConfiguration = progress >= 20;
+        }
+        return renderedAfterOutputConfiguration;
+      }
+
       unawaited(
         standbyController.waitUntilFirstFrameRendered.then<void>(
           (_) => firstFrameRendered = true,
@@ -1585,6 +1640,7 @@ if (forceDeadline != null &&
       Duration.millisecondsPerSecond;
 
   if (firstFrameRendered &&
+      standbyOutputReady() &&
       standbyPlayer.state.width > 0 &&
       standbyPlayer.state.height > 0 &&
       !standbyPlayer.state.buffering &&
@@ -1745,6 +1801,7 @@ if (!aligned &&
 // 强制等待期间页面、数据源或备用实例状态都可能已经发生变化。
 if (!isCurrentSwitch() ||
     firstFrameFailed ||
+    (!forceHandoff && !standbyOutputReady()) ||
     (forceHandoff && !canForceHandoff())) {
   return false;
 }
