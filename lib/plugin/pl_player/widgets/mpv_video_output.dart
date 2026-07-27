@@ -62,12 +62,12 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
   late int _sourceWidth;
   late int _sourceHeight;
   _MpvOutputConfiguration? _pendingConfiguration;
-  _MpvOutputConfiguration? _lastRequestedConfiguration;
-  Rect? _lastMismatchedRect;
-  bool _pendingResize = false;
+  _MpvOutputConfiguration? _appliedConfiguration;
+  _MpvOutputConfiguration? _applyingConfiguration;
+  Rect? _applyingRect;
   bool _configurationScheduled = false;
-  _MpvOutputConfiguration? _pendingResizeConfiguration;
-  bool _resizeInProgress = false;
+  bool _configurationApplying = false;
+  int _configurationGeneration = 0;
 
   @override
   void initState() {
@@ -81,9 +81,11 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
     super.didUpdateWidget(oldWidget);
     if (widget.controller != oldWidget.controller) {
       _sizeSubscription?.cancel();
-      _pendingResizeConfiguration = null;
-      _lastRequestedConfiguration = null;
-      _lastMismatchedRect = null;
+      _configurationGeneration++;
+      _pendingConfiguration = null;
+      _appliedConfiguration = null;
+      _applyingConfiguration = null;
+      _applyingRect = null;
       _listenToController();
     }
     if (widget.transformationController != oldWidget.transformationController) {
@@ -102,13 +104,11 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
       if (_sourceWidth == size.$1 && _sourceHeight == size.$2) return;
       _sourceWidth = size.$1;
       _sourceHeight = size.$2;
-      _lastRequestedConfiguration = null;
       if (mounted) setState(() {});
     });
   }
 
   void _onTransformationChanged() {
-    _lastRequestedConfiguration = null;
     if (mounted) setState(() {});
   }
 
@@ -197,54 +197,72 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
     Rect? rect,
   ) {
     final matches = _rectMatches(rect, configuration);
-    if (_lastRequestedConfiguration == configuration &&
-        (matches || _lastMismatchedRect == rect)) {
+    if (matches &&
+        (_appliedConfiguration == configuration ||
+            _applyingConfiguration == configuration ||
+            _pendingConfiguration == configuration)) {
+      return;
+    }
+    if (_pendingConfiguration == configuration ||
+        (_applyingConfiguration == configuration && _applyingRect == rect)) {
       return;
     }
 
-    _lastRequestedConfiguration = configuration;
-    _lastMismatchedRect = matches ? null : rect;
     _pendingConfiguration = configuration;
-    _pendingResize = _pendingResize || !matches;
-    if (_configurationScheduled) return;
+    _scheduleConfiguration();
+  }
+
+  void _scheduleConfiguration() {
+    if (_configurationScheduled || _configurationApplying) return;
     _configurationScheduled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _configurationScheduled = false;
-      final pending = _pendingConfiguration;
-      final resize = _pendingResize;
-      _pendingConfiguration = null;
-      _pendingResize = false;
-      if (mounted && pending != null) {
-        unawaited(_applyConfiguration(pending, resize: false));
-        if (resize || _resizeInProgress) _requestOutputResize(pending);
-      }
+      if (mounted) unawaited(_drainConfigurations());
     });
   }
 
-  void _requestOutputResize(_MpvOutputConfiguration configuration) {
-    _pendingResizeConfiguration = configuration;
-    if (!_resizeInProgress) unawaited(_drainOutputResizes());
-  }
-
-  Future<void> _drainOutputResizes() async {
-    _resizeInProgress = true;
+  Future<void> _drainConfigurations() async {
+    if (_configurationApplying) return;
+    _configurationApplying = true;
     try {
-      while (mounted) {
-        final configuration = _pendingResizeConfiguration;
-        if (configuration == null) break;
-        _pendingResizeConfiguration = null;
-        await _applyConfiguration(configuration, resize: true);
+      while (mounted && _pendingConfiguration != null) {
+        final configuration = _pendingConfiguration;
+        _pendingConfiguration = null;
+        if (configuration == null) continue;
+
+        final controller = widget.controller;
+        final generation = _configurationGeneration;
+        final rect = controller.rect.value;
+        _applyingConfiguration = configuration;
+        _applyingRect = rect;
+
+        final applied = await _applyConfiguration(
+          controller,
+          configuration,
+          resize: !_rectMatches(rect, configuration),
+        );
+        if (applied &&
+            mounted &&
+            generation == _configurationGeneration &&
+            identical(controller, widget.controller)) {
+          _appliedConfiguration = configuration;
+        }
       }
     } finally {
-      _resizeInProgress = false;
+      _applyingConfiguration = null;
+      _applyingRect = null;
+      _configurationApplying = false;
+      if (mounted && _pendingConfiguration != null) {
+        _scheduleConfiguration();
+      }
     }
   }
 
-  Future<void> _applyConfiguration(
+  Future<bool> _applyConfiguration(
+    VideoController controller,
     _MpvOutputConfiguration configuration, {
     required bool resize,
   }) async {
-    final controller = widget.controller;
     final player = controller.player;
 
     final customOptions = MpvUtils.customOptions;
@@ -265,17 +283,20 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
       setBuiltInProperty('video-pan-x', configuration.panX);
       setBuiltInProperty('video-pan-y', configuration.panY);
 
-      if (!resize) return;
-      await controller.setSize(
-        width: configuration.width,
-        height: configuration.height,
-      );
+      if (resize) {
+        await controller.setSize(
+          width: configuration.width,
+          height: configuration.height,
+        );
+      }
+      return true;
     } catch (error, stackTrace) {
       assert(() {
         debugPrint('Failed to resize mpv video output: $error');
         debugPrintStack(stackTrace: stackTrace);
         return true;
       }());
+      return false;
     }
   }
 
@@ -297,11 +318,11 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
             final outputWidth =
                 rect != null && rect.width > 1
                 ? rect.width / devicePixelRatio
-                : logicalSize.width;
+                : configuration.width / devicePixelRatio;
             final outputHeight =
                 rect != null && rect.height > 1
                 ? rect.height / devicePixelRatio
-                : logicalSize.height;
+                : configuration.height / devicePixelRatio;
             final texture = SizedBox(
               width: outputWidth,
               height: outputHeight,
@@ -312,49 +333,28 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
               ),
             );
             final outputMatches = _rectMatches(rect, configuration);
-            final sourceAspectRatio =
-                widget.fit.aspectRatio ??
-                (_sourceWidth > 0 && _sourceHeight > 0
-                    ? _sourceWidth / _sourceHeight
-                    : configuration.width / configuration.height);
-            final acknowledgedVideoSize = _fittedVideoSize(
-              Size(outputWidth, outputHeight),
-              devicePixelRatio,
-              sourceAspectRatio,
-            );
-            final targetVideoSize = _fittedVideoSize(
-              logicalSize,
-              devicePixelRatio,
-              sourceAspectRatio,
-            );
-            final transitionScale = acknowledgedVideoSize.width > 0
-                ? targetVideoSize.width / acknowledgedVideoSize.width
-                : 1.0;
-            final Widget output;
-            if (outputMatches) {
-              output = texture;
-            } else if (widget.fit == VideoFitType.fill) {
-              output = FittedBox(fit: BoxFit.fill, child: texture);
+            final currentAspectRatio = outputWidth / outputHeight;
+            final targetAspectRatio =
+                configuration.width / configuration.height;
+            final BoxFit pendingFit;
+            if (widget.fit == VideoFitType.fill) {
+              pendingFit = BoxFit.fill;
+            } else if (targetAspectRatio < currentAspectRatio) {
+              pendingFit = BoxFit.cover;
             } else {
-              output = OverflowBox(
-                alignment: widget.alignment,
-                minWidth: 0,
-                maxWidth: double.infinity,
-                minHeight: 0,
-                maxHeight: double.infinity,
-                child: Transform.scale(
-                  scale: transitionScale,
-                  alignment: widget.alignment,
-                  child: texture,
-                ),
-              );
+              pendingFit = BoxFit.contain;
             }
+            final output = outputMatches
+                ? texture
+                : FittedBox(
+                    fit: pendingFit,
+                    alignment: widget.alignment,
+                    child: texture,
+                  );
 
             return ColoredBox(
               color: widget.fill,
               child: ClipRect(
-                // Keep the last acknowledged video geometry while Android is
-                // producing the first frame at the newly requested size.
                 child: output,
               ),
             );
