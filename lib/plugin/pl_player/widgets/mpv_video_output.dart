@@ -64,7 +64,6 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
   _MpvOutputConfiguration? _pendingConfiguration;
   _MpvOutputConfiguration? _appliedConfiguration;
   _MpvOutputConfiguration? _applyingConfiguration;
-  Rect? _applyingRect;
   bool _configurationScheduled = false;
   bool _configurationApplying = false;
   int _configurationGeneration = 0;
@@ -85,7 +84,6 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
       _pendingConfiguration = null;
       _appliedConfiguration = null;
       _applyingConfiguration = null;
-      _applyingRect = null;
       _listenToController();
     }
     if (widget.transformationController != oldWidget.transformationController) {
@@ -192,19 +190,10 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
       (rect.width - configuration.width).abs() < 0.5 &&
       (rect.height - configuration.height).abs() < 0.5;
 
-  void _requestConfiguration(
-    _MpvOutputConfiguration configuration,
-    Rect? rect,
-  ) {
-    final matches = _rectMatches(rect, configuration);
-    if (matches &&
-        (_appliedConfiguration == configuration ||
-            _applyingConfiguration == configuration ||
-            _pendingConfiguration == configuration)) {
-      return;
-    }
-    if (_pendingConfiguration == configuration ||
-        (_applyingConfiguration == configuration && _applyingRect == rect)) {
+  void _requestConfiguration(_MpvOutputConfiguration configuration) {
+    if (_appliedConfiguration == configuration ||
+        _applyingConfiguration == configuration ||
+        _pendingConfiguration == configuration) {
       return;
     }
 
@@ -234,7 +223,6 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
         final generation = _configurationGeneration;
         final rect = controller.rect.value;
         _applyingConfiguration = configuration;
-        _applyingRect = rect;
 
         final applied = await _applyConfiguration(
           controller,
@@ -250,7 +238,6 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
       }
     } finally {
       _applyingConfiguration = null;
-      _applyingRect = null;
       _configurationApplying = false;
       if (mounted && _pendingConfiguration != null) {
         _scheduleConfiguration();
@@ -314,7 +301,7 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
           listenable: widget.controller.rect,
           builder: (context, _) {
             final rect = widget.controller.rect.value;
-            _requestConfiguration(configuration, rect);
+            _requestConfiguration(configuration);
             final outputWidth =
                 rect != null && rect.width > 1
                 ? rect.width / devicePixelRatio
