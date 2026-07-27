@@ -75,10 +75,17 @@ class PlPlayerController with BlockConfigMixin {
   Player? _videoPlayerController;
   VideoController? _videoController;
   Future<Player>? _playerInitTask;
-Timer? _mediaOpenRetryTimer;
+  Timer? _mediaRecoveryTimer;
+  bool _mediaRecoveryRunning = false;
+  int _mediaRecoveryAttempt = 0;
 
-static const Duration _mediaOpenRetryDelay =
-    Duration(seconds: 2);
+  static const List<Duration> _mediaRecoveryDelays = [
+    Duration(milliseconds: 350),
+    Duration(milliseconds: 700),
+    Duration(milliseconds: 1400),
+    Duration(milliseconds: 2800),
+    Duration(seconds: 4),
+  ];
   static PlPlayerController? _instance;
 
   final playerStatus = PlPlayerStatus(.playing);
@@ -870,14 +877,17 @@ final dataSourceGeneration = ++_dataSourceGeneration;
 
     try {
       final customHwdec = customOptions['hwdec'];
+      final configuredVo = customOptions['vo'];
       final videoController = await VideoController.create(
         player,
         configuration: VideoControllerConfiguration(
-          vo: customOptions['vo'],
+          vo: configuredVo,
           enableHardwareAcceleration: customHwdec != null
               ? customHwdec != 'no'
               : hwdec != null,
-          androidAttachSurfaceAfterVideoParameters: false,
+          androidAttachSurfaceAfterVideoParameters:
+              Platform.isAndroid &&
+              (configuredVo == null || configuredVo == 'gpu'),
           hwdec: customHwdec ?? hwdec,
         ),
       );
@@ -1020,8 +1030,8 @@ final dataSourceGeneration = ++_dataSourceGeneration;
       );
     }
     if (isCurrentDataSource?.call() == false) return;
-    // player.open 会先卸载旧媒体；每次打开（包括网络错误重试）前
-    // 都重新应用用户参数，避免重试路径绕过自定义设置。
+    // player.open 会先卸载旧媒体；手动刷新与直播错误重试前重新应用用户
+    // 参数，避免这些原地打开路径绕过自定义设置。
     MpvUtils.applyRuntimeOverrides(player);
     await player.open(media, play: play);
   }
@@ -1044,58 +1054,120 @@ final dataSourceGeneration = ++_dataSourceGeneration;
     }
     return null;
   }
-void _resetMediaOpenRetry() {
-  _mediaOpenRetryTimer?.cancel();
-  _mediaOpenRetryTimer = null;
-}
-bool _isRetryableMediaOpenError(String event) {
-  return event.startsWith('Failed to open https://') ||
-      event.startsWith('Can not open external file https://') ||
-      event.startsWith('tcp: ffurl_read returned ');
-}
-
-void _scheduleMediaOpenRetry() {
-  if (_playerCount == 0 ||
-      isLive ||
-      dataSource is FileSource ||
-      _mediaOpenRetryTimer != null) {
-    return;
+  void _resetMediaOpenRetry() {
+    _mediaRecoveryTimer?.cancel();
+    _mediaRecoveryTimer = null;
+    _mediaRecoveryAttempt = 0;
   }
 
-  final generation = _dataSourceGeneration;
+  bool _isRetryableMediaOpenError(String event) {
+    return event.startsWith('Failed to open https://') ||
+        event.startsWith('Can not open external file https://') ||
+        event.startsWith('tcp: ffurl_read returned ');
+  }
 
+  void _scheduleSeamlessMediaRecovery() {
+    if (_playerCount == 0 ||
+        isLive ||
+        dataSource is FileSource ||
+        _mediaRecoveryTimer != null ||
+        _mediaRecoveryRunning) {
+      return;
+    }
 
-  _mediaOpenRetryTimer = Timer(
-    _mediaOpenRetryDelay,
-    () async {
-      _mediaOpenRetryTimer = null;
+    final generation = _dataSourceGeneration;
+    final activePlayer = _videoPlayerController;
+
+    if (activePlayer == null || activePlayer.current.isEmpty) {
+      return;
+    }
+
+    final delayIndex = min(
+      _mediaRecoveryAttempt,
+      _mediaRecoveryDelays.length - 1,
+    );
+    final delay = _mediaRecoveryDelays[delayIndex];
+
+    _mediaRecoveryTimer = Timer(delay, () async {
+      _mediaRecoveryTimer = null;
 
       if (_playerCount == 0 ||
-          generation != _dataSourceGeneration) {
+          generation != _dataSourceGeneration ||
+          !identical(activePlayer, _videoPlayerController)) {
         return;
       }
 
-      
+      // 用户此时可能正在主动切换画质。网络恢复不能取消画质切换。
+      if (_videoPlayerSwitchCancellation != null) {
+        _scheduleSeamlessMediaRecovery();
+        return;
+      }
+
+      final currentSource = dataSource;
+      if (currentSource is! NetworkSource) {
+        return;
+      }
+
+      _mediaRecoveryRunning = true;
+      var shouldRetry = false;
+
       try {
-        final task = refreshPlayer();
-        if (task != null) {
-          await task;
-        }
-      } catch (err, stackTrace) {
-        if (kDebugMode) {
-          debugPrint(
-            'media open retry failed: $err',
-          );
-          debugPrint(stackTrace.toString());
+        final success = await switchVideoPlayer(
+          source: currentSource.videoSource,
+          width:
+              width ??
+              (activePlayer.state.width > 0
+                  ? activePlayer.state.width
+                  : null),
+          height:
+              height ??
+              (activePlayer.state.height > 0
+                  ? activePlayer.state.height
+                  : null),
+          reloadSameSource: true,
+          allowForcedHandoff: false,
+          strictTimeout: const Duration(seconds: 8),
+          logSource: 'seamless network recovery',
+        );
+
+        if (!success &&
+            (generation != _dataSourceGeneration ||
+                !identical(activePlayer, _videoPlayerController))) {
+          return;
         }
 
-        if (generation == _dataSourceGeneration) {
-          _scheduleMediaOpenRetry();
+        if (success) {
+          _mediaRecoveryAttempt = 0;
+        } else {
+          _mediaRecoveryAttempt++;
+          shouldRetry = true;
+        }
+      } catch (err, stackTrace) {
+        if (generation != _dataSourceGeneration ||
+            !identical(activePlayer, _videoPlayerController)) {
+          return;
+        }
+
+        _mediaRecoveryAttempt++;
+        shouldRetry = true;
+
+        if (kDebugMode) {
+          debugPrint('seamless media recovery failed: $err');
+          debugPrint(stackTrace.toString());
+        }
+      } finally {
+        _mediaRecoveryRunning = false;
+
+        if (shouldRetry &&
+            _playerCount > 0 &&
+            generation == _dataSourceGeneration &&
+            identical(activePlayer, _videoPlayerController)) {
+          _scheduleSeamlessMediaRecovery();
         }
       }
-    },
-  );
-}
+    });
+  }
+
   void _bumpVideoOutputRevision() {
     videoOutputRevision.value = videoOutputRevision.value + 1;
   }
@@ -1143,11 +1215,16 @@ void _scheduleMediaOpenRetry() {
   /// 备用实例加载与当前实例相同的音频和媒体参数，静音播放并在当前画面
   /// 下方预先挂载纹理。只有首帧、前向缓存与时间同步均达到门槛后，才将
   /// 播放控制和画面一次性交给备用实例；旧实例随后在界面完成一帧重建后
-  /// 释放，避免切换期间出现黑屏或两个实例同时出声。
+  /// 释放，避免切换期间出现黑屏或两个实例同时出声。同源网络恢复可显式
+  /// 绕过地址短路，并关闭未就绪时的强制交接。
   Future<bool> switchVideoPlayer({
     required String source,
     required int? width,
     required int? height,
+    bool reloadSameSource = false,
+    bool allowForcedHandoff = true,
+    Duration strictTimeout = const Duration(seconds: 30),
+    String logSource = 'video quality switch',
   }) async {
     final activePlayer = _videoPlayerController;
     final currentSource = dataSource;
@@ -1158,7 +1235,7 @@ void _scheduleMediaOpenRetry() {
         _playerCount == 0) {
       return false;
     }
-    if (currentSource.videoSource == source) {
+    if (!reloadSameSource && currentSource.videoSource == source) {
       return true;
     }
 
@@ -1227,8 +1304,9 @@ void _scheduleMediaOpenRetry() {
       await standbyPlayer.setRate(activePlayer.state.rate);
       await standbyPlayer.play();
 
-final forceTimeoutSeconds =
-    Pref.videoPlayerSwitchForceTimeoutSeconds;
+final forceTimeoutSeconds = allowForcedHandoff
+    ? Pref.videoPlayerSwitchForceTimeoutSeconds
+    : 0;
 
 final forceDeadline = forceTimeoutSeconds > 0
     ? DateTime.now().add(
@@ -1263,7 +1341,7 @@ bool canForceHandoff() {
       final strictDeadline = DateTime.now().add(
   Duration(
     seconds: max(
-      30,
+      strictTimeout.inSeconds,
       (requiredBufferSeconds * 4).ceil(),
     ),
   ),
@@ -1510,7 +1588,7 @@ await activePlayer.pause();
       unawaited(
   MpvLogService.beginSession(
     standbyPlayer,
-    source: 'video quality switch',
+    source: logSource,
   ),
 );
 _startListeners(standbyPlayer);
@@ -1737,6 +1815,11 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
         }
       }),
       stream.error.listen((String event) {
+        // 交接完成后，旧实例的延迟错误不能触发新一轮恢复。
+        if (!identical(player, _videoPlayerController)) {
+          return;
+        }
+
         if (dataSource is FileSource &&
             event.startsWith("Failed to open file")) {
           return;
@@ -1750,9 +1833,9 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
           return;
         }
         if (_isRetryableMediaOpenError(event)) {
-  _scheduleMediaOpenRetry();
-  return;
-} else if (event.startsWith('Could not open codec')) {
+          _scheduleSeamlessMediaRecovery();
+          return;
+        } else if (event.startsWith('Could not open codec')) {
           SmartDialog.showToast('无法加载解码器, $event，可能会切换至软解');
         } else if (!onlyPlayAudio.value) {
           if (event.startsWith("error running") ||
