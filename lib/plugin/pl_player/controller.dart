@@ -2202,6 +2202,42 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
   final Set<ValueChanged<Duration>> _positionListeners = {};
   final Set<ValueChanged<PlayerStatus>> _statusListeners = {};
 
+  void _publishLogicalPlayingState(NativePlayer player, bool playing) {
+    WakelockPlus.toggle(enable: playing);
+    if (playing) {
+      if (_isAutoEnterPip) {
+        if (_isCurrVideoPage) {
+          enterPip(autoEnter: true);
+        } else {
+          _disableAutoEnterPip();
+        }
+      }
+      playerStatus.value = .playing;
+      _maybeStartPlaybackHistory(player);
+    } else {
+      _disableAutoEnterPip();
+      playerStatus.value = .paused;
+    }
+
+    if (_historySessionStarted) {
+      unawaited(
+        PlaybackHistoryTracker.instance.setActive(
+          playing && !isBuffering.value,
+        ),
+      );
+    }
+
+    videoPlayerServiceHandler?.onStatusChange(
+      playerStatus.value,
+      isBuffering.value,
+      isLive,
+    );
+
+    for (final element in _statusListeners) {
+      element(playing ? .playing : .paused);
+    }
+  }
+
   /// 播放事件监听
   void _startListeners(NativePlayer player) {
     assert(_subscriptions == null);
@@ -2210,44 +2246,15 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
     _subscriptions = [
       /// playing
       stream.playing.listen((bool playing) {
-  // 双播放器交接后，旧实例的延迟事件不得再修改全局播放状态。
-  if (!identical(player, _videoPlayerController)) {
-    return;
-  }
-
-  WakelockPlus.toggle(enable: playing);
-        if (playing) {
-          if (_isAutoEnterPip) {
-            if (_isCurrVideoPage) {
-              enterPip(autoEnter: true);
-            } else {
-              _disableAutoEnterPip();
-            }
-          }
-          playerStatus.value = .playing;
-          _maybeStartPlaybackHistory(player);
-        } else {
-          _disableAutoEnterPip();
-          playerStatus.value = .paused;
+        // 双播放器交接后，旧实例的延迟事件不得再修改全局播放状态。
+        if (!identical(player, _videoPlayerController)) {
+          return;
         }
 
-        if (_historySessionStarted) {
-          unawaited(
-            PlaybackHistoryTracker.instance.setActive(
-              playing && !isBuffering.value,
-            ),
-          );
-        }
-
-        videoPlayerServiceHandler?.onStatusChange(
-          playerStatus.value,
-          isBuffering.value,
-          isLive,
-        );
-
-        for (final element in _statusListeners) {
-          element(playing ? .playing : .paused);
-        }
+        final logicalPlaying =
+            playing ||
+            (_pausedForVideoStall && _resumeAfterVideoRecovery);
+        _publishLogicalPlayingState(player, logicalPlaying);
 
         final seconds = videoPlayerController!.state.position.inSeconds;
         if (seconds != 0) {
@@ -2529,6 +2536,9 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
     if (_pausedForVideoStall) {
       _resumeAfterVideoRecovery = true;
       isBuffering.value = true;
+      if (_videoPlayerController case final player?) {
+        _publishLogicalPlayingState(player, true);
+      }
       audioSessionHandler?.setActive(true);
       _scheduleSeamlessMediaRecovery();
       return;
@@ -2554,7 +2564,11 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
   Future<void> pause({bool notify = true, bool isInterrupt = false}) async {
     if (_pausedForVideoStall) {
       _resumeAfterVideoRecovery = false;
-      playerStatus.value = PlayerStatus.paused;
+      if (_videoPlayerController case final player?) {
+        _publishLogicalPlayingState(player, false);
+      } else {
+        playerStatus.value = PlayerStatus.paused;
+      }
 
       if (!isInterrupt) {
         audioSessionHandler?.setActive(false);
@@ -2714,6 +2728,15 @@ void onSeekStart({bool fromGesture = false}) {
 
   // 双击播放、暂停
   Future<void> onDoubleTapCenter() async {
+    if (_pausedForVideoStall) {
+      if (_resumeAfterVideoRecovery) {
+        await pause();
+      } else {
+        await play();
+      }
+      return;
+    }
+
     if (!isLive && isCompleted) {
       await videoPlayerController!.seek(Duration.zero);
       videoPlayerController!.play();
