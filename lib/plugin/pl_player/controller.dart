@@ -78,6 +78,10 @@ class PlPlayerController with BlockConfigMixin {
   Timer? _mediaRecoveryTimer;
   bool _mediaRecoveryRunning = false;
   int _mediaRecoveryAttempt = 0;
+  bool _videoNetworkFailed = false;
+  bool _pausedForVideoStall = false;
+  bool _resumeAfterVideoRecovery = false;
+  DateTime? _videoStallSince;
 
   static const List<Duration> _mediaRecoveryDelays = [
     Duration(milliseconds: 350),
@@ -1058,12 +1062,83 @@ final dataSourceGeneration = ++_dataSourceGeneration;
     _mediaRecoveryTimer?.cancel();
     _mediaRecoveryTimer = null;
     _mediaRecoveryAttempt = 0;
+    _videoNetworkFailed = false;
+    _pausedForVideoStall = false;
+    _resumeAfterVideoRecovery = false;
+    _videoStallSince = null;
   }
 
   bool _isRetryableMediaOpenError(String event) {
-    return event.startsWith('Failed to open https://') ||
-        event.startsWith('Can not open external file https://') ||
-        event.startsWith('tcp: ffurl_read returned ');
+    final text = event.toLowerCase();
+
+    return text.startsWith('failed to open https://') ||
+        text.startsWith('can not open external file https://') ||
+        text.contains('ffurl_read returned') ||
+        text.contains('i/o error') ||
+        text.contains('connection reset') ||
+        text.contains('connection timed out') ||
+        text.contains('network is unreachable') ||
+        text.contains('error reading') ||
+        text.contains('tls') ||
+        text.contains('broken pipe');
+  }
+
+  void _checkVideoStall(NativePlayer player) {
+    if (!_videoNetworkFailed ||
+        _pausedForVideoStall ||
+        !identical(player, _videoPlayerController) ||
+        _playerCount == 0 ||
+        isLive ||
+        dataSource is FileSource ||
+        onlyPlayAudio.value ||
+        isSeeking.value ||
+        !player.state.playing) {
+      _videoStallSince = null;
+      return;
+    }
+
+    final state = player.state;
+    final nearNaturalEnd =
+        state.duration > Duration.zero &&
+        state.duration - state.position <= const Duration(seconds: 1);
+
+    if (nearNaturalEnd) {
+      _videoStallSince = null;
+      return;
+    }
+
+    final bufferedAhead = state.buffer - state.position;
+    final videoDepleted =
+        bufferedAhead <= const Duration(milliseconds: 150);
+
+    if (!videoDepleted) {
+      _videoStallSince = null;
+      return;
+    }
+
+    _videoStallSince ??= DateTime.now();
+
+    if (DateTime.now().difference(_videoStallSince!) >=
+        const Duration(milliseconds: 250)) {
+      unawaited(_pauseForVideoStall(player));
+    }
+  }
+
+  Future<void> _pauseForVideoStall(NativePlayer player) async {
+    if (_pausedForVideoStall ||
+        !identical(player, _videoPlayerController) ||
+        _playerCount == 0) {
+      return;
+    }
+
+    _pausedForVideoStall = true;
+    _resumeAfterVideoRecovery = player.state.playing;
+
+    // 暂停整个旧 mpv，保留最后一帧，并阻止独立音轨继续推进。
+    await player.pause();
+
+    isBuffering.value = true;
+    _scheduleSeamlessMediaRecovery();
   }
 
   void _scheduleSeamlessMediaRecovery() {
@@ -1512,7 +1587,9 @@ if (!aligned &&
         return false;
       }
 
-      final handoffPlaying = activePlayer.state.playing;
+      final handoffPlaying = _pausedForVideoStall
+          ? _resumeAfterVideoRecovery
+          : activePlayer.state.playing;
       final handoffRate = activePlayer.state.rate;
       final activeVolumeProperty = activePlayer.getProperty('volume');
       final activeMuteProperty = activePlayer.getProperty('mute');
@@ -1593,9 +1670,14 @@ await activePlayer.pause();
 );
 _startListeners(standbyPlayer);
 
+_videoNetworkFailed = false;
+_pausedForVideoStall = false;
+_videoStallSince = null;
+
 // 必须在新播放器监听器挂载后再确定最终的界面状态，
 // 避免监听器订阅时的初始事件覆盖该状态。
 playerStatus.value = handoffPlaying ? .playing : .paused;
+      _resumeAfterVideoRecovery = false;
       videoPlayerServiceHandler
         ?..onPositionChange(standbyPlayer.state.position)
         ..onStatusChange(playerStatus.value, isBuffering.value, isLive);
@@ -1781,10 +1863,12 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
           element(position);
         }
         _maybeStartPlaybackHistory(player);
+        _checkVideoStall(player);
       }),
       stream.duration.listen(updateDuration),
       stream.buffer.listen((Duration buffer) {
         buffered.value = buffer.inSeconds;
+        _checkVideoStall(player);
       }),
       stream.buffering.listen((bool buffering) {
         isBuffering.value = buffering;
@@ -1803,6 +1887,7 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
           buffering,
           isLive,
         );
+        _checkVideoStall(player);
       }),
       stream.log.listen((PlayerLog log) {
         MpvLogService.add(player, log);
@@ -1833,6 +1918,7 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
           return;
         }
         if (_isRetryableMediaOpenError(event)) {
+          _videoNetworkFailed = true;
           _scheduleSeamlessMediaRecovery();
           return;
         } else if (event.startsWith('Could not open codec')) {
@@ -2004,6 +2090,15 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
   /// 播放视频
   Future<void> play({bool repeat = false, bool hideControls = true}) async {
     if (_playerCount == 0) return;
+
+    if (_pausedForVideoStall) {
+      _resumeAfterVideoRecovery = true;
+      isBuffering.value = true;
+      audioSessionHandler?.setActive(true);
+      _scheduleSeamlessMediaRecovery();
+      return;
+    }
+
     // 播放时自动隐藏控制条
     controls = !hideControls;
     // repeat为true，将从头播放
@@ -2022,6 +2117,16 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
 
   /// 暂停播放
   Future<void> pause({bool notify = true, bool isInterrupt = false}) async {
+    if (_pausedForVideoStall) {
+      _resumeAfterVideoRecovery = false;
+      playerStatus.value = PlayerStatus.paused;
+
+      if (!isInterrupt) {
+        audioSessionHandler?.setActive(false);
+      }
+      return;
+    }
+
     await _videoPlayerController?.pause();
     playerStatus.value = PlayerStatus.paused;
 
