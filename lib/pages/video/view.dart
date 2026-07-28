@@ -110,6 +110,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       videoDetailController.plPlayerController.pipNoDanmaku;
 
   bool isShowing = true;
+  int _playerWidgetRevision = 0;
 
   bool get isFullScreen =>
       videoDetailController.plPlayerController.isFullScreen.value;
@@ -203,6 +204,18 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         ..addPositionListener(positionListener);
     }
     return plPlayerController?.play();
+  }
+
+  Future<void> _resumeAfterPlayerWidgetRebuild() async {
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted ||
+        !isShowing ||
+        !videoDetailController.isPageActive ||
+        !videoDetailController.plPlayerController
+            .isVideoPageDataSourceLoaded(heroTag)) {
+      return;
+    }
+    await videoDetailController.plPlayerController.play();
   }
 
   // 播放器状态监听
@@ -400,6 +413,11 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
 
     isShowing = true;
     videoDetailController.setPageActive(true);
+    final reuseLoadedDataSource = videoDetailController.plPlayerController
+        .isVideoPageDataSourceLoaded(heroTag);
+    if (mounted) {
+      setState(() => _playerWidgetRevision++);
+    }
 
     addObserverMobile(this);
 
@@ -434,7 +452,13 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     plPlayerController
       ?..addStatusLister(playerListener)
       ..addPositionListener(positionListener);
-    if (videoDetailController.autoPlay) {
+    if (reuseLoadedDataSource) {
+      videoDetailController.videoState.value = true;
+      if (videoDetailController.autoPlay &&
+          (videoDetailController.playerStatus?.isPlaying ?? false)) {
+        unawaited(_resumeAfterPlayerWidgetRebuild());
+      }
+    } else if (videoDetailController.autoPlay) {
       videoDetailController.playerInit(
         autoplay: videoDetailController.playerStatus?.isPlaying ?? false,
       );
@@ -1232,6 +1256,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
               plPlayerController?.videoController == null
           ? const SizedBox.shrink()
           : PLVideoPlayer(
+              key: ValueKey((heroTag, _playerWidgetRevision)),
               maxWidth: width,
               maxHeight: height,
               plPlayerController: plPlayerController!,

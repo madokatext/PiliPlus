@@ -264,16 +264,21 @@ ui.PointerDeviceKind? _gesturePointerKind;
     super.initState();
     addObserverMobile(this);
 
-    _controlsListener = plPlayerController.showControls.listen(
-      _onControlChanged,
-    );
-
     _transformationController = TransformationController();
 
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 100),
     );
+
+    _controlsListener = plPlayerController.showControls.listen(
+      _onControlChanged,
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _onControlChanged(plPlayerController.showControls.value);
+      }
+    });
 
     if (PlatformUtils.isMobile) {
       Future.microtask(() {

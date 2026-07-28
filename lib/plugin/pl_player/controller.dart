@@ -141,6 +141,7 @@ final RxInt seekStartPosition = 0.obs;
 
   int _playerCount = 0;
   String? _activeVideoPageTag;
+  String? _loadedVideoPageTag;
   int _dataSourceGeneration = 0;
   int _videoPlayerSwitchGeneration = 0;
   Completer<void>? _videoPlayerSwitchCancellation;
@@ -157,6 +158,12 @@ final RxInt seekStartPosition = 0.obs;
   }
 
   bool isVideoPageActive(String pageTag) => _activeVideoPageTag == pageTag;
+
+  bool isVideoPageDataSourceLoaded(String pageTag) =>
+      _loadedVideoPageTag == pageTag &&
+      _videoPlayerController != null &&
+      _videoController != null &&
+      _videoPlayerController!.current.isNotEmpty;
 
   late double lastPlaybackSpeed = 1.0;
   final RxDouble _playbackSpeed = Pref.playSpeedDefault.obs;
@@ -737,6 +744,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     try {
       if (!isCurrentDataSource()) return;
       _processing = true;
+      _loadedVideoPageTag = null;
       this.isLive = isLive;
       _videoType = videoType ?? VideoType.ugc;
       this.width = width;
@@ -790,6 +798,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
           _videoPlayerController?.dispose();
           _videoPlayerController = null;
           _videoController = null;
+          _loadedVideoPageTag = null;
         }
         return;
       }
@@ -808,6 +817,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         initialAutoPlayAudioGate,
       );
       if (isCurrentDataSource()) {
+        _loadedVideoPageTag = videoPageTag;
         onInit?.call();
       }
     } catch (err, stackTrace) {
@@ -1092,6 +1102,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         await _removeListeners();
         player.dispose();
         _videoController = null;
+        _loadedVideoPageTag = null;
         return null;
       }
       _videoPlayerController ??= player;
@@ -3022,6 +3033,7 @@ void onSeekStart({bool fromGesture = false}) {
     _historySessionStarted = false;
     unawaited(PlaybackHistoryTracker.instance.end());
     _activeVideoPageTag = null;
+    _loadedVideoPageTag = null;
     cancelVideoPlayerSwitch();
     _dataSourceGeneration++;
     _discardInitialAutoPlayAudioGate();
