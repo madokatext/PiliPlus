@@ -65,6 +65,9 @@ class _SearchResultPageState extends State<SearchResultPage>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final titleStyle = theme.textTheme.titleMedium!;
+    final titleLineHeight =
+        titleStyle.fontSize! * (titleStyle.height ?? 1);
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
@@ -88,10 +91,14 @@ class _SearchResultPageState extends State<SearchResultPage>
           behavior: HitTestBehavior.opaque,
           child: SizedBox(
             width: double.infinity,
-            child: Text(
-              _searchResultController.keyword,
-              style: theme.textTheme.titleMedium,
-              maxLines: 1,
+            height: titleLineHeight * 2,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                _searchResultController.keyword,
+                style: titleStyle,
+                maxLines: 1,
+              ),
             ),
           ),
         ),
