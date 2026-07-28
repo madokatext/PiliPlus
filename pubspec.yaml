@@ -19,7 +19,7 @@ issue_tracker: https://github.com/madokatext/PiliPlus-Max/issues
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
 # update when release
-version: 2.1.0-d+4
+version: 2.1.0-e+5
 
 environment:
   sdk: ">=3.12.0"
