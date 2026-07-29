@@ -7,7 +7,7 @@ import 'package:media_kit/media_kit.dart';
 import 'package:path/path.dart' as path;
 
 abstract final class MpvLogService {
-  static const _maxBytes = 4 * 1024 * 1024;
+  static const _maxBytes = 20 * 1024 * 1024;
   static final File _file = File(
     path.join(appSupportDirPath, 'mpv_last_playback.log'),
   );
@@ -118,7 +118,7 @@ abstract final class MpvLogService {
 
     if (_writtenBytes + bytes > _maxBytes) {
       _truncated = true;
-      const marker = '\n# 日志已达到 4 MiB，后续内容不再写入。\n';
+      const marker = '\n# 日志已达到 20 MiB，后续内容不再写入。\n';
 
       _run(() async {
         if (session != _session) {
