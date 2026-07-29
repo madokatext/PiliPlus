@@ -209,6 +209,13 @@ List<SettingsModel> get videoSettings => [
     setKey: SettingBoxKey.useMpvVideoScaling,
     defaultVal: false,
   ),
+  const SwitchModel(
+    title: '全屏切换使用黑屏遮罩',
+    subtitle: '调整 mpv 输出尺寸前盖黑，确认新 Surface 帧后立即移除',
+    leading: Icon(Icons.fullscreen_outlined),
+    setKey: SettingBoxKey.coverFullscreenTransitionWithBlack,
+    defaultVal: false,
+  ),
   NormalModel(
     title: '自定义 mpv 启动参数',
     leading: const Icon(Icons.tune),

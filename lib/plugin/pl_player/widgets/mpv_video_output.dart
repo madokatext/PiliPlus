@@ -45,6 +45,7 @@ class MpvVideoOutput extends StatefulWidget {
     required this.alignment,
     required this.transformationController,
     this.waitForResizeFrame = false,
+    this.coverFullscreenTransitionWithBlack = false,
     super.key,
   });
 
@@ -54,6 +55,7 @@ class MpvVideoOutput extends StatefulWidget {
   final Alignment alignment;
   final TransformationController transformationController;
   final bool waitForResizeFrame;
+  final bool coverFullscreenTransitionWithBlack;
 
   @override
   State<MpvVideoOutput> createState() => _MpvVideoOutputState();
@@ -67,6 +69,7 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
   bool _pendingWaitForFrame = false;
   _MpvOutputConfiguration? _appliedConfiguration;
   _MpvOutputConfiguration? _applyingConfiguration;
+  _MpvOutputConfiguration? _maskedConfiguration;
   bool _configurationScheduled = false;
   bool _configurationApplying = false;
   int _configurationGeneration = 0;
@@ -83,12 +86,18 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
     super.didUpdateWidget(oldWidget);
     if (widget.controller != oldWidget.controller) {
       _sizeSubscription?.cancel();
+      oldWidget.controller.rect.removeListener(_onOutputRectChanged);
       _configurationGeneration++;
       _pendingConfiguration = null;
       _pendingWaitForFrame = false;
       _appliedConfiguration = null;
       _applyingConfiguration = null;
+      _maskedConfiguration = null;
       _listenToController();
+    }
+    if (!widget.coverFullscreenTransitionWithBlack &&
+        oldWidget.coverFullscreenTransitionWithBlack) {
+      _maskedConfiguration = null;
     }
     if (widget.transformationController != oldWidget.transformationController) {
       oldWidget.transformationController.removeListener(
@@ -100,6 +109,7 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
 
   void _listenToController() {
     final player = widget.controller.player;
+    widget.controller.rect.addListener(_onOutputRectChanged);
     _sourceWidth = player.state.width;
     _sourceHeight = player.state.height;
     _sizeSubscription = player.stream.size.listen((size) {
@@ -114,9 +124,19 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
     if (mounted) setState(() {});
   }
 
+  void _onOutputRectChanged() {
+    final maskedConfiguration = _maskedConfiguration;
+    if (maskedConfiguration != null &&
+        _rectMatches(widget.controller.rect.value, maskedConfiguration)) {
+      // rect 只会在目标尺寸对应的 Surface 帧得到确认后发布。
+      _maskedConfiguration = null;
+    }
+  }
+
   @override
   void dispose() {
     widget.transformationController.removeListener(_onTransformationChanged);
+    widget.controller.rect.removeListener(_onOutputRectChanged);
     _sizeSubscription?.cancel();
     super.dispose();
   }
@@ -267,6 +287,11 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
     required bool waitForFrame,
   }) async {
     final player = controller.player;
+    final wasPaused = !player.state.playing;
+    final shouldMask =
+        resize &&
+        waitForFrame &&
+        widget.coverFullscreenTransitionWithBlack;
 
     final customOptions = MpvUtils.customOptions;
     void setBuiltInProperty(String name, String value) {
@@ -276,6 +301,30 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
     }
 
     try {
+      if (shouldMask) {
+        _maskedConfiguration = configuration;
+        if (mounted) {
+          setState(() {});
+          // 此方法从上一帧的 post-frame 回调进入：第一轮等待结束当前帧，
+          // 第二轮确保黑色遮罩已经真正提交给 Flutter 后再调整 Surface。
+          await WidgetsBinding.instance.endOfFrame;
+          await WidgetsBinding.instance.endOfFrame;
+        }
+        if (!mounted || !identical(controller, widget.controller)) {
+          return false;
+        }
+        final pendingConfiguration = _pendingConfiguration;
+        if (pendingConfiguration != null &&
+            pendingConfiguration != configuration) {
+          // 遮罩提交期间若 Flutter 又给出了更新的最终布局，跳过旧尺寸，
+          // 由 drain 循环直接处理最新配置，避免反向制造一次中间态 resize。
+          return false;
+        }
+      } else if (!waitForFrame && _maskedConfiguration != null) {
+        _maskedConfiguration = null;
+        if (mounted) setState(() {});
+      }
+
       setBuiltInProperty('keepaspect', 'yes');
       setBuiltInProperty('panscan', configuration.panscan);
       setBuiltInProperty('video-unscaled', configuration.videoUnscaled);
@@ -292,9 +341,21 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
           height: configuration.height,
           waitForFrame: waitForFrame,
         );
+        if (waitForFrame && wasPaused) {
+          // mpv 没有公开的 redraw-frame 输入命令。空的 0 级 OSD 更新不会
+          // 改变画面内容，但会唤醒 VO 重绘缓存帧；分两次发送，确保暂停态
+          // Surface 在新尺寸下实际收到两帧相同画面。
+          await player.command(const ['show-text', '', '0', '0']);
+          await Future<void>.delayed(const Duration(milliseconds: 20));
+          await player.command(const ['show-text', '', '0', '0']);
+        }
       }
       return true;
     } catch (error, stackTrace) {
+      if (shouldMask) {
+        _maskedConfiguration = null;
+        if (mounted) setState(() {});
+      }
       assert(() {
         debugPrint('Failed to resize mpv video output: $error');
         debugPrintStack(stackTrace: stackTrace);
@@ -358,11 +419,23 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
                     alignment: widget.alignment,
                     child: texture,
                   );
+            final maskedConfiguration = _maskedConfiguration;
+            final showResizeMask =
+                widget.coverFullscreenTransitionWithBlack &&
+                maskedConfiguration != null &&
+                !_rectMatches(rect, maskedConfiguration);
 
             return ColoredBox(
               color: widget.fill,
               child: ClipRect(
-                child: output,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    output,
+                    if (showResizeMask)
+                      const ColoredBox(color: Colors.black),
+                  ],
+                ),
               ),
             );
           },

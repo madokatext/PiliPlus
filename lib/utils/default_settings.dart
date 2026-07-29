@@ -23,10 +23,11 @@ const Map<String, Object> defaultSettingValues = {
   'burstDanmakuWindowSeconds': 6.0,
   'cardRadius': 5.0,
   'cdnSpeedTest': true,
-  'CDNServices': ['backupUrl'],
+  'CDNServices': ['backupUrl', 'ali', 'alib'],
   'checkDynamic': true,
   'collapsedReplyFontScale': 0.95,
   'continuePlayInBackground': false,
+  'coverFullscreenTransitionWithBlack': false,
   'customColor': 13,
   'customMpvOptions': '--dscale=ewa_robidoux\n'
       '--scale=ewa_robidoux\n'

@@ -404,6 +404,11 @@ static int get videoPlayerSwitchForceTimeoutSeconds {
   static bool get useMpvVideoScaling =>
       _setting.get(SettingBoxKey.useMpvVideoScaling, defaultValue: false);
 
+  static bool get coverFullscreenTransitionWithBlack => _setting.get(
+    SettingBoxKey.coverFullscreenTransitionWithBlack,
+    defaultValue: false,
+  );
+
   static String get mpvLogLevel {
     final value = _setting.get(
       SettingBoxKey.mpvLogLevel,
@@ -436,7 +441,13 @@ static int get videoPlayerSwitchForceTimeoutSeconds {
         break;
       }
     }
-    return services.isEmpty ? [CDNService.backupUrl] : services;
+    return services.isEmpty
+        ? const [
+            CDNService.backupUrl,
+            CDNService.ali,
+            CDNService.alib,
+          ]
+        : services;
   }
 
   static CDNService get defaultCDNService => cdnServices.first;

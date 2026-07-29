@@ -2556,6 +2556,8 @@ if (!isLive)
 
   Widget get _videoWidget {
     final useMpvVideoScaling = Pref.useMpvVideoScaling;
+    final coverFullscreenTransitionWithBlack =
+        Pref.coverFullscreenTransitionWithBlack;
     return Container(
       clipBehavior: .none,
       width: maxWidth,
@@ -2619,6 +2621,8 @@ if (!isLive)
                     alignment: widget.alignment,
                     transformationController: _transformationController,
                     waitForResizeFrame: waitForResizeFrame,
+                    coverFullscreenTransitionWithBlack:
+                        coverFullscreenTransitionWithBlack,
                   );
                 }
 

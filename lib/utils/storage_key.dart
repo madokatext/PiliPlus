@@ -24,6 +24,8 @@ abstract final class SettingBoxKey {
       customMpvOptions = 'customMpvOptions',
       mpvLogLevel = 'mpvLogLevel',
       useMpvVideoScaling = 'useMpvVideoScaling',
+      coverFullscreenTransitionWithBlack =
+          'coverFullscreenTransitionWithBlack',
       p1080 = 'p1080',
       enableAutoEnter = 'enableAutoEnter',
       enableAutoExit = 'enableAutoExit',
