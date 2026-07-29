@@ -164,22 +164,34 @@ ui.PointerDeviceKind? _gesturePointerKind;
   StreamSubscription? _brightnessListener;
   late final bool _showMpvOutputFps = Pref.showMpvOutputFps;
   final RxString _mpvOutputFps = '-- FPS'.obs;
+  final RxString _mpvDroppedFrames = '--'.obs;
   Timer? _mpvOutputFpsTimer;
 
   void _updateMpvOutputFps() {
     var label = '-- FPS';
+    var droppedFrames = '--';
     try {
-      final raw = plPlayerController.videoPlayerController?.getProperty(
+      final player = plPlayerController.videoPlayerController;
+      final rawFps = player?.getProperty(
         'estimated-vf-fps',
       );
-      final fps = double.tryParse(raw?.trim() ?? '');
+      final fps = double.tryParse(rawFps?.trim() ?? '');
       if (fps != null && fps.isFinite && fps > 0) {
         label = '${fps.toStringAsFixed(1)} FPS';
+      }
+
+      final rawDroppedFrames = player?.getProperty('frame-drop-count');
+      final count = int.tryParse(rawDroppedFrames?.trim() ?? '');
+      if (count != null && count >= 0) {
+        droppedFrames = count.toString();
       }
     } catch (_) {}
 
     if (_mpvOutputFps.value != label) {
       _mpvOutputFps.value = label;
+    }
+    if (_mpvDroppedFrames.value != droppedFrames) {
+      _mpvDroppedFrames.value = droppedFrames;
     }
   }
 
@@ -1596,6 +1608,17 @@ void _handleProgressBarExpandedPointerDown(
         ? 0.0
         : (hasHeaderActionRow ? 2.0 : 24.0) *
               plPlayerController.playerControlBarThicknessScale;
+    const mpvStatsTextStyle = TextStyle(
+      color: Colors.white,
+      fontSize: 10,
+      fontWeight: FontWeight.w500,
+      shadows: [
+        Shadow(
+          color: Colors.black,
+          blurRadius: 2,
+        ),
+      ],
+    );
 
     Widget buildSeekTimeToast({required bool insidePreview}) {
       return Obx(() {
@@ -1910,24 +1933,27 @@ if (!isLive)
                                 plPlayerController
                                     .playerControlHorizontalPadding -
                                 8,
-                            width: 56,
                             child: IgnorePointer(
                               child: Obx(
-                                () => Text(
-                                  _mpvOutputFps.value,
-                                  textAlign: TextAlign.center,
-                                  maxLines: 1,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w500,
-                                    shadows: [
-                                      Shadow(
-                                        color: Colors.black,
-                                        blurRadius: 2,
+                                () => Row(
+                                  spacing: 4,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SizedBox(
+                                      width: 56,
+                                      child: Text(
+                                        _mpvOutputFps.value,
+                                        textAlign: TextAlign.center,
+                                        maxLines: 1,
+                                        style: mpvStatsTextStyle,
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                    Text(
+                                      '已丢帧 ${_mpvDroppedFrames.value}',
+                                      maxLines: 1,
+                                      style: mpvStatsTextStyle,
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),

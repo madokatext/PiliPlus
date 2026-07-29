@@ -131,8 +131,10 @@ if (PlatformUtils.isMobile)
     defaultVal: PlatformUtils.isMobile,
   ),
   const SwitchModel(
-    title: '显示 mpv 输出帧率',
-    subtitle: '在播放界面返回按钮正下方显示当前 mpv 输出帧率',
+    title: '显示 mpv 帧率与丢帧',
+    subtitle:
+        '帧率：根据最近 10 帧估算的每秒输出画面数；'
+        '已丢帧：因来不及显示而累计跳过的画面数，不含解码阶段丢帧',
     leading: Icon(Icons.speed_outlined),
     setKey: SettingBoxKey.showMpvOutputFps,
     defaultVal: false,
