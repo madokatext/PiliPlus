@@ -9,6 +9,8 @@ import 'package:media_kit_video/media_kit_video.dart';
 
 typedef MpvVideoTransform = ({double zoom, double panX, double panY});
 
+const double _pausedResizeScaleNudge = 1.0001;
+
 @visibleForTesting
 MpvVideoTransform calculateMpvVideoTransform({
   required Matrix4 matrix,
@@ -344,12 +346,25 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
           waitForFrame: waitForFrame,
         );
         if (waitForFrame && wasPaused) {
-          // mpv 没有公开的 redraw-frame 输入命令。空的 0 级 OSD 更新不会
-          // 改变画面内容，但会唤醒 VO 重绘缓存帧；进、出全屏两个方向均
-          // 分两次发送，确保暂停态 Surface 在新尺寸下收到两帧相同画面。
-          await player.command(const ['show-text', '', '0', '0']);
+          // video-zoom 使用 log2 倍率。以 mpv 当前实际值为基准做一次
+          // 约 0.01% 的放大并精确恢复，既能强制暂停画面重新合成，也不会
+          // 抹掉用户已有的双指缩放倍率与平移状态。进、出全屏均走此路径。
+          final originalZoomValue = player.getProperty('video-zoom');
+          final originalZoom =
+              double.tryParse(originalZoomValue) ??
+              double.tryParse(configuration.zoom) ??
+              0.0;
+          final nudgedZoom =
+              originalZoom +
+              math.log(_pausedResizeScaleNudge) / math.ln2;
+          player.setProperty('video-zoom', nudgedZoom.toString());
           await Future<void>.delayed(const Duration(milliseconds: 20));
-          await player.command(const ['show-text', '', '0', '0']);
+          player.setProperty(
+            'video-zoom',
+            originalZoomValue.isEmpty
+                ? configuration.zoom
+                : originalZoomValue,
+          );
         }
       }
       return true;
