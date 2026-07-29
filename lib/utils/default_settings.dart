@@ -113,6 +113,7 @@ const Map<String, Object> defaultSettingValues = {
   'playerProgressBarTouchPadding': 10.0,
   'playerProgressThumbScale': 1.3,
   'preInitPlayer': true,
+  'preloadVideoShot': true,
   'preferCodecs': <String>['AV1', 'HEVC', 'AVC'],
   'rcmdRefreshCount': 20,
   'recommendHistoryFilterSettings': <String, Object>{

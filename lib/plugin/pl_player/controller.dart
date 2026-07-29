@@ -5,6 +5,7 @@ import 'dart:math' show max, min;
 import 'dart:ui' as ui;
 
 import 'package:PiliPlus/common/assets.dart';
+import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/http/browser_ua.dart';
 import 'package:PiliPlus/http/constants.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -36,6 +37,7 @@ import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/android/android_helper.dart';
 import 'package:PiliPlus/utils/android/bindings.g.dart';
 import 'package:PiliPlus/utils/asset_utils.dart';
+import 'package:PiliPlus/utils/cache_manager.dart';
 import 'package:PiliPlus/utils/device_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/extension/box_ext.dart';
@@ -443,6 +445,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
 
   late final horizontalSeasonPanel = Pref.horizontalSeasonPanel;
   late final preInitPlayer = Pref.preInitPlayer;
+  late final preloadVideoShot = Pref.preloadVideoShot;
   late final showRelatedVideo = Pref.showRelatedVideo;
   late final showVideoReply = Pref.showVideoReply;
   late final showBangumiReply = Pref.showBangumiReply;
@@ -770,8 +773,9 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         if (!this.isLive &&
             !isFileSource &&
             _bvid?.isNotEmpty == true &&
-            this.cid != null) {
-          _loadVideoShot();
+            this.cid != null &&
+            preloadVideoShot) {
+          _loadVideoShot(preloadImages: true);
         }
       }
       cancelLongPressTimer();
@@ -3158,7 +3162,7 @@ late final seekPreviewScale = Pref.seekPreviewScale;
     showPreview.value = true;
   }
 
-  void _loadVideoShot() {
+  void _loadVideoShot({bool preloadImages = false}) {
     if (_videoShotTask != null ||
         isLive ||
         isFileSource ||
@@ -3175,14 +3179,16 @@ late final seekPreviewScale = Pref.seekPreviewScale;
       generation,
       requestBvid,
       requestCid,
+      preloadImages: preloadImages,
     );
   }
 
   Future<void> _fetchVideoShot(
     int generation,
     String requestBvid,
-    int requestCid,
-  ) async {
+    int requestCid, {
+    required bool preloadImages,
+  }) async {
     try {
       final result = await VideoHttp.videoshot(
         bvid: requestBvid,
@@ -3200,6 +3206,9 @@ late final seekPreviewScale = Pref.seekPreviewScale;
         if (seconds != null && isSeeking.value) {
           _applyPreviewIndex(response, seconds);
         }
+        if (preloadImages) {
+          await _preloadVideoShotImages(response, generation);
+        }
       }
     } catch (err) {
       if (generation == _previewGeneration &&
@@ -3214,6 +3223,32 @@ late final seekPreviewScale = Pref.seekPreviewScale;
         _videoShotTask = null;
       }
     }
+  }
+
+  Future<void> _preloadVideoShotImages(
+    VideoShotData data,
+    int generation,
+  ) async {
+    const batchSize = 4;
+    for (var start = 0; start < data.image.length; start += batchSize) {
+      if (generation != _previewGeneration) return;
+      final end = min(start + batchSize, data.image.length);
+      await Future.wait(
+        data.image
+            .sublist(start, end)
+            .map(_cacheVideoShotImage),
+      );
+    }
+  }
+
+  Future<void> _cacheVideoShotImage(String url) async {
+    try {
+      await CacheManager.manager.getSingleFile(
+        ImageUtils.safeThumbnailUrl(url),
+        key: Utils.getFileName(url, fileExt: false),
+        headers: Constants.baseHeaders,
+      );
+    } catch (_) {}
   }
 
   void _clearPreview() {

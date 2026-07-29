@@ -712,6 +712,9 @@ static double get burstDanmakuFontScale => _getClampedDouble(
   static bool get preInitPlayer =>
       _setting.get(SettingBoxKey.preInitPlayer, defaultValue: false);
 
+  static bool get preloadVideoShot =>
+      _setting.get(SettingBoxKey.preloadVideoShot, defaultValue: true);
+
   static bool get mainTabBarView =>
       _setting.get(SettingBoxKey.mainTabBarView, defaultValue: false);
 

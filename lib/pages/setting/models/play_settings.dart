@@ -273,6 +273,13 @@ if (PlatformUtils.isMobile)
     defaultVal: Pref.showSeekPreview,
   ),
   const SwitchModel(
+    title: '提前下载进度预览资源',
+    subtitle: '起播或预载播放器时下载全部雪碧图和对应索引',
+    leading: Icon(Icons.downloading_outlined),
+    setKey: SettingBoxKey.preloadVideoShot,
+    defaultVal: true,
+  ),
+  const SwitchModel(
     title: '当前时间浮窗集成到预览窗',
     subtitle: '开启后，时间浮窗在预览窗内部显示并随预览窗移动；没有预览窗时仍单独显示',
     leading: Icon(Icons.layers_outlined),

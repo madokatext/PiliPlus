@@ -10,6 +10,7 @@ void main() {
     expect(defaultSettingValues['useMpvVideoScaling'], isFalse);
     expect(defaultSettingValues['useRelativeSlide'], isFalse);
     expect(defaultSettingValues['videoPlayerSwitchForceTimeoutSeconds'], 5);
+    expect(defaultSettingValues['preloadVideoShot'], isTrue);
     expect(defaultSettingValues['rcmdRefreshCount'], 20);
     expect(defaultSettingValues['danmakuFontScale'], 0.9);
     expect(defaultSettingValues['danmakuFontScaleFS'], 1.2);
