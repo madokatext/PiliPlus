@@ -162,6 +162,45 @@ ui.PointerDeviceKind? _gesturePointerKind;
   bool _pauseDueToPauseUponEnteringBackgroundMode = false;
 
   StreamSubscription? _brightnessListener;
+  late final bool _showMpvOutputFps = Pref.showMpvOutputFps;
+  final RxString _mpvOutputFps = '-- FPS'.obs;
+  Timer? _mpvOutputFpsTimer;
+
+  void _updateMpvOutputFps() {
+    var label = '-- FPS';
+    try {
+      final raw = plPlayerController.videoPlayerController?.getProperty(
+        'estimated-vf-fps',
+      );
+      final fps = double.tryParse(raw?.trim() ?? '');
+      if (fps != null && fps.isFinite && fps > 0) {
+        label = '${fps.toStringAsFixed(1)} FPS';
+      }
+    } catch (_) {}
+
+    if (_mpvOutputFps.value != label) {
+      _mpvOutputFps.value = label;
+    }
+  }
+
+  void _setMpvOutputFpsPolling(bool enabled) {
+    if (!_showMpvOutputFps) {
+      return;
+    }
+
+    _mpvOutputFpsTimer?.cancel();
+    _mpvOutputFpsTimer = null;
+    if (!enabled) {
+      return;
+    }
+
+    _updateMpvOutputFps();
+    _mpvOutputFpsTimer = Timer.periodic(
+      const Duration(milliseconds: 500),
+      (_) => _updateMpvOutputFps(),
+    );
+  }
+
   void _onBrightnessChanged(double value) {
     if (mounted && _gestureType != .left) {
       _brightnessValue.value = value;
@@ -215,6 +254,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
   StreamSubscription? _controlsListener;
   void _onControlChanged(bool val) {
     final visible = val && !plPlayerController.controlsLock.value;
+    _setMpvOutputFpsPolling(visible);
 
     if ((widget.headerControl.key as GlobalKey<TimeBatteryMixin>).currentState
         case final state?) {
@@ -392,6 +432,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
     _scaleGestureRecognizer.dispose();
     _brightnessListener?.cancel();
     _controlsListener?.cancel();
+    _mpvOutputFpsTimer?.cancel();
     _animationController.dispose();
     _transformationController.dispose();
     _removeDmAction();
@@ -1543,6 +1584,18 @@ void _handleProgressBarExpandedPointerDown(
   );
 }
     final isLive = plPlayerController.isLive;
+    final showMpvOutputFps =
+        _showMpvOutputFps &&
+        (!isLive || isFullScreen || plPlayerController.isDesktopPip);
+    final hasHeaderActionRow =
+        !isLive &&
+        !plPlayerController.isFileSource &&
+        plPlayerController.showFSActionItem &&
+        (isFullScreen || plPlayerController.isDesktopPip);
+    final mpvOutputFpsBottomSpace = !showMpvOutputFps
+        ? 0.0
+        : (hasHeaderActionRow ? 2.0 : 24.0) *
+              plPlayerController.playerControlBarThicknessScale;
 
     Widget buildSeekTimeToast({required bool insidePreview}) {
       return Obx(() {
@@ -1831,13 +1884,56 @@ if (!isLive)
                     removeSafeArea: plPlayerController.removeSafeArea,
                     gradientExtent:
                         plPlayerController.playerControlBarGradientExtent,
-                    child: plPlayerController.isDesktopPip
-                        ? GestureDetector(
-                            behavior: HitTestBehavior.translucent,
-                            onPanStart: (_) => windowManager.startDragging(),
-                            child: widget.headerControl,
-                          )
-                        : widget.headerControl,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(
+                            bottom: mpvOutputFpsBottomSpace,
+                          ),
+                          child: plPlayerController.isDesktopPip
+                              ? GestureDetector(
+                                  behavior: HitTestBehavior.translucent,
+                                  onPanStart: (_) =>
+                                      windowManager.startDragging(),
+                                  child: widget.headerControl,
+                                )
+                              : widget.headerControl,
+                        ),
+                        if (showMpvOutputFps)
+                          Positioned(
+                            top:
+                                42 *
+                                plPlayerController
+                                    .playerControlBarThicknessScale,
+                            left:
+                                plPlayerController
+                                    .playerControlHorizontalPadding -
+                                8,
+                            width: 56,
+                            child: IgnorePointer(
+                              child: Obx(
+                                () => Text(
+                                  _mpvOutputFps.value,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                    shadows: [
+                                      Shadow(
+                                        color: Colors.black,
+                                        blurRadius: 2,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                   AppBarAni(
                     isTop: false,

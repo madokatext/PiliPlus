@@ -1484,6 +1484,11 @@ static int get playerControlDisplayDurationSeconds {
     defaultValue: PlatformUtils.isMobile,
   );
 
+  static bool get showMpvOutputFps => _setting.get(
+    SettingBoxKey.showMpvOutputFps,
+    defaultValue: false,
+  );
+
   static FollowOrderType get followOrderType =>
       FollowOrderType.values[_setting.get(
         SettingBoxKey.followOrderType,

@@ -150,6 +150,7 @@ const Map<String, Object> defaultSettingValues = {
   'showFsLockBtn': false,
   'showFsScreenshotBtn': false,
   'showHotRcmd': true,
+  'showMpvOutputFps': false,
   'showSeekPreviewOnGesture': true,
   'showSeekPreviewOnSlider': true,
   'sliderOffset': 50,

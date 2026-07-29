@@ -124,6 +124,13 @@ if (PlatformUtils.isMobile)
     defaultVal: PlatformUtils.isMobile,
   ),
   const SwitchModel(
+    title: '显示 mpv 输出帧率',
+    subtitle: '在播放界面返回按钮正下方显示当前 mpv 输出帧率',
+    leading: Icon(Icons.speed_outlined),
+    setKey: SettingBoxKey.showMpvOutputFps,
+    defaultVal: false,
+  ),
+  const SwitchModel(
     title: '双击快退/快进',
     subtitle: '左侧双击快退/右侧双击快进，关闭则双击均为暂停/播放',
     leading: Icon(Icons.touch_app_outlined),

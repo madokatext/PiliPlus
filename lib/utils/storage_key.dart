@@ -35,6 +35,7 @@ abstract final class SettingBoxKey {
       pgcSkipType = 'pgcSkipType',
       audioPlayMode = 'audioPlayMode',
       showBatteryLevel = 'showBatteryLevel',
+      showMpvOutputFps = 'showMpvOutputFps',
       playerVolume = 'playerVolume',
       maxVolume = 'maxVolume';
 
