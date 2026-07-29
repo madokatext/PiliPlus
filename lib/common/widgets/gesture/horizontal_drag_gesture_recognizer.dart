@@ -20,7 +20,18 @@ class CustomHorizontalDragGestureRecognizer
     super.debugOwner,
     super.supportedDevices,
     super.allowedButtonsFilter,
+    this.shouldAcceptLeftDownwardDragAt45Degrees,
   });
+
+  final bool Function()? shouldAcceptLeftDownwardDragAt45Degrees;
+  bool _acceptLeftDownwardDragAt45Degrees = false;
+
+  @override
+  void addAllowedPointer(PointerDownEvent event) {
+    _acceptLeftDownwardDragAt45Degrees =
+        shouldAcceptLeftDownwardDragAt45Degrees?.call() ?? false;
+    super.addAllowedPointer(event);
+  }
 
   @override
   DeviceGestureSettings get gestureSettings => _gestureSettings;
@@ -37,9 +48,12 @@ class CustomHorizontalDragGestureRecognizer
       pointerDeviceKind,
       _initialPosition,
       lastPosition.global,
+      acceptLeftDownwardDragAt45Degrees:
+          _acceptLeftDownwardDragAt45Degrees,
     );
   }
-    @override
+
+  @override
   bool isFlingGesture(
     VelocityEstimate estimate,
     PointerDeviceKind kind,
@@ -60,8 +74,9 @@ bool _computeHitSlop(
   DeviceGestureSettings settings,
   PointerDeviceKind kind,
   Offset? initialPosition,
-  Offset lastPosition,
-) {
+  Offset lastPosition, {
+  required bool acceptLeftDownwardDragAt45Degrees,
+}) {
   switch (kind) {
     case .mouse:
       return globalDistanceMoved > kPrecisePointerHitSlop;
@@ -70,14 +85,28 @@ bool _computeHitSlop(
     case .unknown:
     case .touch:
       return globalDistanceMoved > settings.touchSlop! &&
-          _calcAngle(initialPosition!, lastPosition);
+          _calcAngle(
+            initialPosition!,
+            lastPosition,
+            acceptLeftDownwardDragAt45Degrees:
+                acceptLeftDownwardDragAt45Degrees,
+          );
     case .trackpad:
       return globalDistanceMoved > settings.touchSlop!;
   }
 }
 
-bool _calcAngle(Offset initialPosition, Offset lastPosition) {
+bool _calcAngle(
+  Offset initialPosition,
+  Offset lastPosition, {
+  required bool acceptLeftDownwardDragAt45Degrees,
+}) {
   final offset = lastPosition - initialPosition;
+  if (acceptLeftDownwardDragAt45Degrees &&
+      offset.dx < 0 &&
+      offset.dy > 0) {
+    return offset.dx.abs() >= offset.dy;
+  }
   return offset.dx.abs() > offset.dy.abs() * 3;
 }
 

@@ -7,6 +7,7 @@ import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
+import 'package:PiliPlus/common/widgets/gesture/horizontal_drag_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/keep_alive_wrapper.dart';
 import 'package:PiliPlus/common/widgets/route_aware_mixin.dart';
@@ -611,6 +612,11 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                   Expanded(
                     child: tabBarView(
                       controller: videoDetailController.tabCtr,
+                      horizontalDragGestureRecognizer: () =>
+                          CustomHorizontalDragGestureRecognizer(
+                            shouldAcceptLeftDownwardDragAt45Degrees:
+                                _shouldAcceptLeftDownwardIntroSwipe,
+                          ),
                       children: [
                         videoIntro(
                           isHorizontal: false,
@@ -731,6 +737,29 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         ),
       ),
     );
+  }
+
+  bool _shouldAcceptLeftDownwardIntroSwipe() {
+    final tabController = videoDetailController.tabCtr;
+    if (isFullScreen ||
+        !videoDetailController.showReply ||
+        tabController.index != 0 ||
+        tabController.indexIsChanging ||
+        tabController.offset.abs() > 0.001) {
+      return false;
+    }
+
+    final nestedState = videoDetailController.scrollKey.currentState;
+    if (nestedState == null) return false;
+
+    final outerPositions = nestedState.outerController.positions;
+    final innerPositions = nestedState.innerPositions;
+    if (outerPositions.isEmpty || innerPositions.isEmpty) return false;
+
+    bool isAtTop(ScrollPosition position) =>
+        position.pixels <= position.minScrollExtent + 0.5;
+
+    return outerPositions.every(isAtTop) && innerPositions.every(isAtTop);
   }
 
   Widget _buildHeaderOverlay() {
