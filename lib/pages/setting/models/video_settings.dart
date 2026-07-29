@@ -84,8 +84,7 @@ List<SettingsModel> get videoSettings => [
   NormalModel(
     title: 'CDN 设置',
     leading: const Icon(MdiIcons.cloudPlusOutline),
-    getSubtitle: () =>
-        '当前使用：${VideoUtils.cdnService.desc}，部分 CDN 可能失效，如无法播放请尝试切换',
+    getSubtitle: () => '当前顺序：${VideoUtils.cdnDescription}',
     onTap: _showCDNDialog,
   ),
   NormalModel(
@@ -239,13 +238,16 @@ List<SettingsModel> get videoSettings => [
 ];
 
 Future<void> _showCDNDialog(BuildContext context, VoidCallback setState) async {
-  final res = await showDialog<CDNService>(
+  final res = await showDialog<List<CDNService>>(
     context: context,
     builder: (context) => const CdnSelectDialog(),
   );
-  if (res != null) {
-    VideoUtils.cdnService = res;
-    await GStorage.setting.put(SettingBoxKey.CDNService, res.name);
+  if (res != null && res.isNotEmpty) {
+    VideoUtils.setCdnServices(res);
+    await GStorage.setting.putAll({
+      SettingBoxKey.CDNServices: res.map((item) => item.name).toList(),
+      SettingBoxKey.CDNService: res.first.name,
+    });
     setState();
   }
 }

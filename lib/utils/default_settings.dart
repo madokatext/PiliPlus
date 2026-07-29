@@ -23,6 +23,7 @@ const Map<String, Object> defaultSettingValues = {
   'burstDanmakuWindowSeconds': 6.0,
   'cardRadius': 5.0,
   'cdnSpeedTest': true,
+  'CDNServices': ['backupUrl'],
   'checkDynamic': true,
   'collapsedReplyFontScale': 0.95,
   'continuePlayInBackground': false,

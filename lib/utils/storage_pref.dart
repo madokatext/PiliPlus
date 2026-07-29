@@ -415,12 +415,31 @@ static int get videoPlayerSwitchForceTimeoutSeconds {
     };
   }
 
-  static CDNService get defaultCDNService {
-    if (_setting.get(SettingBoxKey.CDNService) case final String cdnName) {
-      return CDNService.values.byName(cdnName);
+  static List<CDNService> get cdnServices {
+    final saved = _setting.get(SettingBoxKey.CDNServices);
+    final names = saved is List
+        ? saved.whereType<String>()
+        : [
+            if (_setting.get(SettingBoxKey.CDNService)
+                case final String cdnName)
+              cdnName,
+          ];
+    final services = <CDNService>[];
+    for (final name in names) {
+      for (final service in CDNService.values) {
+        if (service.name == name && !services.contains(service)) {
+          services.add(service);
+          break;
+        }
+      }
+      if (services.length == 3) {
+        break;
+      }
     }
-    return CDNService.backupUrl;
+    return services.isEmpty ? [CDNService.backupUrl] : services;
   }
+
+  static CDNService get defaultCDNService => cdnServices.first;
 
   static String get banWordForRecommend =>
       _setting.get(SettingBoxKey.banWordForRecommend, defaultValue: '');

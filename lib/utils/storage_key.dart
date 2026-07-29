@@ -51,8 +51,9 @@ abstract final class SettingBoxKey {
     playerControlDisplayDurationSeconds =
         'playerControlDisplayDurationSeconds',
 
-    horizontalScreen = 'horizontalScreen',
+      horizontalScreen = 'horizontalScreen',
       CDNService = 'CDNService',
+      CDNServices = 'CDNServices',
       disableAudioCDN = 'disableAudioCDN',
       autoPiP = 'autoPiP',
       enableAutoLongPressSpeed = 'enableAutoLongPressSpeed',

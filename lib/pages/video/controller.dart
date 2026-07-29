@@ -149,11 +149,47 @@ class VideoDetailController extends GetxController
   late VideoItem firstVideo;
   String? videoUrl;
   String? audioUrl;
+  List<String> videoCdnUrls = const [];
+  List<String?> audioCdnUrls = const [];
   Duration? defaultST;
   Duration? playedTime;
   String get playedTimePos {
     final pos = playedTime?.inMilliseconds;
     return pos == null || pos == 0 ? '' : '?t=${pos / 1000}';
+  }
+
+  void _setVideoPlayUrls(Iterable<String> playUrls) {
+    videoCdnUrls = VideoUtils.getCdnUrls(playUrls);
+    videoUrl = videoCdnUrls.first;
+  }
+
+  void _setAudioPlayUrls(Iterable<String> playUrls) {
+    final urls = VideoUtils.getCdnUrls(playUrls, isAudio: true);
+    audioCdnUrls = urls.cast<String?>();
+    audioUrl = urls.first;
+  }
+
+  void _clearAudioPlayUrls() {
+    audioUrl = '';
+    audioCdnUrls = List<String?>.filled(
+      videoCdnUrls.isEmpty ? 1 : videoCdnUrls.length,
+      '',
+      growable: false,
+    );
+  }
+
+  NetworkSource _networkSource() {
+    final primaryVideo = videoUrl!;
+    final videos = videoCdnUrls.isEmpty ? [primaryVideo] : videoCdnUrls;
+    final audios = audioCdnUrls.isEmpty
+        ? List<String?>.filled(videos.length, audioUrl, growable: false)
+        : audioCdnUrls;
+    return NetworkSource(
+      videoSource: primaryVideo,
+      audioSource: audioUrl,
+      cdnVideoSources: videos,
+      cdnAudioSources: audios,
+    );
   }
 
   // 亮度
@@ -730,9 +766,15 @@ class VideoDetailController extends GetxController
     }
   
     final targetVideo = findVideoByQa(targetQuality);
-    final targetVideoUrl = VideoUtils.getCdnUrl(targetVideo.playUrls);
+    final targetVideoUrls = VideoUtils.getCdnUrls(targetVideo.playUrls);
+    final targetVideoUrl = targetVideoUrls.first;
     final switched = await plPlayerController.switchVideoPlayer(
-      source: targetVideoUrl,
+      targetSource: NetworkSource(
+        videoSource: targetVideoUrl,
+        audioSource: audioUrl,
+        cdnVideoSources: targetVideoUrls,
+        cdnAudioSources: audioCdnUrls,
+      ),
       width: targetVideo.width,
       height: targetVideo.height,
     );
@@ -744,6 +786,7 @@ class VideoDetailController extends GetxController
     plPlayerController.cacheVideoQa = preferredQuality;
     firstVideo = targetVideo;
     videoUrl = targetVideoUrl;
+    videoCdnUrls = targetVideoUrls;
     currentDecodeFormats = VideoDecodeFormatType.fromString(
       targetVideo.codecs!,
     );
@@ -798,7 +841,7 @@ class VideoDetailController extends GetxController
       ..buffered.value = 0;
 
     firstVideo = findVideoByQa(currentVideoQa.code, setCodecs: true);
-    videoUrl = VideoUtils.getCdnUrl(firstVideo.playUrls);
+    _setVideoPlayUrls(firstVideo.playUrls);
 
     /// 根据currentAudioQa 重新设置audioUrl
     if (currentAudioQa != null) {
@@ -806,7 +849,7 @@ class VideoDetailController extends GetxController
         (i) => i.id == currentAudioQa!.code,
         orElse: () => data.dash!.audio!.first,
       );
-      audioUrl = VideoUtils.getCdnUrl(firstAudio.playUrls, isAudio: true);
+      _setAudioPlayUrls(firstAudio.playUrls);
     }
 
     playerInit(autoplay: autoplay);
@@ -842,10 +885,7 @@ class VideoDetailController extends GetxController
               isMp4: entry.mediaType == 1,
               hasDashAudio: entry.hasDashAudio,
             )
-          : NetworkSource(
-              videoSource: videoUrl!,
-              audioSource: audioUrl,
-            ),
+          : _networkSource(),
       seekTo: seek,
       duration: data.timeLength == null
           ? null
@@ -1015,8 +1055,8 @@ class VideoDetailController extends GetxController
       }
       if (data.dash == null && data.durl != null) {
         final first = data.durl!.first;
-        videoUrl = VideoUtils.getCdnUrl(first.playUrls);
-        audioUrl = '';
+        _setVideoPlayUrls(first.playUrls);
+        _clearAudioPlayUrls();
 
         // 实际为FLV/MP4格式，但已被淘汰，这里仅做兜底处理
         final videoQuality = VideoQuality.fromCode(data.quality!);
@@ -1078,7 +1118,7 @@ class VideoDetailController extends GetxController
       );
       _setVideoHeight();
 
-      videoUrl = VideoUtils.getCdnUrl(firstVideo.playUrls);
+      _setVideoPlayUrls(firstVideo.playUrls);
 
       /// 优先顺序 设置中指定质量 -> 当前可选的最高质量
       AudioItem? firstAudio;
@@ -1097,12 +1137,12 @@ class VideoDetailController extends GetxController
           (e) => e.id == closestNumber,
           orElse: () => audioList.first,
         );
-        audioUrl = VideoUtils.getCdnUrl(firstAudio.playUrls, isAudio: true);
+        _setAudioPlayUrls(firstAudio.playUrls);
         if (firstAudio.id case final int id?) {
           currentAudioQa = AudioQuality.fromCode(id);
         }
       } else {
-        audioUrl = '';
+        _clearAudioPlayUrls();
       }
       await _initPlayerIfNeeded(autoFullScreenFlag);
     } else {
@@ -1396,6 +1436,8 @@ class VideoDetailController extends GetxController
     defaultST = null;
     videoUrl = null;
     audioUrl = null;
+    videoCdnUrls = const [];
+    audioCdnUrls = const [];
 
     // danmaku
     savedDanmaku = null;
@@ -1672,6 +1714,9 @@ class VideoDetailController extends GetxController
               Get.back();
               this.videoUrl = videoUrl;
               this.audioUrl = audioUrl;
+              videoCdnUrls = [videoUrl];
+              audioCdnUrls = [audioUrl];
+              plPlayerController.resetCdnForCurrentVideo();
               playerInit();
             },
             child: const Text('确定'),
