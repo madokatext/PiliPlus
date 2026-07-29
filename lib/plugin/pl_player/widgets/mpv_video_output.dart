@@ -291,6 +291,7 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
     final shouldMask =
         resize &&
         waitForFrame &&
+        !wasPaused &&
         widget.coverFullscreenTransitionWithBlack;
 
     final customOptions = MpvUtils.customOptions;
@@ -320,7 +321,8 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
           // 由 drain 循环直接处理最新配置，避免反向制造一次中间态 resize。
           return false;
         }
-      } else if (!waitForFrame && _maskedConfiguration != null) {
+      } else if ((!waitForFrame || wasPaused) &&
+          _maskedConfiguration != null) {
         _maskedConfiguration = null;
         if (mounted) setState(() {});
       }
@@ -343,8 +345,8 @@ class _MpvVideoOutputState extends State<MpvVideoOutput> {
         );
         if (waitForFrame && wasPaused) {
           // mpv 没有公开的 redraw-frame 输入命令。空的 0 级 OSD 更新不会
-          // 改变画面内容，但会唤醒 VO 重绘缓存帧；分两次发送，确保暂停态
-          // Surface 在新尺寸下实际收到两帧相同画面。
+          // 改变画面内容，但会唤醒 VO 重绘缓存帧；进、出全屏两个方向均
+          // 分两次发送，确保暂停态 Surface 在新尺寸下收到两帧相同画面。
           await player.command(const ['show-text', '', '0', '0']);
           await Future<void>.delayed(const Duration(milliseconds: 20));
           await player.command(const ['show-text', '', '0', '0']);

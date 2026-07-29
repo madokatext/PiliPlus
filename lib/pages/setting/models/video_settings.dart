@@ -211,7 +211,7 @@ List<SettingsModel> get videoSettings => [
   ),
   const SwitchModel(
     title: '全屏切换使用黑屏遮罩',
-    subtitle: '调整 mpv 输出尺寸前盖黑，确认新 Surface 帧后立即移除',
+    subtitle: '播放状态切换时，调整 mpv 输出尺寸前盖黑，确认新 Surface 帧后立即移除',
     leading: Icon(Icons.fullscreen_outlined),
     setKey: SettingBoxKey.coverFullscreenTransitionWithBlack,
     defaultVal: false,

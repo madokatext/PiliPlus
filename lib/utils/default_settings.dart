@@ -94,7 +94,6 @@ const Map<String, Object> defaultSettingValues = {
   'horizontalScreen': false,
   'horizontalSeekGestureAngleThreshold': 45.0,
   'horizontalSeekGestureThreshold': 5.0,
-  'legacyBottomBarBottomPadding': 35.0,
   'liveQualityCellular': 10000,
   'longPressSpeedToastVerticalPercent': 26.0,
   'longPressSpeedTriggerDelay': 400,
