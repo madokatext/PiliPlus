@@ -111,6 +111,11 @@ class PlPlayerController with BlockConfigMixin {
   Duration? _videoStallPosition;
   Timer? _videoStallWatchdogTimer;
   DateTime? _videoStallSince;
+  int _postSeekWatchdogGuardGeneration = 0;
+  NativePlayer? _postSeekWatchdogGuardPlayer;
+  Duration? _postSeekWatchdogGuardTarget;
+  DateTime? _postSeekWatchdogGuardMinimumUntil;
+  DateTime? _postSeekWatchdogGuardDeadline;
 
   static const List<Duration> _mediaRecoveryDelays = [
     Duration(milliseconds: 350),
@@ -1391,6 +1396,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     _pausedForVideoStall = false;
     _resumeAfterVideoRecovery = false;
     _videoStallPosition = null;
+    _clearPostSeekWatchdogGuard();
     _resetVideoStallObservation();
   }
 
@@ -1413,6 +1419,69 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     _videoStallSince = null;
   }
 
+  int? _beginPostSeekWatchdogGuard(
+    NativePlayer? player,
+    Duration target,
+  ) {
+    if (player == null) {
+      return null;
+    }
+    final generation = ++_postSeekWatchdogGuardGeneration;
+    _postSeekWatchdogGuardPlayer = player;
+    _postSeekWatchdogGuardTarget = target;
+    final now = DateTime.now();
+    _postSeekWatchdogGuardMinimumUntil = now.add(
+      const Duration(seconds: 1),
+    );
+    _postSeekWatchdogGuardDeadline = now.add(
+      const Duration(seconds: 15),
+    );
+    _resetVideoStallObservation();
+    return generation;
+  }
+
+  void _clearPostSeekWatchdogGuard({int? generation}) {
+    if (generation != null &&
+        generation != _postSeekWatchdogGuardGeneration) {
+      return;
+    }
+    _postSeekWatchdogGuardGeneration++;
+    _postSeekWatchdogGuardPlayer = null;
+    _postSeekWatchdogGuardTarget = null;
+    _postSeekWatchdogGuardMinimumUntil = null;
+    _postSeekWatchdogGuardDeadline = null;
+  }
+
+  bool _isPostSeekWatchdogGuardActive(NativePlayer player) {
+    if (!identical(player, _postSeekWatchdogGuardPlayer)) {
+      return false;
+    }
+
+    final target = _postSeekWatchdogGuardTarget;
+    final minimumUntil = _postSeekWatchdogGuardMinimumUntil;
+    final deadline = _postSeekWatchdogGuardDeadline;
+    final now = DateTime.now();
+    if (target == null ||
+        minimumUntil == null ||
+        deadline == null ||
+        !now.isBefore(deadline)) {
+      _clearPostSeekWatchdogGuard();
+      return false;
+    }
+
+    final state = player.state;
+    final minimumGuardElapsed = !now.isBefore(minimumUntil);
+    final videoBufferReachedTarget =
+        state.buffer > Duration.zero &&
+        state.buffer >= target;
+    if (minimumGuardElapsed && videoBufferReachedTarget) {
+      _clearPostSeekWatchdogGuard();
+      return false;
+    }
+
+    return true;
+  }
+
   String? _readPlayerProperty(NativePlayer player, String name) {
     try {
       return player.getProperty(name);
@@ -1423,6 +1492,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
 
   void _startVideoStallWatchdog(NativePlayer player) {
     _videoStallWatchdogTimer?.cancel();
+    _clearPostSeekWatchdogGuard();
     _resetVideoStallObservation();
     _videoStallWatchdogTimer = Timer.periodic(
       const Duration(milliseconds: 200),
@@ -1444,6 +1514,11 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         seeking ||
         player.current.isEmpty ||
         !player.state.playing) {
+      _resetVideoStallObservation();
+      return;
+    }
+
+    if (_isPostSeekWatchdogGuardActive(player)) {
       _resetVideoStallObservation();
       return;
     }
@@ -1500,6 +1575,10 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       return;
     }
 
+    if (_isPostSeekWatchdogGuardActive(player)) {
+      return;
+    }
+
     final state = player.state;
     final nearNaturalEnd =
         state.duration > Duration.zero &&
@@ -1538,6 +1617,10 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     if (_pausedForVideoStall ||
         !identical(player, _videoPlayerController) ||
         _playerCount == 0) {
+      return;
+    }
+    if (_isPostSeekWatchdogGuardActive(player)) {
+      _resetVideoStallObservation();
       return;
     }
 
@@ -2648,14 +2731,20 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
     _heartDuration = position.inSeconds;
 
     Future<void> seek() async {
-      if (isSeek) {
-        /// 拖动进度条调节时，不等待第一帧，防止抖动
-        await _videoPlayerController?.stream.buffer.first;
-      }
-      danmakuController?.clear();
+      final player = _videoPlayerController;
+      final guardGeneration = _beginPostSeekWatchdogGuard(
+        player,
+        position,
+      );
       try {
-        await _videoPlayerController?.seek(position);
+        if (isSeek) {
+          /// 拖动进度条调节时，不等待第一帧，防止抖动
+          await player?.stream.buffer.first;
+        }
+        danmakuController?.clear();
+        await player?.seek(position);
       } catch (e) {
+        _clearPostSeekWatchdogGuard(generation: guardGeneration);
         if (kDebugMode) debugPrint('seek failed: $e');
       }
     }
