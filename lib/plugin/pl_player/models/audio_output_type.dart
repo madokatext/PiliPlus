@@ -1,9 +1,9 @@
 import 'package:PiliPlus/models/common/enum_with_label.dart';
 
 enum AudioOutput implements EnumWithLabel {
+  audiotrack('AudioTrack'),
   opensles('OpenSL ES'),
   aaudio('AAudio'),
-  audiotrack('AudioTrack'),
   ;
 
   static final defaultValue = values.map((e) => e.name).join(',');
