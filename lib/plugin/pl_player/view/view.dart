@@ -168,7 +168,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
   Timer? _mpvOutputFpsTimer;
   late final bool _showBufferingInfo = Pref.showBufferingInfo;
   final RxBool _isCacheBuffering = false.obs;
-  final RxString _bufferingInfo = '--/s · --/--'.obs;
+  final RxString _bufferingInfo = '--/s · --%'.obs;
   Timer? _bufferingInfoTimer;
 
   static String _formatBufferSize(num bytes) {
@@ -192,37 +192,6 @@ ui.PointerDeviceKind? _gesturePointerKind;
         ? 1
         : 2;
     return '${value.toStringAsFixed(fractionDigits)} ${units[unitIndex]}';
-  }
-
-  static String _formatBufferProgress(
-    int bufferedBytes,
-    int requiredBytes,
-  ) {
-    final totalBytes = math.max(bufferedBytes, requiredBytes);
-    if (bufferedBytes < 0 || totalBytes <= 0) {
-      return '--/--';
-    }
-
-    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-    var divisor = 1.0;
-    var total = totalBytes.toDouble();
-    var unitIndex = 0;
-    while (total >= 1024 && unitIndex < units.length - 1) {
-      total /= 1024;
-      divisor *= 1024;
-      unitIndex++;
-    }
-
-    final fractionDigits = unitIndex == 0
-        ? 0
-        : total >= 100
-        ? 0
-        : total >= 10
-        ? 1
-        : 2;
-    final buffered = bufferedBytes / divisor;
-    return '${buffered.toStringAsFixed(fractionDigits)}/'
-        '${total.toStringAsFixed(fractionDigits)} ${units[unitIndex]}';
   }
 
   String? _readBufferingProperty(String name) {
@@ -258,62 +227,17 @@ ui.PointerDeviceKind? _gesturePointerKind;
     final cacheSpeed = int.tryParse(
       _readBufferingProperty('cache-speed')?.trim() ?? '',
     );
-    final bufferedBytes = int.tryParse(
-      _readBufferingProperty('demuxer-cache-state/fw-bytes')?.trim() ?? '',
-    );
     final bufferingState = double.tryParse(
       _readBufferingProperty('cache-buffering-state')?.trim() ?? '',
     );
 
-    int? requiredBytes;
-    if (bufferedBytes != null && bufferedBytes >= 0) {
-      if (bufferingState != null &&
-          bufferingState.isFinite &&
-          bufferingState > 0) {
-        // mpv reports the fill percentage until cache pause ends. Combining
-        // it with forward-buffered bytes gives the corresponding byte target.
-        requiredBytes = math.max(
-          bufferedBytes,
-          (bufferedBytes * 100 / bufferingState).round(),
-        );
-      } else {
-        final cacheDuration = double.tryParse(
-          _readBufferingProperty('demuxer-cache-duration')?.trim() ?? '',
-        );
-        final cachePauseWait = double.tryParse(
-          _readBufferingProperty('cache-pause-wait')?.trim() ?? '',
-        );
-        if (cacheDuration != null &&
-            cacheDuration.isFinite &&
-            cacheDuration > 0 &&
-            cachePauseWait != null &&
-            cachePauseWait.isFinite &&
-            cachePauseWait > 0) {
-          requiredBytes = math.max(
-            bufferedBytes,
-            (bufferedBytes * cachePauseWait / cacheDuration).round(),
-          );
-        } else if (cacheSpeed != null &&
-            cacheSpeed >= 0 &&
-            cachePauseWait != null &&
-            cachePauseWait.isFinite &&
-            cachePauseWait > 0) {
-          requiredBytes = math.max(
-            bufferedBytes,
-            (cacheSpeed * cachePauseWait).round(),
-          );
-        }
-      }
-    }
-
     final speedLabel = cacheSpeed == null || cacheSpeed < 0
         ? '--/s'
         : '${_formatBufferSize(cacheSpeed)}/s';
-    final progressLabel = bufferedBytes == null || bufferedBytes < 0
-        ? '--/--'
-        : requiredBytes == null
-        ? '${_formatBufferSize(bufferedBytes)}/--'
-        : _formatBufferProgress(bufferedBytes, requiredBytes);
+    final progressLabel =
+        bufferingState == null || !bufferingState.isFinite
+        ? '--%'
+        : '${bufferingState.clamp(0, 100).round()}%';
     _bufferingInfo.value = '$speedLabel · $progressLabel';
     _isCacheBuffering.value = true;
   }

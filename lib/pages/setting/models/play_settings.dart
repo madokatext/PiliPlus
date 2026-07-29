@@ -148,7 +148,7 @@ if (PlatformUtils.isMobile)
   ),
   const SwitchModel(
     title: '显示缓冲速度与进度',
-    subtitle: '在缓冲 Logo 下每 500ms 更新；非缓冲加载仅显示“初始化中”',
+    subtitle: '每 500ms 显示实时速度和百分比进度；非缓冲加载仅显示“初始化中”',
     leading: Icon(Icons.cloud_download_outlined),
     setKey: SettingBoxKey.showBufferingInfo,
     defaultVal: true,
