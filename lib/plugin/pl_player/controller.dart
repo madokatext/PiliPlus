@@ -115,7 +115,6 @@ class PlPlayerController with BlockConfigMixin {
   NativePlayer? _postSeekWatchdogGuardPlayer;
   Duration? _postSeekWatchdogGuardTarget;
   DateTime? _postSeekWatchdogGuardMinimumUntil;
-  DateTime? _postSeekWatchdogGuardDeadline;
 
   static const List<Duration> _mediaRecoveryDelays = [
     Duration(milliseconds: 350),
@@ -1433,9 +1432,6 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     _postSeekWatchdogGuardMinimumUntil = now.add(
       const Duration(seconds: 1),
     );
-    _postSeekWatchdogGuardDeadline = now.add(
-      const Duration(seconds: 15),
-    );
     _resetVideoStallObservation();
     return generation;
   }
@@ -1449,7 +1445,6 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     _postSeekWatchdogGuardPlayer = null;
     _postSeekWatchdogGuardTarget = null;
     _postSeekWatchdogGuardMinimumUntil = null;
-    _postSeekWatchdogGuardDeadline = null;
   }
 
   bool _isPostSeekWatchdogGuardActive(NativePlayer player) {
@@ -1459,12 +1454,8 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
 
     final target = _postSeekWatchdogGuardTarget;
     final minimumUntil = _postSeekWatchdogGuardMinimumUntil;
-    final deadline = _postSeekWatchdogGuardDeadline;
     final now = DateTime.now();
-    if (target == null ||
-        minimumUntil == null ||
-        deadline == null ||
-        !now.isBefore(deadline)) {
+    if (target == null || minimumUntil == null) {
       _clearPostSeekWatchdogGuard();
       return false;
     }
@@ -1479,6 +1470,9 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       return false;
     }
 
+    // 网络缓冲没有可靠的最长耗时。只要缓存末端还没追到 seek 目标，
+    // 就不能让启发式看门狗把 seek 前的旧缓存误判为视频流已停止。
+    // 明确的网络错误仍会由 stream.error 触发播放器恢复。
     return true;
   }
 
@@ -1513,7 +1507,8 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         isSeeking.value ||
         seeking ||
         player.current.isEmpty ||
-        !player.state.playing) {
+        !player.state.playing ||
+        player.state.buffering) {
       _resetVideoStallObservation();
       return;
     }
@@ -1571,7 +1566,8 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         dataSource is FileSource ||
         onlyPlayAudio.value ||
         isSeeking.value ||
-        !player.state.playing) {
+        !player.state.playing ||
+        player.state.buffering) {
       return;
     }
 
@@ -1620,6 +1616,10 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       return;
     }
     if (_isPostSeekWatchdogGuardActive(player)) {
+      _resetVideoStallObservation();
+      return;
+    }
+    if (player.state.buffering) {
       _resetVideoStallObservation();
       return;
     }
@@ -1848,10 +1848,23 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         !onlyPlayAudio.value &&
         !cancellation.isCompleted;
 
-    Duration activeHandoffPosition() =>
-        _pausedForVideoStall && _videoStallPosition != null
-        ? _videoStallPosition!
-        : activePlayer.state.position;
+    Duration activeHandoffPosition() {
+      final position =
+          _pausedForVideoStall && _videoStallPosition != null
+          ? _videoStallPosition!
+          : activePlayer.state.position;
+      final postSeekTarget =
+          identical(activePlayer, _postSeekWatchdogGuardPlayer)
+          ? _postSeekWatchdogGuardTarget
+          : null;
+
+      // seek 尚未完成时若遇到明确的网络错误，备用实例也必须从 seek
+      // 目标或更后的位置接管，不能重新打开到 seek 前的旧播放位置。
+      if (postSeekTarget != null && position < postSeekTarget) {
+        return postSeekTarget;
+      }
+      return position;
+    }
 
     late final Player standbyPlayer;
     late final VideoController standbyController;
