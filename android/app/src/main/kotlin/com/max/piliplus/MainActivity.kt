@@ -44,8 +44,13 @@ class MainActivity : AudioServiceActivity() {
     }
 
     private fun saveTextToDownloads(fileName: String, content: String): String {
-        if (fileName != File(fileName).name || !fileName.endsWith(".json", ignoreCase = true)) {
-            throw IllegalArgumentException("无效的 JSON 文件名")
+        val mimeType = when (fileName.substringAfterLast('.', "").lowercase()) {
+            "json" -> "application/json"
+            "log", "txt" -> "text/plain"
+            else -> throw IllegalArgumentException("无效的文本文件名")
+        }
+        if (fileName != File(fileName).name) {
+            throw IllegalArgumentException("无效的文本文件名")
         }
 
         val bytes = content.toByteArray(StandardCharsets.UTF_8)
@@ -53,7 +58,7 @@ class MainActivity : AudioServiceActivity() {
             val resolver = applicationContext.contentResolver
             val values = ContentValues().apply {
                 put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-                put(MediaStore.MediaColumns.MIME_TYPE, "application/json")
+                put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
                 put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
                 put(MediaStore.MediaColumns.IS_PENDING, 1)
             }

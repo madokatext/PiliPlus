@@ -1,7 +1,15 @@
+import 'dart:io' show Platform;
+
 import 'package:PiliPlus/services/mpv_log_service.dart';
+import 'package:PiliPlus/utils/device_utils.dart';
+import 'package:PiliPlus/utils/permission_handler.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
+import 'package:intl/intl.dart' show DateFormat;
+
+const _storageChannel = MethodChannel('com.max.piliplus/storage');
 
 class MpvLogsPage extends StatefulWidget {
   const MpvLogsPage({super.key});
@@ -11,11 +19,8 @@ class MpvLogsPage extends StatefulWidget {
 }
 
 class _MpvLogsPageState extends State<MpvLogsPage> {
-  late Future<String> _future = MpvLogService.readLastLog();
-
-  void _reload() {
-    setState(() => _future = MpvLogService.readLastLog());
-  }
+  late final Future<String> _future = MpvLogService.readLastLog();
+  bool _saving = false;
 
   Future<void> _copy() async {
     final content = await MpvLogService.readLastLog();
@@ -26,11 +31,48 @@ class _MpvLogsPageState extends State<MpvLogsPage> {
     Utils.copyText(content);
   }
 
-  Future<void> _clear() async {
-    await MpvLogService.clear();
-    if (!mounted) return;
-    _reload();
-    SmartDialog.showToast('已清空');
+  Future<void> _save() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+
+    try {
+      final content = await MpvLogService.readLastLog();
+      if (content.isEmpty) {
+        SmartDialog.showToast('暂无日志');
+        return;
+      }
+      if (!Platform.isAndroid) {
+        SmartDialog.showToast('保存至主存储 Download 目录仅支持 Android');
+        return;
+      }
+      if (DeviceUtils.sdkInt < 29) {
+        final status = await Permission.storage.request();
+        if (!status.isGranted) {
+          SmartDialog.showToast('存储权限未授权，无法写入主存储 Download 目录');
+          return;
+        }
+      }
+
+      final fileName =
+          'piliplus_mpv_log_'
+          '${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.log';
+      final savedPath = await _storageChannel.invokeMethod<String>(
+        'saveTextToDownloads',
+        {
+          'fileName': fileName,
+          'content': content,
+        },
+      );
+      SmartDialog.showToast('已保存至 ${savedPath ?? 'Download/$fileName'}');
+    } on PlatformException catch (e) {
+      SmartDialog.showToast('保存失败：${e.message ?? e.code}');
+    } catch (e) {
+      SmartDialog.showToast('保存失败：$e');
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
+    }
   }
 
   @override
@@ -41,19 +83,14 @@ class _MpvLogsPageState extends State<MpvLogsPage> {
         title: const Text('上次 mpv 播放日志'),
         actions: [
           IconButton(
-            tooltip: '刷新',
-            onPressed: _reload,
-            icon: const Icon(Icons.refresh),
+            tooltip: '保存至本地',
+            onPressed: _saving ? null : _save,
+            icon: const Icon(Icons.save_alt),
           ),
           IconButton(
             tooltip: '复制',
             onPressed: _copy,
             icon: const Icon(Icons.copy_outlined),
-          ),
-          IconButton(
-            tooltip: '清空',
-            onPressed: _clear,
-            icon: const Icon(Icons.delete_outline),
           ),
           const SizedBox(width: 6),
         ],
