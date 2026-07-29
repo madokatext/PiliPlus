@@ -91,6 +91,13 @@ if (PlatformUtils.isMobile)
     leading: const Icon(Icons.timer_outlined),
     onTap: _showLongPressSpeedTriggerDelayDialog,
   ),
+  const SwitchModel(
+    title: '显示倍速浮窗',
+    subtitle: '长按倍速时显示当前倍速提示',
+    leading: Icon(Icons.speed),
+    setKey: SettingBoxKey.showLongPressSpeedToast,
+    defaultVal: true,
+  ),
   if (Platform.isAndroid)
     NormalModel(
       onTap: _showAngleDegreesDialog,

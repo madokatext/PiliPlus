@@ -1336,6 +1336,11 @@ static int get playerControlDisplayDurationSeconds {
   static bool get enableAutoLongPressSpeed =>
       _setting.get(SettingBoxKey.enableAutoLongPressSpeed, defaultValue: false);
 
+  static bool get showLongPressSpeedToast => _setting.get(
+    SettingBoxKey.showLongPressSpeedToast,
+    defaultValue: true,
+  );
+
   static int get longPressSpeedTriggerDelay {
     final defaultValue = PlatformUtils.isMobile && enableTapDm ? 300 : 500;
     final value = _setting.get(SettingBoxKey.longPressSpeedTriggerDelay);

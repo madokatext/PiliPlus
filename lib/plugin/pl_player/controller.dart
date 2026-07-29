@@ -409,6 +409,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       Pref.horizontalSeekGestureThreshold;
   late final darkVideoPage = Pref.darkVideoPage;
   late final enableSlideVolumeBrightness = Pref.enableSlideVolumeBrightness;
+  late final showLongPressSpeedToast = Pref.showLongPressSpeedToast;
   bool get volumeBrightnessGestureProgressBar =>
       Pref.volumeBrightnessGestureProgressBar;
   late final biliProgressTimeStyle = Pref.biliProgressTimeStyle;

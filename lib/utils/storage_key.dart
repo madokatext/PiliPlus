@@ -54,6 +54,7 @@ abstract final class SettingBoxKey {
       disableAudioCDN = 'disableAudioCDN',
       autoPiP = 'autoPiP',
       enableAutoLongPressSpeed = 'enableAutoLongPressSpeed',
+      showLongPressSpeedToast = 'showLongPressSpeedToast',
       longPressSpeedTriggerDelay = 'longPressSpeedTriggerDelay',
       useRelativeSlide = 'useRelativeSlide',
       sliderDuration = 'sliderOffset',

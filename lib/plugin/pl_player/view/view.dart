@@ -1772,7 +1772,7 @@ backgroundColor: gestureProgressColor.withValues(alpha: 0.24),
           ),
 
         /// 长按倍速 toast
-        if (!isLive)
+        if (!isLive && plPlayerController.showLongPressSpeedToast)
           IgnorePointer(
             ignoring: true,
             child: Align(
