@@ -147,6 +147,13 @@ if (PlatformUtils.isMobile)
     defaultVal: false,
   ),
   const SwitchModel(
+    title: '显示缓冲速度与进度',
+    subtitle: '在缓冲 Logo 下每 500ms 更新；非缓冲加载仅显示“初始化中”',
+    leading: Icon(Icons.cloud_download_outlined),
+    setKey: SettingBoxKey.showBufferingInfo,
+    defaultVal: true,
+  ),
+  const SwitchModel(
     title: '双击快退/快进',
     subtitle: '左侧双击快退/右侧双击快进，关闭则双击均为暂停/播放',
     leading: Icon(Icons.touch_app_outlined),

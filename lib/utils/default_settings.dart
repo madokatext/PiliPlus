@@ -147,6 +147,7 @@ const Map<String, Object> defaultSettingValues = {
   'seekTimeToastFontSize': 9.0,
   'seekTimeToastVerticalPercent': 5.0,
   'showAdvancedSettings': false,
+  'showBufferingInfo': true,
   'showDynDispute': true,
   'showFSActionItem': false,
   'showFsLockBtn': false,

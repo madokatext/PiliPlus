@@ -1502,6 +1502,11 @@ static int get playerControlDisplayDurationSeconds {
     defaultValue: false,
   );
 
+  static bool get showBufferingInfo => _setting.get(
+    SettingBoxKey.showBufferingInfo,
+    defaultValue: true,
+  );
+
   static FollowOrderType get followOrderType =>
       FollowOrderType.values[_setting.get(
         SettingBoxKey.followOrderType,

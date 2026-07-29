@@ -166,6 +166,157 @@ ui.PointerDeviceKind? _gesturePointerKind;
   final RxString _mpvOutputFps = '-- FPS'.obs;
   final RxString _mpvDroppedFrames = '--'.obs;
   Timer? _mpvOutputFpsTimer;
+  late final bool _showBufferingInfo = Pref.showBufferingInfo;
+  final RxBool _isCacheBuffering = false.obs;
+  final RxString _bufferingInfo = '--/s · --/--'.obs;
+  Timer? _bufferingInfoTimer;
+
+  static String _formatBufferSize(num bytes) {
+    if (!bytes.isFinite || bytes < 0) {
+      return '--';
+    }
+
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    var value = bytes.toDouble();
+    var unitIndex = 0;
+    while (value >= 1024 && unitIndex < units.length - 1) {
+      value /= 1024;
+      unitIndex++;
+    }
+
+    final fractionDigits = unitIndex == 0
+        ? 0
+        : value >= 100
+        ? 0
+        : value >= 10
+        ? 1
+        : 2;
+    return '${value.toStringAsFixed(fractionDigits)} ${units[unitIndex]}';
+  }
+
+  static String _formatBufferProgress(
+    int bufferedBytes,
+    int requiredBytes,
+  ) {
+    final totalBytes = math.max(bufferedBytes, requiredBytes);
+    if (bufferedBytes < 0 || totalBytes <= 0) {
+      return '--/--';
+    }
+
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    var divisor = 1.0;
+    var total = totalBytes.toDouble();
+    var unitIndex = 0;
+    while (total >= 1024 && unitIndex < units.length - 1) {
+      total /= 1024;
+      divisor *= 1024;
+      unitIndex++;
+    }
+
+    final fractionDigits = unitIndex == 0
+        ? 0
+        : total >= 100
+        ? 0
+        : total >= 10
+        ? 1
+        : 2;
+    final buffered = bufferedBytes / divisor;
+    return '${buffered.toStringAsFixed(fractionDigits)}/'
+        '${total.toStringAsFixed(fractionDigits)} ${units[unitIndex]}';
+  }
+
+  String? _readBufferingProperty(String name) {
+    try {
+      return plPlayerController.videoPlayerController?.getProperty(name);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _updateBufferingInfo() {
+    if (!_showBufferingInfo) {
+      return;
+    }
+
+    final loadingVisible =
+        plPlayerController.dataStatus.loading ||
+        (plPlayerController.isBuffering.value &&
+            plPlayerController.playerStatus.isPlaying);
+    if (!loadingVisible) {
+      _isCacheBuffering.value = false;
+      return;
+    }
+
+    final cacheBuffering =
+        plPlayerController.isBuffering.value &&
+        _readBufferingProperty('paused-for-cache') == 'yes';
+    if (!cacheBuffering) {
+      _isCacheBuffering.value = false;
+      return;
+    }
+
+    final cacheSpeed = int.tryParse(
+      _readBufferingProperty('cache-speed')?.trim() ?? '',
+    );
+    final bufferedBytes = int.tryParse(
+      _readBufferingProperty('demuxer-cache-state/fw-bytes')?.trim() ?? '',
+    );
+    final bufferingState = double.tryParse(
+      _readBufferingProperty('cache-buffering-state')?.trim() ?? '',
+    );
+
+    int? requiredBytes;
+    if (bufferedBytes != null && bufferedBytes >= 0) {
+      if (bufferingState != null &&
+          bufferingState.isFinite &&
+          bufferingState > 0) {
+        // mpv reports the fill percentage until cache pause ends. Combining
+        // it with forward-buffered bytes gives the corresponding byte target.
+        requiredBytes = math.max(
+          bufferedBytes,
+          (bufferedBytes * 100 / bufferingState).round(),
+        );
+      } else {
+        final cacheDuration = double.tryParse(
+          _readBufferingProperty('demuxer-cache-duration')?.trim() ?? '',
+        );
+        final cachePauseWait = double.tryParse(
+          _readBufferingProperty('cache-pause-wait')?.trim() ?? '',
+        );
+        if (cacheDuration != null &&
+            cacheDuration.isFinite &&
+            cacheDuration > 0 &&
+            cachePauseWait != null &&
+            cachePauseWait.isFinite &&
+            cachePauseWait > 0) {
+          requiredBytes = math.max(
+            bufferedBytes,
+            (bufferedBytes * cachePauseWait / cacheDuration).round(),
+          );
+        } else if (cacheSpeed != null &&
+            cacheSpeed >= 0 &&
+            cachePauseWait != null &&
+            cachePauseWait.isFinite &&
+            cachePauseWait > 0) {
+          requiredBytes = math.max(
+            bufferedBytes,
+            (cacheSpeed * cachePauseWait).round(),
+          );
+        }
+      }
+    }
+
+    final speedLabel = cacheSpeed == null || cacheSpeed < 0
+        ? '--/s'
+        : '${_formatBufferSize(cacheSpeed)}/s';
+    final progressLabel = bufferedBytes == null || bufferedBytes < 0
+        ? '--/--'
+        : requiredBytes == null
+        ? '${_formatBufferSize(bufferedBytes)}/--'
+        : _formatBufferProgress(bufferedBytes, requiredBytes);
+    _bufferingInfo.value = '$speedLabel · $progressLabel';
+    _isCacheBuffering.value = true;
+  }
 
   void _updateMpvOutputFps() {
     var label = '-- FPS';
@@ -332,6 +483,14 @@ ui.PointerDeviceKind? _gesturePointerKind;
       }
     });
 
+    if (_showBufferingInfo) {
+      _updateBufferingInfo();
+      _bufferingInfoTimer = Timer.periodic(
+        const Duration(milliseconds: 500),
+        (_) => _updateBufferingInfo(),
+      );
+    }
+
     if (PlatformUtils.isMobile) {
       Future.microtask(() {
         try {
@@ -445,6 +604,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
     _brightnessListener?.cancel();
     _controlsListener?.cancel();
     _mpvOutputFpsTimer?.cancel();
+    _bufferingInfoTimer?.cancel();
     _animationController.dispose();
     _transformationController.dispose();
     _removeDmAction();
@@ -2292,26 +2452,46 @@ if (!isLive)
                         semanticLabel: "加载中",
                         color: Colors.white,
                       ),
-                      if (plPlayerController.isBuffering.value)
-                        Obx(() {
-                          final buffered = plPlayerController.buffered.value;
-                          if (buffered == 0) {
-                            return const Text(
-                              '加载中...',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                              ),
-                            );
-                          }
-                          return Text(
-                            DurationUtils.formatDuration(buffered),
+                      if (_showBufferingInfo)
+                        if (_isCacheBuffering.value) ...[
+                          Text(
+                            plPlayerController.buffered.value == 0
+                                ? '加载中...'
+                                : DurationUtils.formatDuration(
+                                    plPlayerController.buffered.value,
+                                  ),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 12,
                             ),
-                          );
-                        }),
+                          ),
+                          Text(
+                            _bufferingInfo.value,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ] else
+                          const Text(
+                            '初始化中',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                          )
+                      else if (plPlayerController.isBuffering.value)
+                        Text(
+                          plPlayerController.buffered.value == 0
+                              ? '加载中...'
+                              : DurationUtils.formatDuration(
+                                  plPlayerController.buffered.value,
+                                ),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
+                        ),
                     ],
                   ),
                 ),

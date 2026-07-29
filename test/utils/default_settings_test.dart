@@ -16,6 +16,7 @@ void main() {
     expect(defaultSettingValues['danmakuFontScaleFS'], 1.2);
     expect(defaultSettingValues['danmakuMassiveMode'], isTrue);
     expect(defaultSettingValues['rememberDanmakuSwitchState'], isFalse);
+    expect(defaultSettingValues['showBufferingInfo'], isTrue);
     expect(defaultVideoValues['cacheVideoFit'], 1);
     expect(defaultSettingValues['recommendHistoryFilterSettings'], {
       'enabled': false,

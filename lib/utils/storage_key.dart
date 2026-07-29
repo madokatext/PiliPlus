@@ -36,6 +36,7 @@ abstract final class SettingBoxKey {
       audioPlayMode = 'audioPlayMode',
       showBatteryLevel = 'showBatteryLevel',
       showMpvOutputFps = 'showMpvOutputFps',
+      showBufferingInfo = 'showBufferingInfo',
       playerVolume = 'playerVolume',
       maxVolume = 'maxVolume';
 
