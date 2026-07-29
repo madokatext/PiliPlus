@@ -4,7 +4,6 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:PiliPlus/common/assets.dart';
-import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/cropped_image.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
@@ -53,7 +52,6 @@ import 'package:PiliPlus/plugin/pl_player/widgets/mpv_video_output.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/mpv_convert_webp.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/play_pause_btn.dart';
 import 'package:PiliPlus/utils/android/bindings.g.dart';
-import 'package:PiliPlus/utils/cache_manager.dart';
 import 'package:PiliPlus/utils/connectivity_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';

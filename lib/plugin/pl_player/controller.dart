@@ -3139,7 +3139,7 @@ void onSeekStart({bool fromGesture = false}) {
   }
 
   late final Map<String, ui.Image> previewCache = {};
-  late final Map<String, Future<ui.Image?>> previewLoadTasks = {};
+  final Map<String, Future<ui.Image?>> _previewLoadTasks = {};
   LoadingState<VideoShotData>? videoShot;
   Future<void>? _videoShotTask;
   int _previewGeneration = 0;
@@ -3257,19 +3257,69 @@ late final seekPreviewScale = Pref.seekPreviewScale;
       await Future.wait(
         data.image
             .sublist(start, end)
-            .map(_cacheVideoShotImage),
+            .map((url) => loadVideoShotImage(url, generation)),
       );
     }
   }
 
-  Future<void> _cacheVideoShotImage(String url) async {
+  Future<ui.Image?> loadVideoShotImage(String url, int generation) {
+    if (generation != _previewGeneration) {
+      return Future<ui.Image?>.value();
+    }
+
+    final cachedImage = previewCache[url];
+    if (cachedImage != null) {
+      return Future<ui.Image?>.value(cachedImage);
+    }
+
+    final activeTask = _previewLoadTasks[url];
+    if (activeTask != null) {
+      return activeTask;
+    }
+
+    late final Future<ui.Image?> task;
+    task = _decodeVideoShotImage(url).then((image) {
+      if (image == null) return null;
+      if (generation != _previewGeneration) {
+        image.dispose();
+        return null;
+      }
+
+      final cachedImage = previewCache[url];
+      if (cachedImage != null) {
+        image.dispose();
+        return cachedImage;
+      }
+
+      previewCache[url] = image;
+      return image;
+    }).whenComplete(() {
+      if (identical(_previewLoadTasks[url], task)) {
+        _previewLoadTasks.remove(url);
+      }
+    });
+    _previewLoadTasks[url] = task;
+    return task;
+  }
+
+  Future<ui.Image?> _decodeVideoShotImage(String url) async {
     try {
-      await CacheManager.manager.getSingleFile(
+      final file = await CacheManager.manager.getSingleFile(
         ImageUtils.safeThumbnailUrl(url),
         key: Utils.getFileName(url, fileExt: false),
         headers: Constants.baseHeaders,
       );
-    } catch (_) {}
+      final codec = await ui.instantiateImageCodecFromBuffer(
+        await ui.ImmutableBuffer.fromFilePath(file.path),
+      );
+      try {
+        return (await codec.getNextFrame()).image;
+      } finally {
+        codec.dispose();
+      }
+    } catch (_) {
+      return null;
+    }
   }
 
   void _clearPreview() {
@@ -3284,11 +3334,7 @@ late final seekPreviewScale = Pref.seekPreviewScale;
       i.dispose();
     }
     previewCache.clear();
-    final pendingTasks = previewLoadTasks.values.toSet();
-    previewLoadTasks.clear();
-    for (final task in pendingTasks) {
-      task.then((image) => image?.dispose());
-    }
+    _previewLoadTasks.clear();
   }
 
   Future<void> takeScreenshot() async {

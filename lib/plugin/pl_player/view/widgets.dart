@@ -221,7 +221,7 @@ if (globalX != null) {
             restoreVideoAspectRatio: !plPlayerController.isVertical,
             generation: plPlayerController.previewGeneration,
             imageCache: plPlayerController.previewCache,
-            imageLoadTasks: plPlayerController.previewLoadTasks,
+            imageLoader: plPlayerController.loadVideoShotImage,
             onSetSize: (xSize, ySize) => data
               ..imgXSize = imgXSize = xSize
               ..imgYSize = imgYSize = ySize,
@@ -303,13 +303,13 @@ class VideoShotImage extends StatefulWidget {
     required this.videoAspectRatio,
     required this.restoreVideoAspectRatio,
     required this.generation,
-    required this.imageLoadTasks,
+    required this.imageLoader,
     required this.onSetSize,
     required this.isMounted,
   });
 
   final Map<String, ui.Image> imageCache;
-  final Map<String, Future<ui.Image?>> imageLoadTasks;
+  final Future<ui.Image?> Function(String url, int generation) imageLoader;
   final String url;
   final int x;
   final int y;
@@ -327,29 +327,6 @@ class VideoShotImage extends StatefulWidget {
 
   @override
   State<VideoShotImage> createState() => _VideoShotImageState();
-}
-
-Future<ui.Image?> _getImg(String url) async {
-  final cacheKey = Utils.getFileName(url, fileExt: false);
-  try {
-    final fileInfo = await CacheManager.manager.getSingleFile(
-      ImageUtils.safeThumbnailUrl(url),
-      key: cacheKey,
-      headers: Constants.baseHeaders,
-    );
-    return await _loadImg(fileInfo.path);
-  } catch (_) {
-    return null;
-  }
-}
-
-Future<ui.Image?> _loadImg(String path) async {
-  final codec = await ui.instantiateImageCodecFromBuffer(
-    await ImmutableBuffer.fromFilePath(path),
-  );
-  final frame = await codec.getNextFrame();
-  codec.dispose();
-  return frame.image;
 }
 
 class _VideoShotImageState extends State<VideoShotImage> {
@@ -482,32 +459,13 @@ class _VideoShotImageState extends State<VideoShotImage> {
     }
 
     _initSize();
-    final task = widget.imageLoadTasks.putIfAbsent(url, () => _getImg(url));
-    task.then((image) {
-      final isActiveTask = identical(widget.imageLoadTasks[url], task);
-      if (image == null) {
-        if (isActiveTask) {
-          widget.imageLoadTasks.remove(url);
-        }
-        return;
-      }
-
-      if (isActiveTask) {
-        widget.imageLoadTasks.remove(url);
-        if (widget.isMounted() && widget.generation == generation) {
-          widget.imageCache[url] = image;
-        } else {
-          image.dispose();
-          return;
-        }
-      }
-
-      final resolvedImage = widget.imageCache[url];
-      if (resolvedImage != null &&
+    widget.imageLoader(url, generation).then((image) {
+      if (image != null &&
+          widget.isMounted() &&
           mounted &&
           widget.url == url &&
           widget.generation == generation) {
-        _image = resolvedImage;
+        _image = image;
         _initSize();
         setState(() {});
       }
