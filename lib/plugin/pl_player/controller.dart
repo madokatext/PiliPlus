@@ -3257,70 +3257,20 @@ late final seekPreviewScale = Pref.seekPreviewScale;
       await Future.wait(
         data.image
             .sublist(start, end)
-            .map((url) => _cacheVideoShotImage(url, generation)),
+            .map(_cacheVideoShotImage),
       );
     }
   }
 
-  Future<void> _cacheVideoShotImage(
-  String url,
-  int generation,
-) async {
-  if (generation != _previewGeneration || previewCache.containsKey(url)) {
-    return;
-  }
-
-  final task = previewLoadTasks.putIfAbsent(
-    url,
-    () => _downloadVideoShotImage(url),
-  );
-  final image = await task;
-  final isActiveTask = identical(previewLoadTasks[url], task);
-  if (image == null) {
-    if (isActiveTask) {
-      previewLoadTasks.remove(url);
-    }
-    return;
-  }
-
-  // The preview widget may have awaited and adopted the same task first.
-  if (!isActiveTask) {
-    return;
-  }
-
-  previewLoadTasks.remove(url);
-  if (generation != _previewGeneration) {
-    image.dispose();
-    return;
-  }
-
-  final cachedImage = previewCache[url];
-  if (cachedImage == null) {
-    previewCache[url] = image;
-  } else if (!identical(cachedImage, image)) {
-    image.dispose();
-  }
-}
-
-Future<ui.Image?> _downloadVideoShotImage(String url) async {
-  try {
-    final file = await CacheManager.manager.getSingleFile(
-      ImageUtils.safeThumbnailUrl(url),
-      key: Utils.getFileName(url, fileExt: false),
-      headers: Constants.baseHeaders,
-    );
-    final codec = await ui.instantiateImageCodecFromBuffer(
-      await ui.ImmutableBuffer.fromFilePath(file.path),
-    );
+  Future<void> _cacheVideoShotImage(String url) async {
     try {
-      return (await codec.getNextFrame()).image;
-    } finally {
-      codec.dispose();
-    }
-  } catch (_) {
-    return null;
+      await CacheManager.manager.getSingleFile(
+        ImageUtils.safeThumbnailUrl(url),
+        key: Utils.getFileName(url, fileExt: false),
+        headers: Constants.baseHeaders,
+      );
+    } catch (_) {}
   }
-}
 
   void _clearPreview() {
     _previewGeneration++;
