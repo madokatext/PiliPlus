@@ -158,6 +158,7 @@ final RxInt seekStartPosition = 0.obs;
   Player? _standbyVideoPlayerController;
   VideoController? _standbyVideoController;
   final RxInt videoOutputRevision = 0.obs;
+  final RxBool videoPlayerSwitching = false.obs;
 
   void setVideoPageActive(String pageTag, bool isActive) {
     if (isActive) {
@@ -329,6 +330,12 @@ final RxInt seekStartPosition = 0.obs;
 
   /// 预缓冲中的备用播放器实例。
   Player? get standbyVideoPlayerController => _standbyVideoPlayerController;
+
+  bool get mainPlayerHasVideoSource =>
+      _videoPlayerController?.current.isNotEmpty ?? false;
+
+  bool get standbyPlayerHasVideoSource =>
+      _standbyVideoPlayerController?.current.isNotEmpty ?? false;
 
   bool isMuted = false;
 
@@ -1703,6 +1710,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     final hadStandbyOutput = _standbyVideoController != null;
     _standbyVideoPlayerController = null;
     _standbyVideoController = null;
+    videoPlayerSwitching.value = false;
     if (hadStandbyOutput) {
       _bumpVideoOutputRevision();
     }
@@ -1747,6 +1755,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     final mpvLogSession = _mpvLogSession;
     final cancellation = Completer<void>();
     _videoPlayerSwitchCancellation = cancellation;
+    videoPlayerSwitching.value = true;
 
     bool isCurrentSwitch() =>
         generation == _videoPlayerSwitchGeneration &&
@@ -1806,6 +1815,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         currentMedia.copyWith(uri: source, start: startPosition),
         play: false,
       );
+      _bumpVideoOutputRevision();
       if (!isCurrentSwitch()) {
         return false;
       }
@@ -2246,6 +2256,7 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
       }
       if (identical(_videoPlayerSwitchCancellation, cancellation)) {
         _videoPlayerSwitchCancellation = null;
+        videoPlayerSwitching.value = false;
       }
     }
   }

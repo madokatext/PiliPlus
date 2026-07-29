@@ -164,6 +164,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
   final RxString _mpvOutputFps = '-- FPS'.obs;
   final RxString _mpvDroppedFrames = '--'.obs;
   Timer? _mpvOutputFpsTimer;
+  late final bool _showPlayerInstanceStatus = Pref.showPlayerInstanceStatus;
   late final bool _showBufferingInfo = Pref.showBufferingInfo;
   final RxBool _hasValidBufferingState = false.obs;
   final RxString _bufferingInfo = '--/s · --%'.obs;
@@ -193,6 +194,57 @@ ui.PointerDeviceKind? _gesturePointerKind;
         : 2;
     return '${value.toStringAsFixed(fractionDigits)} ${units[unitIndex]}';
   }
+
+  Widget get _playerInstanceStatusOverlay => IgnorePointer(
+    child: Align(
+      alignment: const Alignment(-0.72, 0),
+      child: Obx(() {
+        plPlayerController.videoOutputRevision.value;
+        plPlayerController.dataStatus.value;
+        final mainHasSource =
+            plPlayerController.mainPlayerHasVideoSource;
+        final standbyHasSource =
+            plPlayerController.standbyPlayerHasVideoSource;
+        final switching = plPlayerController.videoPlayerSwitching.value;
+        const textStyle = TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontFamily: 'Monospace',
+        );
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.58),
+            borderRadius: const BorderRadius.all(Radius.circular(7)),
+            border: Border.all(color: Colors.white24),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '主实例：${mainHasSource ? '已加载视频源' : '未加载视频源'}',
+                style: textStyle,
+              ),
+              Text(
+                '备实例：${standbyHasSource ? '已加载视频源' : '未加载视频源'}',
+                style: textStyle,
+              ),
+              if (switching)
+                const Text(
+                  '正在切换播放器实例…',
+                  style: TextStyle(
+                    color: Colors.amberAccent,
+                    fontSize: 12,
+                    fontFamily: 'Monospace',
+                  ),
+                ),
+            ],
+          ),
+        );
+      }),
+    ),
+  );
 
   ({int? cacheSpeed, double bufferingState})? _readBufferingInfo({
     required bool readCacheSpeed,
@@ -1908,6 +1960,8 @@ backgroundColor: gestureProgressColor.withValues(alpha: 0.24),
               ),
             ),
           ),
+
+        if (_showPlayerInstanceStatus) _playerInstanceStatusOverlay,
 
         if (plPlayerController.enableTapDm)
           Obx(

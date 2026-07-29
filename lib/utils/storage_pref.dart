@@ -1507,6 +1507,11 @@ static int get playerControlDisplayDurationSeconds {
     defaultValue: true,
   );
 
+  static bool get showPlayerInstanceStatus => _setting.get(
+    SettingBoxKey.showPlayerInstanceStatus,
+    defaultValue: false,
+  );
+
   static FollowOrderType get followOrderType =>
       FollowOrderType.values[_setting.get(
         SettingBoxKey.followOrderType,

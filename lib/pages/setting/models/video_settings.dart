@@ -229,6 +229,13 @@ List<SettingsModel> get videoSettings => [
     leading: const Icon(Icons.article_outlined),
     onTap: (_, _) => Get.toNamed('/mpvLogs'),
   ),
+  const SwitchModel(
+    title: '显示播放器主备实例状态',
+    subtitle: '在画面中心偏左显示主、备实例的视频源加载状态与切换提示',
+    leading: Icon(Icons.swap_horiz_outlined),
+    setKey: SettingBoxKey.showPlayerInstanceStatus,
+    defaultVal: false,
+  ),
 ];
 
 Future<void> _showCDNDialog(BuildContext context, VoidCallback setState) async {

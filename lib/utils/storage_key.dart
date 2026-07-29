@@ -37,6 +37,7 @@ abstract final class SettingBoxKey {
       showBatteryLevel = 'showBatteryLevel',
       showMpvOutputFps = 'showMpvOutputFps',
       showBufferingInfo = 'showBufferingInfo',
+      showPlayerInstanceStatus = 'showPlayerInstanceStatus',
       playerVolume = 'playerVolume',
       maxVolume = 'maxVolume';
 
