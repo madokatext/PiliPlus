@@ -1105,7 +1105,7 @@ static bool get seekPreviewFollowGesture => _setting.get(
 
   static bool get rememberDanmakuSwitchState => _setting.get(
     SettingBoxKey.rememberDanmakuSwitchState,
-    defaultValue: true,
+    defaultValue: false,
   );
 
   static bool get enableShowLiveDanmaku =>

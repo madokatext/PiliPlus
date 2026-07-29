@@ -38,7 +38,7 @@ List<SettingsModel> get playSettings => [
     subtitle: '关闭后，每次打开新视频都使用上方的默认弹幕开关状态',
     leading: Icon(Icons.history_toggle_off_outlined),
     setKey: SettingBoxKey.rememberDanmakuSwitchState,
-    defaultVal: true,
+    defaultVal: false,
   ),
   NormalModel(
     title: '弹幕中文字体',
