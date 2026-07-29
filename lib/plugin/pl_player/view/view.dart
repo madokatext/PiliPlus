@@ -165,9 +165,11 @@ ui.PointerDeviceKind? _gesturePointerKind;
   final RxString _mpvDroppedFrames = '--'.obs;
   Timer? _mpvOutputFpsTimer;
   late final bool _showBufferingInfo = Pref.showBufferingInfo;
-  final RxBool _isCacheBuffering = false.obs;
+  final RxBool _hasValidBufferingState = false.obs;
   final RxString _bufferingInfo = '--/s · --%'.obs;
-  Timer? _bufferingInfoTimer;
+  String _bufferingSpeedLabel = '--/s';
+  Timer? _bufferingProgressTimer;
+  Timer? _bufferingSpeedTimer;
 
   static String _formatBufferSize(num bytes) {
     if (!bytes.isFinite || bytes < 0) {
@@ -192,52 +194,94 @@ ui.PointerDeviceKind? _gesturePointerKind;
     return '${value.toStringAsFixed(fractionDigits)} ${units[unitIndex]}';
   }
 
-  String? _readBufferingProperty(String name) {
-    try {
-      return plPlayerController.videoPlayerController?.getProperty(name);
-    } catch (_) {
-      return null;
+  ({int? cacheSpeed, double bufferingState})? _readBufferingInfo({
+    required bool readCacheSpeed,
+  }) {
+    final players = [
+      plPlayerController.videoPlayerController,
+      plPlayerController.standbyVideoPlayerController,
+    ];
+    for (final player in players) {
+      if (player == null) {
+        continue;
+      }
+      try {
+        final bufferingState = double.tryParse(
+          player.getProperty('cache-buffering-state').trim(),
+        );
+        if (bufferingState == null ||
+            !bufferingState.isFinite ||
+            bufferingState < 0 ||
+            bufferingState > 100) {
+          continue;
+        }
+        int? cacheSpeed;
+        if (readCacheSpeed) {
+          try {
+            cacheSpeed = int.tryParse(
+              player.getProperty('cache-speed').trim(),
+            );
+          } catch (_) {}
+        }
+        return (
+          cacheSpeed: cacheSpeed,
+          bufferingState: bufferingState,
+        );
+      } catch (_) {
+        // 主实例尚未提供有效属性时继续尝试备用实例。
+      }
     }
+    return null;
   }
 
-  void _updateBufferingInfo() {
+  bool get _isBufferingOverlayVisible =>
+      plPlayerController.dataStatus.loading ||
+      (plPlayerController.isBuffering.value &&
+          plPlayerController.playerStatus.isPlaying);
+
+  void _updateBufferingProgress() {
     if (!_showBufferingInfo) {
       return;
     }
 
-    final loadingVisible =
-        plPlayerController.dataStatus.loading ||
-        (plPlayerController.isBuffering.value &&
-            plPlayerController.playerStatus.isPlaying);
-    if (!loadingVisible) {
-      _isCacheBuffering.value = false;
+    if (!_isBufferingOverlayVisible) {
+      _hasValidBufferingState.value = false;
+      _bufferingSpeedLabel = '--/s';
       return;
     }
 
-    final cacheBuffering =
-        plPlayerController.isBuffering.value &&
-        _readBufferingProperty('paused-for-cache') == 'yes';
-    if (!cacheBuffering) {
-      _isCacheBuffering.value = false;
+    final bufferingInfo = _readBufferingInfo(readCacheSpeed: false);
+    if (bufferingInfo == null) {
+      _hasValidBufferingState.value = false;
+      _bufferingSpeedLabel = '--/s';
       return;
     }
 
-    final cacheSpeed = int.tryParse(
-      _readBufferingProperty('cache-speed')?.trim() ?? '',
-    );
-    final bufferingState = double.tryParse(
-      _readBufferingProperty('cache-buffering-state')?.trim() ?? '',
-    );
+    final progressLabel = '${bufferingInfo.bufferingState.round()}%';
+    _bufferingInfo.value = '$_bufferingSpeedLabel · $progressLabel';
+    _hasValidBufferingState.value = true;
+  }
 
-    final speedLabel = cacheSpeed == null || cacheSpeed < 0
+  void _updateBufferingSpeed() {
+    if (!_showBufferingInfo || !_isBufferingOverlayVisible) {
+      _bufferingSpeedLabel = '--/s';
+      return;
+    }
+
+    final bufferingInfo = _readBufferingInfo(readCacheSpeed: true);
+    if (bufferingInfo == null) {
+      _bufferingSpeedLabel = '--/s';
+      return;
+    }
+
+    final cacheSpeed = bufferingInfo.cacheSpeed;
+    _bufferingSpeedLabel = cacheSpeed == null || cacheSpeed < 0
         ? '--/s'
         : '${_formatBufferSize(cacheSpeed)}/s';
-    final progressLabel =
-        bufferingState == null || !bufferingState.isFinite
-        ? '--%'
-        : '${bufferingState.clamp(0, 100).round()}%';
-    _bufferingInfo.value = '$speedLabel · $progressLabel';
-    _isCacheBuffering.value = true;
+    if (_hasValidBufferingState.value) {
+      final progressLabel = '${bufferingInfo.bufferingState.round()}%';
+      _bufferingInfo.value = '$_bufferingSpeedLabel · $progressLabel';
+    }
   }
 
   void _updateMpvOutputFps() {
@@ -406,10 +450,15 @@ ui.PointerDeviceKind? _gesturePointerKind;
     });
 
     if (_showBufferingInfo) {
-      _updateBufferingInfo();
-      _bufferingInfoTimer = Timer.periodic(
+      _updateBufferingSpeed();
+      _updateBufferingProgress();
+      _bufferingProgressTimer = Timer.periodic(
+        const Duration(milliseconds: 100),
+        (_) => _updateBufferingProgress(),
+      );
+      _bufferingSpeedTimer = Timer.periodic(
         const Duration(milliseconds: 500),
-        (_) => _updateBufferingInfo(),
+        (_) => _updateBufferingSpeed(),
       );
     }
 
@@ -526,7 +575,8 @@ ui.PointerDeviceKind? _gesturePointerKind;
     _brightnessListener?.cancel();
     _controlsListener?.cancel();
     _mpvOutputFpsTimer?.cancel();
-    _bufferingInfoTimer?.cancel();
+    _bufferingProgressTimer?.cancel();
+    _bufferingSpeedTimer?.cancel();
     _animationController.dispose();
     _transformationController.dispose();
     _removeDmAction();
@@ -2375,7 +2425,7 @@ if (!isLive)
                         color: Colors.white,
                       ),
                       if (_showBufferingInfo)
-                        if (_isCacheBuffering.value) ...[
+                        if (_hasValidBufferingState.value) ...[
                           Text(
                             plPlayerController.buffered.value == 0
                                 ? '加载中...'
@@ -2396,7 +2446,7 @@ if (!isLive)
                           ),
                         ] else
                           const Text(
-                            '初始化中',
+                            '加载中',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 12,

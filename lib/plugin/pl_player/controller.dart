@@ -327,6 +327,9 @@ final RxInt seekStartPosition = 0.obs;
   /// 已经建立纹理并渲染首帧。
   VideoController? get standbyVideoController => _standbyVideoController;
 
+  /// 预缓冲中的备用播放器实例。
+  Player? get standbyVideoPlayerController => _standbyVideoPlayerController;
+
   bool isMuted = false;
 
   /// 听视频
