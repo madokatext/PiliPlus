@@ -12,6 +12,7 @@ import 'package:PiliPlus/utils/video_utils.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 
 class SelectDialog<T> extends StatelessWidget {
   final T? value;
@@ -295,9 +296,7 @@ class _CdnSelectDialogState extends State<CdnSelectDialog> {
                 onChanged: (_) {
                   if (order == null) {
                     if (_selected.length == 3) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('最多选择 3 个 CDN')),
-                      );
+                      SmartDialog.showToast('最多选择 3 个 CDN');
                       return;
                     }
                     setState(() {
@@ -306,9 +305,7 @@ class _CdnSelectDialogState extends State<CdnSelectDialog> {
                     return;
                   }
                   if (_selected.length == 1) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('至少保留 1 个 CDN')),
-                    );
+                    SmartDialog.showToast('至少保留 1 个 CDN');
                     return;
                   }
                   setState(() {
