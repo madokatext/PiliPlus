@@ -166,10 +166,8 @@ ui.PointerDeviceKind? _gesturePointerKind;
   Timer? _mpvOutputFpsTimer;
   late final bool _showPlayerInstanceStatus = Pref.showPlayerInstanceStatus;
   late final bool _showBufferingInfo = Pref.showBufferingInfo;
-  final RxBool _hasValidBufferingState = false.obs;
-  final RxString _bufferingInfo = '--/s · --%'.obs;
-  String _bufferingSpeedLabel = '--/s';
-  Timer? _bufferingProgressTimer;
+  final RxBool _hasValidBufferingSpeed = false.obs;
+  final RxString _bufferingSpeed = '--/s'.obs;
   Timer? _bufferingSpeedTimer;
 
   static String _formatBufferSize(num bytes) {
@@ -246,9 +244,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
     ),
   );
 
-  ({int? cacheSpeed, double bufferingState})? _readBufferingInfo({
-    required bool readCacheSpeed,
-  }) {
+  num? _readBufferingSpeed() {
     final players = [
       plPlayerController.videoPlayerController,
       plPlayerController.standbyVideoPlayerController,
@@ -258,29 +254,17 @@ ui.PointerDeviceKind? _gesturePointerKind;
         continue;
       }
       try {
-        final bufferingState = double.tryParse(
-          player.getProperty('cache-buffering-state').trim(),
+        final cacheSpeed = double.tryParse(
+          player.getProperty('cache-speed').trim(),
         );
-        if (bufferingState == null ||
-            !bufferingState.isFinite ||
-            bufferingState < 0 ||
-            bufferingState > 100) {
+        if (cacheSpeed == null ||
+            !cacheSpeed.isFinite ||
+            cacheSpeed < 0) {
           continue;
         }
-        int? cacheSpeed;
-        if (readCacheSpeed) {
-          try {
-            cacheSpeed = int.tryParse(
-              player.getProperty('cache-speed').trim(),
-            );
-          } catch (_) {}
-        }
-        return (
-          cacheSpeed: cacheSpeed,
-          bufferingState: bufferingState,
-        );
+        return cacheSpeed;
       } catch (_) {
-        // 主实例尚未提供有效属性时继续尝试备用实例。
+        // 主实例尚未提供有效速度时继续尝试备用实例。
       }
     }
     return null;
@@ -291,49 +275,22 @@ ui.PointerDeviceKind? _gesturePointerKind;
       (plPlayerController.isBuffering.value &&
           plPlayerController.playerStatus.isPlaying);
 
-  void _updateBufferingProgress() {
-    if (!_showBufferingInfo) {
-      return;
-    }
-
-    if (!_isBufferingOverlayVisible) {
-      _hasValidBufferingState.value = false;
-      _bufferingSpeedLabel = '--/s';
-      return;
-    }
-
-    final bufferingInfo = _readBufferingInfo(readCacheSpeed: false);
-    if (bufferingInfo == null) {
-      _hasValidBufferingState.value = false;
-      _bufferingSpeedLabel = '--/s';
-      return;
-    }
-
-    final progressLabel = '${bufferingInfo.bufferingState.round()}%';
-    _bufferingInfo.value = '$_bufferingSpeedLabel · $progressLabel';
-    _hasValidBufferingState.value = true;
-  }
-
   void _updateBufferingSpeed() {
     if (!_showBufferingInfo || !_isBufferingOverlayVisible) {
-      _bufferingSpeedLabel = '--/s';
+      _bufferingSpeed.value = '--/s';
+      _hasValidBufferingSpeed.value = false;
       return;
     }
 
-    final bufferingInfo = _readBufferingInfo(readCacheSpeed: true);
-    if (bufferingInfo == null) {
-      _bufferingSpeedLabel = '--/s';
+    final cacheSpeed = _readBufferingSpeed();
+    if (cacheSpeed == null) {
+      _bufferingSpeed.value = '--/s';
+      _hasValidBufferingSpeed.value = false;
       return;
     }
 
-    final cacheSpeed = bufferingInfo.cacheSpeed;
-    _bufferingSpeedLabel = cacheSpeed == null || cacheSpeed < 0
-        ? '--/s'
-        : '${_formatBufferSize(cacheSpeed)}/s';
-    if (_hasValidBufferingState.value) {
-      final progressLabel = '${bufferingInfo.bufferingState.round()}%';
-      _bufferingInfo.value = '$_bufferingSpeedLabel · $progressLabel';
-    }
+    _bufferingSpeed.value = '${_formatBufferSize(cacheSpeed)}/s';
+    _hasValidBufferingSpeed.value = true;
   }
 
   void _updateMpvOutputFps() {
@@ -503,11 +460,6 @@ ui.PointerDeviceKind? _gesturePointerKind;
 
     if (_showBufferingInfo) {
       _updateBufferingSpeed();
-      _updateBufferingProgress();
-      _bufferingProgressTimer = Timer.periodic(
-        const Duration(milliseconds: 100),
-        (_) => _updateBufferingProgress(),
-      );
       _bufferingSpeedTimer = Timer.periodic(
         const Duration(milliseconds: 500),
         (_) => _updateBufferingSpeed(),
@@ -627,7 +579,6 @@ ui.PointerDeviceKind? _gesturePointerKind;
     _brightnessListener?.cancel();
     _controlsListener?.cancel();
     _mpvOutputFpsTimer?.cancel();
-    _bufferingProgressTimer?.cancel();
     _bufferingSpeedTimer?.cancel();
     _animationController.dispose();
     _transformationController.dispose();
@@ -2479,20 +2430,18 @@ if (!isLive)
                         color: Colors.white,
                       ),
                       if (_showBufferingInfo)
-                        if (_hasValidBufferingState.value) ...[
+                        if (_hasValidBufferingSpeed.value) ...[
                           Text(
-                            plPlayerController.buffered.value == 0
-                                ? '加载中...'
-                                : DurationUtils.formatDuration(
-                                    plPlayerController.buffered.value,
-                                  ),
+                            DurationUtils.formatDuration(
+                              plPlayerController.buffered.value,
+                            ),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 12,
                             ),
                           ),
                           Text(
-                            _bufferingInfo.value,
+                            _bufferingSpeed.value,
                             style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 11,
