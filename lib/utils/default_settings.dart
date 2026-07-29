@@ -129,6 +129,7 @@ const Map<String, Object> defaultSettingValues = {
   'recommendDurationInStatRow': false,
   'recommendStatSpacing': 15.0,
   'recordSearchHistory': true,
+  'rememberDanmakuSwitchState': true,
   'refreshHomeOnRestart': false,
   'refreshDragPercentage': 0.2,
   'removeSafeArea': false,

@@ -33,6 +33,13 @@ List<SettingsModel> get playSettings => [
     setKey: SettingBoxKey.enableShowDanmaku,
     defaultVal: true,
   ),
+  const SwitchModel(
+    title: '记忆弹幕开关状态',
+    subtitle: '关闭后，每次打开新视频都使用上方的默认弹幕开关状态',
+    leading: Icon(Icons.history_toggle_off_outlined),
+    setKey: SettingBoxKey.rememberDanmakuSwitchState,
+    defaultVal: true,
+  ),
   NormalModel(
     title: '弹幕中文字体',
     getSubtitle: () =>

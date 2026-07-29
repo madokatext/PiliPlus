@@ -267,6 +267,24 @@ final RxInt seekStartPosition = 0.obs;
   RxBool get enableShowDanmakuAdaptive =>
       isLive ? enableShowLiveDanmaku : enableShowDanmaku;
 
+  void setDanmakuEnabled(bool value) {
+    enableShowDanmaku.value = value;
+    if (!tempPlayerConf && Pref.rememberDanmakuSwitchState) {
+      setting.put(SettingBoxKey.enableShowDanmaku, value);
+    }
+  }
+
+  void setDanmakuEnabledAdaptive(bool value) {
+    if (isLive) {
+      enableShowLiveDanmaku.value = value;
+      if (!tempPlayerConf) {
+        setting.put(SettingBoxKey.enableShowLiveDanmaku, value);
+      }
+    } else {
+      setDanmakuEnabled(value);
+    }
+  }
+
   late final bool autoPiP = Pref.autoPiP;
   bool get isPipMode =>
       (Platform.isAndroid && AndroidHelper.isPipMode) ||
@@ -750,6 +768,9 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       _processing = true;
       _loadedVideoPageTag = null;
       this.isLive = isLive;
+      if (!isLive && !Pref.rememberDanmakuSwitchState) {
+        enableShowDanmaku.value = Pref.enableShowDanmaku;
+      }
       _videoType = videoType ?? VideoType.ugc;
       this.width = width;
       this.height = height;

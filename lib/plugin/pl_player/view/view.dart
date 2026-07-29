@@ -827,10 +827,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
           ),
           onTap: () {
             final value = !enabled;
-            plPlayerController.enableShowDanmaku.value = value;
-            if (!plPlayerController.tempPlayerConf) {
-              GStorage.setting.put(SettingBoxKey.enableShowDanmaku, value);
-            }
+            plPlayerController.setDanmakuEnabled(value);
           },
         );
       }),

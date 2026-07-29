@@ -1955,13 +1955,7 @@ class HeaderControlState extends State<HeaderControl>
                           style: btnStyle,
                           onPressed: () {
                             final newVal = !enableShowDanmaku;
-                            plPlayerController.enableShowDanmaku.value = newVal;
-                            if (!plPlayerController.tempPlayerConf) {
-                              setting.put(
-                                SettingBoxKey.enableShowDanmaku,
-                                newVal,
-                              );
-                            }
+                            plPlayerController.setDanmakuEnabled(newVal);
                           },
                           icon: enableShowDanmaku
                               ? const Icon(

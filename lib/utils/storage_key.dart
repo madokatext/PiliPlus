@@ -254,6 +254,7 @@ seekPreviewScale = 'seekPreviewScale',
       blockTrack = 'blockTrack';
 
   static const String enableShowDanmaku = 'enableShowDanmaku',
+      rememberDanmakuSwitchState = 'rememberDanmakuSwitchState',
       enableShowLiveDanmaku = 'enableShowLiveDanmaku',
       pipNoDanmaku = 'pipNoDanmaku',
       showVipDanmaku = 'showVipDanmaku',

@@ -1481,13 +1481,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                           return IconButton(
                             onPressed: () {
                               final newVal = !enableShowDanmaku;
-                              ctr.enableShowDanmaku.value = newVal;
-                              if (!ctr.tempPlayerConf) {
-                                GStorage.setting.put(
-                                  SettingBoxKey.enableShowDanmaku,
-                                  newVal,
-                                );
-                              }
+                              ctr.setDanmakuEnabled(newVal);
                             },
                             icon: Icon(
                               size: 22,
