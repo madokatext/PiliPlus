@@ -72,6 +72,11 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:window_manager/window_manager.dart';
 
 typedef PlayCallback = Future<void>? Function();
+typedef _PlayerPair = ({
+  Player player,
+  VideoController videoController,
+  StreamSubscription<PlayerLog>? initializationLogSubscription,
+});
 
 class _InitialAutoPlayAudioGate {
   _InitialAutoPlayAudioGate({
@@ -145,6 +150,9 @@ final RxInt seekStartPosition = 0.obs;
   String? _activeVideoPageTag;
   String? _loadedVideoPageTag;
   int _dataSourceGeneration = 0;
+  int? _mpvLogSession;
+  String? _mpvLogMediaKey;
+  String? _mpvLogPageTag;
   int _videoPlayerSwitchGeneration = 0;
   Completer<void>? _videoPlayerSwitchCancellation;
   Player? _standbyVideoPlayerController;
@@ -166,6 +174,84 @@ final RxInt seekStartPosition = 0.obs;
       _videoPlayerController != null &&
       _videoController != null &&
       _videoPlayerController!.current.isNotEmpty;
+
+  String _buildMpvLogMediaKey(
+    DataSource dataSource, {
+    required bool isLive,
+    required String? videoPageTag,
+    required String? bvid,
+    required int? cid,
+    required int? epid,
+  }) {
+    if (isLive) return 'live';
+    final hasStableMediaId = bvid != null || cid != null || epid != null;
+    return [
+      'video',
+      videoPageTag ?? '',
+      bvid ?? '',
+      cid?.toString() ?? '',
+      epid?.toString() ?? '',
+      if (!hasStableMediaId) dataSource.videoSource,
+    ].join('\u0000');
+  }
+
+  Future<bool> _ensureMpvLogSession(
+    DataSource dataSource, {
+    required bool isLive,
+    required String? videoPageTag,
+    required String? bvid,
+    required int? cid,
+    required int? epid,
+    required bool Function() isCurrentDataSource,
+  }) async {
+    final mediaKey = _buildMpvLogMediaKey(
+      dataSource,
+      isLive: isLive,
+      videoPageTag: videoPageTag,
+      bvid: bvid,
+      cid: cid,
+      epid: epid,
+    );
+    final currentSession = _mpvLogSession;
+    if (_mpvLogMediaKey == mediaKey &&
+        MpvLogService.isSessionActive(currentSession)) {
+      final player = _videoPlayerController;
+      if (player != null) {
+        MpvLogService.attachPlayer(player, session: currentSession!);
+      }
+      return true;
+    }
+
+    final session = await MpvLogService.beginSession(
+      _videoPlayerController,
+      source: isLive ? 'live video' : 'video',
+    );
+    if (!isCurrentDataSource()) {
+      await MpvLogService.endSession(session);
+      return false;
+    }
+
+    _mpvLogSession = session;
+    _mpvLogMediaKey = mediaKey;
+    _mpvLogPageTag = videoPageTag;
+    return true;
+  }
+
+  void endMpvLogSessionForPage(String pageTag) {
+    if (_mpvLogPageTag == pageTag) {
+      _endMpvLogSession();
+    }
+  }
+
+  void _endMpvLogSession() {
+    final session = _mpvLogSession;
+    _mpvLogSession = null;
+    _mpvLogMediaKey = null;
+    _mpvLogPageTag = null;
+    if (session != null) {
+      unawaited(MpvLogService.endSession(session));
+    }
+  }
 
   late double lastPlaybackSpeed = 1.0;
   final RxDouble _playbackSpeed = Pref.playSpeedDefault.obs;
@@ -762,6 +848,18 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         dataSourceGeneration == _dataSourceGeneration &&
         (videoPageTag == null || isVideoPageActive(videoPageTag));
 
+    if (!await _ensureMpvLogSession(
+      dataSource,
+      isLive: isLive,
+      videoPageTag: videoPageTag,
+      bvid: bvid,
+      cid: cid,
+      epid: epid,
+      isCurrentDataSource: isCurrentDataSource,
+    )) {
+      return;
+    }
+
     _InitialAutoPlayAudioGate? initialAutoPlayAudioGate;
     try {
       if (!isCurrentDataSource()) return;
@@ -1025,8 +1123,9 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     }
   }
 
-  Future<({Player player, VideoController videoController})> _createPlayerPair({
+  Future<_PlayerPair> _createPlayerPair({
     bool muted = false,
+    int? logSession,
   }) async {
     final customOptions = MpvUtils.customOptions;
     final builtInOptions = <String, String>{
@@ -1055,6 +1154,11 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         options: options,
       ),
     );
+    final initializationLogSubscription =
+        logSession != null &&
+            MpvLogService.attachPlayer(player, session: logSession)
+        ? player.stream.log.listen((log) => MpvLogService.add(player, log))
+        : null;
 
     try {
       final customHwdec = customOptions['hwdec'];
@@ -1078,8 +1182,16 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         referer: HttpString.baseUrl,
       );
 
-      return (player: player, videoController: videoController);
+      return (
+        player: player,
+        videoController: videoController,
+        initializationLogSubscription: initializationLogSubscription,
+      );
     } catch (_) {
+      await initializationLogSubscription?.cancel();
+      if (logSession != null) {
+        MpvLogService.detachPlayer(player, session: logSession);
+      }
       await player.dispose();
       rethrow;
     }
@@ -1088,8 +1200,13 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
   Future<Player> _initPlayer() async {
     assert(_videoPlayerController == null);
     assert(_videoController == null);
-    final pair = await _createPlayerPair();
+    final logSession = _mpvLogSession;
+    final pair = await _createPlayerPair(logSession: logSession);
     _videoController = pair.videoController;
+    await pair.initializationLogSubscription?.cancel();
+    if (logSession != null) {
+      MpvLogService.attachPlayer(pair.player, session: logSession);
+    }
     _startListeners(pair.player);
     return pair.player;
   }
@@ -1228,16 +1345,9 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     NativePlayer player,
     Media media, {
     required bool play,
-    bool beginLogSession = true,
     bool Function()? isCurrentDataSource,
     VoidCallback? beforeOpen,
   }) async {
-    if (beginLogSession) {
-      await MpvLogService.beginSession(
-        player,
-        source: isLive ? 'live video' : 'video',
-      );
-    }
     if (isCurrentDataSource?.call() == false) return;
     // player.open 会先卸载旧媒体；手动刷新与直播错误重试前重新应用用户
     // 参数，避免这些原地打开路径绕过自定义设置。
@@ -1259,7 +1369,6 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
           start: ctr.state.position,
         ),
         play: true,
-        beginLogSession: false,
       );
     }
     return null;
@@ -1517,7 +1626,6 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
           reloadSameSource: true,
           allowForcedHandoff: false,
           strictTimeout: const Duration(seconds: 8),
-          logSource: 'seamless network recovery',
         );
 
         if (!success &&
@@ -1614,7 +1722,6 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     bool reloadSameSource = false,
     bool allowForcedHandoff = true,
     Duration strictTimeout = const Duration(seconds: 30),
-    String logSource = 'video quality switch',
   }) async {
     final activePlayer = _videoPlayerController;
     final activeController = _videoController;
@@ -1634,6 +1741,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     cancelVideoPlayerSwitch();
     final generation = ++_videoPlayerSwitchGeneration;
     final dataSourceGeneration = _dataSourceGeneration;
+    final mpvLogSession = _mpvLogSession;
     final cancellation = Completer<void>();
     _videoPlayerSwitchCancellation = cancellation;
 
@@ -1657,11 +1765,17 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     var committed = false;
     var activeListenersDetached = false;
     var resumeActiveOnFailure = false;
+    StreamSubscription<PlayerLog>? standbyInitializationLogSubscription;
 
     try {
-      final pair = await _createPlayerPair(muted: true);
+      final pair = await _createPlayerPair(
+        muted: true,
+        logSession: mpvLogSession,
+      );
       standbyPlayer = pair.player;
       standbyController = pair.videoController;
+      standbyInitializationLogSubscription =
+          pair.initializationLogSubscription;
       standbyCreated = true;
       if (!isCurrentSwitch()) {
         return false;
@@ -2039,12 +2153,14 @@ await activePlayer.pause();
       position.value = standbyPlayer.state.position.inSeconds;
       buffered.value = standbyPlayer.state.buffer.inSeconds;
       updateDuration(standbyPlayer.state.duration);
-      unawaited(
-  MpvLogService.beginSession(
-    standbyPlayer,
-    source: logSource,
-  ),
-);
+      await standbyInitializationLogSubscription?.cancel();
+      standbyInitializationLogSubscription = null;
+      if (mpvLogSession != null) {
+        MpvLogService.attachPlayer(
+          standbyPlayer,
+          session: mpvLogSession,
+        );
+      }
 _startListeners(standbyPlayer);
 
 _videoNetworkFailed = false;
@@ -2066,6 +2182,12 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
         await activePlayer.dispose();
       } catch (_) {
         // 新实例已经接管播放，旧实例释放失败不应回滚已完成的切换。
+      }
+      if (mpvLogSession != null) {
+        MpvLogService.detachPlayer(
+          activePlayer,
+          session: mpvLogSession,
+        );
       }
       return true;
     } catch (err, stackTrace) {
@@ -2093,7 +2215,14 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
       }
       return committed;
     } finally {
+      await standbyInitializationLogSubscription?.cancel();
       if (!committed && standbyCreated) {
+        if (mpvLogSession != null) {
+          MpvLogService.detachPlayer(
+            standbyPlayer,
+            session: mpvLogSession,
+          );
+        }
         if (identical(_standbyVideoPlayerController, standbyPlayer)) {
           _standbyVideoPlayerController = null;
           _standbyVideoController = null;
@@ -3109,6 +3238,7 @@ void onSeekStart({bool fromGesture = false}) {
     _videoPlayerController = null;
     _videoController = null;
     _playerInitTask = null;
+    _endMpvLogSession();
     _instance = null;
     videoPlayerServiceHandler?.clear();
   }

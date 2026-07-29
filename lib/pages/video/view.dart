@@ -369,6 +369,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         PlPlayerController.updatePlayCount();
       }
     }
+    videoDetailController.plPlayerController.endMpvLogSessionForPage(heroTag);
     removeObserverMobile(this);
 
     super.dispose();

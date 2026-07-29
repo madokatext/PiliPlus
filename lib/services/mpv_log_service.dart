@@ -14,8 +14,9 @@ abstract final class MpvLogService {
 
   static Future<void> _operation = Future.value();
   static IOSink? _sink;
-  static Player? _activePlayer;
+  static final Set<Player> _activePlayers = Set<Player>.identity();
   static int _session = 0;
+  static bool _sessionActive = false;
   static int _writtenBytes = 0;
   static int _pendingBytes = 0;
   static bool _truncated = false;
@@ -30,12 +31,16 @@ abstract final class MpvLogService {
     });
   }
 
-  static Future<void> beginSession(
-    Player player, {
+  static Future<int> beginSession(
+    Player? player, {
     required String source,
   }) {
-    _activePlayer = player;
     final session = ++_session;
+    _sessionActive = true;
+    _activePlayers.clear();
+    if (player != null) {
+      _activePlayers.add(player);
+    }
     final header = [
       '# PiliPlus mpv playback log',
       '# source: $source',
@@ -58,11 +63,50 @@ abstract final class MpvLogService {
       _sink = sink;
       sink.write(header);
       await sink.flush();
+    }).then((_) => session);
+  }
+
+  static bool isSessionActive(int? session) =>
+      session != null && _sessionActive && session == _session;
+
+  static bool attachPlayer(
+    Player player, {
+    required int session,
+  }) {
+    if (!isSessionActive(session)) return false;
+    _activePlayers.add(player);
+    return true;
+  }
+
+  static void detachPlayer(
+    Player player, {
+    required int session,
+  }) {
+    if (session == _session) {
+      _activePlayers.remove(player);
+    }
+  }
+
+  static Future<void> endSession(int session) {
+    if (!isSessionActive(session)) {
+      return Future<void>.value();
+    }
+
+    _sessionActive = false;
+    _activePlayers.clear();
+    return _run(() async {
+      if (session != _session || _sessionActive) return;
+      final oldSink = _sink;
+      _sink = null;
+      await oldSink?.flush();
+      await oldSink?.close();
     });
   }
 
-    static void add(Player player, PlayerLog log) {
-    if (!identical(player, _activePlayer) || _truncated) {
+  static void add(Player player, PlayerLog log) {
+    if (!_sessionActive ||
+        !_activePlayers.contains(player) ||
+        _truncated) {
       return;
     }
 
@@ -124,6 +168,7 @@ abstract final class MpvLogService {
       }
     });
   }
+
   static Future<String> readLastLog() async {
     await _operation;
     await _sink?.flush();
@@ -141,7 +186,7 @@ abstract final class MpvLogService {
       await oldSink?.flush();
       await oldSink?.close();
       await _file.writeAsString('', flush: true);
-      if (_activePlayer != null) {
+      if (_sessionActive) {
         _sink = _file.openWrite(mode: FileMode.append);
       }
     });
