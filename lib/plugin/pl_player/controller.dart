@@ -1131,7 +1131,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
 
     _initialAutoPlayAudioGate = gate;
     try {
-      _enforceInitialAutoPlayMute(gate);
+      _holdInitialAutoPlay(gate);
     } catch (_) {
       _restoreInitialAutoPlayAudio(gate);
       rethrow;
@@ -1139,11 +1139,43 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     return gate;
   }
 
-  void _enforceInitialAutoPlayMute(_InitialAutoPlayAudioGate gate) {
+  void _holdInitialAutoPlay(_InitialAutoPlayAudioGate gate) {
     if (!gate.active) return;
     gate.player
+      ..setProperty('pause', 'yes')
       ..setProperty('volume', '0')
       ..setProperty('mute', 'yes');
+  }
+
+  Future<bool> _waitForInitialAutoPlayOutput(
+    _InitialAutoPlayAudioGate gate,
+    NativePlayer player,
+    bool Function() isCurrentDataSource,
+    DateTime deadline,
+  ) async {
+    while (DateTime.now().isBefore(deadline)) {
+      if (!gate.active ||
+          !isCurrentDataSource() ||
+          gate.generation != _dataSourceGeneration ||
+          !identical(player, _videoPlayerController)) {
+        return false;
+      }
+
+      final currentVo = player
+          .getProperty('current-vo')
+          .trim()
+          .toLowerCase();
+      if (currentVo.isNotEmpty && currentVo != 'null') {
+        return true;
+      }
+
+      final canceled = await Future.any<bool>([
+        gate.canceled.future.then((_) => true),
+        Future<bool>.delayed(const Duration(milliseconds: 20), () => false),
+      ]);
+      if (canceled) return false;
+    }
+    return false;
   }
 
   void _restoreInitialAutoPlayAudio(_InitialAutoPlayAudioGate gate) {
@@ -1418,8 +1450,9 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         },
       );
       if (gate case final gate?) {
-        // 逐文件参数可能在 open 期间再次覆盖音量，等待首帧前重新封住音频。
-        _enforceInitialAutoPlayMute(gate);
+        // open 及逐文件参数可能再次改写 pause/音量。真正 Surface 帧确认前
+        // 始终保持暂停，静音仅作为底层状态异常时的第二道保险。
+        _holdInitialAutoPlay(gate);
       }
       return gate;
     } catch (_) {
@@ -2983,15 +3016,27 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
         return;
       }
 
+      final readyDeadline = DateTime.now().add(const Duration(seconds: 15));
       final firstFrameReady = await Future.any<bool>([
         gate.firstFrameRendered.then(
           (_) => true,
           onError: (_) => false,
         ),
         gate.canceled.future.then((_) => false),
-        Future<bool>.delayed(const Duration(seconds: 15), () => false),
+        Future<bool>.delayed(
+          readyDeadline.difference(DateTime.now()),
+          () => false,
+        ),
       ]);
-      if (!firstFrameReady ||
+      final outputReady =
+          firstFrameReady &&
+          await _waitForInitialAutoPlayOutput(
+            gate,
+            player,
+            isCurrentDataSource,
+            readyDeadline,
+          );
+      if (!outputReady ||
           !gate.active ||
           !isCurrentDataSource() ||
           gate.generation != _dataSourceGeneration ||
@@ -3002,8 +3047,8 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
         return;
       }
 
-      // 先订阅时钟，再放行播放。只有 pause=no 已生效且视频时钟确实前进，
-      // 才恢复真实音量，避免 AudioTrack 在 GPU 输出重建期间漏出假起播。
+      // 首个 Surface 帧和非 null VO 均已就绪后才允许唯一一次正式起播。
+      // 先订阅时钟，再解除暂停；只有视频时钟确实前进后才恢复真实音量。
       final positionBeforePlay = player.state.position;
       var playCommandCompleted = false;
       final playbackAdvanced = Completer<void>();
@@ -3033,6 +3078,9 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
       );
 
       try {
+        // 再次压住 open/输出初始化期间可能发生的状态写入，确保下面的
+        // playIfExists 是本次媒体第一次有效的 pause=no。
+        _holdInitialAutoPlay(gate);
         _initialAutoPlayReleaseGeneration = gate.generation;
         await playIfExists();
         playCommandCompleted = true;
