@@ -1,3 +1,4 @@
+import 'package:PiliPlus/models/common/video/cdn_type.dart';
 import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:path/path.dart' as path;
 
@@ -12,9 +13,12 @@ sealed class DataSource {
 }
 
 class NetworkSource extends DataSource {
+  final CDNService? cdnService;
+
   NetworkSource({
     required super.videoSource,
     required super.audioSource,
+    this.cdnService,
   });
 }
 

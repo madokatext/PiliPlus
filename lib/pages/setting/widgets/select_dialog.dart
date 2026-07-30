@@ -259,7 +259,7 @@ class _CdnSelectDialogState extends State<CdnSelectDialog> {
           Text('CDN 设置'),
           SizedBox(height: 4),
           Text(
-            '按勾选顺序作为主、备、次备 CDN，最多选择 3 个',
+            '新视频按勾选顺序轮换；无法播放时退出重开即可尝试下一个 CDN，最多选择 3 个',
             style: TextStyle(fontSize: 13, fontWeight: FontWeight.normal),
           ),
         ],

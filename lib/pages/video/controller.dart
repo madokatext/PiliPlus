@@ -190,6 +190,7 @@ class VideoDetailController extends GetxController
   NetworkSource _networkSource() => NetworkSource(
     videoSource: videoUrl!,
     audioSource: audioUrl,
+    cdnService: _currentCdnService,
   );
 
   // 亮度
@@ -776,6 +777,7 @@ class VideoDetailController extends GetxController
       targetSource: NetworkSource(
         videoSource: targetVideoUrl,
         audioSource: audioUrl,
+        cdnService: _currentCdnService,
       ),
       width: targetVideo.width,
       height: targetVideo.height,

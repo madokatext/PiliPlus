@@ -203,6 +203,8 @@ ui.PointerDeviceKind? _gesturePointerKind;
             plPlayerController.mainPlayerHasVideoSource;
         final standbyHasSource =
             plPlayerController.standbyPlayerHasVideoSource;
+        final mainCdn = plPlayerController.mainPlayerCdnName ?? '--';
+        final standbyCdn = plPlayerController.standbyPlayerCdnName ?? '--';
         final switching = plPlayerController.videoPlayerSwitching.value;
         const textStyle = TextStyle(
           color: Colors.white,
@@ -221,11 +223,11 @@ ui.PointerDeviceKind? _gesturePointerKind;
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '主实例：${mainHasSource ? '已加载视频源' : '未加载视频源'}',
+                '主实例 [$mainCdn]：${mainHasSource ? '已加载视频源' : '未加载视频源'}',
                 style: textStyle,
               ),
               Text(
-                '备实例：${standbyHasSource ? '已加载视频源' : '未加载视频源'}',
+                '备实例 [$standbyCdn]：${standbyHasSource ? '已加载视频源' : '未加载视频源'}',
                 style: textStyle,
               ),
               if (switching)

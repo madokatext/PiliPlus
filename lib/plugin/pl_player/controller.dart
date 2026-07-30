@@ -155,6 +155,8 @@ final RxInt seekStartPosition = 0.obs;
   String? _mpvLogPageTag;
   int _videoPlayerSwitchGeneration = 0;
   Completer<void>? _videoPlayerSwitchCancellation;
+  NetworkSource? _mainNetworkSource;
+  NetworkSource? _standbyNetworkSource;
   Player? _standbyVideoPlayerController;
   VideoController? _standbyVideoController;
   bool _standbyVideoOnTop = false;
@@ -347,6 +349,11 @@ final RxInt seekStartPosition = 0.obs;
 
   bool get standbyPlayerHasVideoSource =>
       _standbyVideoPlayerController?.current.isNotEmpty ?? false;
+
+  String? get mainPlayerCdnName => _mainNetworkSource?.cdnService?.name;
+
+  String? get standbyPlayerCdnName =>
+      _standbyNetworkSource?.cdnService?.name;
 
   bool isMuted = false;
 
@@ -895,6 +902,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       this.width = width;
       this.height = height;
       this.dataSource = dataSource;
+      _mainNetworkSource = dataSource is NetworkSource ? dataSource : null;
       _autoPlay = autoplay;
       // 初始化视频倍速
       // _playbackSpeed.value = speed;
@@ -2029,6 +2037,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         _standbyVideoOnly;
     _standbyVideoPlayerController = null;
     _standbyVideoController = null;
+    _standbyNetworkSource = null;
     _standbyVideoOnTop = false;
     _standbyVideoOnly = false;
     videoPlayerSwitching.value = false;
@@ -2169,6 +2178,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
 
       _standbyVideoPlayerController = standbyPlayer;
       _standbyVideoController = standbyController;
+      _standbyNetworkSource = targetSource;
       standbyRegistered = true;
       _bumpVideoOutputRevision();
 
@@ -2568,11 +2578,13 @@ if (!isCurrentSwitch() ||
 
       _standbyVideoPlayerController = null;
       _standbyVideoController = null;
+      _standbyNetworkSource = null;
       _standbyVideoOnly = false;
       _videoPlayerController = standbyPlayer;
       _videoController = standbyController;
-      _bumpVideoOutputRevision();
       dataSource = targetSource;
+      _mainNetworkSource = targetSource;
+      _bumpVideoOutputRevision();
       this.width = width;
       this.height = height;
       committed = true;
@@ -2672,6 +2684,7 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
         if (identical(_standbyVideoPlayerController, standbyPlayer)) {
           _standbyVideoPlayerController = null;
           _standbyVideoController = null;
+          _standbyNetworkSource = null;
           _standbyVideoOnTop = false;
           _standbyVideoOnly = false;
           final removalRevision = _bumpVideoOutputRevision();
@@ -3590,6 +3603,7 @@ void onSeekStart({bool fromGesture = false}) {
     unawaited(PlaybackHistoryTracker.instance.end());
     _activeVideoPageTag = null;
     _loadedVideoPageTag = null;
+    _mainNetworkSource = null;
     cancelVideoPlayerSwitch();
     _dataSourceGeneration++;
     _discardInitialPlayGate();
