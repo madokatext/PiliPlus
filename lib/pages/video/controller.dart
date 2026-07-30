@@ -877,7 +877,9 @@ class VideoDetailController extends GetxController
     final revealCoverOnInit =
         showVideoCover.value && (autoplay ?? _autoPlay.value);
     Duration? seek = defaultST ?? playedTime;
-    if (seek == null || seek == Duration.zero) {
+    if (isInteractiveVideo) {
+      seek ??= Duration.zero;
+    } else if (seek == null || seek == Duration.zero) {
       seek = getFirstSegment();
     }
     await plPlayerController.setDataSource(
@@ -957,6 +959,9 @@ class VideoDetailController extends GetxController
   Volume? volume;
 
   Duration _resumePosition(int progress) {
+    if (isInteractiveVideo) {
+      return Duration.zero;
+    }
     final timeLength = data.timeLength;
     if (progress <= 0) {
       return Duration.zero;
@@ -966,11 +971,8 @@ class VideoDetailController extends GetxController
     }
 
     // Avoid reaching EOF while Android is still replacing vo=null with the
-    // real GPU surface. Interactive nodes need a wider tail guard because
-    // their saved progress may sit very close to the end after a branch.
-    final endGuardMilliseconds = isInteractiveVideo
-        ? (timeLength ~/ 10).clamp(3000, 10000)
-        : (timeLength ~/ 20).clamp(1000, 5000);
+    // real GPU surface.
+    final endGuardMilliseconds = (timeLength ~/ 20).clamp(1000, 5000);
     if (progress >= timeLength ||
         timeLength - progress <= endGuardMilliseconds) {
       return Duration.zero;
@@ -1046,7 +1048,9 @@ class VideoDetailController extends GetxController
 
       if (!fromReset) {
         final progress = args.remove('progress');
-        if (progress != null) {
+        if (isInteractiveVideo) {
+          defaultST = Duration.zero;
+        } else if (progress != null) {
           defaultST = Duration(milliseconds: progress);
         } else {
           defaultST = _resumePosition(data.lastPlayTime);

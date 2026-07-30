@@ -1312,14 +1312,31 @@ class _ExpandableReplyContentState extends State<_ExpandableReplyContent> {
 
   @override
   Widget build(BuildContext context) {
-    return custom_text.Text.rich(
-      widget.textSpan,
-      primary: widget.primary,
-      style: widget.style,
-      maxLines: _isExpanded ? null : widget.maxLines,
-      onShowMore: widget.maxLines == null || _isExpanded
-          ? null
-          : () => setState(() => _isExpanded = true),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        custom_text.Text.rich(
+          widget.textSpan,
+          primary: widget.primary,
+          style: widget.style,
+          maxLines: _isExpanded ? null : widget.maxLines,
+          onShowMore: widget.maxLines == null || _isExpanded
+              ? null
+              : () => setState(() => _isExpanded = true),
+        ),
+        if (_isExpanded)
+          TextButton.icon(
+            onPressed: () => setState(() => _isExpanded = false),
+            style: TextButton.styleFrom(
+              minimumSize: const Size(48, 32),
+              padding: EdgeInsets.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            icon: const Icon(Icons.expand_less, size: 18),
+            label: const Text('收起'),
+          ),
+      ],
     );
   }
 }
