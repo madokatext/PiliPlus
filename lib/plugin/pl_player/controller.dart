@@ -78,19 +78,15 @@ typedef _PlayerPair = ({
   StreamSubscription<PlayerLog>? initializationLogSubscription,
 });
 
-class _InitialAutoPlayAudioGate {
-  _InitialAutoPlayAudioGate({
+class _InitialPlayGate {
+  _InitialPlayGate({
     required this.generation,
     required this.player,
-    required this.volume,
-    required this.mute,
     required this.firstFrameRendered,
   });
 
   final int generation;
   final Player player;
-  final String volume;
-  final String mute;
   final Future<void> firstFrameRendered;
   final Completer<void> canceled = Completer<void>();
   bool active = true;
@@ -100,8 +96,8 @@ class PlPlayerController with BlockConfigMixin {
   Player? _videoPlayerController;
   VideoController? _videoController;
   Future<Player>? _playerInitTask;
-  _InitialAutoPlayAudioGate? _initialAutoPlayAudioGate;
-  int? _initialAutoPlayReleaseGeneration;
+  _InitialPlayGate? _initialPlayGate;
+  int? _initialPlayReleaseGeneration;
   Timer? _mediaRecoveryTimer;
   bool _mediaRecoveryRunning = false;
   int _mediaRecoveryAttempt = 0;
@@ -925,7 +921,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     }
 
     final dataSourceGeneration = ++_dataSourceGeneration;
-    await _cancelInitialAutoPlayAudioGate();
+    await _cancelInitialPlayGate();
     bool isCurrentDataSource() =>
         dataSourceGeneration == _dataSourceGeneration &&
         (videoPageTag == null || isVideoPageActive(videoPageTag));
@@ -942,7 +938,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       return;
     }
 
-    _InitialAutoPlayAudioGate? initialAutoPlayAudioGate;
+    _InitialPlayGate? initialPlayGate;
     try {
       if (!isCurrentDataSource()) return;
       _processing = true;
@@ -989,7 +985,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         return;
       }
       // 配置Player 音轨、字幕等等
-      initialAutoPlayAudioGate = await _createVideoController(
+      initialPlayGate = await _createVideoController(
         dataSource,
         seekTo,
         volume,
@@ -998,7 +994,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       );
 
       if (_playerCount == 0 || !isCurrentDataSource()) {
-        await _cancelInitialAutoPlayAudioGate(initialAutoPlayAudioGate);
+        await _cancelInitialPlayGate(initialPlayGate);
         if (_playerCount == 0) {
           await _removeListeners();
           _videoPlayerController?.dispose();
@@ -1027,14 +1023,14 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
 
       await _initializePlayer(
         isCurrentDataSource,
-        initialAutoPlayAudioGate,
+        initialPlayGate,
       );
       if (isCurrentDataSource()) {
         _loadedVideoPageTag = videoPageTag;
         onInit?.call();
       }
     } catch (err, stackTrace) {
-      await _cancelInitialAutoPlayAudioGate(initialAutoPlayAudioGate);
+      await _cancelInitialPlayGate(initialPlayGate);
       if (isCurrentDataSource()) {
         dataStatus.value = DataStatus.error;
         if (kDebugMode) {
@@ -1111,43 +1107,34 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         (configuredVo == null || configuredVo == 'gpu');
   }
 
-  _InitialAutoPlayAudioGate _beginInitialAutoPlayAudioGate(
+  _InitialPlayGate _beginInitialPlayGate(
     Player player,
     int generation,
     Future<void> firstFrameRendered,
   ) {
-    final volumeProperty = player.getProperty('volume');
-    final muteProperty = player.getProperty('mute');
-    final gate = _InitialAutoPlayAudioGate(
+    final gate = _InitialPlayGate(
       generation: generation,
       player: player,
-      volume: volumeProperty.isEmpty
-          ? player.state.volume.toString()
-          : volumeProperty,
-      mute: muteProperty.isEmpty ? (isMuted ? 'yes' : 'no') : muteProperty,
       firstFrameRendered: firstFrameRendered,
     );
 
-    _initialAutoPlayAudioGate = gate;
+    _initialPlayGate = gate;
     try {
-      _holdInitialAutoPlay(gate);
+      _holdInitialPlay(gate);
     } catch (_) {
-      _restoreInitialAutoPlayAudio(gate);
+      _finishInitialPlayGate(gate);
       rethrow;
     }
     return gate;
   }
 
-  void _holdInitialAutoPlay(_InitialAutoPlayAudioGate gate) {
+  void _holdInitialPlay(_InitialPlayGate gate) {
     if (!gate.active) return;
-    gate.player
-      ..setProperty('pause', 'yes')
-      ..setProperty('volume', '0')
-      ..setProperty('mute', 'yes');
+    gate.player.setProperty('pause', 'yes');
   }
 
-  Future<bool> _waitForInitialAutoPlayOutput(
-    _InitialAutoPlayAudioGate gate,
+  Future<bool> _waitForInitialPlayOutput(
+    _InitialPlayGate gate,
     NativePlayer player,
     bool Function() isCurrentDataSource,
     DateTime deadline,
@@ -1178,7 +1165,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
   }
 
   Future<void> _releaseInitialPlayGate(
-    _InitialAutoPlayAudioGate gate,
+    _InitialPlayGate gate,
     bool Function() isCurrentDataSource,
   ) async {
     final player = _videoPlayerController;
@@ -1195,7 +1182,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     ]);
     final outputReady =
         firstFrameReady &&
-        await _waitForInitialAutoPlayOutput(
+        await _waitForInitialPlayOutput(
           gate,
           player,
           isCurrentDataSource,
@@ -1207,59 +1194,52 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         gate.generation != _dataSourceGeneration ||
         !identical(player, _videoPlayerController)) {
       if (gate.active) {
-        await _cancelInitialAutoPlayAudioGate(gate);
+        await _cancelInitialPlayGate(gate);
       }
       return;
     }
 
     try {
       // Surface 已以最终封面视口尺寸出帧；从这里开始只解除一次暂停。
-      _holdInitialAutoPlay(gate);
-      _initialAutoPlayReleaseGeneration = gate.generation;
+      _holdInitialPlay(gate);
+      _initialPlayReleaseGeneration = gate.generation;
       await playIfExists();
       if (gate.active &&
           isCurrentDataSource() &&
           gate.generation == _dataSourceGeneration &&
           identical(player, _videoPlayerController)) {
-        _restoreInitialAutoPlayAudio(gate);
+        _finishInitialPlayGate(gate);
       }
     } finally {
-      if (_initialAutoPlayReleaseGeneration == gate.generation) {
-        _initialAutoPlayReleaseGeneration = null;
+      if (_initialPlayReleaseGeneration == gate.generation) {
+        _initialPlayReleaseGeneration = null;
       }
     }
   }
 
-  void _restoreInitialAutoPlayAudio(_InitialAutoPlayAudioGate gate) {
+  void _finishInitialPlayGate(_InitialPlayGate gate) {
     if (!gate.active) return;
     gate.active = false;
     if (!gate.canceled.isCompleted) {
       gate.canceled.complete();
     }
-    if (identical(_initialAutoPlayAudioGate, gate)) {
-      _initialAutoPlayAudioGate = null;
-    }
-    try {
-      gate.player
-        ..setProperty('volume', gate.volume)
-        ..setProperty('mute', gate.mute);
-    } catch (_) {
-      // 播放器可能已经在页面销毁或数据源替换过程中释放。
+    if (identical(_initialPlayGate, gate)) {
+      _initialPlayGate = null;
     }
   }
 
-  Future<void> _cancelInitialAutoPlayAudioGate([
-    _InitialAutoPlayAudioGate? expected,
+  Future<void> _cancelInitialPlayGate([
+    _InitialPlayGate? expected,
   ]) async {
-    final gate = expected ?? _initialAutoPlayAudioGate;
+    final gate = expected ?? _initialPlayGate;
     if (gate == null ||
         !gate.active ||
-        (expected != null && !identical(_initialAutoPlayAudioGate, expected))) {
+        (expected != null && !identical(_initialPlayGate, expected))) {
       return;
     }
 
-    if (identical(_initialAutoPlayAudioGate, gate)) {
-      _initialAutoPlayAudioGate = null;
+    if (identical(_initialPlayGate, gate)) {
+      _initialPlayGate = null;
     }
     gate.active = false;
     if (!gate.canceled.isCompleted) {
@@ -1277,18 +1257,11 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     if (paused) {
       audioSessionHandler?.setActive(false);
     }
-    try {
-      gate.player
-        ..setProperty('volume', gate.volume)
-        ..setProperty('mute', gate.mute);
-    } catch (_) {
-      // 播放器可能已经释放。
-    }
   }
 
-  void _discardInitialAutoPlayAudioGate() {
-    final gate = _initialAutoPlayAudioGate;
-    _initialAutoPlayAudioGate = null;
+  void _discardInitialPlayGate() {
+    final gate = _initialPlayGate;
+    _initialPlayGate = null;
     if (gate == null || !gate.active) return;
     gate.active = false;
     if (!gate.canceled.isCompleted) {
@@ -1391,7 +1364,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
   Map<String, String> get liveBuffer => _liveBuffer ??= Pref.initLiveBuffer();
 
   // 配置播放器
-  Future<_InitialAutoPlayAudioGate?> _createVideoController(
+  Future<_InitialPlayGate?> _createVideoController(
     DataSource dataSource,
     Duration? seekTo,
     Volume? volume, {
@@ -1477,7 +1450,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     }
 
     MpvUtils.overridePerFileOptions(extras);
-    _InitialAutoPlayAudioGate? gate;
+    _InitialPlayGate? gate;
     try {
       await _openVideoMedia(
         player,
@@ -1493,7 +1466,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
           if (_shouldGateInitialPlay &&
               isCurrentDataSource() &&
               videoController != null) {
-            gate = _beginInitialAutoPlayAudioGate(
+            gate = _beginInitialPlayGate(
               player!,
               dataSourceGeneration,
               videoController.armWaitUntilFirstFrameRendered(),
@@ -1502,14 +1475,14 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         },
       );
       if (gate case final gate?) {
-        // open 及逐文件参数可能再次改写 pause/音量。真正 Surface 帧确认前
-        // 始终保持暂停，静音仅作为底层状态异常时的第二道保险。
-        _holdInitialAutoPlay(gate);
+        // open 及逐文件参数可能再次改写 pause。真正 Surface 帧确认前
+        // 始终保持暂停。
+        _holdInitialPlay(gate);
       }
       return gate;
     } catch (_) {
       if (gate case final gate?) {
-        _restoreInitialAutoPlayAudio(gate);
+        _finishInitialPlayGate(gate);
       }
       rethrow;
     }
@@ -3035,7 +3008,7 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
   // 开始播放
   Future<void> _initializePlayer(
     bool Function() isCurrentDataSource,
-    _InitialAutoPlayAudioGate? initialAutoPlayAudioGate,
+    _InitialPlayGate? initialPlayGate,
   ) async {
     if (_instance == null || !isCurrentDataSource()) return;
     // 设置倍速
@@ -3059,7 +3032,7 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
 
     // 自动播放
     if (_autoPlay && isCurrentDataSource()) {
-      final gate = initialAutoPlayAudioGate;
+      final gate = initialPlayGate;
       final player = _videoPlayerController;
       if (gate == null ||
           player == null ||
@@ -3421,10 +3394,10 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
   /// 播放视频
   Future<void> play({bool repeat = false, bool hideControls = true}) async {
     if (_playerCount == 0) return;
-    final initialGate = _initialAutoPlayAudioGate;
+    final initialGate = _initialPlayGate;
     if (initialGate != null &&
         initialGate.active &&
-        _initialAutoPlayReleaseGeneration != initialGate.generation) {
+        _initialPlayReleaseGeneration != initialGate.generation) {
       await _releaseInitialPlayGate(
         initialGate,
         () =>
@@ -3929,7 +3902,7 @@ void onSeekStart({bool fromGesture = false}) {
     resetCdnForCurrentVideo();
     cancelVideoPlayerSwitch();
     _dataSourceGeneration++;
-    _discardInitialAutoPlayAudioGate();
+    _discardInitialPlayGate();
     if (removeSafeArea) {
       showSystemBar();
     }
