@@ -110,6 +110,7 @@ class VideoDetailController extends GetxController
   late PlayUrlModel data;
   final RxBool videoState = false.obs;
   final RxBool showVideoCover = true.obs;
+  final RxBool blackVideoCover = false.obs;
 
   /// 播放器配置 画质 音质 解码格式
   final Rxn<VideoQuality> currentVideoQa = Rxn<VideoQuality>();
@@ -911,6 +912,7 @@ class VideoDetailController extends GetxController
         if (!isPageActive) return;
         if (revealCoverOnInit) {
           showVideoCover.value = false;
+          blackVideoCover.value = false;
         }
         setSubtitle(vttSubtitlesIndex.value);
       },

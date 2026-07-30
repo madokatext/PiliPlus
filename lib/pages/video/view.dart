@@ -243,6 +243,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         videoDetailController.plPlayerController
             .isVideoPageDataSourceLoaded(heroTag)) {
       videoDetailController.showVideoCover.value = false;
+      videoDetailController.blackVideoCover.value = false;
     }
     try {
       if (videoDetailController.scrollCtr.hasClients) {
@@ -340,6 +341,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     }
     final plPlayerController = this.plPlayerController =
         videoDetailController.plPlayerController;
+    videoDetailController.blackVideoCover.value = true;
     videoDetailController.autoPlay = true;
     plPlayerController
       ..addStatusLister(playerListener)
@@ -1547,19 +1549,19 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
               child: GestureDetector(
                 onTap: videoDetailController.autoPlay ? () {} : handlePlay,
                 behavior: .opaque,
-                child: Obx(
-                  () => NetworkImgLayer(
-                    type: .emote,
-                    quality: 60,
-                    src: videoDetailController.cover.value,
-                    width: width,
-                    height: height,
-                    cacheWidth: true,
-                    getPlaceHolder: () => Center(
-                      child: Image.asset(Assets.loading),
-                    ),
-                  ),
-                ),
+                child: videoDetailController.blackVideoCover.value
+                    ? const ColoredBox(color: Colors.black)
+                    : NetworkImgLayer(
+                        type: .emote,
+                        quality: 60,
+                        src: videoDetailController.cover.value,
+                        width: width,
+                        height: height,
+                        cacheWidth: true,
+                        getPlaceHolder: () => Center(
+                          child: Image.asset(Assets.loading),
+                        ),
+                      ),
               ),
             );
           }
