@@ -956,8 +956,11 @@ class VideoDetailController extends GetxController
     }
 
     // Avoid reaching EOF while Android is still replacing vo=null with the
-    // real GPU surface. Scale the tail guard for short videos, capped at 5 s.
-    final endGuardMilliseconds = (timeLength ~/ 20).clamp(1000, 5000);
+    // real GPU surface. Interactive nodes need a wider tail guard because
+    // their saved progress may sit very close to the end after a branch.
+    final endGuardMilliseconds = graphVersion != null
+        ? (timeLength ~/ 10).clamp(3000, 10000)
+        : (timeLength ~/ 20).clamp(1000, 5000);
     if (progress >= timeLength ||
         timeLength - progress <= endGuardMilliseconds) {
       return Duration.zero;
