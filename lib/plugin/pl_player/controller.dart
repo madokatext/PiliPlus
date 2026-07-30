@@ -1363,6 +1363,34 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
   Map<String, String>? _liveBuffer;
   Map<String, String> get liveBuffer => _liveBuffer ??= Pref.initLiveBuffer();
 
+  Future<void> _prepareFlutterScaledVideoOutput(Player player) async {
+    final videoController = _videoController;
+    if (videoController == null) return;
+
+    final customOptions = MpvUtils.customOptions;
+    void resetBuiltInProperty(String name, String value) {
+      if (!customOptions.containsKey(name)) {
+        player.setProperty(name, value);
+      }
+    }
+
+    // MpvVideoOutput writes viewport-specific geometry into both mpv and the
+    // Android Surface. When Flutter scaling is selected, clear that retained
+    // state before opening the next media so SimpleVideo receives a texture
+    // whose dimensions follow the source video instead of the previous
+    // viewport. Custom mpv options keep their precedence.
+    resetBuiltInProperty('keepaspect', 'yes');
+    resetBuiltInProperty('panscan', '0');
+    resetBuiltInProperty('video-unscaled', 'no');
+    resetBuiltInProperty('video-aspect-override', 'no');
+    resetBuiltInProperty('video-align-x', '0');
+    resetBuiltInProperty('video-align-y', '0');
+    resetBuiltInProperty('video-zoom', '0');
+    resetBuiltInProperty('video-pan-x', '0');
+    resetBuiltInProperty('video-pan-y', '0');
+    await videoController.setSize();
+  }
+
   // 配置播放器
   Future<_InitialPlayGate?> _createVideoController(
     DataSource dataSource,
@@ -1400,6 +1428,11 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         await setShader();
         if (!isCurrentDataSource()) return null;
       }
+    }
+
+    if (!Pref.useMpvVideoScaling) {
+      await _prepareFlutterScaledVideoOutput(player);
+      if (!isCurrentDataSource()) return null;
     }
 
     final Map<String, String> extras = {};
