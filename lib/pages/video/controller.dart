@@ -899,9 +899,12 @@ class VideoDetailController extends GetxController
       seasonId: isUgc ? null : seasonId,
       pgcType: isUgc ? null : pgcType,
       videoType: videoType,
-      onInit: () {
+      onVideoOutputReady: () {
         if (!isPageActive) return;
         videoState.value = true;
+      },
+      onInit: () {
+        if (!isPageActive) return;
         setSubtitle(vttSubtitlesIndex.value);
       },
       width: firstVideo.width,
@@ -958,7 +961,7 @@ class VideoDetailController extends GetxController
     // Avoid reaching EOF while Android is still replacing vo=null with the
     // real GPU surface. Interactive nodes need a wider tail guard because
     // their saved progress may sit very close to the end after a branch.
-    final endGuardMilliseconds = graphVersion != null
+    final endGuardMilliseconds = isInteractiveVideo
         ? (timeLength ~/ 10).clamp(3000, 10000)
         : (timeLength ~/ 20).clamp(1000, 5000);
     if (progress >= timeLength ||
@@ -1240,6 +1243,7 @@ class VideoDetailController extends GetxController
   }
 
   // interactive video
+  bool isInteractiveVideo = false;
   int? graphVersion;
   EdgeInfoData? steinEdgeInfo;
   late final RxBool showSteinEdgeInfo = false.obs;
@@ -1287,6 +1291,7 @@ class VideoDetailController extends GetxController
       if (isUgc && graphVersion == null) {
         try {
           if (introCtr.videoDetail.value.rights?.isSteinGate == 1) {
+            isInteractiveVideo = true;
             graphVersion = response.interaction?.graphVersion;
             getSteinEdgeInfo();
           }
@@ -1472,6 +1477,7 @@ class VideoDetailController extends GetxController
 
       // interactive video
       if (!isStein) {
+        isInteractiveVideo = false;
         graphVersion = null;
       }
       steinEdgeInfo = null;

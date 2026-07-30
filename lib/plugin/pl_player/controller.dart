@@ -877,6 +877,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     int? seasonId,
     int? pgcType,
     VideoType? videoType,
+    VoidCallback? onVideoOutputReady,
     VoidCallback? onInit,
     Volume? volume,
     bool autoFullScreenFlag = false,
@@ -1001,6 +1002,13 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       position.value = buffered.value = seekTo?.inSeconds ?? 0;
 
       dataStatus.value = .loaded;
+
+      if (isCurrentDataSource()) {
+        // The Android autoplay gate waits for a real Surface frame. Mount the
+        // video output before waiting, otherwise a nested video page can wait
+        // for a frame while its output widget is still unmounted.
+        onVideoOutputReady?.call();
+      }
 
       if (autoFullScreenFlag && autoEnterFullScreen) {
         triggerFullScreen(status: true);

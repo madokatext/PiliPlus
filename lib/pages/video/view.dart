@@ -169,14 +169,30 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   }
 
   // 获取视频资源，初始化播放器
-  void videoSourceInit() {
-    videoDetailController.queryVideoUrl(autoFullScreenFlag: true);
+  Future<void> videoSourceInit() async {
     if (videoDetailController.autoPlay) {
       plPlayerController = videoDetailController.plPlayerController;
       plPlayerController!
         ..addStatusLister(playerListener)
         ..addPositionListener(positionListener);
     }
+
+    if (videoDetailController.isUgc && !videoDetailController.isFileSource) {
+      try {
+        await ugcIntroController.ensureInitialVideoIntroLoaded();
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('preload interactive video status: $e');
+        }
+      }
+      if (!mounted || !videoDetailController.isPageActive) {
+        return;
+      }
+      videoDetailController.isInteractiveVideo =
+          ugcIntroController.videoDetail.value.rights?.isSteinGate == 1;
+    }
+
+    await videoDetailController.queryVideoUrl(autoFullScreenFlag: true);
   }
 
   void positionListener(Duration position) {
