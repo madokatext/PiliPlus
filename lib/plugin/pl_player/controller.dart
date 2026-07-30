@@ -2070,6 +2070,16 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       return true;
     }
 
+    final activeStateAtSwitchStart = activePlayer.state;
+    // A failed initial open has no valid frame, output geometry, or playback
+    // clock to align against. This exception is limited to recovery reloads;
+    // normal quality switches and recoveries from an already rendered player
+    // continue to use the strict two-player handoff.
+    final activeMediaNeverLoaded =
+        reloadSameSource &&
+        (activeStateAtSwitchStart.width <= 0 ||
+            activeStateAtSwitchStart.height <= 0);
+
     cancelVideoPlayerSwitch();
     final generation = ++_videoPlayerSwitchGeneration;
     final dataSourceGeneration = _dataSourceGeneration;
@@ -2214,8 +2224,12 @@ var firstFrameRendered = false;
           return true;
         }
 
-        final targetRect = activeController.rect.value;
         final standbyRect = standbyController.rect.value;
+        // When the initial player never loaded, validate the standby output's
+        // own configured Surface instead of waiting for an invalid active rect.
+        final targetRect = activeMediaNeverLoaded
+            ? standbyRect
+            : activeController.rect.value;
         if (targetRect == null ||
             targetRect.width <= 1 ||
             targetRect.height <= 1) {
@@ -2367,7 +2381,9 @@ if ((!bufferReady && !forceHandoff) ||
       // 正常情况下两个实例会自然保持同步，不能在短时间内循环 seek。
       // AV1/HEVC 连续 seek 会反复清空解码与缓存队列，导致备用实例
       // 一直处于 buffering，最终无法完成交接。
-      final shouldPlay = activePlayer.state.playing;
+      final shouldPlay = activeMediaNeverLoaded
+          ? _autoPlay
+          : activePlayer.state.playing;
       final targetRate = activePlayer.state.rate;
 
       if (standbyPlayer.state.rate != targetRate) {
@@ -2384,7 +2400,8 @@ if ((!bufferReady && !forceHandoff) ||
 
       // 播放状态下只有偏差明显时才执行一次 seek。
       // 暂停状态下则必须回到旧播放器当前的静止位置。
-      if (forceHandoff || !shouldPlay || drift > 400) {
+      if (!activeMediaNeverLoaded &&
+          (forceHandoff || !shouldPlay || drift > 400)) {
   try {
     // 强制接管时将备用实例跳到旧实例的最新位置。
     // 之后即使缓存不足，也由新实例走正常 buffering 流程。
@@ -2407,9 +2424,10 @@ if ((!bufferReady && !forceHandoff) ||
       const Duration(seconds: 3),
     );
 
-var aligned = forceHandoff;
+var aligned = forceHandoff || activeMediaNeverLoaded;
 
       while (!forceHandoff &&
+    !activeMediaNeverLoaded &&
     isCurrentSwitch() &&
     DateTime.now().isBefore(alignmentDeadline)) {
         if (standbyTlsHandshakeFailed) {
@@ -2457,7 +2475,9 @@ if (!aligned &&
         return false;
       }
 
-      final handoffPlaying = _pausedForVideoStall
+      final handoffPlaying = activeMediaNeverLoaded
+          ? _autoPlay
+          : _pausedForVideoStall
           ? _resumeAfterVideoRecovery
           : activePlayer.state.playing;
       final handoffRate = activePlayer.state.rate;
@@ -2490,9 +2510,10 @@ if (!aligned &&
       final allowedHandoffDrift = handoffPlaying ? 450 : 150;
 
       if (!forceHandoff &&
-    (handoffDrift > allowedHandoffDrift ||
-        standbyPlayer.state.buffering ||
-        standbyPlayer.getProperty('paused-for-cache') == 'yes')) {
+    (standbyPlayer.state.buffering ||
+        standbyPlayer.getProperty('paused-for-cache') == 'yes' ||
+        (!activeMediaNeverLoaded &&
+            handoffDrift > allowedHandoffDrift))) {
   return false;
 }
 // 真正停止旧实例前再次确认切换仍有效。
