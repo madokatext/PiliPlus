@@ -238,6 +238,12 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   // 播放器状态监听
   Future<void> playerListener(PlayerStatus status) async {
     final isPlaying = status.isPlaying;
+    if (isPlaying &&
+        videoDetailController.showVideoCover.value &&
+        videoDetailController.plPlayerController
+            .isVideoPageDataSourceLoaded(heroTag)) {
+      videoDetailController.showVideoCover.value = false;
+    }
     try {
       if (videoDetailController.scrollCtr.hasClients) {
         if (isPlaying) {
@@ -569,6 +575,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
             pinnedHeaderSliverHeightBuilder: () {
               double pinnedHeight = this.isFullScreen || !isPortrait
                   ? maxHeight - (isWindowMode && !isPortrait ? 0 : padding.top)
+                  : videoDetailController.showVideoCover.value
+                  ? videoDetailController.videoHeight
                   : videoDetailController.isExpanding ||
                         videoDetailController.isCollapsing
                   ? videoDetailController.animHeight
@@ -1298,14 +1306,13 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     child: Obx(
       () =>
           !videoDetailController.videoState.value ||
-              !videoDetailController.autoPlay ||
-              plPlayerController?.videoController == null
+              videoDetailController.plPlayerController.videoController == null
           ? const SizedBox.shrink()
           : PLVideoPlayer(
               key: ValueKey((heroTag, _playerWidgetRevision)),
               maxWidth: width,
               maxHeight: height,
-              plPlayerController: plPlayerController!,
+              plPlayerController: videoDetailController.plPlayerController,
               videoDetailController: videoDetailController,
               introController: introController,
               headerControl: HeaderControl(
@@ -1534,11 +1541,11 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         plPlayer(width: width, height: height),
 
         Obx(() {
-          if (!videoDetailController.autoPlay) {
+          if (videoDetailController.showVideoCover.value) {
             return Positioned.fill(
               bottom: -1,
               child: GestureDetector(
-                onTap: handlePlay,
+                onTap: videoDetailController.autoPlay ? () {} : handlePlay,
                 behavior: .opaque,
                 child: Obx(
                   () => NetworkImgLayer(

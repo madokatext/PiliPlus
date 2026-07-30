@@ -2595,7 +2595,9 @@ if (!isLive)
                 final outputRevision =
                     plPlayerController.videoOutputRevision.value;
                 final waitForResizeFrame =
-                    plPlayerController.frameSyncVideoResize.value;
+                    plPlayerController.frameSyncVideoResize.value ||
+                    (widget.videoDetailController?.showVideoCover.value ??
+                        false);
                 final videoFit = plPlayerController.videoFit.value;
                 final controller = plPlayerController.videoController!;
                 final standbyController =

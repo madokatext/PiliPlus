@@ -1103,10 +1103,9 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
 
   static final loudnormRegExp = RegExp('loudnorm=([^,]+)');
 
-  bool get _shouldGateInitialAutoPlay {
+  bool get _shouldGateInitialPlay {
     final configuredVo = MpvUtils.customOptions['vo'];
-    return _autoPlay &&
-        Platform.isAndroid &&
+    return Platform.isAndroid &&
         !isLive &&
         !onlyPlayAudio.value &&
         (configuredVo == null || configuredVo == 'gpu');
@@ -1176,6 +1175,59 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       if (canceled) return false;
     }
     return false;
+  }
+
+  Future<void> _releaseInitialPlayGate(
+    _InitialAutoPlayAudioGate gate,
+    bool Function() isCurrentDataSource,
+  ) async {
+    final player = _videoPlayerController;
+    if (player == null || !identical(gate.player, player)) return;
+
+    final readyDeadline = DateTime.now().add(const Duration(seconds: 15));
+    final firstFrameReady = await Future.any<bool>([
+      gate.firstFrameRendered.then(
+        (_) => true,
+        onError: (_) => false,
+      ),
+      gate.canceled.future.then((_) => false),
+      Future<bool>.delayed(const Duration(seconds: 15), () => false),
+    ]);
+    final outputReady =
+        firstFrameReady &&
+        await _waitForInitialAutoPlayOutput(
+          gate,
+          player,
+          isCurrentDataSource,
+          readyDeadline,
+        );
+    if (!outputReady ||
+        !gate.active ||
+        !isCurrentDataSource() ||
+        gate.generation != _dataSourceGeneration ||
+        !identical(player, _videoPlayerController)) {
+      if (gate.active) {
+        await _cancelInitialAutoPlayAudioGate(gate);
+      }
+      return;
+    }
+
+    try {
+      // Surface 已以最终封面视口尺寸出帧；从这里开始只解除一次暂停。
+      _holdInitialAutoPlay(gate);
+      _initialAutoPlayReleaseGeneration = gate.generation;
+      await playIfExists();
+      if (gate.active &&
+          isCurrentDataSource() &&
+          gate.generation == _dataSourceGeneration &&
+          identical(player, _videoPlayerController)) {
+        _restoreInitialAutoPlayAudio(gate);
+      }
+    } finally {
+      if (_initialAutoPlayReleaseGeneration == gate.generation) {
+        _initialAutoPlayReleaseGeneration = null;
+      }
+    }
   }
 
   void _restoreInitialAutoPlayAudio(_InitialAutoPlayAudioGate gate) {
@@ -1438,7 +1490,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         isCurrentDataSource: isCurrentDataSource,
         beforeOpen: () {
           final videoController = _videoController;
-          if (_shouldGateInitialAutoPlay &&
+          if (_shouldGateInitialPlay &&
               isCurrentDataSource() &&
               videoController != null) {
             gate = _beginInitialAutoPlayAudioGate(
@@ -3015,100 +3067,7 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
         await playIfExists();
         return;
       }
-
-      final readyDeadline = DateTime.now().add(const Duration(seconds: 15));
-      final firstFrameReady = await Future.any<bool>([
-        gate.firstFrameRendered.then(
-          (_) => true,
-          onError: (_) => false,
-        ),
-        gate.canceled.future.then((_) => false),
-        Future<bool>.delayed(
-          readyDeadline.difference(DateTime.now()),
-          () => false,
-        ),
-      ]);
-      final outputReady =
-          firstFrameReady &&
-          await _waitForInitialAutoPlayOutput(
-            gate,
-            player,
-            isCurrentDataSource,
-            readyDeadline,
-          );
-      if (!outputReady ||
-          !gate.active ||
-          !isCurrentDataSource() ||
-          gate.generation != _dataSourceGeneration ||
-          !identical(player, _videoPlayerController)) {
-        if (gate.active) {
-          await _cancelInitialAutoPlayAudioGate(gate);
-        }
-        return;
-      }
-
-      // 首个 Surface 帧和非 null VO 均已就绪后才允许唯一一次正式起播。
-      // 先订阅时钟，再解除暂停；只有视频时钟确实前进后才恢复真实音量。
-      final positionBeforePlay = player.state.position;
-      var playCommandCompleted = false;
-      final playbackAdvanced = Completer<void>();
-      final playbackPositionSubscription = player.stream.position.listen(
-        (current) {
-          if (!playbackAdvanced.isCompleted &&
-              playCommandCompleted &&
-              current >
-                  positionBeforePlay + const Duration(milliseconds: 10) &&
-              !player.state.buffering &&
-              player.getProperty('paused-for-cache') != 'yes') {
-            playbackAdvanced.complete();
-          }
-        },
-        onError: (Object error, StackTrace stackTrace) {
-          if (!playbackAdvanced.isCompleted) {
-            playbackAdvanced.completeError(error, stackTrace);
-          }
-        },
-        onDone: () {
-          if (!playbackAdvanced.isCompleted) {
-            playbackAdvanced.completeError(
-              StateError('Position stream closed before playback started.'),
-            );
-          }
-        },
-      );
-
-      try {
-        // 再次压住 open/输出初始化期间可能发生的状态写入，确保下面的
-        // playIfExists 是本次媒体第一次有效的 pause=no。
-        _holdInitialAutoPlay(gate);
-        _initialAutoPlayReleaseGeneration = gate.generation;
-        await playIfExists();
-        playCommandCompleted = true;
-
-        final playbackStable = await Future.any<bool>([
-          playbackAdvanced.future.then((_) => true, onError: (_) => false),
-          gate.canceled.future.then((_) => false),
-          Future<bool>.delayed(const Duration(seconds: 5), () => false),
-        ]);
-        if (!playbackStable ||
-            !gate.active ||
-            !isCurrentDataSource() ||
-            gate.generation != _dataSourceGeneration ||
-            !identical(player, _videoPlayerController)) {
-          if (gate.active) {
-            await _cancelInitialAutoPlayAudioGate(gate);
-          }
-          return;
-        }
-
-        _restoreInitialAutoPlayAudio(gate);
-      } finally {
-        await playbackPositionSubscription.cancel();
-        if (_initialAutoPlayReleaseGeneration == gate.generation) {
-          _initialAutoPlayReleaseGeneration = null;
-        }
-      }
-      // await play(duration: duration);
+      await _releaseInitialPlayGate(gate, isCurrentDataSource);
     }
   }
 
@@ -3463,8 +3422,17 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
   Future<void> play({bool repeat = false, bool hideControls = true}) async {
     if (_playerCount == 0) return;
     final initialGate = _initialAutoPlayAudioGate;
-    if ((initialGate?.active ?? false) &&
-        _initialAutoPlayReleaseGeneration != initialGate?.generation) {
+    if (initialGate != null &&
+        initialGate.active &&
+        _initialAutoPlayReleaseGeneration != initialGate.generation) {
+      await _releaseInitialPlayGate(
+        initialGate,
+        () =>
+            initialGate.generation == _dataSourceGeneration &&
+            identical(initialGate.player, _videoPlayerController) &&
+            (_loadedVideoPageTag == null ||
+                isVideoPageActive(_loadedVideoPageTag!)),
+      );
       return;
     }
 

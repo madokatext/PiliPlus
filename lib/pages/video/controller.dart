@@ -109,6 +109,7 @@ class VideoDetailController extends GetxController
   // 请求返回的视频信息
   late PlayUrlModel data;
   final RxBool videoState = false.obs;
+  final RxBool showVideoCover = true.obs;
 
   /// 播放器配置 画质 音质 解码格式
   final Rxn<VideoQuality> currentVideoQa = Rxn<VideoQuality>();
@@ -408,6 +409,7 @@ class VideoDetailController extends GetxController
     if (args['autoplay'] case final bool autoplay) {
       _autoPlay.value = autoplay;
     }
+    showVideoCover.value = !_autoPlay.value;
     videoType = args['videoType'];
     if (videoType == VideoType.pgc) {
       if (!isLoginVideo) {
@@ -873,6 +875,8 @@ class VideoDetailController extends GetxController
     bool autoFullScreenFlag = false,
   }) async {
     if (!isPageActive) return;
+    final revealCoverOnInit =
+        showVideoCover.value && (autoplay ?? _autoPlay.value);
     Duration? seek = defaultST ?? playedTime;
     if (seek == null || seek == Duration.zero) {
       seek = getFirstSegment();
@@ -905,6 +909,9 @@ class VideoDetailController extends GetxController
       },
       onInit: () {
         if (!isPageActive) return;
+        if (revealCoverOnInit) {
+          showVideoCover.value = false;
+        }
         setSubtitle(vttSubtitlesIndex.value);
       },
       width: firstVideo.width,
