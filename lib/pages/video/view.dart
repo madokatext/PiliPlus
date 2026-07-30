@@ -268,6 +268,13 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     } catch (e) {
       if (kDebugMode) debugPrint('handle player status: $e');
     }
+    if (isPlaying &&
+        videoDetailController.keepInitialVideoViewport.value &&
+        !videoDetailController.isExpanding &&
+        !videoDetailController.isCollapsing &&
+        !videoDetailController.animationController.isAnimating) {
+      videoDetailController.keepInitialVideoViewport.value = false;
+    }
 
     if (status.isCompleted) {
       try {
@@ -577,8 +584,6 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
             pinnedHeaderSliverHeightBuilder: () {
               double pinnedHeight = this.isFullScreen || !isPortrait
                   ? maxHeight - (isWindowMode && !isPortrait ? 0 : padding.top)
-                  : videoDetailController.showVideoCover.value
-                  ? videoDetailController.videoHeight
                   : videoDetailController.isExpanding ||
                         videoDetailController.isCollapsing
                   ? videoDetailController.animHeight
@@ -590,6 +595,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                   videoDetailController.animationController.value == 1) {
                 videoDetailController.isExpanding = false;
                 WidgetsBinding.instance.addPostFrameCallback((_) {
+                  videoDetailController.keepInitialVideoViewport.value = false;
                   videoDetailController.scrollRatio.value = 0;
                   videoDetailController.refreshPage();
                 });
@@ -597,6 +603,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                   videoDetailController.animationController.value == 1) {
                 videoDetailController.isCollapsing = false;
                 WidgetsBinding.instance.addPostFrameCallback((_) {
+                  videoDetailController.keepInitialVideoViewport.value = false;
                   videoDetailController.refreshPage();
                 });
               }
@@ -1540,7 +1547,38 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       children: [
         const Positioned.fill(child: ColoredBox(color: Colors.black)),
 
-        plPlayer(width: width, height: height),
+        Positioned.fill(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Obx(() {
+                // Scroll only clips the cover; keep preloaded mpv at full size.
+                final keepInitialViewport =
+                    isPortrait &&
+                    !isFullScreen &&
+                    videoDetailController.keepInitialVideoViewport.value;
+                final playerWidth = keepInitialViewport
+                    ? width
+                    : constraints.maxWidth;
+                final playerHeight = keepInitialViewport
+                    ? videoDetailController.videoHeight
+                    : constraints.maxHeight;
+                return ClipRect(
+                  child: OverflowBox(
+                    alignment: Alignment.topCenter,
+                    minWidth: playerWidth,
+                    maxWidth: playerWidth,
+                    minHeight: playerHeight,
+                    maxHeight: playerHeight,
+                    child: plPlayer(
+                      width: playerWidth,
+                      height: playerHeight,
+                    ),
+                  ),
+                );
+              });
+            },
+          ),
+        ),
 
         Obx(() {
           if (videoDetailController.showVideoCover.value) {

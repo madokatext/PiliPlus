@@ -111,6 +111,7 @@ class VideoDetailController extends GetxController
   final RxBool videoState = false.obs;
   final RxBool showVideoCover = true.obs;
   final RxBool blackVideoCover = false.obs;
+  final RxBool keepInitialVideoViewport = false.obs;
 
   /// 播放器配置 画质 音质 解码格式
   final Rxn<VideoQuality> currentVideoQa = Rxn<VideoQuality>();
@@ -411,6 +412,7 @@ class VideoDetailController extends GetxController
       _autoPlay.value = autoplay;
     }
     showVideoCover.value = !_autoPlay.value;
+    keepInitialVideoViewport.value = showVideoCover.value;
     videoType = args['videoType'];
     if (videoType == VideoType.pgc) {
       if (!isLoginVideo) {
