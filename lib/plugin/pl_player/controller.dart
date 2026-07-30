@@ -166,6 +166,13 @@ final RxInt seekStartPosition = 0.obs;
   Completer<void>? _videoPlayerSwitchCancellation;
   Player? _standbyVideoPlayerController;
   VideoController? _standbyVideoController;
+  bool _standbyVideoOnTop = false;
+  bool _standbyVideoOnly = false;
+  int _presentedVideoOutputRevision = -1;
+  VideoController? _presentedVideoController;
+  int? _pendingVideoOutputRevision;
+  VideoController? _pendingVideoOutputController;
+  Completer<void>? _pendingVideoOutputPresentation;
   final RxInt videoOutputRevision = 0.obs;
   final RxBool videoPlayerSwitching = false.obs;
 
@@ -362,12 +369,16 @@ final RxInt seekStartPosition = 0.obs;
   /// [videoController] instance of Player
   VideoController? get videoController => _videoController;
 
-  /// 预缓冲中的备用视频输出。界面将它绘制在当前输出下方，确保切换前
-  /// 已经建立纹理并渲染首帧。
+  /// 预缓冲中的备用视频输出。界面通常将它绘制在当前输出下方；正式
+  /// 交接时会先提升到顶层，并在 Flutter 确认该 Texture 已呈现后再切音频。
   VideoController? get standbyVideoController => _standbyVideoController;
 
   /// 预缓冲中的备用播放器实例。
   Player? get standbyVideoPlayerController => _standbyVideoPlayerController;
+
+  bool get standbyVideoOnTop => _standbyVideoOnTop;
+
+  bool get standbyVideoOnly => _standbyVideoOnly;
 
   bool get mainPlayerHasVideoSource =>
       _videoPlayerController?.current.isNotEmpty ?? false;
@@ -1501,13 +1512,44 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     return hasHandshakeContext && hasFailure;
   }
 
-  void _handleTlsHandshakeFailure(
-    NativePlayer player,
-    String prefix,
-    String message,
-  ) {
-    if (!_isTlsHandshakeFailure(prefix, message) ||
-        !identical(player, _videoPlayerController) ||
+  bool _messageReferencesUrl(String message, String? source) {
+    if (source == null || source.isEmpty) {
+      return false;
+    }
+    final text = message
+        .replaceAll(r'\:', ':')
+        .replaceAll('&amp;', '&')
+        .toLowerCase();
+    final normalizedSource = source
+        .replaceAll(r'\:', ':')
+        .replaceAll('&amp;', '&')
+        .toLowerCase();
+    if (text.contains(normalizedSource)) {
+      return true;
+    }
+
+    try {
+      return text.contains(Uri.decodeFull(normalizedSource));
+    } catch (_) {
+      return false;
+    }
+  }
+
+  bool _isExternalAudioFailure(NetworkSource source, String message) {
+    final text = message.toLowerCase();
+    if (text.contains('can not open external file') ||
+        text.contains('cannot open external file') ||
+        text.contains('failed to open external file')) {
+      return true;
+    }
+
+    final referencesAudio = _messageReferencesUrl(message, source.audioSource);
+    final referencesVideo = _messageReferencesUrl(message, source.videoSource);
+    return referencesAudio && !referencesVideo;
+  }
+
+  void _triggerVideoTlsHandshakeFailure(NativePlayer player) {
+    if (!identical(player, _videoPlayerController) ||
         _playerCount == 0 ||
         isLive ||
         dataSource is! NetworkSource) {
@@ -1515,6 +1557,36 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     }
     _videoNetworkFailed = true;
     unawaited(_switchCdnAfterTlsHandshakeFailure(player));
+  }
+
+  void _handleTlsHandshakeFailure(
+    NativePlayer player,
+    String prefix,
+    String message,
+  ) {
+    final source = dataSource;
+    if (!identical(player, _videoPlayerController) ||
+        _playerCount == 0 ||
+        isLive ||
+        source is! NetworkSource) {
+      return;
+    }
+
+    final text = '$prefix $message';
+    if (!_isTlsHandshakeFailure(prefix, message)) {
+      return;
+    }
+    if (_isExternalAudioFailure(source, text)) {
+      return;
+    }
+
+    final referencesVideo = _messageReferencesUrl(text, source.videoSource);
+    // DASH 视频与 audio-files 共用错误流；存在外置音轨时，只有日志明确
+    // 指向视频 URL 才能触发整媒体 CDN 切换。无 URL 的错误交给视频停滞
+    // 看门狗确认，不能用猜测破坏仍然正常的视频实例。
+    if (referencesVideo || source.audioSource?.isNotEmpty != true) {
+      _triggerVideoTlsHandshakeFailure(player);
+    }
   }
 
   Future<void> _switchCdnAfterTlsHandshakeFailure(
@@ -1605,11 +1677,16 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     }
   }
 
-  bool _isRetryableMediaOpenError(String event) {
+  bool _isRetryableVideoMediaError(
+    NetworkSource source,
+    String event,
+  ) {
+    if (_isExternalAudioFailure(source, event)) {
+      return false;
+    }
     final text = event.toLowerCase();
-
-    return text.startsWith('failed to open https://') ||
-        text.startsWith('can not open external file https://') ||
+    final retryable =
+        text.startsWith('failed to open https://') ||
         text.contains('ffurl_read returned') ||
         text.contains('i/o error') ||
         text.contains('connection reset') ||
@@ -1618,6 +1695,18 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         text.contains('error reading') ||
         text.contains('tls') ||
         text.contains('broken pipe');
+    if (!retryable) {
+      return false;
+    }
+
+    if (_messageReferencesUrl(event, source.videoSource)) {
+      return true;
+    }
+
+    // DASH 的视频与 audio-files 共享同一个 mpv 错误流。没有 URL 的
+    // ffurl_read/I/O 错误无法证明坏的是哪条链路，不能据此重建整个媒体；
+    // 真正的视频中断仍由视频缓存/输出看门狗触发恢复。
+    return source.audioSource?.isNotEmpty != true;
   }
 
   void _resetVideoStallObservation() {
@@ -1967,8 +2056,66 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     });
   }
 
-  void _bumpVideoOutputRevision() {
-    videoOutputRevision.value = videoOutputRevision.value + 1;
+  VideoController? get _visibleVideoController {
+    if ((_standbyVideoOnTop || _standbyVideoOnly) &&
+        _standbyVideoController != null) {
+      return _standbyVideoController;
+    }
+    return _videoController;
+  }
+
+  int _bumpVideoOutputRevision() {
+    final revision = videoOutputRevision.value + 1;
+    videoOutputRevision.value = revision;
+    return revision;
+  }
+
+  void acknowledgeVideoOutputPresentation(
+    int revision,
+    VideoController controller,
+  ) {
+    if (revision != videoOutputRevision.value ||
+        !identical(controller, _visibleVideoController)) {
+      return;
+    }
+    _presentedVideoOutputRevision = revision;
+    _presentedVideoController = controller;
+    if (_pendingVideoOutputRevision == revision &&
+        identical(_pendingVideoOutputController, controller)) {
+      final presentation = _pendingVideoOutputPresentation;
+      if (presentation != null && !presentation.isCompleted) {
+        presentation.complete();
+      }
+    }
+  }
+
+  Future<bool> _waitForVideoOutputPresentation(
+    int revision,
+    VideoController controller,
+    Completer<void> cancellation,
+  ) async {
+    if (_presentedVideoOutputRevision == revision &&
+        identical(_presentedVideoController, controller)) {
+      return true;
+    }
+
+    final presentation = Completer<void>();
+    _pendingVideoOutputRevision = revision;
+    _pendingVideoOutputController = controller;
+    _pendingVideoOutputPresentation = presentation;
+    final presented = await Future.any<bool>([
+      presentation.future.then((_) => true),
+      cancellation.future.then((_) => false),
+      Future<bool>.delayed(const Duration(seconds: 2), () => false),
+    ]);
+    if (identical(_pendingVideoOutputPresentation, presentation)) {
+      _pendingVideoOutputRevision = null;
+      _pendingVideoOutputController = null;
+      _pendingVideoOutputPresentation = null;
+    }
+    return presented &&
+        revision == videoOutputRevision.value &&
+        identical(controller, _visibleVideoController);
   }
 
   Future<void> _waitForVideoOutputFrame() {
@@ -1978,9 +2125,21 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     ]);
   }
 
-  void _disposePlayerAfterOutputFrame(Player player) {
+  void _disposePlayerAfterOutputPresentation(
+    Player player, {
+    required int? revision,
+    required VideoController? controller,
+  }) {
     unawaited(() async {
-      await _waitForVideoOutputFrame();
+      if (revision != null && controller != null) {
+        await _waitForVideoOutputPresentation(
+          revision,
+          controller,
+          Completer<void>(),
+        );
+      } else {
+        await _waitForVideoOutputFrame();
+      }
       try {
         await player.dispose();
       } catch (_) {
@@ -1998,15 +2157,25 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     }
 
     final standbyPlayer = _standbyVideoPlayerController;
-    final hadStandbyOutput = _standbyVideoController != null;
+    final hadStandbyOutput =
+        _standbyVideoController != null ||
+        _standbyVideoOnTop ||
+        _standbyVideoOnly;
     _standbyVideoPlayerController = null;
     _standbyVideoController = null;
+    _standbyVideoOnTop = false;
+    _standbyVideoOnly = false;
     videoPlayerSwitching.value = false;
+    int? outputRevision;
     if (hadStandbyOutput) {
-      _bumpVideoOutputRevision();
+      outputRevision = _bumpVideoOutputRevision();
     }
     if (standbyPlayer != null) {
-      _disposePlayerAfterOutputFrame(standbyPlayer);
+      _disposePlayerAfterOutputPresentation(
+        standbyPlayer,
+        revision: outputRevision,
+        controller: _visibleVideoController,
+      );
     }
   }
 
@@ -2014,9 +2183,9 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
   ///
   /// 备用实例加载与当前实例相同的音频和媒体参数，静音播放并在当前画面
   /// 下方预先挂载纹理。只有首帧、前向缓存与时间同步均达到门槛后，才将
-  /// 播放控制和画面一次性交给备用实例；旧实例随后在界面完成一帧重建后
-  /// 释放，避免切换期间出现黑屏或两个实例同时出声。同源网络恢复可显式
-  /// 绕过地址短路，并关闭未就绪时的强制交接。
+  /// 备用 Texture 提升到顶层；Flutter 确认新 Texture 可见且旧 Texture
+  /// 已移除后，才把播放控制与音频交给同一实例。同源网络恢复可显式绕过
+  /// 地址短路，并关闭未就绪时的强制交接。
   Media _mediaForNetworkSource(
     Media currentMedia,
     NetworkSource currentSource,
@@ -2125,6 +2294,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     StreamSubscription<PlayerLog>? standbyTlsLogSubscription;
     StreamSubscription<String>? standbyTlsErrorSubscription;
     var standbyTlsHandshakeFailed = false;
+    var standbyUnattributedTlsFailure = false;
 
     try {
       final pair = await _createPlayerPair(
@@ -2144,15 +2314,36 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         onTlsHandshakeFailure?.call();
       }
 
-      standbyTlsLogSubscription = standbyPlayer.stream.log.listen((log) {
-        if (_isTlsHandshakeFailure(log.prefix, log.text)) {
-          markStandbyTlsHandshakeFailure();
+      void inspectStandbyTlsFailure(String prefix, String message) {
+        final text = '$prefix $message';
+        if (!_isTlsHandshakeFailure(prefix, message)) {
+          return;
         }
+        if (_isExternalAudioFailure(resolvedTargetSource, text)) {
+          return;
+        }
+        if (_messageReferencesUrl(
+              text,
+              resolvedTargetSource.videoSource,
+            ) ||
+            resolvedTargetSource.audioSource?.isNotEmpty != true) {
+          markStandbyTlsHandshakeFailure();
+        } else {
+          // 先记下没有 URL 的 TLS 错误，但不立即判死整个实例。若视频随后
+          // 成功出画，说明该错误不能归因给主视频；若始终没有视频输出，
+          // finally 会把它确认为候选 CDN 的视频打开失败。
+          standbyUnattributedTlsFailure = true;
+        }
+      }
+
+      standbyTlsLogSubscription = standbyPlayer.stream.log.listen((log) {
+        inspectStandbyTlsFailure(log.prefix, log.text);
       });
       standbyTlsErrorSubscription = standbyPlayer.stream.error.listen((event) {
-        if (_isTlsHandshakeFailure('', event)) {
-          markStandbyTlsHandshakeFailure();
+        if (_isExternalAudioFailure(resolvedTargetSource, event)) {
+          return;
         }
+        inspectStandbyTlsFailure('', event);
       });
       if (!isCurrentSwitch()) {
         return false;
@@ -2525,22 +2716,54 @@ if (!isCurrentSwitch() ||
     (forceHandoff && !canForceHandoff())) {
   return false;
 }
-      // 备用实例始终静音运行。先停止旧实例，再恢复备用实例的实际音量，
-      // 可避免交接点产生双重音频；两个实例各自加载同一 DASH 音轨，由 mpv
-      // 在实例内部继续负责音视频时间戳同步。
+      // 备用实例始终静音运行。先停止旧实例，再把已经挂载的备用 Texture
+      // 提升到顶层；只有 Flutter 在帧后确认该实例确实成为可见输出，才切换
+      // 播放控制并恢复同一实例的音频，避免画面与音频落在不同播放器上。
       resumeActiveOnFailure = handoffPlaying;
-await _removeListeners();
-activeListenersDetached = true;
-await activePlayer.pause();
-      standbyPlayer
-        ..setProperty('volume', handoffVolume)
-        ..setProperty('mute', handoffMute);
+      await _removeListeners();
+      activeListenersDetached = true;
+      await activePlayer.pause();
+      _standbyVideoOnTop = true;
+      final promotedRevision = _bumpVideoOutputRevision();
+      final standbyPresented = await _waitForVideoOutputPresentation(
+        promotedRevision,
+        standbyController,
+        cancellation,
+      );
+      if (!standbyPresented ||
+          standbyTlsHandshakeFailed ||
+          firstFrameFailed ||
+          !isCurrentSwitch()) {
+        _standbyVideoOnTop = false;
+        _bumpVideoOutputRevision();
+        throw StateError('standby Texture was not presented');
+      }
+
+      // 再让 Flutter 暂时只绘制备用输出。此时播放控制仍属于旧实例，
+      // 因而取消切换或换源不会观察到播放器与 VideoController 不一致。
+      _standbyVideoOnTop = false;
+      _standbyVideoOnly = true;
+      final committedOutputRevision = _bumpVideoOutputRevision();
+      final committedOutputPresented = await _waitForVideoOutputPresentation(
+        committedOutputRevision,
+        standbyController,
+        cancellation,
+      );
+      if (!committedOutputPresented ||
+          standbyTlsHandshakeFailed ||
+          firstFrameFailed ||
+          !isCurrentSwitch()) {
+        _standbyVideoOnly = false;
+        _bumpVideoOutputRevision();
+        throw StateError('committed Texture was not presented');
+      }
 
       _standbyVideoPlayerController = null;
       _standbyVideoController = null;
+      _standbyVideoOnly = false;
       _videoPlayerController = standbyPlayer;
       _videoController = standbyController;
-      activeListenersDetached = false;
+      _bumpVideoOutputRevision();
       dataSource = NetworkSource(
         videoSource: resolvedTargetSource.videoSource,
         audioSource: resolvedTargetSource.audioSource,
@@ -2567,7 +2790,8 @@ await activePlayer.pause();
           session: mpvLogSession,
         );
       }
-_startListeners(standbyPlayer);
+      _startListeners(standbyPlayer);
+      activeListenersDetached = false;
 
 _videoNetworkFailed = false;
 _pausedForVideoStall = false;
@@ -2581,9 +2805,12 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
       videoPlayerServiceHandler
         ?..onPositionChange(standbyPlayer.state.position)
         ..onStatusChange(playerStatus.value, isBuffering.value, isLive);
-      _bumpVideoOutputRevision();
 
-      await _waitForVideoOutputFrame();
+      // Flutter 已确认显示的是 standbyController 后，才恢复同一 mpv
+      // 实例的真实音量。旧实例保持暂停，因而不存在跨实例音画组合。
+      standbyPlayer
+        ..setProperty('volume', handoffVolume)
+        ..setProperty('mute', handoffMute);
       try {
         await activePlayer.dispose();
       } catch (_) {
@@ -2597,7 +2824,11 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
       }
       return true;
     } catch (err, stackTrace) {
-      if (_isTlsHandshakeFailure('', err.toString())) {
+      if (_isTlsHandshakeFailure('', err.toString()) &&
+          !_isExternalAudioFailure(
+            resolvedTargetSource,
+            err.toString(),
+          )) {
         onTlsHandshakeFailure?.call();
       }
       if (kDebugMode) {
@@ -2613,6 +2844,18 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
               ..setProperty('mute', 'yes')
               ..setProperty('volume', '0');
           }
+          _standbyVideoOnTop = false;
+          _standbyVideoOnly = false;
+          final rollbackRevision = _bumpVideoOutputRevision();
+          await _waitForVideoOutputPresentation(
+            rollbackRevision,
+            activeController,
+            Completer<void>(),
+          );
+          if (!identical(activePlayer, _videoPlayerController) ||
+              _playerCount == 0) {
+            return committed;
+          }
           _startListeners(activePlayer);
           if (resumeActiveOnFailure && !activePlayer.state.playing) {
             await activePlayer.play();
@@ -2624,6 +2867,17 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
       }
       return committed;
     } finally {
+      if (!committed &&
+          standbyCreated &&
+          !standbyTlsHandshakeFailed &&
+          standbyUnattributedTlsFailure &&
+          generation == _videoPlayerSwitchGeneration &&
+          dataSourceGeneration == _dataSourceGeneration &&
+          !cancellation.isCompleted &&
+          (standbyPlayer.state.width <= 0 ||
+              standbyPlayer.state.height <= 0)) {
+        onTlsHandshakeFailure?.call();
+      }
       await standbyInitializationLogSubscription?.cancel();
       await standbyTlsLogSubscription?.cancel();
       await standbyTlsErrorSubscription?.cancel();
@@ -2637,8 +2891,19 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
         if (identical(_standbyVideoPlayerController, standbyPlayer)) {
           _standbyVideoPlayerController = null;
           _standbyVideoController = null;
-          _bumpVideoOutputRevision();
-          await _waitForVideoOutputFrame();
+          _standbyVideoOnTop = false;
+          _standbyVideoOnly = false;
+          final removalRevision = _bumpVideoOutputRevision();
+          final visibleController = _visibleVideoController;
+          if (visibleController != null) {
+            await _waitForVideoOutputPresentation(
+              removalRevision,
+              visibleController,
+              Completer<void>(),
+            );
+          } else {
+            await _waitForVideoOutputFrame();
+          }
           try {
             await standbyPlayer.dispose();
           } catch (_) {
@@ -2929,11 +3194,17 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
           }
           return;
         }
+        final source = dataSource;
+        if (source is NetworkSource &&
+            _isExternalAudioFailure(source, event)) {
+          return;
+        }
         if (_isTlsHandshakeFailure('', event)) {
           _handleTlsHandshakeFailure(player, '', event);
           return;
         }
-        if (_isRetryableMediaOpenError(event)) {
+        if (source is NetworkSource &&
+            _isRetryableVideoMediaError(source, event)) {
           _videoNetworkFailed = true;
           _scheduleSeamlessMediaRecovery();
           return;

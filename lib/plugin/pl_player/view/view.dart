@@ -2592,17 +2592,28 @@ if (!isLive)
             key: _videoKey,
             child: Obx(
               () {
-                plPlayerController.videoOutputRevision.value;
+                final outputRevision =
+                    plPlayerController.videoOutputRevision.value;
                 final waitForResizeFrame =
                     plPlayerController.frameSyncVideoResize.value;
                 final videoFit = plPlayerController.videoFit.value;
                 final controller = plPlayerController.videoController!;
                 final standbyController =
                     plPlayerController.standbyVideoController;
+                final standbyOnTop =
+                    plPlayerController.standbyVideoOnTop &&
+                    standbyController != null;
+                final standbyOnly =
+                    plPlayerController.standbyVideoOnly &&
+                    standbyController != null;
+                final visibleController = standbyOnTop || standbyOnly
+                    ? standbyController!
+                    : controller;
 
                 Widget buildVideoOutput(VideoController targetController) {
                   if (!useMpvVideoScaling) {
                     return FittedBox(
+                      key: ValueKey(targetController),
                       fit: videoFit.boxFit,
                       alignment: widget.alignment,
                       child: SimpleVideo(
@@ -2626,6 +2637,15 @@ if (!isLive)
                   );
                 }
 
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) {
+                    plPlayerController.acknowledgeVideoOutputPresentation(
+                      outputRevision,
+                      visibleController,
+                    );
+                  }
+                });
+
                 return Transform.flip(
                   flipX: plPlayerController.flipX.value,
                   flipY: plPlayerController.flipY.value,
@@ -2633,9 +2653,13 @@ if (!isLive)
                     fit: StackFit.expand,
                     clipBehavior: Clip.none,
                     children: [
-                      if (standbyController != null)
+                      if (standbyController != null &&
+                          !standbyOnTop &&
+                          !standbyOnly)
                         buildVideoOutput(standbyController),
-                      buildVideoOutput(controller),
+                      if (!standbyOnly) buildVideoOutput(controller),
+                      if (standbyOnTop || standbyOnly)
+                        buildVideoOutput(standbyController!),
                     ],
                   ),
                 );
