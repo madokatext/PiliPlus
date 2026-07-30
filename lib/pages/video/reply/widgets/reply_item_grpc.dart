@@ -342,7 +342,8 @@ class ReplyItemGrpc extends StatelessWidget {
         if (replyControl.hasVoteOption()) const SizedBox(height: 4),
         Padding(
           padding: padding,
-          child: custom_text.Text.rich(
+          child: _ExpandableReplyContent(
+            key: ValueKey(replyItem.id),
             primary: colorScheme.primary,
             style: TextStyle(
               height: 1.75 * Pref.replyLineSpacingScale,
@@ -1283,6 +1284,42 @@ class ReplyItemGrpc extends StatelessWidget {
     return AdaptiveTextSelectionToolbar.buttonItems(
       buttonItems: items,
       anchors: editableTextState.contextMenuAnchors,
+    );
+  }
+}
+
+class _ExpandableReplyContent extends StatefulWidget {
+  const _ExpandableReplyContent(
+    this.textSpan, {
+    super.key,
+    required this.primary,
+    required this.style,
+    this.maxLines,
+  });
+
+  final TextSpan textSpan;
+  final Color primary;
+  final TextStyle style;
+  final int? maxLines;
+
+  @override
+  State<_ExpandableReplyContent> createState() =>
+      _ExpandableReplyContentState();
+}
+
+class _ExpandableReplyContentState extends State<_ExpandableReplyContent> {
+  bool _isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return custom_text.Text.rich(
+      widget.textSpan,
+      primary: widget.primary,
+      style: widget.style,
+      maxLines: _isExpanded ? null : widget.maxLines,
+      onShowMore: widget.maxLines == null || _isExpanded
+          ? null
+          : () => setState(() => _isExpanded = true),
     );
   }
 }
