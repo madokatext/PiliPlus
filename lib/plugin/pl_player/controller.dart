@@ -150,11 +150,6 @@ final RxInt seekStartPosition = 0.obs;
   String? _activeVideoPageTag;
   String? _loadedVideoPageTag;
   int _dataSourceGeneration = 0;
-  String? _cdnFailoverMediaKey;
-  int _currentVideoCdnIndex = 0;
-  int? _videoCdnFailoverGeneration;
-  bool _videoCdnFailoverPending = false;
-  NativePlayer? _videoCdnFailoverSourcePlayer;
   int? _mpvLogSession;
   String? _mpvLogMediaKey;
   String? _mpvLogPageTag;
@@ -187,35 +182,6 @@ final RxInt seekStartPosition = 0.obs;
       _videoPlayerController != null &&
       _videoController != null &&
       _videoPlayerController!.current.isNotEmpty;
-
-  String _buildCdnFailoverMediaKey(
-    DataSource dataSource, {
-    required bool isLive,
-    required String? videoPageTag,
-    required String? bvid,
-    required int? cid,
-    required int? epid,
-  }) {
-    if (isLive || dataSource is FileSource) {
-      return '';
-    }
-    final hasStableMediaId = bvid != null || cid != null || epid != null;
-    return [
-      videoPageTag ?? '',
-      bvid ?? '',
-      cid?.toString() ?? '',
-      epid?.toString() ?? '',
-      if (!hasStableMediaId) dataSource.videoSource,
-    ].join('\u0000');
-  }
-
-  void resetCdnForCurrentVideo() {
-    _cdnFailoverMediaKey = null;
-    _currentVideoCdnIndex = 0;
-    _videoCdnFailoverGeneration = null;
-    _videoCdnFailoverPending = false;
-    _videoCdnFailoverSourcePlayer = null;
-  }
 
   String _buildMpvLogMediaKey(
     DataSource dataSource, {
@@ -898,28 +864,6 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     cancelVideoPlayerSwitch();
     _resetMediaOpenRetry();
 
-    if (dataSource case NetworkSource networkSource when !isLive) {
-      final mediaKey = _buildCdnFailoverMediaKey(
-        networkSource,
-        isLive: isLive,
-        videoPageTag: videoPageTag,
-        bvid: bvid,
-        cid: cid,
-        epid: epid,
-      );
-      if (_cdnFailoverMediaKey != mediaKey) {
-        _cdnFailoverMediaKey = mediaKey;
-        _currentVideoCdnIndex = 0;
-      }
-      final selectedSource = networkSource.atCdnIndex(
-        _currentVideoCdnIndex,
-      );
-      dataSource = selectedSource;
-      _currentVideoCdnIndex = selectedSource.cdnIndex;
-    } else {
-      resetCdnForCurrentVideo();
-    }
-
     final dataSourceGeneration = ++_dataSourceGeneration;
     await _cancelInitialPlayGate();
     bool isCurrentDataSource() =>
@@ -1561,46 +1505,8 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     _pausedForVideoStall = false;
     _resumeAfterVideoRecovery = false;
     _videoStallPosition = null;
-    _videoCdnFailoverGeneration = null;
-    _videoCdnFailoverPending = false;
-    _videoCdnFailoverSourcePlayer = null;
     _clearPostSeekWatchdogGuard();
     _resetVideoStallObservation();
-  }
-
-  bool _isTlsHandshakeFailure(String prefix, String message) {
-    final text = '$prefix $message'.toLowerCase();
-    final hasTlsContext =
-        text.contains('tls') ||
-        text.contains('ssl') ||
-        text.contains('gnutls');
-    if (!hasTlsContext) {
-      return false;
-    }
-    final hasHandshakeContext =
-        text.contains('handshake') ||
-        text.contains('certificate verify') ||
-        text.contains('certificate unknown') ||
-        text.contains('unknown ca') ||
-        text.contains('unable to negotiate') ||
-        text.contains('failed to initialize') ||
-        text.contains('ssl_connect') ||
-        text.contains('tls_connect') ||
-        text.contains('wrong version number') ||
-        text.contains('protocol version') ||
-        text.contains('no suitable signature') ||
-        text.contains('peer did not return a certificate');
-    final hasFailure =
-        text.contains('fail') ||
-        text.contains('error') ||
-        text.contains('fatal') ||
-        text.contains('unable') ||
-        text.contains('timeout') ||
-        text.contains('timed out') ||
-        text.contains('unknown') ||
-        text.contains('wrong') ||
-        text.contains('alert');
-    return hasHandshakeContext && hasFailure;
   }
 
   bool _messageReferencesUrl(String message, String? source) {
@@ -1637,149 +1543,6 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     final referencesAudio = _messageReferencesUrl(message, source.audioSource);
     final referencesVideo = _messageReferencesUrl(message, source.videoSource);
     return referencesAudio && !referencesVideo;
-  }
-
-  bool _isExplicitVideoOpenFailure(
-    NetworkSource source,
-    String message,
-  ) {
-    return message.toLowerCase().contains('failed to open') &&
-        _messageReferencesUrl(message, source.videoSource);
-  }
-
-  void _triggerVideoCdnFailover(NativePlayer player) {
-    if (!identical(player, _videoPlayerController) ||
-        _playerCount == 0 ||
-        isLive ||
-        dataSource is! NetworkSource) {
-      return;
-    }
-    _videoNetworkFailed = true;
-    unawaited(_switchCdnAfterVideoFailure(player));
-  }
-
-  bool _handleVideoCdnFailure(
-    NativePlayer player,
-    String prefix,
-    String message,
-  ) {
-    final source = dataSource;
-    if (!identical(player, _videoPlayerController) ||
-        _playerCount == 0 ||
-        isLive ||
-        source is! NetworkSource) {
-      return false;
-    }
-
-    final text = '$prefix $message';
-    if (_isExplicitVideoOpenFailure(source, text)) {
-      _triggerVideoCdnFailover(player);
-      return true;
-    }
-    if (!_isTlsHandshakeFailure(prefix, message)) {
-      return false;
-    }
-    if (_isExternalAudioFailure(source, text)) {
-      return false;
-    }
-
-    final referencesVideo = _messageReferencesUrl(text, source.videoSource);
-    // DASH 视频与 audio-files 共用错误流；存在外置音轨时，只有日志明确
-    // 指向视频 URL 才能触发整媒体 CDN 切换。无 URL 的错误交给视频停滞
-    // 看门狗确认，不能用猜测破坏仍然正常的视频实例。
-    if (referencesVideo || source.audioSource?.isNotEmpty != true) {
-      _triggerVideoCdnFailover(player);
-      return true;
-    }
-    return false;
-  }
-
-  Future<void> _switchCdnAfterVideoFailure(
-    NativePlayer failedPlayer,
-  ) async {
-    final generation = _dataSourceGeneration;
-    if (_videoCdnFailoverGeneration == generation) {
-      if (!identical(failedPlayer, _videoCdnFailoverSourcePlayer)) {
-        _videoCdnFailoverPending = true;
-      }
-      return;
-    }
-    final initialSource = dataSource;
-    if (initialSource is! NetworkSource || !initialSource.hasNextCdn) {
-      _scheduleSeamlessMediaRecovery();
-      return;
-    }
-
-    _videoCdnFailoverGeneration = generation;
-    _videoCdnFailoverPending = false;
-    _videoCdnFailoverSourcePlayer = failedPlayer;
-    _mediaRecoveryTimer?.cancel();
-    _mediaRecoveryTimer = null;
-    _mediaRecoveryAttempt = 0;
-    var attemptedSource = initialSource;
-    var shouldScheduleRecovery = false;
-
-    try {
-      while (_playerCount > 0 &&
-          generation == _dataSourceGeneration &&
-          identical(failedPlayer, _videoPlayerController) &&
-          attemptedSource.hasNextCdn) {
-        final nextSource = attemptedSource.atCdnIndex(
-          attemptedSource.cdnIndex + 1,
-        );
-        var nextVideoCdnFailed = false;
-        final success = await switchVideoPlayer(
-          targetSource: nextSource,
-          width:
-              width ??
-              (failedPlayer.state.width > 0
-                  ? failedPlayer.state.width
-                  : null),
-          height:
-              height ??
-              (failedPlayer.state.height > 0
-                  ? failedPlayer.state.height
-                  : null),
-          reloadSameSource: true,
-          useCurrentVideoCdn: false,
-          allowForcedHandoff: false,
-          strictTimeout: const Duration(seconds: 8),
-          onVideoCdnFailure: () {
-            nextVideoCdnFailed = true;
-          },
-        );
-
-        if (success ||
-            generation != _dataSourceGeneration ||
-            !identical(failedPlayer, _videoPlayerController)) {
-          return;
-        }
-        if (!nextVideoCdnFailed) {
-          shouldScheduleRecovery = true;
-          return;
-        }
-        attemptedSource = nextSource;
-      }
-      shouldScheduleRecovery = true;
-    } finally {
-      final retryPendingVideoFailure = _videoCdnFailoverPending;
-      if (_videoCdnFailoverGeneration == generation) {
-        _videoCdnFailoverGeneration = null;
-        _videoCdnFailoverPending = false;
-        _videoCdnFailoverSourcePlayer = null;
-      }
-      if (shouldScheduleRecovery &&
-          generation == _dataSourceGeneration &&
-          identical(failedPlayer, _videoPlayerController)) {
-        _scheduleSeamlessMediaRecovery();
-      } else if (retryPendingVideoFailure &&
-          generation == _dataSourceGeneration) {
-        final activePlayer = _videoPlayerController;
-        if (activePlayer != null) {
-          unawaited(_switchCdnAfterVideoFailure(activePlayer));
-        }
-      }
-    }
   }
 
   bool _isRetryableVideoMediaError(
@@ -2062,7 +1825,6 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     if (_playerCount == 0 ||
         isLive ||
         dataSource is FileSource ||
-        _videoCdnFailoverGeneration == _dataSourceGeneration ||
         _mediaRecoveryTimer != null ||
         _mediaRecoveryRunning) {
       return;
@@ -2118,7 +1880,6 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
                   ? activePlayer.state.height
                   : null),
           reloadSameSource: true,
-          useCurrentVideoCdn: false,
           allowForcedHandoff: false,
           strictTimeout: const Duration(seconds: 8),
         );
@@ -2320,10 +2081,8 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     required int? width,
     required int? height,
     bool reloadSameSource = false,
-    bool useCurrentVideoCdn = true,
     bool allowForcedHandoff = true,
     Duration strictTimeout = const Duration(seconds: 30),
-    VoidCallback? onVideoCdnFailure,
   }) async {
     final activePlayer = _videoPlayerController;
     final activeController = _videoController;
@@ -2336,11 +2095,8 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         _playerCount == 0) {
       return false;
     }
-    final resolvedTargetSource = useCurrentVideoCdn
-        ? targetSource.atCdnIndex(_currentVideoCdnIndex)
-        : targetSource;
     if (!reloadSameSource &&
-        currentSource.videoSource == resolvedTargetSource.videoSource) {
+        currentSource.videoSource == targetSource.videoSource) {
       return true;
     }
 
@@ -2396,10 +2152,6 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     var activeListenersDetached = false;
     var resumeActiveOnFailure = false;
     StreamSubscription<PlayerLog>? standbyInitializationLogSubscription;
-    StreamSubscription<PlayerLog>? standbyCdnLogSubscription;
-    StreamSubscription<String>? standbyCdnErrorSubscription;
-    var standbyVideoCdnFailed = false;
-    var standbyUnattributedTlsFailure = false;
 
     try {
       final pair = await _createPlayerPair(
@@ -2411,49 +2163,6 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       standbyInitializationLogSubscription =
           pair.initializationLogSubscription;
       standbyCreated = true;
-      void markStandbyVideoCdnFailure() {
-        if (standbyVideoCdnFailed) {
-          return;
-        }
-        standbyVideoCdnFailed = true;
-        onVideoCdnFailure?.call();
-      }
-
-      void inspectStandbyCdnFailure(String prefix, String message) {
-        final text = '$prefix $message';
-        if (_isExplicitVideoOpenFailure(resolvedTargetSource, text)) {
-          markStandbyVideoCdnFailure();
-          return;
-        }
-        if (!_isTlsHandshakeFailure(prefix, message)) {
-          return;
-        }
-        if (_isExternalAudioFailure(resolvedTargetSource, text)) {
-          return;
-        }
-        if (_messageReferencesUrl(
-              text,
-              resolvedTargetSource.videoSource,
-            ) ||
-            resolvedTargetSource.audioSource?.isNotEmpty != true) {
-          markStandbyVideoCdnFailure();
-        } else {
-          // 先记下没有 URL 的 TLS 错误，但不立即判死整个实例。若视频随后
-          // 成功出画，说明该错误不能归因给主视频；若始终没有视频输出，
-          // finally 会把它确认为候选 CDN 的视频打开失败。
-          standbyUnattributedTlsFailure = true;
-        }
-      }
-
-      standbyCdnLogSubscription = standbyPlayer.stream.log.listen((log) {
-        inspectStandbyCdnFailure(log.prefix, log.text);
-      });
-      standbyCdnErrorSubscription = standbyPlayer.stream.error.listen((event) {
-        if (_isExternalAudioFailure(resolvedTargetSource, event)) {
-          return;
-        }
-        inspectStandbyCdnFailure('', event);
-      });
       if (!isCurrentSwitch()) {
         return false;
       }
@@ -2480,7 +2189,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         _mediaForNetworkSource(
           currentMedia,
           currentSource,
-          resolvedTargetSource,
+          targetSource,
           startPosition,
         ),
         play: false,
@@ -2614,10 +2323,6 @@ bool canForceHandoff() {
 while (isCurrentSwitch()) {
   final now = DateTime.now();
 
-  if (standbyVideoCdnFailed) {
-    return false;
-  }
-
   // 明确的渲染错误属于硬失败，不能强制接管。
   if (firstFrameFailed) {
     return false;
@@ -2730,9 +2435,6 @@ var aligned = forceHandoff || activeMediaNeverLoaded;
     !activeMediaNeverLoaded &&
     isCurrentSwitch() &&
     DateTime.now().isBefore(alignmentDeadline)) {
-        if (standbyVideoCdnFailed) {
-          return false;
-        }
         target = activeHandoffPosition();
         drift =
             (standbyPlayer.state.position - target).inMilliseconds.abs();
@@ -2819,7 +2521,6 @@ if (!aligned &&
 // 真正停止旧实例前再次确认切换仍有效。
 // 强制等待期间页面、数据源或备用实例状态都可能已经发生变化。
 if (!isCurrentSwitch() ||
-    standbyVideoCdnFailed ||
     firstFrameFailed ||
     (!forceHandoff && !standbyOutputReady()) ||
     (forceHandoff && !canForceHandoff())) {
@@ -2840,7 +2541,6 @@ if (!isCurrentSwitch() ||
         cancellation,
       );
       if (!standbyPresented ||
-          standbyVideoCdnFailed ||
           firstFrameFailed ||
           !isCurrentSwitch()) {
         _standbyVideoOnTop = false;
@@ -2859,7 +2559,6 @@ if (!isCurrentSwitch() ||
         cancellation,
       );
       if (!committedOutputPresented ||
-          standbyVideoCdnFailed ||
           firstFrameFailed ||
           !isCurrentSwitch()) {
         _standbyVideoOnly = false;
@@ -2873,14 +2572,7 @@ if (!isCurrentSwitch() ||
       _videoPlayerController = standbyPlayer;
       _videoController = standbyController;
       _bumpVideoOutputRevision();
-      dataSource = NetworkSource(
-        videoSource: resolvedTargetSource.videoSource,
-        audioSource: resolvedTargetSource.audioSource,
-        cdnVideoSources: resolvedTargetSource.cdnVideoSources,
-        cdnAudioSources: resolvedTargetSource.cdnAudioSources,
-        cdnIndex: resolvedTargetSource.cdnIndex,
-      );
-      _currentVideoCdnIndex = resolvedTargetSource.cdnIndex;
+      dataSource = targetSource;
       this.width = width;
       this.height = height;
       committed = true;
@@ -2933,18 +2625,6 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
       }
       return true;
     } catch (err, stackTrace) {
-      final switchError = err.toString();
-      if (_isExplicitVideoOpenFailure(
-            resolvedTargetSource,
-            switchError,
-          ) ||
-          (_isTlsHandshakeFailure('', switchError) &&
-              !_isExternalAudioFailure(
-                resolvedTargetSource,
-                switchError,
-              ))) {
-        onVideoCdnFailure?.call();
-      }
       if (kDebugMode) {
         debugPrint('switch video player failed: $err');
         debugPrint(stackTrace.toString());
@@ -2981,20 +2661,7 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
       }
       return committed;
     } finally {
-      if (!committed &&
-          standbyCreated &&
-          !standbyVideoCdnFailed &&
-          standbyUnattributedTlsFailure &&
-          generation == _videoPlayerSwitchGeneration &&
-          dataSourceGeneration == _dataSourceGeneration &&
-          !cancellation.isCompleted &&
-          (standbyPlayer.state.width <= 0 ||
-              standbyPlayer.state.height <= 0)) {
-        onVideoCdnFailure?.call();
-      }
       await standbyInitializationLogSubscription?.cancel();
-      await standbyCdnLogSubscription?.cancel();
-      await standbyCdnErrorSubscription?.cancel();
       if (!committed && standbyCreated) {
         if (mpvLogSession != null) {
           MpvLogService.detachPlayer(
@@ -3202,7 +2869,6 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
       }),
       stream.log.listen((PlayerLog log) {
         MpvLogService.add(player, log);
-        _handleVideoCdnFailure(player, log.prefix, log.text);
         _handleVideoPipelineLog(player, log);
         if (kDebugMode) {
           if (log.level == 'error' || log.level == 'fatal') {
@@ -3233,14 +2899,6 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
         final source = dataSource;
         if (source is NetworkSource &&
             _isExternalAudioFailure(source, event)) {
-          return;
-        }
-        if (_handleVideoCdnFailure(player, '', event)) {
-          return;
-        }
-        if (_isTlsHandshakeFailure('', event)) {
-          // 存在外置音轨且错误没有 URL 时无法确定是哪条链路，
-          // 继续交给视频停滞看门狗判定，不能误触发整媒体恢复。
           return;
         }
         if (source is NetworkSource &&
@@ -3932,7 +3590,6 @@ void onSeekStart({bool fromGesture = false}) {
     unawaited(PlaybackHistoryTracker.instance.end());
     _activeVideoPageTag = null;
     _loadedVideoPageTag = null;
-    resetCdnForCurrentVideo();
     cancelVideoPlayerSwitch();
     _dataSourceGeneration++;
     _discardInitialPlayGate();

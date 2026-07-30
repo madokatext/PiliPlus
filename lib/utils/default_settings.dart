@@ -24,6 +24,7 @@ const Map<String, Object> defaultSettingValues = {
   'cardRadius': 5.0,
   'cdnSpeedTest': true,
   'CDNServices': ['backupUrl', 'ali', 'alib'],
+  'cdnRotationIndex': 0,
   'checkDynamic': true,
   'collapsedReplyFontScale': 0.95,
   'continuePlayInBackground': false,

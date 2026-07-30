@@ -452,6 +452,14 @@ static int get videoPlayerSwitchForceTimeoutSeconds {
 
   static CDNService get defaultCDNService => cdnServices.first;
 
+  static int get cdnRotationIndex {
+    final value = _setting.get(
+      SettingBoxKey.cdnRotationIndex,
+      defaultValue: 0,
+    );
+    return value is int && value >= 0 ? value : 0;
+  }
+
   static String get banWordForRecommend =>
       _setting.get(SettingBoxKey.banWordForRecommend, defaultValue: '');
 

@@ -12,52 +12,10 @@ sealed class DataSource {
 }
 
 class NetworkSource extends DataSource {
-  final List<String> cdnVideoSources;
-  final List<String?> cdnAudioSources;
-  final int cdnIndex;
-
   NetworkSource({
-    required String videoSource,
-    required String? audioSource,
-    List<String>? cdnVideoSources,
-    List<String?>? cdnAudioSources,
-    this.cdnIndex = 0,
-  }) : cdnVideoSources = List<String>.unmodifiable(
-         cdnVideoSources == null || cdnVideoSources.isEmpty
-             ? [videoSource]
-             : cdnVideoSources,
-       ),
-       cdnAudioSources = List<String?>.unmodifiable(
-         cdnAudioSources == null || cdnAudioSources.isEmpty
-             ? [audioSource]
-             : cdnAudioSources,
-       ),
-       super(videoSource: videoSource, audioSource: audioSource);
-
-  int get cdnCount => cdnVideoSources.length;
-
-  bool get hasNextCdn => cdnIndex + 1 < cdnCount;
-
-  NetworkSource atCdnIndex(int index) {
-    final resolvedIndex = index < 0
-        ? 0
-        : index >= cdnCount
-        ? cdnCount - 1
-        : index;
-    final resolvedAudioIndex = resolvedIndex >= cdnAudioSources.length
-        ? cdnAudioSources.length - 1
-        : resolvedIndex;
-    final resolvedAudio = cdnAudioSources.isEmpty
-        ? audioSource
-        : cdnAudioSources[resolvedAudioIndex];
-    return NetworkSource(
-      videoSource: cdnVideoSources[resolvedIndex],
-      audioSource: resolvedAudio,
-      cdnVideoSources: cdnVideoSources,
-      cdnAudioSources: cdnAudioSources,
-      cdnIndex: resolvedIndex,
-    );
-  }
+    required super.videoSource,
+    required super.audioSource,
+  });
 }
 
 class FileSource extends DataSource {

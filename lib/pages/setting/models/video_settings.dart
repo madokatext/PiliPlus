@@ -254,6 +254,7 @@ Future<void> _showCDNDialog(BuildContext context, VoidCallback setState) async {
     await GStorage.setting.putAll({
       SettingBoxKey.CDNServices: res.map((item) => item.name).toList(),
       SettingBoxKey.CDNService: res.first.name,
+      SettingBoxKey.cdnRotationIndex: VideoUtils.cdnRotationIndex,
     });
     setState();
   }

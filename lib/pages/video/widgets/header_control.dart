@@ -517,13 +517,15 @@ class HeaderControlState extends State<HeaderControl>
                       );
                       if (result != null && result.isNotEmpty) {
                         VideoUtils.setCdnServices(result);
-                        setting.putAll({
+                        await setting.putAll({
                           SettingBoxKey.CDNServices: result
                               .map((item) => item.name)
                               .toList(),
                           SettingBoxKey.CDNService: result.first.name,
+                          SettingBoxKey.cdnRotationIndex:
+                              VideoUtils.cdnRotationIndex,
                         });
-                        plPlayerController.resetCdnForCurrentVideo();
+                        videoDetailCtr.selectNextCdn();
                         SmartDialog.showToast('已更新 CDN 顺序，正在重载视频');
                         videoDetailCtr.queryVideoUrl(fromReset: true);
                       }

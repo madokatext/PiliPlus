@@ -19,6 +19,7 @@ import 'package:PiliPlus/models/common/sponsor_block/post_segment_model.dart';
 import 'package:PiliPlus/models/common/sponsor_block/segment_model.dart';
 import 'package:PiliPlus/models/common/sponsor_block/segment_type.dart';
 import 'package:PiliPlus/models/common/video/audio_quality.dart';
+import 'package:PiliPlus/models/common/video/cdn_type.dart';
 import 'package:PiliPlus/models/common/video/source_type.dart';
 import 'package:PiliPlus/models/common/video/video_decode_type.dart';
 import 'package:PiliPlus/models/common/video/video_quality.dart';
@@ -152,8 +153,7 @@ class VideoDetailController extends GetxController
   late VideoItem firstVideo;
   String? videoUrl;
   String? audioUrl;
-  List<String> videoCdnUrls = const [];
-  List<String?> audioCdnUrls = const [];
+  CDNService? _cdnService;
   Duration? defaultST;
   Duration? playedTime;
   String get playedTimePos {
@@ -162,38 +162,35 @@ class VideoDetailController extends GetxController
   }
 
   void _setVideoPlayUrls(Iterable<String> playUrls) {
-    videoCdnUrls = VideoUtils.getCdnUrls(playUrls);
-    videoUrl = videoCdnUrls.first;
+    videoUrl = VideoUtils.getCdnUrl(
+      playUrls,
+      defaultCDNService: _currentCdnService,
+    );
   }
 
   void _setAudioPlayUrls(Iterable<String> playUrls) {
-    final urls = VideoUtils.getCdnUrls(playUrls, isAudio: true);
-    audioCdnUrls = urls.cast<String?>();
-    audioUrl = urls.first;
+    audioUrl = VideoUtils.getCdnUrl(
+      playUrls,
+      defaultCDNService: _currentCdnService,
+      isAudio: true,
+    );
   }
 
   void _clearAudioPlayUrls() {
     audioUrl = '';
-    audioCdnUrls = List<String?>.filled(
-      videoCdnUrls.isEmpty ? 1 : videoCdnUrls.length,
-      '',
-      growable: false,
-    );
   }
 
-  NetworkSource _networkSource() {
-    final primaryVideo = videoUrl!;
-    final videos = videoCdnUrls.isEmpty ? [primaryVideo] : videoCdnUrls;
-    final audios = audioCdnUrls.isEmpty
-        ? List<String?>.filled(videos.length, audioUrl, growable: false)
-        : audioCdnUrls;
-    return NetworkSource(
-      videoSource: primaryVideo,
-      audioSource: audioUrl,
-      cdnVideoSources: videos,
-      cdnAudioSources: audios,
-    );
+  CDNService get _currentCdnService =>
+      _cdnService ??= VideoUtils.takeNextCdnService();
+
+  void selectNextCdn() {
+    _cdnService = VideoUtils.takeNextCdnService();
   }
+
+  NetworkSource _networkSource() => NetworkSource(
+    videoSource: videoUrl!,
+    audioSource: audioUrl,
+  );
 
   // 亮度
   double? brightness;
@@ -771,14 +768,14 @@ class VideoDetailController extends GetxController
     }
   
     final targetVideo = findVideoByQa(targetQuality);
-    final targetVideoUrls = VideoUtils.getCdnUrls(targetVideo.playUrls);
-    final targetVideoUrl = targetVideoUrls.first;
+    final targetVideoUrl = VideoUtils.getCdnUrl(
+      targetVideo.playUrls,
+      defaultCDNService: _currentCdnService,
+    );
     final switched = await plPlayerController.switchVideoPlayer(
       targetSource: NetworkSource(
         videoSource: targetVideoUrl,
         audioSource: audioUrl,
-        cdnVideoSources: targetVideoUrls,
-        cdnAudioSources: audioCdnUrls,
       ),
       width: targetVideo.width,
       height: targetVideo.height,
@@ -791,7 +788,6 @@ class VideoDetailController extends GetxController
     plPlayerController.cacheVideoQa = preferredQuality;
     firstVideo = targetVideo;
     videoUrl = targetVideoUrl;
-    videoCdnUrls = targetVideoUrls;
     currentDecodeFormats = VideoDecodeFormatType.fromString(
       targetVideo.codecs!,
     );
@@ -1455,8 +1451,7 @@ class VideoDetailController extends GetxController
     defaultST = null;
     videoUrl = null;
     audioUrl = null;
-    videoCdnUrls = const [];
-    audioCdnUrls = const [];
+    _cdnService = null;
 
     // danmaku
     savedDanmaku = null;
@@ -1734,9 +1729,6 @@ class VideoDetailController extends GetxController
               Get.back();
               this.videoUrl = videoUrl;
               this.audioUrl = audioUrl;
-              videoCdnUrls = [videoUrl];
-              audioCdnUrls = [audioUrl];
-              plPlayerController.resetCdnForCurrentVideo();
               playerInit();
             },
             child: const Text('确定'),

@@ -1,18 +1,21 @@
+import 'dart:async' show unawaited;
+
 import 'package:PiliPlus/models/common/video/cdn_type.dart';
 import 'package:PiliPlus/models/common/video/video_decode_type.dart';
 import 'package:PiliPlus/models_new/live/live_room_play_info/codec.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
+import 'package:PiliPlus/utils/storage.dart';
+import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, debugPrint;
 
 abstract final class VideoUtils {
   static List<CDNService> cdnServices = Pref.cdnServices;
+  static int _cdnRotationIndex = Pref.cdnRotationIndex;
   static String? liveCdnUrl = Pref.liveCdnUrl;
   static bool disableAudioCDN = Pref.disableAudioCDN;
 
   static CDNService get cdnService => cdnServices.first;
-
-  static set cdnService(CDNService value) => cdnServices = [value];
 
   static String get cdnDescription => cdnServices.indexed
       .map((item) => '${item.$1 + 1}. ${item.$2.desc}')
@@ -21,6 +24,22 @@ abstract final class VideoUtils {
   static void setCdnServices(Iterable<CDNService> services) {
     final ordered = services.take(3).toList();
     cdnServices = ordered.isEmpty ? [CDNService.backupUrl] : ordered;
+    _cdnRotationIndex = 0;
+  }
+
+  static int get cdnRotationIndex => _cdnRotationIndex;
+
+  static CDNService takeNextCdnService() {
+    final index = _cdnRotationIndex % cdnServices.length;
+    final service = cdnServices[index];
+    _cdnRotationIndex = (index + 1) % cdnServices.length;
+    unawaited(
+      GStorage.setting.put(
+        SettingBoxKey.cdnRotationIndex,
+        _cdnRotationIndex,
+      ),
+    );
+    return service;
   }
 
   static const _proxyTf = 'proxy-tf-all-ws.bilivideo.com';
@@ -101,22 +120,6 @@ abstract final class VideoUtils {
         : Uri.parse(mcdnUpgcxcode)
               .replace(host: defaultCDNService.host ?? CDNService.ali.host)
               .toString();
-  }
-
-  static List<String> getCdnUrls(
-    Iterable<String> urls, {
-    bool isAudio = false,
-  }) {
-    final sourceUrls = urls.toList();
-    return cdnServices
-        .map(
-          (service) => getCdnUrl(
-            sourceUrls,
-            defaultCDNService: service,
-            isAudio: isAudio,
-          ),
-        )
-        .toList(growable: false);
   }
 
   static String getLiveCdnUrl(CodecItem e, {int index = 0}) {
