@@ -63,6 +63,7 @@ class _LaterPageState extends State<LaterPage>
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = ColorScheme.of(context);
     return Obx(
       () {
         final enableMultiSelect = _baseCtr.enableMultiSelect.value;
@@ -94,6 +95,8 @@ class _LaterPageState extends State<LaterPage>
                                 details.localPosition.dx < _baseCtr.dx,
                               ),
                           child: FloatingActionButton.extended(
+                            backgroundColor: colorScheme.primary,
+                            foregroundColor: colorScheme.onPrimary,
                             onPressed: () {
                               if (_baseCtr.isPlayAll.value) {
                                 currCtr().toViewPlayAll();

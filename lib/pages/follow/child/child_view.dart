@@ -43,8 +43,12 @@ class _FollowChildPageState extends State<FollowChildPage>
         SingleTickerProviderStateMixin,
         BaseFabMixin,
         LazyFabMixin {
+  static const double _fabRevealDistance = 72.0;
+
   late String _tag;
   late FollowChildController _followController;
+  double _fabUpwardDistance = 0.0;
+  bool _fabHiddenByScroll = false;
 
   String get _newTag =>
       '${widget.tag ?? Utils.generateRandomString(8)}${widget.tagid}';
@@ -75,6 +79,42 @@ class _FollowChildPageState extends State<FollowChildPage>
         _initController();
       }
     }
+  }
+
+  bool _handleFabScroll(ScrollNotification notification) {
+    if (notification.depth != 0 ||
+        notification.metrics.axis != Axis.vertical) {
+      return false;
+    }
+
+    if (notification is! ScrollUpdateNotification) {
+      return false;
+    }
+
+    final delta = notification.scrollDelta ?? 0.0;
+
+    if (delta > 0) {
+      _fabUpwardDistance = 0.0;
+
+      if (!_fabHiddenByScroll) {
+        _fabHiddenByScroll = true;
+        hideFab();
+      }
+    } else if (delta < 0 && _fabHiddenByScroll) {
+      _fabUpwardDistance += -delta;
+
+      final reachedTop =
+          notification.metrics.pixels <=
+          notification.metrics.minScrollExtent + 0.5;
+
+      if (_fabUpwardDistance >= _fabRevealDistance || reachedTop) {
+        _fabUpwardDistance = 0.0;
+        _fabHiddenByScroll = false;
+        showFab();
+      }
+    }
+
+    return false;
   }
 
   @override
@@ -112,16 +152,8 @@ class _FollowChildPageState extends State<FollowChildPage>
       return Stack(
         clipBehavior: Clip.none,
         children: [
-          NotificationListener<UserScrollNotification>(
-            onNotification: (notification) {
-              final direction = notification.direction;
-              if (direction == .forward) {
-                showFab();
-              } else if (direction == .reverse) {
-                hideFab();
-              }
-              return false;
-            },
+          NotificationListener<ScrollNotification>(
+            onNotification: _handleFabScroll,
             child: child,
           ),
           Positioned(
@@ -134,6 +166,8 @@ class _FollowChildPageState extends State<FollowChildPage>
                   bottom: kFloatingActionButtonMargin + padding.bottom,
                 ),
                 child: FloatingActionButton.extended(
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
                   onPressed: () => _followController
                     ..setOrderType(
                       _followController.orderType.value == FollowOrderType.def

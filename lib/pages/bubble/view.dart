@@ -51,6 +51,7 @@ class _BubblePageState extends State<BubblePage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final colorScheme = ColorScheme.of(context);
     final padding = MediaQuery.viewPaddingOf(context);
     Widget child = refreshIndicator(
       onRefresh: _controller.onRefresh,
@@ -88,6 +89,8 @@ class _BubblePageState extends State<BubblePage>
                 );
                 if (item != null) {
                   return FloatingActionButton.extended(
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
                     tooltip: '排序',
                     onPressed: () => showDialog(
                       context: context,

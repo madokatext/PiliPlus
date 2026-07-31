@@ -49,6 +49,7 @@ class _FavDetailPageState extends State<FavDetailPage> with GridMixin {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     padding = MediaQuery.viewPaddingOf(context);
     return Obx(
       () {
@@ -84,6 +85,8 @@ class _FavDetailPageState extends State<FavDetailPage> with GridMixin {
                                     _favDetailController.dx,
                               ),
                           child: FloatingActionButton.extended(
+                            backgroundColor: colorScheme.primary,
+                            foregroundColor: colorScheme.onPrimary,
                             onPressed: () {
                               if (_favDetailController.isPlayAll.value) {
                                 _favDetailController.toViewPlayAll();
