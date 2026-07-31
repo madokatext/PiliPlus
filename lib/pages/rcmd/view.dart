@@ -96,7 +96,7 @@ class _RcmdPageState extends State<RcmdPage>
       ),
       decoration: const BoxDecoration(borderRadius: Style.mdRadius),
       child: refreshIndicator(
-        onRefresh: controller.onRefresh,
+        onRefresh: controller.onPullDownRefresh,
         child: NotificationListener<ScrollNotification>(
           onNotification: (notification) {
             _scheduleExposureCheck();
@@ -156,7 +156,7 @@ class _RcmdPageState extends State<RcmdPage>
                       return GestureDetector(
                         onTap: () => controller
                           ..animateToTop()
-                          ..onRefresh(),
+                          ..refreshFromHistoryMarker(),
                         child: Card(
                           child: Container(
                             alignment: Alignment.center,

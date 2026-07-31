@@ -480,6 +480,11 @@ static int get rcmdRefreshCount {
   return (value is num ? value.toInt() : 20).clamp(4, 30).toInt();
 }
 
+  static bool get showRecommendRefreshStatsToast => _setting.get(
+    SettingBoxKey.showRecommendRefreshStatsToast,
+    defaultValue: false,
+  );
+
   static RecommendHistoryFilterSettings get recommendHistoryFilterSettings =>
       RecommendHistoryFilterSettings.fromStorage(
         _setting.get(SettingBoxKey.recommendHistoryFilterSettings),

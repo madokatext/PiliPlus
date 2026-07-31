@@ -11,6 +11,7 @@ import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 
 const Set<String> _advancedSettingTitles = {
+  '首页下拉刷新显示过滤统计',
   '竖屏视频全屏底栏避让系统导航栏',
   '弹幕行高',
   '横向滑动阈值',

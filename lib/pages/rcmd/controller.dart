@@ -30,8 +30,11 @@ class RcmdController
   int? lastRefreshAt;
   late bool savedRcmdTip = Pref.savedRcmdTip;
 
-  /// 仅在下拉刷新或点击“上次看到这里”时为 true。
+  /// 仅在手动刷新时为 true。
   bool _manualRefreshing = false;
+  bool _showRefreshFilterStats = false;
+  int _refreshRecommendationCount = 0;
+  int _refreshFilteredCount = 0;
 
   /// App 推荐接口自己的 freshIdx。
   ///
@@ -73,6 +76,7 @@ class RcmdController
         freshIdx: page,
         // 首次加载和触底加载仍保持原来的 20 项。
         ps: _manualRefreshing ? refreshItemCount : 20,
+        onFilterStats: _recordFilterStats,
       );
       if (result case Success(:final response)) {
         _stampOccurrences(response, _nextResponseId());
@@ -89,7 +93,10 @@ class RcmdController
 
   /// App 模式普通加载：只请求一个批次。
   Future<LoadingState<List<BaseRcmdVideoItemModel>>> _getSingleAppData() async {
-    final result = await VideoHttp.rcmdVideoListApp(freshIdx: _appFreshIdx);
+    final result = await VideoHttp.rcmdVideoListApp(
+      freshIdx: _appFreshIdx,
+      onFilterStats: _recordFilterStats,
+    );
 
     if (result case Success(:final response)) {
       _stampOccurrences(response, _nextResponseId());
@@ -109,7 +116,10 @@ class RcmdController
     var requestCount = 0;
 
     while (data.length < refreshItemCount && requestCount < maxRequestCount) {
-      final result = await VideoHttp.rcmdVideoListApp(freshIdx: _appFreshIdx);
+      final result = await VideoHttp.rcmdVideoListApp(
+        freshIdx: _appFreshIdx,
+        onFilterStats: _recordFilterStats,
+      );
 
       if (result case Success(:final response)) {
         requestCount++;
@@ -158,11 +168,15 @@ class RcmdController
       final remaining = targetCount - data.length;
       final LoadingState<List<BaseRcmdVideoItemModel>> result;
       if (appRcmd) {
-        result = await VideoHttp.rcmdVideoListApp(freshIdx: appCursor);
+        result = await VideoHttp.rcmdVideoListApp(
+          freshIdx: appCursor,
+          onFilterStats: _recordFilterStats,
+        );
       } else {
         result = await VideoHttp.rcmdVideoList(
           freshIdx: webCursor,
           ps: _adaptiveRequestCount(remaining),
+          onFilterStats: _recordFilterStats,
         );
       }
 
@@ -198,6 +212,13 @@ class RcmdController
         } catch (_) {
           // History failures must not blank or shorten the recommendation feed.
           blocked = const <String>{};
+        }
+
+        if (_showRefreshFilterStats && blocked.isNotEmpty) {
+          _refreshFilteredCount += response.where((item) {
+            final videoKey = recommendVideoKey(item);
+            return videoKey != null && blocked.contains(videoKey);
+          }).length;
         }
 
         for (final item in response) {
@@ -353,7 +374,14 @@ class RcmdController
   }
 
   @override
-  Future<void> onRefresh() async {
+  Future<void> onRefresh() => _refresh(showFilterStats: false);
+
+  Future<void> onPullDownRefresh() => _refresh(showFilterStats: true);
+
+  Future<void> refreshFromHistoryMarker() =>
+      _refresh(showFilterStats: false);
+
+  Future<void> _refresh({required bool showFilterStats}) async {
     if (_activeQuery case final activeQuery?) {
       try {
         await activeQuery;
@@ -362,6 +390,10 @@ class RcmdController
 
     final previousPage = page;
     final previousAppFreshIdx = _appFreshIdx;
+    _showRefreshFilterStats =
+        showFilterStats && Pref.showRecommendRefreshStatsToast;
+    _refreshRecommendationCount = 0;
+    _refreshFilteredCount = 0;
     _manualRefreshing = true;
     page = 0;
     _appFreshIdx = 0;
@@ -370,12 +402,30 @@ class RcmdController
     try {
       await queryData();
     } finally {
+      final shouldShowStats =
+          _lastRequestSucceeded && _showRefreshFilterStats;
+      final recommendationCount = _refreshRecommendationCount;
+      final filteredCount = _refreshFilteredCount;
       if (!_lastRequestSucceeded) {
         page = previousPage;
         _appFreshIdx = previousAppFreshIdx;
       }
       _manualRefreshing = false;
+      _showRefreshFilterStats = false;
+      if (shouldShowStats) {
+        SmartDialog.showToast(
+          '本次推荐：共 $recommendationCount 条，过滤 $filteredCount 条',
+        );
+      }
     }
+  }
+
+  void _recordFilterStats(int total, int filtered) {
+    if (!_manualRefreshing || !_showRefreshFilterStats) {
+      return;
+    }
+    _refreshRecommendationCount += total;
+    _refreshFilteredCount += filtered;
   }
 
   void requestLoadMore(int index, int length) {

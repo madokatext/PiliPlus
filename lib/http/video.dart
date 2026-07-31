@@ -53,6 +53,7 @@ abstract final class VideoHttp {
   static Future<LoadingState<List<RcmdVideoItemModel>>> rcmdVideoList({
     required int ps,
     required int freshIdx,
+    void Function(int total, int filtered)? onFilterStats,
   }) async {
     final res = await Request().get(
       Api.recommendListWeb,
@@ -67,8 +68,9 @@ abstract final class VideoHttp {
       }),
     );
     if (res.data['code'] == 0) {
+      final items = res.data['data']['item'] as List;
       List<RcmdVideoItemModel> list = <RcmdVideoItemModel>[];
-      for (final i in res.data['data']['item']) {
+      for (final i in items) {
         //过滤掉live与ad，以及拉黑用户
         if (i['goto'] == 'av' &&
             (i['owner'] != null &&
@@ -79,6 +81,7 @@ abstract final class VideoHttp {
           }
         }
       }
+      onFilterStats?.call(items.length, items.length - list.length);
       return Success(list);
     } else {
       return Error(res.data['message']);
@@ -88,6 +91,7 @@ abstract final class VideoHttp {
   // 添加额外的loginState变量模拟未登录状态
   static Future<LoadingState<List<RcmdVideoItemAppModel>>> rcmdVideoListApp({
     required int freshIdx,
+    void Function(int total, int filtered)? onFilterStats,
   }) async {
     final params = {
       'build': 2001100,
@@ -140,8 +144,9 @@ abstract final class VideoHttp {
       ),
     );
     if (res.data['code'] == 0) {
+      final items = res.data['data']['items'] as List;
       List<RcmdVideoItemAppModel> list = <RcmdVideoItemAppModel>[];
-      for (final i in res.data['data']['items']) {
+      for (final i in items) {
         // 屏蔽推广和拉黑用户
         if (i['card_goto'] != 'ad_av' &&
             i['card_goto'] != 'ad_web_s' &&
@@ -159,6 +164,7 @@ abstract final class VideoHttp {
           }
         }
       }
+      onFilterStats?.call(items.length, items.length - list.length);
       return Success(list);
     } else {
       return Error(res.data['message']);

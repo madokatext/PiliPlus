@@ -118,6 +118,7 @@ const Map<String, Object> defaultSettingValues = {
   'preloadVideoShot': true,
   'preferCodecs': <String>['AV1', 'HEVC', 'AVC'],
   'rcmdRefreshCount': 20,
+  'showRecommendRefreshStatsToast': false,
   'recommendHistoryFilterSettings': <String, Object>{
     'enabled': false,
     'lookbackMinutes': 10080,

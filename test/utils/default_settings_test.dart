@@ -12,6 +12,7 @@ void main() {
     expect(defaultSettingValues['videoPlayerSwitchForceTimeoutSeconds'], 5);
     expect(defaultSettingValues['preloadVideoShot'], isTrue);
     expect(defaultSettingValues['rcmdRefreshCount'], 20);
+    expect(defaultSettingValues['showRecommendRefreshStatsToast'], isFalse);
     expect(defaultSettingValues['danmakuFontScale'], 0.9);
     expect(defaultSettingValues['danmakuFontScaleFS'], 1.2);
     expect(defaultSettingValues['danmakuMassiveMode'], isTrue);

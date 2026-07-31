@@ -84,6 +84,13 @@ List<SettingsModel> get recommendSettings => [
         _historyFilterSummary(Pref.recommendHistoryFilterSettings),
     onTap: _showHistoryFilterDialog,
   ),
+  const SwitchModel(
+    title: '首页下拉刷新显示过滤统计',
+    subtitle: '刷新后提示本次请求的推荐总数和过滤数',
+    leading: Icon(Icons.query_stats_outlined),
+    setKey: SettingBoxKey.showRecommendRefreshStatsToast,
+    defaultVal: false,
+  ),
   getVideoFilterSelectModel(
     title: '点赞率',
     suffix: '%',
