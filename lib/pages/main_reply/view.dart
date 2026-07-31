@@ -96,6 +96,8 @@ class _MainReplyPageState extends State<MainReplyPage>
           padding: .only(bottom: padding.bottom + kFloatingActionButtonMargin),
           child: FloatingActionButton(
             heroTag: null,
+              backgroundColor: colorScheme.primary,
+  foregroundColor: colorScheme.onPrimary,
             onPressed: () {
               try {
                 feedBack();
