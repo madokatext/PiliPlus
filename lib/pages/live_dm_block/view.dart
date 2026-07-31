@@ -35,6 +35,7 @@ class _LiveDmBlockPageState extends State<LiveDmBlockPage> {
     isPortrait = MediaQuery.sizeOf(context).isPortrait;
     padding = MediaQuery.viewPaddingOf(context);
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     Widget tabBar = TabBar(
       controller: _controller.tabController,
       tabs: const [
@@ -144,6 +145,8 @@ class _LiveDmBlockPageState extends State<LiveDmBlockPage> {
               right: kFloatingActionButtonMargin,
               bottom: kFloatingActionButtonMargin + padding.bottom,
               child: FloatingActionButton(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
                 tooltip: '添加',
                 onPressed: _addShieldKeyword,
                 child: const Icon(Icons.add),

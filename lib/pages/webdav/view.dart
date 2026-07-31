@@ -38,6 +38,7 @@ class _WebDavSettingPageState extends State<WebDavSettingPage> {
   Widget build(BuildContext context) {
     final showAppBar = widget.showAppBar;
     final padding = MediaQuery.viewPaddingOf(context);
+    final colorScheme = ColorScheme.of(context);
     return Scaffold(
       appBar: showAppBar ? AppBar(title: const Text('WebDAV 设置')) : null,
       body: Stack(
@@ -126,6 +127,8 @@ class _WebDavSettingPageState extends State<WebDavSettingPage> {
                 kFloatingActionButtonMargin + (showAppBar ? padding.right : 0),
             bottom: kFloatingActionButtonMargin + padding.bottom,
             child: FloatingActionButton(
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
               child: const Icon(Icons.save),
               onPressed: () async {
                 await GStorage.setting.putAll({

@@ -45,6 +45,7 @@ class _PgcReviewPageState extends State<PgcReviewPage>
   Widget build(BuildContext context) {
     super.build(context);
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -114,6 +115,8 @@ class _PgcReviewPageState extends State<PgcReviewPage>
               MediaQuery.viewPaddingOf(context).bottom +
               kFloatingActionButtonMargin,
           child: FloatingActionButton(
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
             onPressed: () => showDialog(
               context: context,
               builder: (context) => SimpleDialog(

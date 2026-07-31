@@ -250,6 +250,7 @@ class _PostPanelState extends State<PostPanel>
     if (list.isEmpty) {
       return scrollableError;
     }
+    final colorScheme = theme.colorScheme;
     final bottom = MediaQuery.viewPaddingOf(context).bottom;
     Widget child = ListView.builder(
       key: _key,
@@ -274,6 +275,8 @@ class _PostPanelState extends State<PostPanel>
           right: kFloatingActionButtonMargin,
           bottom: kFloatingActionButtonMargin + bottom,
           child: FloatingActionButton(
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
             tooltip: '提交',
             onPressed: () => showDialog(
               context: context,

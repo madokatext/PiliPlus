@@ -42,6 +42,7 @@ class _DanmakuBlockPageState extends State<DanmakuBlockPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = ColorScheme.of(context);
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
@@ -72,6 +73,8 @@ class _DanmakuBlockPageState extends State<DanmakuBlockPage> {
             .toList(),
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
         tooltip: '添加',
         onPressed: () =>
             _showAddDialog(DmBlockType.values[_controller.tabController.index]),

@@ -84,6 +84,7 @@ class _DynMentionPanelState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final padding = MediaQuery.paddingOf(context).bottom;
     final viewInset = MediaQuery.viewInsetsOf(context).bottom;
     return Column(
@@ -205,6 +206,8 @@ class _DynMentionPanelState
                         : const Offset(0, 3),
                     duration: const Duration(milliseconds: 120),
                     child: FloatingActionButton(
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
                       onPressed: () {
                         if (_controller.mentionList.isNullOrEmpty) {
                           _controller.showBtn.value = false;
