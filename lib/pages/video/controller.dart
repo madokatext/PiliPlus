@@ -973,8 +973,8 @@ class VideoDetailController extends GetxController
     }
 
     // Avoid reaching EOF while Android is still replacing vo=null with the
-    // real GPU surface.
-    final endGuardMilliseconds = (timeLength ~/ 20).clamp(1000, 5000);
+    // real GPU surface. Keep at least three seconds away from EOF.
+    final endGuardMilliseconds = (timeLength ~/ 20).clamp(3000, 5000);
     if (progress >= timeLength ||
         timeLength - progress <= endGuardMilliseconds) {
       return Duration.zero;
