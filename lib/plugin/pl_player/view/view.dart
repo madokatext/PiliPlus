@@ -841,10 +841,11 @@ ui.PointerDeviceKind? _gesturePointerKind;
         () {
           final list = videoDetailController.languages.value;
           if (list != null && list.isNotEmpty) {
+            final currLang = videoDetailController.currLang.value ?? '';
             return PopupMenuButton<String>(
               tooltip: '翻译',
               requestFocus: false,
-              initialValue: videoDetailController.currLang.value,
+              initialValue: currLang,
               color: Colors.black.withValues(alpha: 0.8),
               itemBuilder: (context) {
                 return [
@@ -852,11 +853,11 @@ ui.PointerDeviceKind? _gesturePointerKind;
                     height: 35,
                     value: '',
                     onTap: () => videoDetailController.setLanguage(''),
-                    child: const Text(
+                    child: Text(
                       "关闭翻译",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
+                      style: playerMenuItemTextStyle(
+                        context,
+                        selected: currLang.isEmpty,
                       ),
                     ),
                   ),
@@ -867,9 +868,9 @@ ui.PointerDeviceKind? _gesturePointerKind;
                       onTap: () => videoDetailController.setLanguage(e.lang!),
                       child: Text(
                         e.title!,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
+                        style: playerMenuItemTextStyle(
+                          context,
+                          selected: e.lang == currLang,
                         ),
                       ),
                     );
@@ -907,11 +908,11 @@ ui.PointerDeviceKind? _gesturePointerKind;
                     value: 0,
                     height: 35,
                     onTap: () => videoDetailController.setSubtitle(0),
-                    child: const Text(
+                    child: Text(
                       "关闭字幕",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
+                      style: playerMenuItemTextStyle(
+                        context,
+                        selected: val == 0,
                       ),
                     ),
                   ),
@@ -924,7 +925,10 @@ ui.PointerDeviceKind? _gesturePointerKind;
                         e.lanDoc ?? e.lan,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const .new(color: Colors.white, fontSize: 13),
+                        style: playerMenuItemTextStyle(
+                          context,
+                          selected: val == i + 1,
+                        ),
                       ),
                     );
                   }),
@@ -1033,12 +1037,11 @@ ui.PointerDeviceKind? _gesturePointerKind;
                     },
                     child: Text(
                       item.newDesc ?? '',
-                      style: enabled
-                          ? const TextStyle(color: Colors.white, fontSize: 13)
-                          : const TextStyle(
-                              color: Color(0x62FFFFFF),
-                              fontSize: 13,
-                            ),
+                      style: playerMenuItemTextStyle(
+                        context,
+                        selected: currentVideoQa.code == item.quality,
+                        enabled: enabled,
+                      ),
                     ),
                   );
                 },

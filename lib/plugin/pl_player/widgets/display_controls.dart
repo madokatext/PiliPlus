@@ -5,6 +5,18 @@ import 'package:get/get.dart';
 
 const _itemTextStyle = TextStyle(color: Colors.white, fontSize: 13);
 
+TextStyle playerMenuItemTextStyle(
+  BuildContext context, {
+  required bool selected,
+  bool enabled = true,
+}) => _itemTextStyle.copyWith(
+  color: !enabled
+      ? const Color(0x62FFFFFF)
+      : selected
+      ? ColorScheme.of(context).primary
+      : null,
+);
+
 class PlayerFitButton extends StatelessWidget {
   const PlayerFitButton({
     super.key,
@@ -30,7 +42,13 @@ class PlayerFitButton extends StatelessWidget {
               padding: const EdgeInsets.only(left: 30),
               value: boxFit,
               onTap: () => controller.toggleVideoFit(boxFit),
-              child: Text(boxFit.desc, style: _itemTextStyle),
+              child: Text(
+                boxFit.desc,
+                style: playerMenuItemTextStyle(
+                  context,
+                  selected: boxFit == fit,
+                ),
+              ),
             ),
           )
           .toList(),
@@ -73,7 +91,10 @@ class PlayerSpeedButton extends StatelessWidget {
               onTap: () => controller.setPlaybackSpeed(speed),
               child: Text(
                 '${speed}X',
-                style: _itemTextStyle,
+                style: playerMenuItemTextStyle(
+                  context,
+                  selected: speed == controller.playbackSpeed,
+                ),
                 semanticsLabel: '$speed倍速',
               ),
             ),
