@@ -49,6 +49,8 @@
 
 在此致敬上游作者：[orz12/PiliPalaX](https://github.com/orz12/PiliPalaX)
 
+在此致敬上游作者：[bggRGjQaUbCoE/PiliPlus](https://github.com/bggRGjQaUbCoE/PiliPlus)
+
 本仓库做了更激进的修改，感谢各上游项目与贡献者的开源精神。
 
 感谢使用。
