@@ -12,11 +12,8 @@
 ![GitHub all releases](https://img.shields.io/github/downloads/madokatext/PiliPlus-Max/total)
 
 <p>使用 Flutter 开发的 BiliBili 第三方客户端</p>
-
-
-## 
-
-
+<br>
+<br>
 ## 与 Piliplus 项目的区别
 
 见 Release 页更新日志。
