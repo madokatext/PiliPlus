@@ -63,6 +63,8 @@ abstract class CommonDynPageMultiState<T extends StatefulWidget>
 
 mixin CommonDynPageMixin<T extends StatefulWidget>
     on State<T>, TickerProvider, BaseFabMixin<T>, FabMixin<T> {
+  static const double _fabRevealDistance = 72.0;
+
   CommonDynController get controller;
 
   bool get horizontalPreview => !isPortrait && controller.horizontalPreview;
@@ -74,6 +76,8 @@ mixin CommonDynPageMixin<T extends StatefulWidget>
   late bool isPortrait;
   late double maxWidth;
   late double maxHeight;
+  double _fabUpwardDistance = 0.0;
+  bool _fabHiddenByScroll = false;
 
   @override
   void didChangeDependencies() {
@@ -334,20 +338,45 @@ mixin CommonDynPageMixin<T extends StatefulWidget>
     child: const Icon(Icons.reply),
   );
 
+  bool _handleFabScroll(ScrollNotification notification) {
+    if (notification.depth != 0 ||
+        notification.metrics.axis != Axis.vertical) {
+      return false;
+    }
+
+    if (notification is! ScrollUpdateNotification) {
+      return false;
+    }
+
+    final delta = notification.scrollDelta ?? 0.0;
+
+    if (delta > 0) {
+      _fabUpwardDistance = 0.0;
+
+      if (!_fabHiddenByScroll) {
+        _fabHiddenByScroll = true;
+        hideFab();
+      }
+    } else if (delta < 0 && _fabHiddenByScroll) {
+      _fabUpwardDistance += -delta;
+
+      final reachedTop =
+          notification.metrics.pixels <=
+          notification.metrics.minScrollExtent + 0.5;
+
+      if (_fabUpwardDistance >= _fabRevealDistance || reachedTop) {
+        _fabUpwardDistance = 0.0;
+        _fabHiddenByScroll = false;
+        showFab();
+      }
+    }
+
+    return false;
+  }
+
   Widget fabAnimWrapper(Widget child) {
-    return NotificationListener<UserScrollNotification>(
-      onNotification: (notification) {
-        if (notification.metrics.axisDirection == .down) {
-          switch (notification.direction) {
-            case .forward:
-              showFab();
-            case .reverse:
-              hideFab();
-            default:
-          }
-        }
-        return false;
-      },
+    return NotificationListener<ScrollNotification>(
+      onNotification: _handleFabScroll,
       child: child,
     );
   }

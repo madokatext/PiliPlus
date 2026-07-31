@@ -41,17 +41,57 @@ class MainReplyPage extends StatefulWidget {
 
 class _MainReplyPageState extends State<MainReplyPage>
     with SingleTickerProviderStateMixin, BaseFabMixin, FabMixin {
+  static const double _fabRevealDistance = 72.0;
+
   final _controller = Get.put(
     MainReplyController(),
     tag: Utils.generateRandomString(8),
   );
 
   late EdgeInsets padding;
+  double _fabUpwardDistance = 0.0;
+  bool _fabHiddenByScroll = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     padding = MediaQuery.viewPaddingOf(context);
+  }
+
+  bool _handleFabScroll(ScrollNotification notification) {
+    if (notification.depth != 0 ||
+        notification.metrics.axis != Axis.vertical) {
+      return false;
+    }
+
+    if (notification is! ScrollUpdateNotification) {
+      return false;
+    }
+
+    final delta = notification.scrollDelta ?? 0.0;
+
+    if (delta > 0) {
+      _fabUpwardDistance = 0.0;
+
+      if (!_fabHiddenByScroll) {
+        _fabHiddenByScroll = true;
+        hideFab();
+      }
+    } else if (delta < 0 && _fabHiddenByScroll) {
+      _fabUpwardDistance += -delta;
+
+      final reachedTop =
+          notification.metrics.pixels <=
+          notification.metrics.minScrollExtent + 0.5;
+
+      if (_fabUpwardDistance >= _fabRevealDistance || reachedTop) {
+        _fabUpwardDistance = 0.0;
+        _fabHiddenByScroll = false;
+        showFab();
+      }
+    }
+
+    return false;
   }
 
   @override
@@ -60,16 +100,8 @@ class _MainReplyPageState extends State<MainReplyPage>
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(title: const Text('查看评论')),
-      body: NotificationListener<UserScrollNotification>(
-        onNotification: (notification) {
-          final direction = notification.direction;
-          if (direction == .forward) {
-            showFab();
-          } else if (direction == .reverse) {
-            hideFab();
-          }
-          return false;
-        },
+      body: NotificationListener<ScrollNotification>(
+        onNotification: _handleFabScroll,
         child: refreshIndicator(
           onRefresh: _controller.onRefresh,
           child: Padding(
