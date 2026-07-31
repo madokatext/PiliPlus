@@ -318,6 +318,8 @@ mixin CommonDynPageMixin<T extends StatefulWidget>
 
   Widget get replyButton => FloatingActionButton(
     heroTag: null,
+    backgroundColor: theme.colorScheme.primaryContainer,
+    foregroundColor: theme.colorScheme.onPrimaryContainer,
     onPressed: () {
       try {
         feedBack();
