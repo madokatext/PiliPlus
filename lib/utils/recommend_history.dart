@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' show File, FileSystemException;
 
 import 'package:PiliPlus/models/common/account_type.dart';
 import 'package:PiliPlus/models/common/recommend_history_filter_settings.dart';
@@ -39,6 +40,86 @@ String? playbackVideoKey({
     return 'ugc:$aid';
   }
   return null;
+}
+
+class RecommendHistoryWindowStatistics {
+  final int recommendationCount;
+  final int recommendedVideoCount;
+  final int watchCount;
+  final int watchedVideoCount;
+  final int activePlayedMs;
+
+  const RecommendHistoryWindowStatistics({
+    required this.recommendationCount,
+    required this.recommendedVideoCount,
+    required this.watchCount,
+    required this.watchedVideoCount,
+    required this.activePlayedMs,
+  });
+}
+
+class RecommendHistoryStatistics {
+  final int? exposureDatabaseBytes;
+  final int? watchDatabaseBytes;
+  final int exposureDatabaseEntryCount;
+  final int watchDatabaseEntryCount;
+  final int scopeCount;
+  final int recommendationCount;
+  final int recommendedVideoCount;
+  final int watchCount;
+  final int watchedVideoCount;
+  final int completedWatchCount;
+  final int activePlayedMs;
+  final int recommendedUgcVideoCount;
+  final int recommendedPgcVideoCount;
+  final int watchedUgcVideoCount;
+  final int watchedPgcVideoCount;
+  final int currentScopeRecommendationCount;
+  final int currentScopeRecommendedVideoCount;
+  final int currentScopeWatchCount;
+  final int currentScopeWatchedVideoCount;
+  final DateTime? oldestRecordAt;
+  final DateTime? newestRecordAt;
+  final RecommendHistoryWindowStatistics lastDay;
+  final RecommendHistoryWindowStatistics lastWeek;
+  final RecommendHistoryWindowStatistics lastMonth;
+
+  const RecommendHistoryStatistics({
+    required this.exposureDatabaseBytes,
+    required this.watchDatabaseBytes,
+    required this.exposureDatabaseEntryCount,
+    required this.watchDatabaseEntryCount,
+    required this.scopeCount,
+    required this.recommendationCount,
+    required this.recommendedVideoCount,
+    required this.watchCount,
+    required this.watchedVideoCount,
+    required this.completedWatchCount,
+    required this.activePlayedMs,
+    required this.recommendedUgcVideoCount,
+    required this.recommendedPgcVideoCount,
+    required this.watchedUgcVideoCount,
+    required this.watchedPgcVideoCount,
+    required this.currentScopeRecommendationCount,
+    required this.currentScopeRecommendedVideoCount,
+    required this.currentScopeWatchCount,
+    required this.currentScopeWatchedVideoCount,
+    required this.oldestRecordAt,
+    required this.newestRecordAt,
+    required this.lastDay,
+    required this.lastWeek,
+    required this.lastMonth,
+  });
+
+  int? get totalDatabaseBytes {
+    if (exposureDatabaseBytes == null && watchDatabaseBytes == null) {
+      return null;
+    }
+    return (exposureDatabaseBytes ?? 0) + (watchDatabaseBytes ?? 0);
+  }
+
+  int get averageActivePlayedMs =>
+      watchCount == 0 ? 0 : activePlayedMs ~/ watchCount;
 }
 
 class RecommendHistoryRepository {
@@ -270,6 +351,142 @@ class RecommendHistoryRepository {
       }
 
       return blocked;
+    });
+  }
+
+  Future<RecommendHistoryStatistics> loadStatistics({
+    String? scopeId,
+    DateTime? now,
+  }) async {
+    await flush();
+    return _lock.synchronized(() async {
+      final current = now ?? DateTime.now();
+      await _cleanupIfNeededLocked(current);
+
+      final total = _HistoryStatisticsAccumulator();
+      final currentScope = _HistoryStatisticsAccumulator();
+      final lastDay = _StatisticsWindow(
+        current.subtract(const Duration(days: 1)).millisecondsSinceEpoch,
+      );
+      final lastWeek = _StatisticsWindow(
+        current.subtract(const Duration(days: 7)).millisecondsSinceEpoch,
+      );
+      final lastMonth = _StatisticsWindow(
+        current.subtract(recommendHistoryRetention).millisecondsSinceEpoch,
+      );
+      final windows = [lastDay, lastWeek, lastMonth];
+      final scopes = <String>{};
+      var scannedDataKeys = 0;
+      int? oldestTimestamp;
+      int? newestTimestamp;
+
+      void includeTimestamp(int timestamp) {
+        if (timestamp <= 0) return;
+        if (oldestTimestamp == null || timestamp < oldestTimestamp!) {
+          oldestTimestamp = timestamp;
+        }
+        if (newestTimestamp == null || timestamp > newestTimestamp!) {
+          newestTimestamp = timestamp;
+        }
+      }
+
+      for (final key in exposureBox.keys.whereType<String>()) {
+        final parts = _parseVideoDataKey(key, 'e');
+        if (parts == null) continue;
+        if (++scannedDataKeys % 500 == 0) {
+          await Future<void>.delayed(Duration.zero);
+        }
+        scopes.add(parts.scopeId);
+        final events = _intMap(exposureBox.get(key));
+        for (final timestamp in events.values) {
+          includeTimestamp(timestamp);
+          total.addRecommendation(parts.videoKey);
+          if (parts.scopeId == scopeId) {
+            currentScope.addRecommendation(parts.videoKey);
+          }
+          for (final window in windows) {
+            if (timestamp >= window.cutoffMs) {
+              window.statistics.addRecommendation(parts.videoKey);
+            }
+          }
+        }
+      }
+
+      for (final key in watchBox.keys.whereType<String>()) {
+        final parts = _parseVideoDataKey(key, 'w');
+        if (parts == null) continue;
+        if (++scannedDataKeys % 500 == 0) {
+          await Future<void>.delayed(Duration.zero);
+        }
+        scopes.add(parts.scopeId);
+        final sessions = _sessionMap(watchBox.get(key));
+        for (final session in sessions.values) {
+          if (session.isEmpty) continue;
+          final timestamp = session[0];
+          final activePlayedMs = session.length > 1
+              ? session[1].clamp(0, 300000).toInt()
+              : 0;
+          final completed = session.length > 3 && session[3] == 1;
+          includeTimestamp(timestamp);
+          total.addWatch(
+            parts.videoKey,
+            activePlayedMs: activePlayedMs,
+            completed: completed,
+          );
+          if (parts.scopeId == scopeId) {
+            currentScope.addWatch(
+              parts.videoKey,
+              activePlayedMs: activePlayedMs,
+              completed: completed,
+            );
+          }
+          for (final window in windows) {
+            if (timestamp >= window.cutoffMs) {
+              window.statistics.addWatch(
+                parts.videoKey,
+                activePlayedMs: activePlayedMs,
+                completed: completed,
+              );
+            }
+          }
+        }
+      }
+
+      final databaseSizes = await Future.wait<int?>([
+        _boxFileSize(exposureBox),
+        _boxFileSize(watchBox),
+      ]);
+      return RecommendHistoryStatistics(
+        exposureDatabaseBytes: databaseSizes[0],
+        watchDatabaseBytes: databaseSizes[1],
+        exposureDatabaseEntryCount: exposureBox.length,
+        watchDatabaseEntryCount: watchBox.length,
+        scopeCount: scopes.length,
+        recommendationCount: total.recommendationCount,
+        recommendedVideoCount: total.recommendedVideos.length,
+        watchCount: total.watchCount,
+        watchedVideoCount: total.watchedVideos.length,
+        completedWatchCount: total.completedWatchCount,
+        activePlayedMs: total.activePlayedMs,
+        recommendedUgcVideoCount: total.recommendedUgcVideos.length,
+        recommendedPgcVideoCount: total.recommendedPgcVideos.length,
+        watchedUgcVideoCount: total.watchedUgcVideos.length,
+        watchedPgcVideoCount: total.watchedPgcVideos.length,
+        currentScopeRecommendationCount: currentScope.recommendationCount,
+        currentScopeRecommendedVideoCount:
+            currentScope.recommendedVideos.length,
+        currentScopeWatchCount: currentScope.watchCount,
+        currentScopeWatchedVideoCount: currentScope.watchedVideos.length,
+        oldestRecordAt: oldestTimestamp == null
+            ? null
+            : DateTime.fromMillisecondsSinceEpoch(oldestTimestamp!),
+        newestRecordAt: newestTimestamp == null
+            ? null
+            : DateTime.fromMillisecondsSinceEpoch(newestTimestamp!),
+        lastDay: lastDay.statistics.toWindowStatistics(),
+        lastWeek: lastWeek.statistics.toWindowStatistics(),
+        lastMonth: lastMonth.statistics.toWindowStatistics(),
+      );
     });
   }
 
@@ -515,6 +732,90 @@ class RecommendHistoryRepository {
   static List<int> _intList(Object? value) => value is List
       ? value.whereType<num>().map((item) => item.toInt()).toList()
       : <int>[];
+
+  static ({String scopeId, String videoKey})? _parseVideoDataKey(
+    String key,
+    String prefix,
+  ) {
+    final parts = key.split('|');
+    if (parts.length != 4 || parts[0] != prefix) {
+      return null;
+    }
+    try {
+      return (
+        scopeId: utf8.decode(base64Url.decode(base64Url.normalize(parts[2]))),
+        videoKey: utf8.decode(base64Url.decode(base64Url.normalize(parts[3]))),
+      );
+    } on FormatException {
+      return null;
+    }
+  }
+
+  static Future<int?> _boxFileSize(Box<dynamic> box) async {
+    final path = box.path;
+    if (path == null) return null;
+    try {
+      return await File(path).length();
+    } on FileSystemException {
+      return null;
+    }
+  }
+}
+
+class _StatisticsWindow {
+  final int cutoffMs;
+  final _HistoryStatisticsAccumulator statistics =
+      _HistoryStatisticsAccumulator();
+
+  _StatisticsWindow(this.cutoffMs);
+}
+
+class _HistoryStatisticsAccumulator {
+  int recommendationCount = 0;
+  int watchCount = 0;
+  int completedWatchCount = 0;
+  int activePlayedMs = 0;
+  final Set<String> recommendedVideos = {};
+  final Set<String> watchedVideos = {};
+  final Set<String> recommendedUgcVideos = {};
+  final Set<String> recommendedPgcVideos = {};
+  final Set<String> watchedUgcVideos = {};
+  final Set<String> watchedPgcVideos = {};
+
+  void addRecommendation(String videoKey) {
+    recommendationCount++;
+    recommendedVideos.add(videoKey);
+    if (videoKey.startsWith('ugc:')) {
+      recommendedUgcVideos.add(videoKey);
+    } else if (videoKey.startsWith('pgc:')) {
+      recommendedPgcVideos.add(videoKey);
+    }
+  }
+
+  void addWatch(
+    String videoKey, {
+    required int activePlayedMs,
+    required bool completed,
+  }) {
+    watchCount++;
+    watchedVideos.add(videoKey);
+    this.activePlayedMs += activePlayedMs;
+    if (completed) completedWatchCount++;
+    if (videoKey.startsWith('ugc:')) {
+      watchedUgcVideos.add(videoKey);
+    } else if (videoKey.startsWith('pgc:')) {
+      watchedPgcVideos.add(videoKey);
+    }
+  }
+
+  RecommendHistoryWindowStatistics toWindowStatistics() =>
+      RecommendHistoryWindowStatistics(
+        recommendationCount: recommendationCount,
+        recommendedVideoCount: recommendedVideos.length,
+        watchCount: watchCount,
+        watchedVideoCount: watchedVideos.length,
+        activePlayedMs: activePlayedMs,
+      );
 }
 
 class _PendingExposure {

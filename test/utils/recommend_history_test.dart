@@ -195,6 +195,90 @@ void main() {
       expect(blocked, {'ugc:5'});
     });
 
+    test('builds statistics across time windows and dimensions', () async {
+      final now = DateTime(2026, 7, 25, 12);
+      final tenDaysAgo = now.subtract(const Duration(days: 10));
+      final twoDaysAgo = now.subtract(const Duration(days: 2));
+      final oneHourAgo = now.subtract(const Duration(hours: 1));
+
+      await repository.recordExposure(
+        scopeId: 'uid:2',
+        occurrenceId: 'old-pgc',
+        videoKey: 'pgc:3',
+        exposedAt: tenDaysAgo,
+      );
+      await repository.recordExposure(
+        scopeId: 'uid:1',
+        occurrenceId: 'week-ugc',
+        videoKey: 'ugc:2',
+        exposedAt: twoDaysAgo,
+      );
+      await repository.recordExposure(
+        scopeId: 'uid:1',
+        occurrenceId: 'day-ugc',
+        videoKey: 'ugc:1',
+        exposedAt: oneHourAgo,
+      );
+
+      await repository.createPlaySession(
+        scopeId: 'uid:2',
+        sessionId: 'old-watch',
+        videoKey: 'pgc:3',
+        firstFrameAt: now.subtract(const Duration(days: 8)),
+      );
+      await repository.updatePlaySession(
+        sessionId: 'old-watch',
+        activePlayedMs: 30000,
+        ended: true,
+        updatedAt: now.subtract(const Duration(days: 8)),
+      );
+      await repository.createPlaySession(
+        scopeId: 'uid:1',
+        sessionId: 'recent-watch',
+        videoKey: 'ugc:1',
+        firstFrameAt: now.subtract(const Duration(hours: 2)),
+      );
+      await repository.updatePlaySession(
+        sessionId: 'recent-watch',
+        activePlayedMs: 60000,
+        ended: true,
+        updatedAt: now.subtract(const Duration(hours: 1)),
+      );
+
+      final statistics = await repository.loadStatistics(
+        scopeId: 'uid:1',
+        now: now,
+      );
+
+      expect(statistics.scopeCount, 2);
+      expect(statistics.recommendationCount, 3);
+      expect(statistics.recommendedVideoCount, 3);
+      expect(statistics.watchCount, 2);
+      expect(statistics.watchedVideoCount, 2);
+      expect(statistics.completedWatchCount, 2);
+      expect(statistics.activePlayedMs, 90000);
+      expect(statistics.recommendedUgcVideoCount, 2);
+      expect(statistics.recommendedPgcVideoCount, 1);
+      expect(statistics.watchedUgcVideoCount, 1);
+      expect(statistics.watchedPgcVideoCount, 1);
+      expect(statistics.currentScopeRecommendationCount, 2);
+      expect(statistics.currentScopeRecommendedVideoCount, 2);
+      expect(statistics.currentScopeWatchCount, 1);
+      expect(statistics.currentScopeWatchedVideoCount, 1);
+      expect(statistics.oldestRecordAt, tenDaysAgo);
+      expect(statistics.newestRecordAt, oneHourAgo);
+
+      expect(statistics.lastDay.recommendationCount, 1);
+      expect(statistics.lastDay.watchCount, 1);
+      expect(statistics.lastWeek.recommendationCount, 2);
+      expect(statistics.lastWeek.watchCount, 1);
+      expect(statistics.lastMonth.recommendationCount, 3);
+      expect(statistics.lastMonth.watchCount, 2);
+      expect(statistics.lastMonth.activePlayedMs, 90000);
+      expect(statistics.totalDatabaseBytes, isNotNull);
+      expect(statistics.totalDatabaseBytes, greaterThan(0));
+    });
+
     test(
       'daily cleanup removes expired data without touching current data',
       () async {
