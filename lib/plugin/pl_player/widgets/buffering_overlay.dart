@@ -11,10 +11,12 @@ import 'package:get/get.dart';
 class PlayerBufferingOverlay extends StatefulWidget {
   const PlayerBufferingOverlay({
     required this.controller,
+    this.forceVisible = false,
     super.key,
   });
 
   final PlPlayerController controller;
+  final bool forceVisible;
 
   @override
   State<PlayerBufferingOverlay> createState() =>
@@ -26,6 +28,9 @@ class _PlayerBufferingOverlayState extends State<PlayerBufferingOverlay> {
   final RxBool _hasValidBufferingSpeed = false.obs;
   final RxString _bufferingSpeed = '--/s'.obs;
   Timer? _bufferingSpeedTimer;
+
+  bool get _isVisible =>
+      widget.forceVisible || widget.controller.shouldShowBufferingOverlay;
 
   static String _formatBufferSize(num bytes) {
     if (!bytes.isFinite || bytes < 0) {
@@ -77,8 +82,7 @@ class _PlayerBufferingOverlayState extends State<PlayerBufferingOverlay> {
   }
 
   void _updateBufferingSpeed() {
-    if (!_showBufferingInfo ||
-        !widget.controller.shouldShowBufferingOverlay) {
+    if (!_showBufferingInfo || !_isVisible) {
       _bufferingSpeed.value = '--/s';
       _hasValidBufferingSpeed.value = false;
       return;
@@ -115,7 +119,7 @@ class _PlayerBufferingOverlayState extends State<PlayerBufferingOverlay> {
 
   @override
   Widget build(BuildContext context) => Obx(() {
-    if (!widget.controller.shouldShowBufferingOverlay) {
+    if (!_isVisible) {
       return const SizedBox.shrink();
     }
 

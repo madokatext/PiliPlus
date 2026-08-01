@@ -1095,6 +1095,7 @@ class VideoDetailController extends GetxController
       if (data.dash == null) {
         SmartDialog.showToast('视频资源不存在');
         _autoPlay.value = false;
+        blackVideoCover.value = false;
         videoState.value = false;
         if (plPlayerController.isFullScreen.value) {
           plPlayerController.triggerFullScreen(status: false);
@@ -1166,6 +1167,7 @@ class VideoDetailController extends GetxController
       await _initPlayerIfNeeded(autoFullScreenFlag);
     } else {
       _autoPlay.value = false;
+      blackVideoCover.value = false;
       videoState.value = false;
       if (plPlayerController.isFullScreen.value) {
         plPlayerController.triggerFullScreen(status: false);

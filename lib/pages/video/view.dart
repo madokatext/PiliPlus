@@ -333,6 +333,14 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
 
   /// 未开启自动播放时触发播放
   Future<void>? handlePlay() {
+    final plPlayerController = this.plPlayerController =
+        videoDetailController.plPlayerController;
+    videoDetailController.blackVideoCover.value = true;
+    videoDetailController.autoPlay = true;
+    plPlayerController
+      ..addStatusLister(playerListener)
+      ..addPositionListener(positionListener);
+
     if (!videoDetailController.isFileSource) {
       if (videoDetailController.isQuerying) {
         if (kDebugMode) debugPrint('handlePlay: querying');
@@ -343,17 +351,11 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         if (kDebugMode) {
           debugPrint('handlePlay: videoUrl/audioUrl not initialized');
         }
-        videoDetailController.queryVideoUrl();
-        return null;
+        return videoDetailController.queryVideoUrl(
+          autoFullScreenFlag: true,
+        );
       }
     }
-    final plPlayerController = this.plPlayerController =
-        videoDetailController.plPlayerController;
-    videoDetailController.blackVideoCover.value = true;
-    videoDetailController.autoPlay = true;
-    plPlayerController
-      ..addStatusLister(playerListener)
-      ..addPositionListener(positionListener);
     if (plPlayerController.preInitPlayer) {
       if (plPlayerController.autoEnterFullScreen) {
         plPlayerController.triggerFullScreen();
@@ -808,22 +810,6 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
           bottom: -2,
           child: GestureDetector(
             onTap: () {
-              if (!videoDetailController.isFileSource) {
-                if (videoDetailController.isQuerying) {
-                  if (kDebugMode) {
-                    debugPrint('handlePlay: querying');
-                  }
-                  return;
-                }
-                if (videoDetailController.videoUrl == null ||
-                    videoDetailController.audioUrl == null) {
-                  if (kDebugMode) {
-                    debugPrint('handlePlay: videoUrl/audioUrl not initialized');
-                  }
-                  videoDetailController.queryVideoUrl();
-                  return;
-                }
-              }
               if (plPlayerController == null ||
                   videoDetailController.playedTime == null) {
                 handlePlay();
@@ -1617,12 +1603,14 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                 videoDetailController.plPlayerController.videoController !=
                     null;
             final showStartWaitOverlay =
-                videoDetailController.blackVideoCover.value ||
-                (!videoDetailController.showVideoCover.value &&
-                    !playerOutputMounted);
+                videoDetailController.autoPlay &&
+                (videoDetailController.blackVideoCover.value ||
+                    (!videoDetailController.showVideoCover.value &&
+                        !playerOutputMounted));
             return showStartWaitOverlay
                 ? PlayerBufferingOverlay(
                     controller: videoDetailController.plPlayerController,
+                    forceVisible: true,
                   )
                 : const SizedBox.shrink();
           }),
