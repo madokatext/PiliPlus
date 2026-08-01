@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/models/common/theme/theme_color_type.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/local_font_manager.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
@@ -51,12 +52,22 @@ abstract final class ThemeUtils {
       fontFamily: fontFamilies.primary,
       fontFamilyFallback: fontFamilyFallback,
     );
+    final assignments = Pref.themeColorMode == ThemeColorMode.customMultiSeed
+        ? Pref.customThemeUiColorAssignments
+        : {
+            for (final element in ThemeUiElement.values)
+              element: element.defaultColor,
+          };
+    final uiColors = ThemeUiColors.fromScheme(colorScheme, assignments);
+    Color ui(ThemeUiElement element) => uiColors[element];
     ThemeData themeData = ThemeData(
       highlightColor: colorScheme.onSurface.withValues(alpha: 0.04),
       colorScheme: colorScheme,
+      extensions: [uiColors],
       useMaterial3: true,
       splashFactory: NoSplash.splashFactory,
       fontFamily: fontFamilies.primary,
+      scaffoldBackgroundColor: ui(ThemeUiElement.pageBackground),
       textTheme: !hasCustomTextStyle
           ? null
           : TextTheme(
@@ -76,42 +87,63 @@ abstract final class ThemeUtils {
               labelMedium: textStyle,
               labelSmall: textStyle,
             ),
-      tabBarTheme: !hasCustomTextStyle
-          ? null
-          : TabBarThemeData(labelStyle: textStyle),
+      tabBarTheme: TabBarThemeData(
+        labelColor: ui(ThemeUiElement.tabSelectedContent),
+        unselectedLabelColor: ui(ThemeUiElement.tabUnselectedContent),
+        indicatorColor: ui(ThemeUiElement.tabIndicator),
+        dividerColor: ui(ThemeUiElement.tabDivider),
+        labelStyle: hasCustomTextStyle ? textStyle : null,
+      ),
       appBarTheme: AppBarTheme(
         elevation: 0,
         titleSpacing: 0,
         centerTitle: false,
         scrolledUnderElevation: 0,
-        backgroundColor: colorScheme.surface,
+        backgroundColor: ui(ThemeUiElement.appBarBackground),
+        foregroundColor: ui(ThemeUiElement.appBarContent),
         titleTextStyle: TextStyle(
           fontSize: 16,
-          color: colorScheme.onSurface,
+          color: ui(ThemeUiElement.appBarContent),
           fontWeight: fontWeight,
           fontFamily: fontFamilies.primary,
           fontFamilyFallback: fontFamilyFallback,
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: ui(ThemeUiElement.navigationBarBackground),
+        indicatorColor: ui(ThemeUiElement.navigationSelectedIndicator),
         surfaceTintColor: isDynamic ? colorScheme.onSurfaceVariant : null,
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          final color = states.contains(WidgetState.selected)
+              ? ui(ThemeUiElement.navigationSelectedContent)
+              : ui(ThemeUiElement.navigationUnselectedContent);
+          return IconThemeData(color: color);
+        }),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          final color = states.contains(WidgetState.selected)
+              ? ui(ThemeUiElement.navigationSelectedContent)
+              : ui(ThemeUiElement.navigationUnselectedContent);
+          return textStyle.copyWith(color: color);
+        }),
       ),
       snackBarTheme: SnackBarThemeData(
-        actionTextColor: colorScheme.primary,
-        backgroundColor: colorScheme.secondaryContainer,
-        closeIconColor: colorScheme.secondary,
+        actionTextColor: ui(ThemeUiElement.snackbarAction),
+        backgroundColor: ui(ThemeUiElement.snackbarBackground),
+        closeIconColor: ui(ThemeUiElement.snackbarClose),
         contentTextStyle: TextStyle(
-          color: colorScheme.onSecondaryContainer,
+          color: ui(ThemeUiElement.snackbarContent),
           fontFamily: fontFamilies.primary,
           fontFamilyFallback: fontFamilyFallback,
         ),
         elevation: 20,
       ),
       popupMenuTheme: PopupMenuThemeData(
+        color: ui(ThemeUiElement.popupMenuBackground),
         surfaceTintColor: isDynamic ? colorScheme.onSurfaceVariant : null,
       ),
       cardTheme: CardThemeData(
         elevation: 1,
+        color: ui(ThemeUiElement.cardBackground),
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(borderRadius: Style.cardRadius),
         surfaceTintColor: isDynamic
@@ -124,27 +156,38 @@ abstract final class ThemeUtils {
       progressIndicatorTheme: ProgressIndicatorThemeData(
         // ignore: deprecated_member_use
         year2023: false,
-        refreshBackgroundColor: colorScheme.onSecondary,
+        color: ui(ThemeUiElement.progressIndicator),
+        linearTrackColor: ui(ThemeUiElement.progressTrack),
+        circularTrackColor: ui(ThemeUiElement.progressTrack),
+        refreshBackgroundColor: ui(
+          ThemeUiElement.refreshIndicatorBackground,
+        ),
       ),
       dialogTheme: DialogThemeData(
         titleTextStyle: TextStyle(
           fontSize: 18,
-          color: colorScheme.onSurface,
+          color: ui(ThemeUiElement.dialogTitle),
           fontWeight: fontWeight,
           fontFamily: fontFamilies.primary,
           fontFamilyFallback: fontFamilyFallback,
         ),
-        backgroundColor: colorScheme.surface,
+        backgroundColor: ui(ThemeUiElement.dialogBackground),
         constraints: const BoxConstraints(minWidth: 280, maxWidth: 420),
       ),
       bottomSheetTheme: BottomSheetThemeData(
-        backgroundColor: colorScheme.surface,
+        backgroundColor: ui(ThemeUiElement.bottomSheetBackground),
         shape: const RoundedRectangleBorder(
           borderRadius: Style.bottomSheetRadius,
         ),
       ),
       // ignore: deprecated_member_use
-      sliderTheme: const SliderThemeData(year2023: false),
+      sliderTheme: SliderThemeData(
+        // ignore: deprecated_member_use
+        year2023: false,
+        activeTrackColor: ui(ThemeUiElement.sliderActiveTrack),
+        inactiveTrackColor: ui(ThemeUiElement.sliderInactiveTrack),
+        thumbColor: ui(ThemeUiElement.sliderThumb),
+      ),
       tooltipTheme: TooltipThemeData(
         textStyle: TextStyle(
           color: Colors.white,
@@ -158,18 +201,108 @@ abstract final class ThemeUtils {
         ),
       ),
       cupertinoOverrideTheme: CupertinoThemeData(
-        selectionHandleColor: colorScheme.primary,
+        selectionHandleColor: ui(ThemeUiElement.textSelectionHandle),
       ),
-      switchTheme: const SwitchThemeData(
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: ui(ThemeUiElement.textCursor),
+        selectionColor: ui(ThemeUiElement.textSelection),
+        selectionHandleColor: ui(ThemeUiElement.textSelectionHandle),
+      ),
+      inputDecorationTheme: InputDecorationThemeData(
+        errorStyle: TextStyle(color: ui(ThemeUiElement.inputErrorText)),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: ButtonStyle(
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            return states.contains(WidgetState.disabled)
+                ? null
+                : ui(ThemeUiElement.textButtonContent);
+          }),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ButtonStyle(
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            return states.contains(WidgetState.disabled)
+                ? null
+                : ui(ThemeUiElement.elevatedButtonBackground);
+          }),
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            return states.contains(WidgetState.disabled)
+                ? null
+                : ui(ThemeUiElement.elevatedButtonContent);
+          }),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: ButtonStyle(
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            return states.contains(WidgetState.disabled)
+                ? null
+                : ui(ThemeUiElement.outlinedButtonContent);
+          }),
+          side: WidgetStateProperty.resolveWith((states) {
+            return states.contains(WidgetState.disabled)
+                ? null
+                : BorderSide(
+                    color: ui(ThemeUiElement.outlinedButtonBorder),
+                  );
+          }),
+        ),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: ui(ThemeUiElement.defaultFabBackground),
+        foregroundColor: ui(ThemeUiElement.defaultFabContent),
+      ),
+      switchTheme: SwitchThemeData(
         padding: .zero,
         materialTapTargetSize: .shrinkWrap,
-        thumbIcon: WidgetStateProperty<Icon?>.fromMap(
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          return !states.contains(WidgetState.disabled) &&
+                  states.contains(WidgetState.selected)
+              ? ui(ThemeUiElement.switchSelectedTrack)
+              : null;
+        }),
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          return !states.contains(WidgetState.disabled) &&
+                  states.contains(WidgetState.selected)
+              ? ui(ThemeUiElement.switchSelectedThumb)
+              : null;
+        }),
+        thumbIcon: const WidgetStateProperty<Icon?>.fromMap(
           <WidgetStatesConstraint, Icon?>{
             WidgetState.selected: Icon(Icons.done),
             WidgetState.any: null,
           },
         ),
       ),
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith((states) {
+          return !states.contains(WidgetState.disabled) &&
+                  states.contains(WidgetState.selected)
+              ? ui(ThemeUiElement.checkboxSelectedFill)
+              : null;
+        }),
+        checkColor: WidgetStateProperty.resolveWith((states) {
+          return !states.contains(WidgetState.disabled) &&
+                  states.contains(WidgetState.selected)
+              ? ui(ThemeUiElement.checkboxCheck)
+              : null;
+        }),
+      ),
+      radioTheme: RadioThemeData(
+        fillColor: WidgetStateProperty.resolveWith((states) {
+          return !states.contains(WidgetState.disabled) &&
+                  states.contains(WidgetState.selected)
+              ? ui(ThemeUiElement.radioSelected)
+              : null;
+        }),
+      ),
+      listTileTheme: ListTileThemeData(
+        selectedColor: ui(ThemeUiElement.listTileSelectedContent),
+        iconColor: ui(ThemeUiElement.listTileIcon),
+      ),
+      dividerTheme: DividerThemeData(color: ui(ThemeUiElement.divider)),
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: ZoomPageTransitionsBuilder(),

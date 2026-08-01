@@ -1222,8 +1222,7 @@ Widget _themeColorTrailing(ThemeData theme) {
           Pref.schemeVariant,
           theme.brightness,
         )
-        .applyToneOffsets(Pref.customThemeToneOffsets(theme.brightness))
-        .applyColorAssignments(Pref.customThemeColorAssignments),
+        .applyToneOffsets(Pref.customThemeToneOffsets(theme.brightness)),
     _ => colorThemeTypes[Pref.customColor].color.asColorSchemeSeed(
       Pref.schemeVariant,
       theme.brightness,

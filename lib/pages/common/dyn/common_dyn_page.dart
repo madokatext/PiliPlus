@@ -8,6 +8,7 @@ import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
     show ReplyInfo;
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models/common/enum_with_label.dart';
+import 'package:PiliPlus/models/common/theme/theme_color_type.dart';
 import 'package:PiliPlus/pages/common/dyn/common_dyn_controller.dart';
 import 'package:PiliPlus/pages/common/fab_mixin.dart';
 import 'package:PiliPlus/pages/video/reply/vote/reply_vote_item.dart';
@@ -15,6 +16,7 @@ import 'package:PiliPlus/pages/video/reply/widgets/reply_item_grpc.dart';
 import 'package:PiliPlus/pages/video/reply_reply/view.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/extension/size_ext.dart';
+import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
@@ -322,8 +324,8 @@ mixin CommonDynPageMixin<T extends StatefulWidget>
 
   Widget get replyButton => FloatingActionButton(
     heroTag: null,
-    backgroundColor: theme.colorScheme.primary,
-    foregroundColor: theme.colorScheme.onPrimary,
+    backgroundColor: theme.uiColor(ThemeUiElement.dynamicsReplyBackground),
+    foregroundColor: theme.uiColor(ThemeUiElement.dynamicsReplyContent),
     onPressed: () {
       try {
         feedBack();

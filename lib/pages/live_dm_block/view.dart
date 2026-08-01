@@ -4,10 +4,12 @@ import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart';
 import 'package:PiliPlus/common/widgets/sliver/sliver_pinned_header.dart';
 import 'package:PiliPlus/models/common/live/live_dm_silent_type.dart';
+import 'package:PiliPlus/models/common/theme/theme_color_type.dart';
 import 'package:PiliPlus/models_new/live/live_dm_block/shield_user_list.dart';
 import 'package:PiliPlus/pages/live_dm_block/controller.dart';
 import 'package:PiliPlus/pages/search/widgets/search_text.dart';
 import 'package:PiliPlus/utils/extension/size_ext.dart';
+import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:collection/collection.dart';
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
@@ -145,8 +147,12 @@ class _LiveDmBlockPageState extends State<LiveDmBlockPage> {
               right: kFloatingActionButtonMargin,
               bottom: kFloatingActionButtonMargin + padding.bottom,
               child: FloatingActionButton(
-                backgroundColor: colorScheme.primary,
-                foregroundColor: colorScheme.onPrimary,
+                backgroundColor: Theme.of(
+                  context,
+                ).uiColor(ThemeUiElement.liveDmBlockAddBackground),
+                foregroundColor: Theme.of(
+                  context,
+                ).uiColor(ThemeUiElement.liveDmBlockAddContent),
                 tooltip: '添加',
                 onPressed: _addShieldKeyword,
                 child: const Icon(Icons.add),

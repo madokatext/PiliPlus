@@ -5,6 +5,7 @@ import 'package:PiliPlus/common/widgets/gesture/horizontal_drag_gesture_recogniz
 import 'package:PiliPlus/common/widgets/scroll_physics.dart';
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
 import 'package:PiliPlus/models/common/later_view_type.dart';
+import 'package:PiliPlus/models/common/theme/theme_color_type.dart';
 import 'package:PiliPlus/models_new/later/list.dart';
 import 'package:PiliPlus/pages/common/fab_mixin.dart'
     show NoRightMarginFabLocation;
@@ -13,6 +14,7 @@ import 'package:PiliPlus/pages/later/controller.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/extension/get_ext.dart';
 import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
+import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/request_utils.dart';
 import 'package:flutter/material.dart' hide TabBarView;
 import 'package:get/get.dart';
@@ -95,8 +97,12 @@ class _LaterPageState extends State<LaterPage>
                                 details.localPosition.dx < _baseCtr.dx,
                               ),
                           child: FloatingActionButton.extended(
-                            backgroundColor: colorScheme.primary,
-                            foregroundColor: colorScheme.onPrimary,
+                            backgroundColor: Theme.of(context).uiColor(
+                              ThemeUiElement.laterPlayAllBackground,
+                            ),
+                            foregroundColor: Theme.of(context).uiColor(
+                              ThemeUiElement.laterPlayAllContent,
+                            ),
                             onPressed: () {
                               if (_baseCtr.isPlayAll.value) {
                                 currCtr().toViewPlayAll();

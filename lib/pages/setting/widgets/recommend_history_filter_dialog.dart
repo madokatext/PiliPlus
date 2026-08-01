@@ -1,5 +1,7 @@
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/models/common/recommend_history_filter_settings.dart';
+import 'package:PiliPlus/models/common/theme/theme_color_type.dart';
+import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/recommend_history.dart';
 import 'package:flutter/material.dart';
 
@@ -168,7 +170,18 @@ class _RecommendHistoryFilterDialogState
           onPressed: () => Navigator.pop(context),
           child: const Text('取消'),
         ),
-        FilledButton(onPressed: _save, child: const Text('保存')),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: Theme.of(context).uiColor(
+              ThemeUiElement.recommendFilterSaveBackground,
+            ),
+            foregroundColor: Theme.of(context).uiColor(
+              ThemeUiElement.recommendFilterSaveContent,
+            ),
+          ),
+          onPressed: _save,
+          child: const Text('保存'),
+        ),
       ],
     );
   }

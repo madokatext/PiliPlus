@@ -1,5 +1,7 @@
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/models/common/theme/theme_color_type.dart';
 import 'package:PiliPlus/pages/webdav/webdav.dart';
+import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
@@ -38,7 +40,6 @@ class _WebDavSettingPageState extends State<WebDavSettingPage> {
   Widget build(BuildContext context) {
     final showAppBar = widget.showAppBar;
     final padding = MediaQuery.viewPaddingOf(context);
-    final colorScheme = ColorScheme.of(context);
     return Scaffold(
       appBar: showAppBar ? AppBar(title: const Text('WebDAV 设置')) : null,
       body: Stack(
@@ -127,8 +128,12 @@ class _WebDavSettingPageState extends State<WebDavSettingPage> {
                 kFloatingActionButtonMargin + (showAppBar ? padding.right : 0),
             bottom: kFloatingActionButtonMargin + padding.bottom,
             child: FloatingActionButton(
-              backgroundColor: colorScheme.primary,
-              foregroundColor: colorScheme.onPrimary,
+              backgroundColor: Theme.of(
+                context,
+              ).uiColor(ThemeUiElement.webdavSaveBackground),
+              foregroundColor: Theme.of(
+                context,
+              ).uiColor(ThemeUiElement.webdavSaveContent),
               child: const Icon(Icons.save),
               onPressed: () async {
                 await GStorage.setting.putAll({

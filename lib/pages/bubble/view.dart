@@ -5,9 +5,11 @@ import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart';
 import 'package:PiliPlus/http/loading_state.dart';
+import 'package:PiliPlus/models/common/theme/theme_color_type.dart';
 import 'package:PiliPlus/models_new/bubble/dyn_list.dart';
 import 'package:PiliPlus/pages/bubble/controller.dart';
 import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
+import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/grid.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart'
@@ -51,7 +53,6 @@ class _BubblePageState extends State<BubblePage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final colorScheme = ColorScheme.of(context);
     final padding = MediaQuery.viewPaddingOf(context);
     Widget child = refreshIndicator(
       onRefresh: _controller.onRefresh,
@@ -89,8 +90,12 @@ class _BubblePageState extends State<BubblePage>
                 );
                 if (item != null) {
                   return FloatingActionButton.extended(
-                    backgroundColor: colorScheme.primary,
-                    foregroundColor: colorScheme.onPrimary,
+                    backgroundColor: Theme.of(
+                      context,
+                    ).uiColor(ThemeUiElement.bubbleSortBackground),
+                    foregroundColor: Theme.of(
+                      context,
+                    ).uiColor(ThemeUiElement.bubbleSortContent),
                     tooltip: '排序',
                     onPressed: () => showDialog(
                       context: context,

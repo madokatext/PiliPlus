@@ -9,6 +9,7 @@ import 'package:PiliPlus/common/widgets/sliver/sliver_pinned_header.dart';
 import 'package:PiliPlus/http/constants.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models/common/image_type.dart';
+import 'package:PiliPlus/models/common/theme/theme_color_type.dart';
 import 'package:PiliPlus/models_new/dynamic/dyn_topic_feed/fold_card_item.dart';
 import 'package:PiliPlus/models_new/dynamic/dyn_topic_feed/item.dart';
 import 'package:PiliPlus/models_new/dynamic/dyn_topic_top/top_details.dart';
@@ -194,8 +195,12 @@ class _DynTopicPageState extends State<DynTopicPage>
                   bottom: padding.bottom + kFloatingActionButtonMargin,
                 ),
                 child: FloatingActionButton.extended(
-                  backgroundColor: colorScheme.primary,
-                  foregroundColor: colorScheme.onPrimary,
+                  backgroundColor: Theme.of(context).uiColor(
+                    ThemeUiElement.dynamicsTopicBackground,
+                  ),
+                  foregroundColor: Theme.of(context).uiColor(
+                    ThemeUiElement.dynamicsTopicContent,
+                  ),
                   onPressed: () {
                     if (_controller.isLogin) {
                       CreateDynPanel.onCreateDyn(

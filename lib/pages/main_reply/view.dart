@@ -7,11 +7,13 @@ import 'package:PiliPlus/common/widgets/view_safe_area.dart';
 import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
     show ReplyInfo;
 import 'package:PiliPlus/http/loading_state.dart';
+import 'package:PiliPlus/models/common/theme/theme_color_type.dart';
 import 'package:PiliPlus/pages/common/fab_mixin.dart';
 import 'package:PiliPlus/pages/main_reply/controller.dart';
 import 'package:PiliPlus/pages/video/reply/widgets/reply_item_grpc.dart';
 import 'package:PiliPlus/pages/video/reply_reply/view.dart';
 import 'package:PiliPlus/utils/extension/widget_ext.dart';
+import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
@@ -128,8 +130,12 @@ class _MainReplyPageState extends State<MainReplyPage>
           padding: .only(bottom: padding.bottom + kFloatingActionButtonMargin),
           child: FloatingActionButton(
             heroTag: null,
-              backgroundColor: colorScheme.primary,
-  foregroundColor: colorScheme.onPrimary,
+            backgroundColor: Theme.of(
+              context,
+            ).uiColor(ThemeUiElement.mainReplyBackground),
+            foregroundColor: Theme.of(
+              context,
+            ).uiColor(ThemeUiElement.mainReplyContent),
             onPressed: () {
               try {
                 feedBack();

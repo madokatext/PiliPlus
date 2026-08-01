@@ -1231,34 +1231,42 @@ static bool get seekPreviewFollowGesture => _setting.get(
       role: customThemeToneOffset(brightness, role),
   };
 
-  static Map<ThemeSchemeColor, ThemeSchemeColor?>
-  get customThemeColorAssignments {
+  static Map<ThemeUiElement, ThemeSchemeColor?>
+  get customThemeUiColorAssignments {
     final stored = _setting.get(SettingBoxKey.customThemeColorAssignments);
     if (stored is! Map) {
       return {
-        for (final color in ThemeSchemeColor.values) color: color,
+        for (final element in ThemeUiElement.values)
+          element: element.defaultColor,
       };
     }
 
     return {
-      for (final target in ThemeSchemeColor.values)
-        target: _decodeThemeColorAssignment(stored, target),
+      for (final element in ThemeUiElement.values)
+        element: _decodeThemeUiColorAssignment(stored, element),
     };
   }
 
-  static ThemeSchemeColor? _decodeThemeColorAssignment(
+  static ThemeSchemeColor? _decodeThemeUiColorAssignment(
     Map<dynamic, dynamic> stored,
-    ThemeSchemeColor target,
+    ThemeUiElement element,
   ) {
-    if (!stored.containsKey(target.name)) return target;
-    final sourceName = stored[target.name];
+    // 兼容上一版以 Material 颜色槽名称为目标键的设置：同一默认颜色下
+    // 拆出的具体 UI 元素会继承原颜色槽的选择或未配置状态。
+    final key = stored.containsKey(element.name)
+        ? element.name
+        : stored.containsKey(element.defaultColor.name)
+        ? element.defaultColor.name
+        : null;
+    if (key == null) return element.defaultColor;
+    final sourceName = stored[key];
     if (sourceName == '') return null;
     if (sourceName is String) {
       try {
         return ThemeSchemeColor.values.byName(sourceName);
       } catch (_) {}
     }
-    return target;
+    return element.defaultColor;
   }
 
   static bool get enableSystemProxy =>

@@ -1,5 +1,6 @@
 import 'package:PiliPlus/common/widgets/dialog/simple_dialog_option.dart';
 import 'package:PiliPlus/models/common/pgc_review_type.dart';
+import 'package:PiliPlus/models/common/theme/theme_color_type.dart';
 import 'package:PiliPlus/pages/pgc_review/child/controller.dart';
 import 'package:PiliPlus/pages/pgc_review/child/view.dart';
 import 'package:PiliPlus/pages/pgc_review/post/view.dart';
@@ -115,8 +116,12 @@ class _PgcReviewPageState extends State<PgcReviewPage>
               MediaQuery.viewPaddingOf(context).bottom +
               kFloatingActionButtonMargin,
           child: FloatingActionButton(
-            backgroundColor: colorScheme.primary,
-            foregroundColor: colorScheme.onPrimary,
+            backgroundColor: Theme.of(
+              context,
+            ).uiColor(ThemeUiElement.pgcReviewBackground),
+            foregroundColor: Theme.of(
+              context,
+            ).uiColor(ThemeUiElement.pgcReviewContent),
             onPressed: () => showDialog(
               context: context,
               builder: (context) => SimpleDialog(

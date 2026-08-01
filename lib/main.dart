@@ -255,9 +255,7 @@ class MyApp extends StatelessWidget {
         _ => brandColor.asColorSchemeSeed(variant, brightness),
       };
       return Pref.themeColorMode == ThemeColorMode.customMultiSeed
-          ? scheme
-                .applyToneOffsets(Pref.customThemeToneOffsets(brightness))
-                .applyColorAssignments(Pref.customThemeColorAssignments)
+          ? scheme.applyToneOffsets(Pref.customThemeToneOffsets(brightness))
           : scheme;
     }
 

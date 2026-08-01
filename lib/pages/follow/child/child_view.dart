@@ -6,6 +6,7 @@ import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models/common/follow_order_type.dart';
+import 'package:PiliPlus/models/common/theme/theme_color_type.dart';
 import 'package:PiliPlus/models_new/follow/list.dart';
 import 'package:PiliPlus/pages/common/fab_mixin.dart';
 import 'package:PiliPlus/pages/follow/child/child_controller.dart';
@@ -14,6 +15,7 @@ import 'package:PiliPlus/pages/follow/widgets/follow_item.dart';
 import 'package:PiliPlus/pages/follow_type/follow_same/view.dart';
 import 'package:PiliPlus/pages/share/view.dart' show UserModel;
 import 'package:PiliPlus/utils/utils.dart';
+import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -166,8 +168,12 @@ class _FollowChildPageState extends State<FollowChildPage>
                   bottom: kFloatingActionButtonMargin + padding.bottom,
                 ),
                 child: FloatingActionButton.extended(
-                  backgroundColor: colorScheme.primary,
-                  foregroundColor: colorScheme.onPrimary,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).uiColor(ThemeUiElement.followSortBackground),
+                  foregroundColor: Theme.of(
+                    context,
+                  ).uiColor(ThemeUiElement.followSortContent),
                   onPressed: () => _followController
                     ..setOrderType(
                       _followController.orderType.value == FollowOrderType.def

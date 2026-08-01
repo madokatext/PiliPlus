@@ -5,12 +5,14 @@ import 'package:PiliPlus/common/widgets/scroll_physics.dart';
 import 'package:PiliPlus/common/widgets/sliver/sliver_floating_header.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models/common/member/contribute_type.dart';
+import 'package:PiliPlus/models/common/theme/theme_color_type.dart';
 import 'package:PiliPlus/models_new/space/space_archive/item.dart';
 import 'package:PiliPlus/pages/common/fab_mixin.dart';
 import 'package:PiliPlus/pages/member/controller.dart';
 import 'package:PiliPlus/pages/member_video/controller.dart';
 import 'package:PiliPlus/pages/member_video/widgets/video_card_h_member_video.dart';
 import 'package:PiliPlus/utils/grid.dart';
+import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -168,8 +170,12 @@ class _MemberVideoState extends State<MemberVideo>
                           bottom: padding.bottom + kFloatingActionButtonMargin,
                         ),
                         child: FloatingActionButton.extended(
-                          backgroundColor: theme.colorScheme.primary,
-                          foregroundColor: theme.colorScheme.onPrimary,
+                          backgroundColor: theme.uiColor(
+                            ThemeUiElement.memberVideoLocateBackground,
+                          ),
+                          foregroundColor: theme.uiColor(
+                            ThemeUiElement.memberVideoLocateContent,
+                          ),
                           onPressed: () {
                             final fromViewAid = _controller.fromViewAid;
                             _controller.isLocating.value = true;

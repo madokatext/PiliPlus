@@ -1,5 +1,7 @@
 import 'package:PiliPlus/models/common/danmaku_merge_mode.dart';
+import 'package:PiliPlus/models/common/theme/theme_color_type.dart';
 import 'package:PiliPlus/plugin/pl_player/utils/danmaku_options.dart';
+import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -177,6 +179,14 @@ Future<bool> showDanmakuMergeSettingsDialog(
                 child: const Text('取消'),
               ),
               FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: Theme.of(dialogContext).uiColor(
+                    ThemeUiElement.danmakuMergeConfirmBackground,
+                  ),
+                  foregroundColor: Theme.of(dialogContext).uiColor(
+                    ThemeUiElement.danmakuMergeConfirmContent,
+                  ),
+                ),
                 onPressed: () async {
                   if (mergeMode ==
                       DanmakuMergeMode.burst) {

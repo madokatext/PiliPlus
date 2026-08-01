@@ -6,12 +6,14 @@ import 'package:PiliPlus/common/widgets/sliver/sliver_floating_header.dart';
 import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
     show ReplyInfo;
 import 'package:PiliPlus/http/loading_state.dart';
+import 'package:PiliPlus/models/common/theme/theme_color_type.dart';
 import 'package:PiliPlus/pages/common/fab_mixin.dart';
 import 'package:PiliPlus/pages/video/reply/controller.dart';
 import 'package:PiliPlus/pages/video/reply/vote/reply_vote_item.dart';
 import 'package:PiliPlus/pages/video/reply/widgets/reply_item_grpc.dart';
 import 'package:PiliPlus/pages/video/reply_reply/view.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
+import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:easy_debounce/easy_throttle.dart';
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
 import 'package:flutter/material.dart';
@@ -170,20 +172,25 @@ bool _handleFabScroll(ScrollNotification notification) {
                     bottom: kFloatingActionButtonMargin + bottom,
                   ),
                   child: FloatingActionButton(
-  heroTag: null,
-  backgroundColor: colorScheme.primary,
-  foregroundColor: colorScheme.onPrimary,
-  onPressed: () {
-    feedBack();
-    _videoReplyController.onReply(
-      null,
-      oid: _videoReplyController.aid,
-      replyType: _videoReplyController.videoType.replyType,
-    );
-  },
-  tooltip: '发表评论',
-  child: const Icon(Icons.reply),
-),
+                    heroTag: null,
+                    backgroundColor: Theme.of(context).uiColor(
+                      ThemeUiElement.videoCommentBackground,
+                    ),
+                    foregroundColor: Theme.of(context).uiColor(
+                      ThemeUiElement.videoCommentContent,
+                    ),
+                    onPressed: () {
+                      feedBack();
+                      _videoReplyController.onReply(
+                        null,
+                        oid: _videoReplyController.aid,
+                        replyType:
+                            _videoReplyController.videoType.replyType,
+                      );
+                    },
+                    tooltip: '发表评论',
+                    child: const Icon(Icons.reply),
+                  ),
                 ),
               ),
             ),

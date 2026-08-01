@@ -49,8 +49,8 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
   FlexSchemeVariant _schemeVariant = Pref.schemeVariant;
   Brightness _toneBrightness = Brightness.light;
   bool _toneBrightnessInitialized = false;
-  Map<ThemeSchemeColor, ThemeSchemeColor?> _colorAssignments =
-      Pref.customThemeColorAssignments;
+  Map<ThemeUiElement, ThemeSchemeColor?> _colorAssignments =
+      Pref.customThemeUiColorAssignments;
   final Set<ThemeSchemeColor> _expandedColors = {};
 
   @override
@@ -186,7 +186,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
   }
 
   Future<void> _setColorAssignment(
-    ThemeSchemeColor target,
+    ThemeUiElement target,
     ThemeSchemeColor? source,
   ) async {
     setState(() {
@@ -195,7 +195,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
 
     final stored = <String, String>{};
     for (final entry in _colorAssignments.entries) {
-      if (entry.value == entry.key) continue;
+      if (entry.value == entry.key.defaultColor) continue;
       stored[entry.key.name] = entry.value?.name ?? '';
     }
     if (stored.isEmpty) {
@@ -227,7 +227,8 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
     if (!mounted) return;
     setState(() {
       _colorAssignments = {
-        for (final color in ThemeSchemeColor.values) color: color,
+        for (final element in ThemeUiElement.values)
+          element: element.defaultColor,
       };
     });
     Get.updateMyAppTheme();
@@ -270,16 +271,22 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
     ColorScheme colorScheme,
     TextStyle subtitleStyle,
   ) {
+    Color assignedColor(ThemeUiElement element) => colorScheme.colorFor(
+      _colorAssignments[element] ?? element.defaultColor,
+    );
     final unassignedCount = _colorAssignments.values
         .where((source) => source == null)
         .length;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const ListTile(
-          leading: Icon(Icons.grid_view_outlined),
-          title: Text('完整颜色表与 UI 用途'),
-          subtitle: Text('展开任一颜色，可查看并配置使用该颜色的 UI 元素'),
+        ListTile(
+          leading: const Icon(Icons.grid_view_outlined),
+          title: const Text('完整颜色表与具体 UI 元素'),
+          subtitle: Text(
+            '已拆分 ${ThemeUiElement.values.length} 个可独立着色部位；'
+            '展开任一颜色即可配置',
+          ),
         ),
         _brightnessSelector(),
         Padding(
@@ -294,13 +301,19 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
             margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: colorScheme.errorContainer,
+              color: assignedColor(
+                ThemeUiElement.themeUnassignedWarningBackground,
+              ),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
               '还有 $unassignedCount 个 UI 元素未配置颜色。'
               '它们会保留生成色，并出现在每个颜色的下拉菜单中。',
-              style: TextStyle(color: colorScheme.onErrorContainer),
+              style: TextStyle(
+                color: assignedColor(
+                  ThemeUiElement.themeUnassignedWarningContent,
+                ),
+              ),
             ),
           ),
         for (final family in ThemeColorFamily.values) ...[
@@ -379,7 +392,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
                 controlAffinity: ListTileControlAffinity.leading,
                 value: assigned,
                 title: Text(target.label),
-                subtitle: Text(target.usage),
+                subtitle: Text(target.description),
                 onChanged: (checked) => _setColorAssignment(
                   target,
                   (checked ?? false) ? source : null,
