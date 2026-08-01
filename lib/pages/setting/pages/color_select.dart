@@ -186,9 +186,11 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
   }
 
   Future<void> _setColorAssignment(
+    BuildContext anchorContext,
     ThemeUiElement target,
     ThemeSchemeColor? source,
   ) async {
+    _preserveScrollAnchor(anchorContext);
     setState(() {
       _colorAssignments = {..._colorAssignments, target: source};
     });
@@ -209,6 +211,32 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
       );
     }
     Get.updateMyAppTheme();
+  }
+
+  void _preserveScrollAnchor(BuildContext anchorContext) {
+    final scrollable = Scrollable.maybeOf(anchorContext);
+    final renderObject = anchorContext.findRenderObject();
+    if (scrollable == null ||
+        renderObject is! RenderBox ||
+        !renderObject.attached) {
+      return;
+    }
+    final anchorY = renderObject.localToGlobal(Offset.zero).dy;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !scrollable.mounted || !anchorContext.mounted) return;
+      final nextRenderObject = anchorContext.findRenderObject();
+      if (nextRenderObject is! RenderBox || !nextRenderObject.attached) return;
+      final position = scrollable.position;
+      if (!position.hasPixels) return;
+      final delta = nextRenderObject.localToGlobal(Offset.zero).dy - anchorY;
+      if (delta.abs() < 0.5) return;
+      final targetPixels = (position.pixels + delta)
+          .clamp(position.minScrollExtent, position.maxScrollExtent)
+          .toDouble();
+      if ((targetPixels - position.pixels).abs() >= 0.5) {
+        position.jumpTo(targetPixels);
+      }
+    });
   }
 
   Future<void> _resetColorAssignments() async {
@@ -418,15 +446,19 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
             ]
           : targets.map((target) {
               final assigned = _colorAssignments[target] == source;
-              return CheckboxListTile(
-                dense: true,
-                controlAffinity: ListTileControlAffinity.leading,
-                value: assigned,
-                title: Text(target.label),
-                subtitle: Text(target.description),
-                onChanged: (checked) => _setColorAssignment(
-                  target,
-                  (checked ?? false) ? source : null,
+              return Builder(
+                key: ValueKey('${source.name}:${target.name}'),
+                builder: (anchorContext) => CheckboxListTile(
+                  dense: true,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  value: assigned,
+                  title: Text(target.label),
+                  subtitle: Text(target.description),
+                  onChanged: (checked) => _setColorAssignment(
+                    anchorContext,
+                    target,
+                    (checked ?? false) ? source : null,
+                  ),
                 ),
               );
             }).toList(),
