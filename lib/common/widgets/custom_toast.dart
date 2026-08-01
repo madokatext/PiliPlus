@@ -1,3 +1,5 @@
+import 'package:PiliPlus/models/common/theme/theme_color_type.dart';
+import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flutter/material.dart';
 
@@ -10,21 +12,23 @@ class CustomToast extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = ColorScheme.of(context);
+    final theme = Theme.of(context);
     return Container(
       margin: .only(
         bottom: MediaQuery.viewPaddingOf(context).bottom + 30,
       ),
       padding: const .symmetric(horizontal: 17, vertical: 10),
       decoration: BoxDecoration(
-        color: colorScheme.primaryContainer.withValues(alpha: toastOpacity),
+        color: theme
+            .uiColor(ThemeUiElement.toastBackground)
+            .withValues(alpha: toastOpacity),
         borderRadius: const .all(.circular(20)),
       ),
       child: Text(
         msg,
         style: TextStyle(
           fontSize: 13,
-          color: colorScheme.onPrimaryContainer,
+          color: theme.uiColor(ThemeUiElement.toastContent),
         ),
       ),
     );

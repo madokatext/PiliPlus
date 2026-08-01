@@ -504,6 +504,16 @@ enum ThemeUiElement {
     '所有界面：底部提示条关闭图标',
     'SnackBar 右侧关闭按钮',
   ),
+  toastBackground(
+    ThemeSchemeColor.primaryContainer,
+    '所有界面：Toast 背景',
+    '短暂浮现的气泡提示底色',
+  ),
+  toastContent(
+    ThemeSchemeColor.onPrimaryContainer,
+    '所有界面：Toast 文字',
+    '气泡提示中的正文文字',
+  ),
   themeUnassignedWarningBackground(
     ThemeSchemeColor.errorContainer,
     '主题设置页：未配置颜色提示背景',
