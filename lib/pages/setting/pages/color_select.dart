@@ -267,6 +267,36 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
     ),
   );
 
+  Widget _schemeColorTilePreview(ColorScheme colorScheme) => LayoutBuilder(
+    builder: (context, constraints) {
+      const preferredTileExtent = 24.0;
+      final colors = ThemeSchemeColor.values;
+      final crossAxisCount = (constraints.maxWidth / preferredTileExtent)
+          .floor()
+          .clamp(1, colors.length)
+          .toInt();
+      final tileExtent = constraints.maxWidth / crossAxisCount;
+      final rowCount = (colors.length / crossAxisCount).ceil();
+      return SizedBox(
+        height: rowCount * tileExtent,
+        child: GridView.builder(
+          padding: EdgeInsets.zero,
+          primary: false,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            mainAxisSpacing: 0,
+            crossAxisSpacing: 0,
+          ),
+          itemCount: colors.length,
+          itemBuilder: (context, index) => ColoredBox(
+            color: colorScheme.colorFor(colors[index]),
+          ),
+        ),
+      );
+    },
+  );
+
   Widget _colorAssignmentEditor(
     ColorScheme colorScheme,
     TextStyle subtitleStyle,
@@ -296,6 +326,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
             style: subtitleStyle,
           ),
         ),
+        _schemeColorTilePreview(colorScheme),
         if (unassignedCount > 0)
           Container(
             margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
@@ -578,6 +609,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
                     title: Text('语义区域明暗层级'),
                     subtitle: Text('只改变 HCT 明度，不改变已选种子色的色相'),
                   ),
+                  _schemeColorTilePreview(_previewColorScheme()),
                   ...ThemeToneRole.values.map(_toneOffsetTile),
                   Align(
                     alignment: Alignment.centerRight,
