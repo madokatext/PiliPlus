@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 
 import 'package:PiliPlus/common/widgets/animated_height.dart';
 import 'package:PiliPlus/common/widgets/color_palette.dart';
+import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/main.dart' show MyApp;
 import 'package:PiliPlus/models/common/nav_bar_config.dart';
 import 'package:PiliPlus/models/common/theme/theme_color_type.dart';
@@ -48,6 +49,9 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
   FlexSchemeVariant _schemeVariant = Pref.schemeVariant;
   Brightness _toneBrightness = Brightness.light;
   bool _toneBrightnessInitialized = false;
+  Map<ThemeSchemeColor, ThemeSchemeColor?> _colorAssignments =
+      Pref.customThemeColorAssignments;
+  final Set<ThemeSchemeColor> _expandedColors = {};
 
   @override
   void didChangeDependencies() {
@@ -163,6 +167,15 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
   }
 
   Future<void> _resetToneOffsets() async {
+    final confirmed = await showConfirmDialog(
+      context: context,
+      title: const Text('重置明暗层级？'),
+      content: Text(
+        '将清除${_toneBrightness == Brightness.light ? '亮色' : '暗色'}主题中'
+        '所有语义区域的明暗偏移，此操作无法撤销。',
+      ),
+    );
+    if (!confirmed) return;
     await GStorage.setting.deleteAll(
       ThemeToneRole.values
           .map((role) => Pref.customThemeToneKey(_toneBrightness, role)),
@@ -170,6 +183,210 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
     if (!mounted) return;
     setState(() {});
     Get.updateMyAppTheme();
+  }
+
+  Future<void> _setColorAssignment(
+    ThemeSchemeColor target,
+    ThemeSchemeColor? source,
+  ) async {
+    setState(() {
+      _colorAssignments = {..._colorAssignments, target: source};
+    });
+
+    final stored = <String, String>{};
+    for (final entry in _colorAssignments.entries) {
+      if (entry.value == entry.key) continue;
+      stored[entry.key.name] = entry.value?.name ?? '';
+    }
+    if (stored.isEmpty) {
+      await GStorage.setting.delete(
+        SettingBoxKey.customThemeColorAssignments,
+      );
+    } else {
+      await GStorage.setting.put(
+        SettingBoxKey.customThemeColorAssignments,
+        stored,
+      );
+    }
+    Get.updateMyAppTheme();
+  }
+
+  Future<void> _resetColorAssignments() async {
+    final confirmed = await showConfirmDialog(
+      context: context,
+      title: const Text('恢复 UI 颜色默认配置？'),
+      content: const Text(
+        '所有 UI 元素将重新使用各自默认的 Material 颜色，'
+        '当前自定义分配和未配置状态都会被清除。此操作无法撤销。',
+      ),
+    );
+    if (!confirmed) return;
+    await GStorage.setting.delete(
+      SettingBoxKey.customThemeColorAssignments,
+    );
+    if (!mounted) return;
+    setState(() {
+      _colorAssignments = {
+        for (final color in ThemeSchemeColor.values) color: color,
+      };
+    });
+    Get.updateMyAppTheme();
+  }
+
+  ColorScheme _previewColorScheme() {
+    final seeds = (
+      primary: ctr.primarySeed.value,
+      secondary: ctr.secondarySeed.value,
+      tertiary: ctr.tertiarySeed.value,
+    );
+    return seeds
+        .asColorSchemeSeeds(_schemeVariant, _toneBrightness)
+        .applyToneOffsets(Pref.customThemeToneOffsets(_toneBrightness));
+  }
+
+  Widget _brightnessSelector() => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16),
+    child: SegmentedButton<Brightness>(
+      segments: const [
+        ButtonSegment(
+          value: Brightness.light,
+          label: Text('亮色主题'),
+          icon: Icon(Icons.light_mode_outlined),
+        ),
+        ButtonSegment(
+          value: Brightness.dark,
+          label: Text('暗色主题'),
+          icon: Icon(Icons.dark_mode_outlined),
+        ),
+      ],
+      selected: {_toneBrightness},
+      onSelectionChanged: (value) {
+        setState(() => _toneBrightness = value.single);
+      },
+    ),
+  );
+
+  Widget _colorAssignmentEditor(
+    ColorScheme colorScheme,
+    TextStyle subtitleStyle,
+  ) {
+    final unassignedCount = _colorAssignments.values
+        .where((source) => source == null)
+        .length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const ListTile(
+          leading: Icon(Icons.grid_view_outlined),
+          title: Text('完整颜色表与 UI 用途'),
+          subtitle: Text('展开任一颜色，可查看并配置使用该颜色的 UI 元素'),
+        ),
+        _brightnessSelector(),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: Text(
+            '未配置 UI 元素：$unassignedCount 个',
+            style: subtitleStyle,
+          ),
+        ),
+        if (unassignedCount > 0)
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: colorScheme.errorContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              '还有 $unassignedCount 个 UI 元素未配置颜色。'
+              '它们会保留生成色，并出现在每个颜色的下拉菜单中。',
+              style: TextStyle(color: colorScheme.onErrorContainer),
+            ),
+          ),
+        for (final family in ThemeColorFamily.values) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+            child: Text(
+              family.label,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+          ),
+          for (final source in ThemeSchemeColor.values)
+            if (source.family == family)
+              _colorAssignmentTile(colorScheme, source),
+        ],
+        Align(
+          alignment: Alignment.centerRight,
+          child: Padding(
+            padding: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
+            child: OutlinedButton.icon(
+              onPressed: _resetColorAssignments,
+              icon: const Icon(Icons.settings_backup_restore),
+              label: const Text('恢复所有 UI 元素默认颜色'),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _colorAssignmentTile(
+    ColorScheme colorScheme,
+    ThemeSchemeColor source,
+  ) {
+    final expanded = _expandedColors.contains(source);
+    final assignedCount = _colorAssignments.values
+        .where((assigned) => assigned == source)
+        .length;
+    final targets = _colorAssignments.entries
+        .where((entry) => entry.value == source || entry.value == null)
+        .map((entry) => entry.key)
+        .toList();
+    final color = colorScheme.colorFor(source);
+    final hex = color
+        .toARGB32()
+        .toRadixString(16)
+        .toUpperCase()
+        .padLeft(8, '0');
+    return ExpansionTile(
+      key: PageStorageKey(source.name),
+      leading: _SchemeColorSwatch(color: color),
+      title: Text('${source.label}（${source.name}）'),
+      subtitle: Text('ARGB #$hex · 已配置 $assignedCount 个 UI 元素'),
+      initiallyExpanded: expanded,
+      onExpansionChanged: (value) {
+        setState(() {
+          if (value) {
+            _expandedColors.add(source);
+          } else {
+            _expandedColors.remove(source);
+          }
+        });
+      },
+      children: !expanded
+          ? const []
+          : targets.isEmpty
+          ? const [
+              Padding(
+                padding: EdgeInsets.fromLTRB(24, 8, 24, 16),
+                child: Text('当前没有可分配的 UI 元素。请先从其他颜色中取消对应选项。'),
+              ),
+            ]
+          : targets.map((target) {
+              final assigned = _colorAssignments[target] == source;
+              return CheckboxListTile(
+                dense: true,
+                controlAffinity: ListTileControlAffinity.leading,
+                value: assigned,
+                title: Text(target.label),
+                subtitle: Text(target.usage),
+                onChanged: (checked) => _setColorAssignment(
+                  target,
+                  (checked ?? false) ? source : null,
+                ),
+              );
+            }).toList(),
+    );
   }
 
   Widget _toneOffsetTile(ThemeToneRole role) {
@@ -251,7 +468,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
                   )
                   .toList(),
               onSelected: (value, refresh) {
-                _schemeVariant = value;
+                setState(() => _schemeVariant = value);
                 GStorage.setting
                     .put(SettingBoxKey.schemeVariant, value.index)
                     .whenComplete(() {
@@ -338,31 +555,15 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
                     storageKey: SettingBoxKey.customTertiarySeed,
                   ),
                   const Divider(height: 24),
+                  _colorAssignmentEditor(
+                    _previewColorScheme(),
+                    subTitleStyle,
+                  ),
+                  const Divider(height: 24),
                   const ListTile(
                     leading: Icon(Icons.contrast_outlined),
                     title: Text('语义区域明暗层级'),
                     subtitle: Text('只改变 HCT 明度，不改变已选种子色的色相'),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: SegmentedButton<Brightness>(
-                      segments: const [
-                        ButtonSegment(
-                          value: Brightness.light,
-                          label: Text('亮色主题'),
-                          icon: Icon(Icons.light_mode_outlined),
-                        ),
-                        ButtonSegment(
-                          value: Brightness.dark,
-                          label: Text('暗色主题'),
-                          icon: Icon(Icons.dark_mode_outlined),
-                        ),
-                      ],
-                      selected: {_toneBrightness},
-                      onSelectionChanged: (value) {
-                        setState(() => _toneBrightness = value.single);
-                      },
-                    ),
                   ),
                   ...ThemeToneRole.values.map(_toneOffsetTile),
                   Align(
@@ -458,6 +659,25 @@ class _SeedColorSwatch extends StatelessWidget {
         ),
         ColoredBox(color: color),
       ],
+    ),
+  );
+}
+
+class _SchemeColorSwatch extends StatelessWidget {
+  const _SchemeColorSwatch({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 40,
+    height: 40,
+    decoration: BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(
+        color: Theme.of(context).colorScheme.outlineVariant,
+      ),
     ),
   );
 }

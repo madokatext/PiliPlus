@@ -164,6 +164,130 @@ extension ThemeToneExt on ColorScheme {
   }
 }
 
+extension ThemeColorAssignmentExt on ColorScheme {
+  Color colorFor(ThemeSchemeColor color) => switch (color) {
+    ThemeSchemeColor.primary => primary,
+    ThemeSchemeColor.onPrimary => onPrimary,
+    ThemeSchemeColor.primaryContainer => primaryContainer,
+    ThemeSchemeColor.onPrimaryContainer => onPrimaryContainer,
+    ThemeSchemeColor.primaryFixed => primaryFixed,
+    ThemeSchemeColor.primaryFixedDim => primaryFixedDim,
+    ThemeSchemeColor.onPrimaryFixed => onPrimaryFixed,
+    ThemeSchemeColor.onPrimaryFixedVariant => onPrimaryFixedVariant,
+    ThemeSchemeColor.inversePrimary => inversePrimary,
+    ThemeSchemeColor.secondary => secondary,
+    ThemeSchemeColor.onSecondary => onSecondary,
+    ThemeSchemeColor.secondaryContainer => secondaryContainer,
+    ThemeSchemeColor.onSecondaryContainer => onSecondaryContainer,
+    ThemeSchemeColor.secondaryFixed => secondaryFixed,
+    ThemeSchemeColor.secondaryFixedDim => secondaryFixedDim,
+    ThemeSchemeColor.onSecondaryFixed => onSecondaryFixed,
+    ThemeSchemeColor.onSecondaryFixedVariant => onSecondaryFixedVariant,
+    ThemeSchemeColor.tertiary => tertiary,
+    ThemeSchemeColor.onTertiary => onTertiary,
+    ThemeSchemeColor.tertiaryContainer => tertiaryContainer,
+    ThemeSchemeColor.onTertiaryContainer => onTertiaryContainer,
+    ThemeSchemeColor.tertiaryFixed => tertiaryFixed,
+    ThemeSchemeColor.tertiaryFixedDim => tertiaryFixedDim,
+    ThemeSchemeColor.onTertiaryFixed => onTertiaryFixed,
+    ThemeSchemeColor.onTertiaryFixedVariant => onTertiaryFixedVariant,
+    ThemeSchemeColor.error => error,
+    ThemeSchemeColor.onError => onError,
+    ThemeSchemeColor.errorContainer => errorContainer,
+    ThemeSchemeColor.onErrorContainer => onErrorContainer,
+    ThemeSchemeColor.surface => surface,
+    ThemeSchemeColor.onSurface => onSurface,
+    ThemeSchemeColor.surfaceDim => surfaceDim,
+    ThemeSchemeColor.surfaceBright => surfaceBright,
+    ThemeSchemeColor.surfaceContainerLowest => surfaceContainerLowest,
+    ThemeSchemeColor.surfaceContainerLow => surfaceContainerLow,
+    ThemeSchemeColor.surfaceContainer => surfaceContainer,
+    ThemeSchemeColor.surfaceContainerHigh => surfaceContainerHigh,
+    ThemeSchemeColor.surfaceContainerHighest => surfaceContainerHighest,
+    ThemeSchemeColor.onSurfaceVariant => onSurfaceVariant,
+    ThemeSchemeColor.outline => outline,
+    ThemeSchemeColor.outlineVariant => outlineVariant,
+    ThemeSchemeColor.shadow => shadow,
+    ThemeSchemeColor.scrim => scrim,
+    ThemeSchemeColor.inverseSurface => inverseSurface,
+    ThemeSchemeColor.onInverseSurface => onInverseSurface,
+    ThemeSchemeColor.surfaceTint => surfaceTint,
+  };
+
+  /// 用颜色来源映射替换 Material UI 颜色槽。
+  ///
+  /// `null` 表示该 UI 颜色槽暂未配置，此时仍保留其生成色，避免界面因
+  /// 暂时取消配置而失去可读性。所有来源都从替换前的颜色表读取，避免
+  /// 映射顺序影响最终结果。
+  ColorScheme applyColorAssignments(
+    Map<ThemeSchemeColor, ThemeSchemeColor?> assignments,
+  ) {
+    Color mapped(ThemeSchemeColor target) {
+      final source = assignments[target];
+      return colorFor(source ?? target);
+    }
+
+    return copyWith(
+      primary: mapped(ThemeSchemeColor.primary),
+      onPrimary: mapped(ThemeSchemeColor.onPrimary),
+      primaryContainer: mapped(ThemeSchemeColor.primaryContainer),
+      onPrimaryContainer: mapped(ThemeSchemeColor.onPrimaryContainer),
+      primaryFixed: mapped(ThemeSchemeColor.primaryFixed),
+      primaryFixedDim: mapped(ThemeSchemeColor.primaryFixedDim),
+      onPrimaryFixed: mapped(ThemeSchemeColor.onPrimaryFixed),
+      onPrimaryFixedVariant: mapped(
+        ThemeSchemeColor.onPrimaryFixedVariant,
+      ),
+      inversePrimary: mapped(ThemeSchemeColor.inversePrimary),
+      secondary: mapped(ThemeSchemeColor.secondary),
+      onSecondary: mapped(ThemeSchemeColor.onSecondary),
+      secondaryContainer: mapped(ThemeSchemeColor.secondaryContainer),
+      onSecondaryContainer: mapped(ThemeSchemeColor.onSecondaryContainer),
+      secondaryFixed: mapped(ThemeSchemeColor.secondaryFixed),
+      secondaryFixedDim: mapped(ThemeSchemeColor.secondaryFixedDim),
+      onSecondaryFixed: mapped(ThemeSchemeColor.onSecondaryFixed),
+      onSecondaryFixedVariant: mapped(
+        ThemeSchemeColor.onSecondaryFixedVariant,
+      ),
+      tertiary: mapped(ThemeSchemeColor.tertiary),
+      onTertiary: mapped(ThemeSchemeColor.onTertiary),
+      tertiaryContainer: mapped(ThemeSchemeColor.tertiaryContainer),
+      onTertiaryContainer: mapped(ThemeSchemeColor.onTertiaryContainer),
+      tertiaryFixed: mapped(ThemeSchemeColor.tertiaryFixed),
+      tertiaryFixedDim: mapped(ThemeSchemeColor.tertiaryFixedDim),
+      onTertiaryFixed: mapped(ThemeSchemeColor.onTertiaryFixed),
+      onTertiaryFixedVariant: mapped(
+        ThemeSchemeColor.onTertiaryFixedVariant,
+      ),
+      error: mapped(ThemeSchemeColor.error),
+      onError: mapped(ThemeSchemeColor.onError),
+      errorContainer: mapped(ThemeSchemeColor.errorContainer),
+      onErrorContainer: mapped(ThemeSchemeColor.onErrorContainer),
+      surface: mapped(ThemeSchemeColor.surface),
+      onSurface: mapped(ThemeSchemeColor.onSurface),
+      surfaceDim: mapped(ThemeSchemeColor.surfaceDim),
+      surfaceBright: mapped(ThemeSchemeColor.surfaceBright),
+      surfaceContainerLowest: mapped(
+        ThemeSchemeColor.surfaceContainerLowest,
+      ),
+      surfaceContainerLow: mapped(ThemeSchemeColor.surfaceContainerLow),
+      surfaceContainer: mapped(ThemeSchemeColor.surfaceContainer),
+      surfaceContainerHigh: mapped(ThemeSchemeColor.surfaceContainerHigh),
+      surfaceContainerHighest: mapped(
+        ThemeSchemeColor.surfaceContainerHighest,
+      ),
+      onSurfaceVariant: mapped(ThemeSchemeColor.onSurfaceVariant),
+      outline: mapped(ThemeSchemeColor.outline),
+      outlineVariant: mapped(ThemeSchemeColor.outlineVariant),
+      shadow: mapped(ThemeSchemeColor.shadow),
+      scrim: mapped(ThemeSchemeColor.scrim),
+      inverseSurface: mapped(ThemeSchemeColor.inverseSurface),
+      onInverseSurface: mapped(ThemeSchemeColor.onInverseSurface),
+      surfaceTint: mapped(ThemeSchemeColor.surfaceTint),
+    );
+  }
+}
+
 extension BrightnessExt on Brightness {
   Brightness get reverse => isLight ? Brightness.dark : Brightness.light;
 

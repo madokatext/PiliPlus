@@ -1217,10 +1217,13 @@ Widget _themeColorTrailing(ThemeData theme) {
     return Icon(Icons.color_lens_rounded, color: theme.colorScheme.primary);
   }
   final colorScheme = switch (Pref.themeColorMode) {
-    ThemeColorMode.customMultiSeed => Pref.customThemeSeeds.asColorSchemeSeeds(
-      Pref.schemeVariant,
-      theme.brightness,
-    ),
+    ThemeColorMode.customMultiSeed => Pref.customThemeSeeds
+        .asColorSchemeSeeds(
+          Pref.schemeVariant,
+          theme.brightness,
+        )
+        .applyToneOffsets(Pref.customThemeToneOffsets(theme.brightness))
+        .applyColorAssignments(Pref.customThemeColorAssignments),
     _ => colorThemeTypes[Pref.customColor].color.asColorSchemeSeed(
       Pref.schemeVariant,
       theme.brightness,

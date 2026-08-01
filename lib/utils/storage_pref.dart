@@ -1231,6 +1231,36 @@ static bool get seekPreviewFollowGesture => _setting.get(
       role: customThemeToneOffset(brightness, role),
   };
 
+  static Map<ThemeSchemeColor, ThemeSchemeColor?>
+  get customThemeColorAssignments {
+    final stored = _setting.get(SettingBoxKey.customThemeColorAssignments);
+    if (stored is! Map) {
+      return {
+        for (final color in ThemeSchemeColor.values) color: color,
+      };
+    }
+
+    return {
+      for (final target in ThemeSchemeColor.values)
+        target: _decodeThemeColorAssignment(stored, target),
+    };
+  }
+
+  static ThemeSchemeColor? _decodeThemeColorAssignment(
+    Map<dynamic, dynamic> stored,
+    ThemeSchemeColor target,
+  ) {
+    if (!stored.containsKey(target.name)) return target;
+    final sourceName = stored[target.name];
+    if (sourceName == '') return null;
+    if (sourceName is String) {
+      try {
+        return ThemeSchemeColor.values.byName(sourceName);
+      } catch (_) {}
+    }
+    return target;
+  }
+
   static bool get enableSystemProxy =>
       _setting.get(SettingBoxKey.enableSystemProxy, defaultValue: false);
 
