@@ -624,7 +624,9 @@ class ReplyItemGrpc extends StatelessWidget {
                   onSecondaryTap: PlatformUtils.isMobile ? null : showMore,
                   child: Padding(
                     padding: padding,
-                    child: Text.rich(
+                    child: custom_text.Text.rich(
+                      primary: colorScheme.primary,
+                      primaryLinkHitTestHeightFactor: 1.5,
                       style: TextStyle(
                         height: 1.6 * Pref.replyLineSpacingScale,
                         fontSize:
@@ -1319,6 +1321,7 @@ class _ExpandableReplyContentState extends State<_ExpandableReplyContent> {
         custom_text.Text.rich(
           widget.textSpan,
           primary: widget.primary,
+          primaryLinkHitTestHeightFactor: 1.5,
           style: widget.style,
           maxLines: _isExpanded ? null : widget.maxLines,
           onShowMore: widget.maxLines == null || _isExpanded

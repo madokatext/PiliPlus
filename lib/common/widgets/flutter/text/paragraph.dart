@@ -87,15 +87,18 @@ class RenderParagraph extends RenderBox
     Color? selectionColor,
     SelectionRegistrar? registrar,
     required Color primary,
+    double primaryLinkHitTestHeightFactor = 1.0,
     VoidCallback? onShowMore,
   }) : assert(text.debugAssertIsValid()),
        assert(maxLines == null || maxLines > 0),
+       assert(primaryLinkHitTestHeightFactor >= 1.0),
        assert(
          identical(textScaler, const _UnspecifiedTextScaler()) ||
              textScaleFactor == 1.0,
          'textScaleFactor is deprecated and cannot be specified when textScaler is specified.',
        ),
        _primary = primary,
+       _primaryLinkHitTestHeightFactor = primaryLinkHitTestHeightFactor,
        _onShowMore = onShowMore,
        _softWrap = softWrap,
        _overflow = overflow,
@@ -610,11 +613,32 @@ class RenderParagraph extends RenderBox
     // text justification, as graphemeClusterLayoutBounds.width is the advance
     // width to the next character, so there's no gap between their
     // graphemeClusterLayoutBounds rects.
-    final InlineSpan? spanHit =
-        glyph != null && glyph.graphemeClusterLayoutBounds.contains(position)
-        ? _textPainter.text!.getSpanForPosition(
+    final InlineSpan? closestSpan = glyph == null
+        ? null
+        : _textPainter.text!.getSpanForPosition(
             TextPosition(offset: glyph.graphemeClusterCodeUnitRange.start),
-          )
+          );
+    final glyphBounds = glyph?.graphemeClusterLayoutBounds;
+    // Expand equally above and below so the touch target remains centered on
+    // the rendered link without changing text layout or horizontal hit bounds.
+    final verticalPadding = glyphBounds == null
+        ? 0.0
+        : glyphBounds.height * (_primaryLinkHitTestHeightFactor - 1.0) / 2;
+    final isPrimaryLink =
+        closestSpan is TextSpan &&
+        closestSpan.recognizer != null &&
+        closestSpan.style?.color == _primary;
+    final spanHit =
+        glyphBounds != null &&
+            (glyphBounds.contains(position) ||
+                (isPrimaryLink &&
+                    Rect.fromLTRB(
+                      glyphBounds.left,
+                      glyphBounds.top - verticalPadding,
+                      glyphBounds.right,
+                      glyphBounds.bottom + verticalPadding,
+                    ).contains(position)))
+        ? closestSpan
         : null;
     switch (spanHit) {
       case final HitTestTarget span:
@@ -724,6 +748,14 @@ class RenderParagraph extends RenderBox
 
   Color _primary;
 
+  double _primaryLinkHitTestHeightFactor;
+  double get primaryLinkHitTestHeightFactor =>
+      _primaryLinkHitTestHeightFactor;
+  set primaryLinkHitTestHeightFactor(double value) {
+    assert(value >= 1.0);
+    _primaryLinkHitTestHeightFactor = value;
+  }
+
   VoidCallback? _onShowMore;
   set onShowMore(VoidCallback? onShowMore) {
     if (_onShowMore != onShowMore) {
@@ -763,10 +795,8 @@ class RenderParagraph extends RenderBox
     didOverflowHeight =
         size.height < textSize.height || _textPainter.didExceedMaxLines;
 
-    if (didOverflowHeight) {
-      if (_onShowMore != null) {
-        _tapGestureRecognizer ??= TapGestureRecognizer()..onTap = _onShowMore;
-      }
+    if (didOverflowHeight && _onShowMore != null) {
+      _tapGestureRecognizer ??= TapGestureRecognizer()..onTap = _onShowMore;
       _morePainter ??= TextPainter(
         text: _moreTextSpan(),
         textDirection: textDirection,

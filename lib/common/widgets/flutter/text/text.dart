@@ -181,12 +181,14 @@ class Text extends StatelessWidget {
     this.textHeightBehavior,
     this.selectionColor,
     required this.primary,
+    this.primaryLinkHitTestHeightFactor = 1.0,
     this.onShowMore,
   }) : textSpan = null,
        assert(
          textScaler == null || textScaleFactor == null,
          'textScaleFactor is deprecated and cannot be specified when textScaler is specified.',
-       );
+       ),
+       assert(primaryLinkHitTestHeightFactor >= 1.0);
 
   /// Creates a text widget with a [InlineSpan].
   ///
@@ -220,12 +222,14 @@ class Text extends StatelessWidget {
     this.textHeightBehavior,
     this.selectionColor,
     required this.primary,
+    this.primaryLinkHitTestHeightFactor = 1.0,
     this.onShowMore,
   }) : data = null,
        assert(
          textScaler == null || textScaleFactor == null,
          'textScaleFactor is deprecated and cannot be specified when textScaler is specified.',
-       );
+       ),
+       assert(primaryLinkHitTestHeightFactor >= 1.0);
 
   /// The text to display.
   ///
@@ -371,6 +375,8 @@ class Text extends StatelessWidget {
 
   final Color primary;
 
+  final double primaryLinkHitTestHeightFactor;
+
   final VoidCallback? onShowMore;
 
   @override
@@ -449,6 +455,7 @@ class Text extends StatelessWidget {
               DefaultSelectionStyle.defaultColor,
           text: effectiveTextSpan,
           primary: primary,
+          primaryLinkHitTestHeightFactor: primaryLinkHitTestHeightFactor,
         ),
       );
     } else {
@@ -477,6 +484,7 @@ class Text extends StatelessWidget {
             DefaultSelectionStyle.defaultColor,
         text: effectiveTextSpan,
         primary: primary,
+        primaryLinkHitTestHeightFactor: primaryLinkHitTestHeightFactor,
         onShowMore: onShowMore,
       );
     }
@@ -577,6 +585,7 @@ class _SelectableTextContainer extends StatefulWidget {
     this.textHeightBehavior,
     required this.selectionColor,
     required this.primary,
+    required this.primaryLinkHitTestHeightFactor,
   });
 
   final TextSpan text;
@@ -592,6 +601,7 @@ class _SelectableTextContainer extends StatefulWidget {
   final ui.TextHeightBehavior? textHeightBehavior;
   final Color selectionColor;
   final Color primary;
+  final double primaryLinkHitTestHeightFactor;
 
   @override
   State<_SelectableTextContainer> createState() =>
@@ -635,6 +645,8 @@ class _SelectableTextContainerState extends State<_SelectableTextContainer> {
         selectionColor: widget.selectionColor,
         text: widget.text,
         primary: widget.primary,
+        primaryLinkHitTestHeightFactor:
+            widget.primaryLinkHitTestHeightFactor,
       ),
     );
   }
@@ -656,6 +668,7 @@ class _RichText extends StatelessWidget {
     this.textHeightBehavior,
     required this.selectionColor,
     required this.primary,
+    required this.primaryLinkHitTestHeightFactor,
   });
 
   final GlobalKey? textKey;
@@ -672,6 +685,7 @@ class _RichText extends StatelessWidget {
   final ui.TextHeightBehavior? textHeightBehavior;
   final Color selectionColor;
   final Color primary;
+  final double primaryLinkHitTestHeightFactor;
 
   @override
   Widget build(BuildContext context) {
@@ -692,6 +706,7 @@ class _RichText extends StatelessWidget {
       selectionColor: selectionColor,
       text: text,
       primary: primary,
+      primaryLinkHitTestHeightFactor: primaryLinkHitTestHeightFactor,
     );
   }
 }

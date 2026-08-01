@@ -121,8 +121,10 @@ class RichText extends MultiChildRenderObjectWidget {
     this.selectionRegistrar,
     this.selectionColor,
     required this.primary,
+    this.primaryLinkHitTestHeightFactor = 1.0,
     this.onShowMore,
   }) : assert(maxLines == null || maxLines > 0),
+       assert(primaryLinkHitTestHeightFactor >= 1.0),
        assert(selectionRegistrar == null || selectionColor != null),
        assert(
          textScaleFactor == 1.0 || identical(textScaler, TextScaler.noScaling),
@@ -238,6 +240,8 @@ class RichText extends MultiChildRenderObjectWidget {
 
   final Color primary;
 
+  final double primaryLinkHitTestHeightFactor;
+
   final VoidCallback? onShowMore;
 
   @override
@@ -258,6 +262,7 @@ class RichText extends MultiChildRenderObjectWidget {
       registrar: selectionRegistrar,
       selectionColor: selectionColor,
       primary: primary,
+      primaryLinkHitTestHeightFactor: primaryLinkHitTestHeightFactor,
       onShowMore: onShowMore,
     );
   }
@@ -279,6 +284,7 @@ class RichText extends MultiChildRenderObjectWidget {
       ..locale = locale ?? Localizations.maybeLocaleOf(context)
       ..registrar = selectionRegistrar
       ..selectionColor = selectionColor
+      ..primaryLinkHitTestHeightFactor = primaryLinkHitTestHeightFactor
       ..onShowMore = onShowMore;
   }
 
