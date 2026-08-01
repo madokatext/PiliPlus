@@ -124,6 +124,12 @@ class PlPlayerController with BlockConfigMixin {
   final playerStatus = PlPlayerStatus(.playing);
 
   final Rx<DataStatus> dataStatus = Rx(.none);
+  final RxBool isWaitingForInitialPlay = false.obs;
+
+  bool get shouldShowBufferingOverlay =>
+      dataStatus.loading ||
+      isWaitingForInitialPlay.value ||
+      (isBuffering.value && playerStatus.isPlaying);
 
   Duration? seekToPos;
   bool hasToasted = false;
@@ -1071,6 +1077,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     );
 
     _initialPlayGate = gate;
+    isWaitingForInitialPlay.value = true;
     try {
       _holdInitialPlay(gate);
     } catch (_) {
@@ -1177,6 +1184,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     }
     if (identical(_initialPlayGate, gate)) {
       _initialPlayGate = null;
+      isWaitingForInitialPlay.value = false;
     }
   }
 
@@ -1192,6 +1200,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
 
     if (identical(_initialPlayGate, gate)) {
       _initialPlayGate = null;
+      isWaitingForInitialPlay.value = false;
     }
     gate.active = false;
     if (!gate.canceled.isCompleted) {
@@ -1214,6 +1223,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
   void _discardInitialPlayGate() {
     final gate = _initialPlayGate;
     _initialPlayGate = null;
+    isWaitingForInitialPlay.value = false;
     if (gate == null || !gate.active) return;
     gate.active = false;
     if (!gate.canceled.isCompleted) {

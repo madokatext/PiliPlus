@@ -37,13 +37,13 @@ import 'package:PiliPlus/pages/video/post_panel/view.dart';
 import 'package:PiliPlus/pages/video/widgets/header_control.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/bottom_control_type.dart';
-import 'package:PiliPlus/plugin/pl_player/models/data_status.dart';
 import 'package:PiliPlus/plugin/pl_player/models/double_tap_type.dart';
 import 'package:PiliPlus/plugin/pl_player/models/fullscreen_mode.dart';
 import 'package:PiliPlus/plugin/pl_player/models/gesture_type.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/app_bar_ani.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/backward_seek.dart';
+import 'package:PiliPlus/plugin/pl_player/widgets/buffering_overlay.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/bottom_control.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/common_btn.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/display_controls.dart';
@@ -165,33 +165,6 @@ ui.PointerDeviceKind? _gesturePointerKind;
   final RxString _mpvDroppedFrames = '--'.obs;
   Timer? _mpvOutputFpsTimer;
   late final bool _showPlayerInstanceStatus = Pref.showPlayerInstanceStatus;
-  late final bool _showBufferingInfo = Pref.showBufferingInfo;
-  final RxBool _hasValidBufferingSpeed = false.obs;
-  final RxString _bufferingSpeed = '--/s'.obs;
-  Timer? _bufferingSpeedTimer;
-
-  static String _formatBufferSize(num bytes) {
-    if (!bytes.isFinite || bytes < 0) {
-      return '--';
-    }
-
-    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-    var value = bytes.toDouble();
-    var unitIndex = 0;
-    while (value >= 1024 && unitIndex < units.length - 1) {
-      value /= 1024;
-      unitIndex++;
-    }
-
-    final fractionDigits = unitIndex == 0
-        ? 0
-        : value >= 100
-        ? 0
-        : value >= 10
-        ? 1
-        : 2;
-    return '${value.toStringAsFixed(fractionDigits)} ${units[unitIndex]}';
-  }
 
   Widget get _playerInstanceStatusOverlay => IgnorePointer(
     child: Align(
@@ -245,55 +218,6 @@ ui.PointerDeviceKind? _gesturePointerKind;
       }),
     ),
   );
-
-  num? _readBufferingSpeed() {
-    final players = [
-      plPlayerController.videoPlayerController,
-      plPlayerController.standbyVideoPlayerController,
-    ];
-    for (final player in players) {
-      if (player == null) {
-        continue;
-      }
-      try {
-        final cacheSpeed = double.tryParse(
-          player.getProperty('cache-speed').trim(),
-        );
-        if (cacheSpeed == null ||
-            !cacheSpeed.isFinite ||
-            cacheSpeed < 0) {
-          continue;
-        }
-        return cacheSpeed;
-      } catch (_) {
-        // 主实例尚未提供有效速度时继续尝试备用实例。
-      }
-    }
-    return null;
-  }
-
-  bool get _isBufferingOverlayVisible =>
-      plPlayerController.dataStatus.loading ||
-      (plPlayerController.isBuffering.value &&
-          plPlayerController.playerStatus.isPlaying);
-
-  void _updateBufferingSpeed() {
-    if (!_showBufferingInfo || !_isBufferingOverlayVisible) {
-      _bufferingSpeed.value = '--/s';
-      _hasValidBufferingSpeed.value = false;
-      return;
-    }
-
-    final cacheSpeed = _readBufferingSpeed();
-    if (cacheSpeed == null) {
-      _bufferingSpeed.value = '--/s';
-      _hasValidBufferingSpeed.value = false;
-      return;
-    }
-
-    _bufferingSpeed.value = '${_formatBufferSize(cacheSpeed)}/s';
-    _hasValidBufferingSpeed.value = true;
-  }
 
   void _updateMpvOutputFps() {
     var label = '-- FPS';
@@ -460,14 +384,6 @@ ui.PointerDeviceKind? _gesturePointerKind;
       }
     });
 
-    if (_showBufferingInfo) {
-      _updateBufferingSpeed();
-      _bufferingSpeedTimer = Timer.periodic(
-        const Duration(milliseconds: 500),
-        (_) => _updateBufferingSpeed(),
-      );
-    }
-
     if (PlatformUtils.isMobile) {
       Future.microtask(() {
         try {
@@ -581,7 +497,6 @@ ui.PointerDeviceKind? _gesturePointerKind;
     _brightnessListener?.cancel();
     _controlsListener?.cancel();
     _mpvOutputFpsTimer?.cancel();
-    _bufferingSpeedTimer?.cancel();
     _animationController.dispose();
     _transformationController.dispose();
     _removeDmAction();
@@ -2409,78 +2324,7 @@ if (!isLive)
             ),
         ],
 
-        Obx(() {
-          if (plPlayerController.dataStatus.loading ||
-              (plPlayerController.isBuffering.value &&
-                  plPlayerController.playerStatus.isPlaying)) {
-            return Center(
-              child: GestureDetector(
-                onTap: plPlayerController.refreshPlayer,
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [Colors.black26, Colors.transparent],
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Image.asset(
-                        Assets.buffering,
-                        height: 25,
-                        cacheHeight: 25.cacheSize(context),
-                        semanticLabel: "加载中",
-                        color: Colors.white,
-                      ),
-                      if (_showBufferingInfo)
-                        if (_hasValidBufferingSpeed.value) ...[
-                          Text(
-                            DurationUtils.formatDuration(
-                              plPlayerController.buffered.value,
-                            ),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                            ),
-                          ),
-                          Text(
-                            _bufferingSpeed.value,
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ] else
-                          const Text(
-                            '加载中',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                            ),
-                          )
-                      else if (plPlayerController.isBuffering.value)
-                        Text(
-                          plPlayerController.buffered.value == 0
-                              ? '加载中...'
-                              : DurationUtils.formatDuration(
-                                  plPlayerController.buffered.value,
-                                ),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          } else {
-            return const SizedBox.shrink();
-          }
-        }),
+        PlayerBufferingOverlay(controller: plPlayerController),
 
         /// 点击 快进/快退
         if (!isLive)
