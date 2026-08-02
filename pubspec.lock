@@ -706,8 +706,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: main
-      resolved-ref: "1dbede0ee22f161ec2c928e1e82f0ae9339a097d"
+      ref: 442c10115d9fd28d43ccbc716572da6002642797
+      resolved-ref: "442c10115d9fd28d43ccbc716572da6002642797"
       url: "https://github.com/bggRGjQaUbCoE/flutter_smart_dialog.git"
     source: git
     version: "5.1.0"
