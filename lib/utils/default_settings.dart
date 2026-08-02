@@ -60,7 +60,6 @@ const Map<String, Object> defaultSettingValues = {
   'customThemeTone.light.primaryAccent': 20.0,
   'customThemeTone.light.secondaryAccent': 25.0,
   'customThemeTone.light.selected': 2.0,
-  'customThemeTone.light.tertiaryAccent': 20.0,
   'customThemeTone.light.tertiaryAccentContent': 30.0,
   'danmakuBlockType': <int>[],
   'danmakuDuration': 7.0,
