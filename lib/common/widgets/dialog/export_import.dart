@@ -30,18 +30,20 @@ Future<void> exportToLocalFile({
   required ValueGetter<String> onExport,
   required ValueGetter<String> localFileName,
   ValueGetter<String>? localDirectory,
+  String fileExtension = 'json',
+  List<String>? allowedExtensions,
 }) async {
   try {
     final res = utf8.encode(onExport());
     final fileName =
         'piliplus_${localFileName()}_'
-        '${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.json';
+        '${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.$fileExtension';
     final directoryPath = localDirectory?.call();
     if (directoryPath == null) {
       await StorageUtils.saveBytes2File(
         name: fileName,
         bytes: res,
-        allowedExtensions: const ['json'],
+        allowedExtensions: allowedExtensions ?? [fileExtension],
       );
       return;
     }

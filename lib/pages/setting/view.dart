@@ -221,7 +221,7 @@ class _SettingPageState extends State<SettingPage> {
           leading: const Icon(Icons.import_export_outlined),
           title: Text('导入/导出所有设置', style: titleStyle),
           subtitle: Text(
-            'JSON 文件导出至主存储 Download 目录；导入后重启应用生效',
+            '通过系统文件选择器导入或导出 JSON；导入后重启应用生效',
             style: subTitleStyle,
           ),
           onTap: () => showSettingsImportExportDialog(context),

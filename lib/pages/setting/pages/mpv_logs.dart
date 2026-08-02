@@ -1,15 +1,8 @@
-import 'dart:io' show Platform;
-
+import 'package:PiliPlus/common/widgets/dialog/export_import.dart';
 import 'package:PiliPlus/services/mpv_log_service.dart';
-import 'package:PiliPlus/utils/device_utils.dart';
-import 'package:PiliPlus/utils/permission_handler.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
-import 'package:intl/intl.dart' show DateFormat;
-
-const _storageChannel = MethodChannel('com.max.piliplus/storage');
 
 class MpvLogsPage extends StatefulWidget {
   const MpvLogsPage({super.key});
@@ -41,31 +34,12 @@ class _MpvLogsPageState extends State<MpvLogsPage> {
         SmartDialog.showToast('暂无日志');
         return;
       }
-      if (!Platform.isAndroid) {
-        SmartDialog.showToast('保存至主存储 Download 目录仅支持 Android');
-        return;
-      }
-      if (DeviceUtils.sdkInt < 29) {
-        final status = await Permission.storage.request();
-        if (!status.isGranted) {
-          SmartDialog.showToast('存储权限未授权，无法写入主存储 Download 目录');
-          return;
-        }
-      }
-
-      final fileName =
-          'piliplus_mpv_log_'
-          '${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.log';
-      final savedPath = await _storageChannel.invokeMethod<String>(
-        'saveTextToDownloads',
-        {
-          'fileName': fileName,
-          'content': content,
-        },
+      await exportToLocalFile(
+        onExport: () => content,
+        localFileName: () => 'mpv_log',
+        fileExtension: 'log',
+        allowedExtensions: const ['log', 'txt'],
       );
-      SmartDialog.showToast('已保存至 ${savedPath ?? 'Download/$fileName'}');
-    } on PlatformException catch (e) {
-      SmartDialog.showToast('保存失败：${e.message ?? e.code}');
     } catch (e) {
       SmartDialog.showToast('保存失败：$e');
     } finally {
