@@ -51,6 +51,7 @@ import 'package:PiliPlus/plugin/pl_player/widgets/forward_seek.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/mpv_video_output.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/mpv_convert_webp.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/play_pause_btn.dart';
+import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/utils/android/bindings.g.dart';
 import 'package:PiliPlus/utils/connectivity_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
@@ -80,6 +81,7 @@ import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:media_kit/media_kit.dart' show Player;
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:screen_brightness_platform_interface/screen_brightness_platform_interface.dart';
 import 'package:window_manager/window_manager.dart';
@@ -447,19 +449,51 @@ ui.PointerDeviceKind? _gesturePointerKind;
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (!plPlayerController.continuePlayInBackground.value) {
-      late final player = plPlayerController.videoPlayerController;
-      if (const <AppLifecycleState>[.paused, .detached].contains(state)) {
-        if (player != null && player.state.playing) {
-          _pauseDueToPauseUponEnteringBackgroundMode = true;
-          player.pause();
-        }
-      } else {
-        if (_pauseDueToPauseUponEnteringBackgroundMode) {
-          _pauseDueToPauseUponEnteringBackgroundMode = false;
-          player?.play();
-        }
-      }
+    final isBackgroundState = const <AppLifecycleState>[
+      .paused,
+      .hidden,
+    ].contains(state);
+    if (isBackgroundState) {
+      audioSessionHandler?.saveBluetoothStateBeforeBackground();
+    }
+
+    final continueInBackground =
+        plPlayerController.continuePlayInBackground.value;
+    final player = plPlayerController.videoPlayerController;
+    if (!continueInBackground &&
+        const <AppLifecycleState>[
+          .paused,
+          .hidden,
+          .detached,
+        ].contains(state) &&
+        player != null &&
+        player.state.playing) {
+      _pauseDueToPauseUponEnteringBackgroundMode = true;
+      player.pause();
+    }
+
+    if (state == .resumed) {
+      final resumePlayer =
+          !continueInBackground && _pauseDueToPauseUponEnteringBackgroundMode
+          ? player
+          : null;
+      _pauseDueToPauseUponEnteringBackgroundMode = false;
+      unawaited(_checkBluetoothStateAfterBackground(resumePlayer));
+    }
+  }
+
+  Future<void> _checkBluetoothStateAfterBackground(Player? resumePlayer) async {
+    final canContinue =
+        await (audioSessionHandler?.checkBluetoothStateAfterBackground() ??
+            Future<bool>.value(true));
+    if (!mounted ||
+        !canContinue ||
+        WidgetsBinding.instance.lifecycleState != .resumed) {
+      return;
+    }
+    if (resumePlayer != null &&
+        identical(resumePlayer, plPlayerController.videoPlayerController)) {
+      await resumePlayer.play();
     }
   }
 

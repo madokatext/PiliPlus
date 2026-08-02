@@ -6,6 +6,10 @@ class AudioSessionHandler {
   late AudioSession session;
   bool _playInterrupted = false;
   bool _hasBluetoothOutput = false;
+  bool _backgroundBluetoothStateSaved = false;
+  bool _hadBluetoothOutputBeforeBackground = false;
+  int _backgroundBluetoothCheckGeneration = 0;
+  Future<bool>? _backgroundBluetoothCheck;
 
   static bool _isBluetoothOutput(AudioDevice device) {
     return device.isOutput &&
@@ -19,6 +23,62 @@ class AudioSessionHandler {
   void _exitToHomeOnBluetoothDisconnect() {
     _playInterrupted = false;
     PlPlayerController.exitToHomeIfExists();
+  }
+
+  /// 保存进入后台前的输出状态，避免依赖后台可能丢失的设备变更事件。
+  void saveBluetoothStateBeforeBackground() {
+    if (_backgroundBluetoothStateSaved) return;
+    _backgroundBluetoothStateSaved = true;
+    _hadBluetoothOutputBeforeBackground = _hasBluetoothOutput;
+    _backgroundBluetoothCheckGeneration++;
+    _backgroundBluetoothCheck = null;
+  }
+
+  Future<bool> checkBluetoothStateAfterBackground() {
+    final activeCheck = _backgroundBluetoothCheck;
+    if (activeCheck != null) return activeCheck;
+    if (!_backgroundBluetoothStateSaved) return Future<bool>.value(true);
+
+    _backgroundBluetoothStateSaved = false;
+    final hadBluetoothOutput = _hadBluetoothOutputBeforeBackground;
+    final generation = _backgroundBluetoothCheckGeneration;
+    final check = _checkBluetoothStateAfterBackground(
+      hadBluetoothOutput,
+      generation,
+    );
+    _backgroundBluetoothCheck = check;
+    return check.whenComplete(() {
+      if (identical(_backgroundBluetoothCheck, check)) {
+        _backgroundBluetoothCheck = null;
+      }
+    });
+  }
+
+  Future<bool> _checkBluetoothStateAfterBackground(
+    bool hadBluetoothOutput,
+    int generation,
+  ) async {
+    bool hasBluetoothOutput;
+    try {
+      hasBluetoothOutput =
+          (await session.getDevices()).any(_isBluetoothOutput);
+    } catch (_) {
+      if (generation != _backgroundBluetoothCheckGeneration) return false;
+      if (hadBluetoothOutput) {
+        // 无法确认蓝牙仍连接时禁止续播，避免恢复瞬间从扬声器泄漏声音。
+        _exitToHomeOnBluetoothDisconnect();
+        return false;
+      }
+      return true;
+    }
+
+    if (generation != _backgroundBluetoothCheckGeneration) return false;
+    _hasBluetoothOutput = hasBluetoothOutput;
+    if (hadBluetoothOutput && !hasBluetoothOutput) {
+      _exitToHomeOnBluetoothDisconnect();
+      return false;
+    }
+    return true;
   }
 
   Future<bool> setActive(bool active) {
