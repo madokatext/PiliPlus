@@ -119,6 +119,7 @@ class PlPlayerController with BlockConfigMixin {
     Duration(milliseconds: 2800),
     Duration(seconds: 4),
   ];
+  static const _bluetoothRouteMuteDuration = Duration(milliseconds: 200);
   static PlPlayerController? _instance;
 
   final playerStatus = PlPlayerStatus(.playing);
@@ -3142,11 +3143,48 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
       await seekTo(Duration.zero, isSeek: false);
     }
 
-    await _videoPlayerController?.play();
+    final player = _videoPlayerController;
+    final useBluetoothRouteGate =
+        Platform.isAndroid &&
+        player != null &&
+        (audioSessionHandler?.consumeBluetoothRouteDirty() ?? false);
+    String? restoreVolume;
+    String? restoreMute;
+    if (useBluetoothRouteGate) {
+      // 让旧 AudioTrack 在路由重建窗口内只输出静音，再恢复用户原状态。
+      final gatedPlayer = player!;
+      final volumeProperty = gatedPlayer.getProperty('volume');
+      final muteProperty = gatedPlayer.getProperty('mute');
+      restoreVolume = volumeProperty.isEmpty
+          ? gatedPlayer.state.volume.toString()
+          : volumeProperty;
+      restoreMute = muteProperty.isEmpty
+          ? (isMuted ? 'yes' : 'no')
+          : muteProperty;
+      gatedPlayer
+        ..setProperty('mute', 'yes')
+        ..setProperty('volume', '0');
+    }
 
-    audioSessionHandler?.setActive(true);
+    try {
+      await player?.play();
 
-    playerStatus.value = PlayerStatus.playing;
+      audioSessionHandler?.setActive(true);
+
+      playerStatus.value = PlayerStatus.playing;
+      if (useBluetoothRouteGate) {
+        await Future<void>.delayed(_bluetoothRouteMuteDuration);
+      }
+    } finally {
+      if (useBluetoothRouteGate &&
+          player != null &&
+          identical(player, _videoPlayerController) &&
+          _playerCount > 0) {
+        player
+          ..setProperty('volume', restoreVolume!)
+          ..setProperty('mute', restoreMute!);
+      }
+    }
     // screenManager.setOverlays(false);
   }
 

@@ -5,6 +5,23 @@ import 'package:audio_session/audio_session.dart';
 class AudioSessionHandler {
   late AudioSession session;
   bool _playInterrupted = false;
+  bool _hasBluetoothOutput = false;
+  bool _bluetoothRouteDirty = false;
+
+  static bool _isBluetoothOutput(AudioDevice device) {
+    return device.isOutput &&
+        const {
+          AudioDeviceType.bluetoothA2dp,
+          AudioDeviceType.bluetoothSco,
+          AudioDeviceType.bluetoothLe,
+        }.contains(device.type);
+  }
+
+  bool consumeBluetoothRouteDirty() {
+    final routeDirty = _bluetoothRouteDirty;
+    _bluetoothRouteDirty = false;
+    return routeDirty;
+  }
 
   Future<bool> setActive(bool active) {
     return session.setActive(active);
@@ -17,6 +34,30 @@ class AudioSessionHandler {
   Future<void> initSession() async {
     session = await AudioSession.instance;
     session.configure(const AudioSessionConfiguration.music());
+
+    try {
+      _hasBluetoothOutput =
+          (await session.getDevices()).any(_isBluetoothOutput);
+    } catch (_) {
+      // 设备枚举失败不应阻止音频焦点与中断监听初始化。
+    }
+
+    session.devicesChangedEventStream.listen((event) async {
+      final removedBluetooth = event.devicesRemoved.any(_isBluetoothOutput);
+      if (removedBluetooth) {
+        _bluetoothRouteDirty = true;
+      }
+      final hadBluetoothOutput = _hasBluetoothOutput;
+      try {
+        _hasBluetoothOutput =
+            (await session.getDevices()).any(_isBluetoothOutput);
+      } catch (_) {
+        // 保留上一次设备状态，仍可依据 devicesRemoved 判断断开。
+      }
+      if (hadBluetoothOutput && !_hasBluetoothOutput) {
+        _bluetoothRouteDirty = true;
+      }
+    });
 
     session.interruptionEventStream.listen((event) {
       final playerStatus = PlPlayerController.getPlayerStatusIfExists();
@@ -65,6 +106,9 @@ class AudioSessionHandler {
 
     // 耳机拔出暂停
     session.becomingNoisyEventStream.listen((_) {
+      if (_hasBluetoothOutput) {
+        _bluetoothRouteDirty = true;
+      }
       PlPlayerController.pauseIfExists();
       // final player = PlPlayerController.getInstance();
       // if (player.playerStatus.playing) {
