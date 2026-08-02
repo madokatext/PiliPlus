@@ -119,8 +119,12 @@ class PlPlayerController with BlockConfigMixin {
     Duration(milliseconds: 2800),
     Duration(seconds: 4),
   ];
-  static const _audioOutputReloadTimeout = Duration(seconds: 1);
-  static const _audioOutputReloadPollInterval = Duration(milliseconds: 10);
+  static const _bluetoothPcmSilenceDuration = Duration(milliseconds: 300);
+  static const _bluetoothPcmSilenceFilter =
+      '@bluetooth_pcm_silence:lavfi=[volume=0]';
+  static const _bluetoothPcmSilenceBypassFilter =
+      '@bluetooth_pcm_silence:lavfi=[volume=1]';
+  static const _bluetoothPcmSilenceFilterLabel = '@bluetooth_pcm_silence';
   static PlPlayerController? _instance;
 
   final playerStatus = PlPlayerStatus(.playing);
@@ -3107,24 +3111,25 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
     _playbackSpeed.value = playSpeedDefault;
   }
 
-  Future<bool> _reloadAudioOutputBeforePlay(Player player) async {
-    if (player.getProperty('audio-out-params/samplerate').isEmpty) {
-      // 当前没有已建立的音频输出，不存在需要销毁的旧 AudioTrack。
-      return true;
-    }
-
-    await player.command(const ['ao-reload']);
-    final deadline = DateTime.now().add(_audioOutputReloadTimeout);
-    while (identical(player, _videoPlayerController) && _playerCount > 0) {
-      if (player.getProperty('audio-out-params/samplerate').isNotEmpty) {
-        return true;
+  Future<void> _removeBluetoothPcmSilenceFilter(Player player) async {
+    try {
+      await player.command(
+        const ['af', 'remove', _bluetoothPcmSilenceFilterLabel],
+      );
+    } catch (_) {
+      if (!identical(player, _videoPlayerController) || _playerCount == 0) {
+        return;
       }
-      if (!DateTime.now().isBefore(deadline)) {
-        return false;
-      }
-      await Future<void>.delayed(_audioOutputReloadPollInterval);
+      try {
+        // 若移除命令异常，先把同名滤镜替换为 1 倍增益，避免残留静音。
+        await player.command(
+          const ['af', 'add', _bluetoothPcmSilenceBypassFilter],
+        );
+        await player.command(
+          const ['af', 'remove', _bluetoothPcmSilenceFilterLabel],
+        );
+      } catch (_) {}
     }
-    return false;
   }
 
   /// 播放视频
@@ -3165,34 +3170,48 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
     }
 
     final player = _videoPlayerController;
-    final useBluetoothRouteGate =
+    final useBluetoothPcmSilenceGate =
         Platform.isAndroid &&
         player != null &&
         (audioSessionHandler?.consumeBluetoothRouteDirty() ?? false);
-    if (useBluetoothRouteGate) {
-      bool audioOutputReady;
+    if (useBluetoothPcmSilenceGate) {
+      final gatedPlayer = player!;
+      bool filterAdded = false;
       try {
-        audioOutputReady = await _reloadAudioOutputBeforePlay(player!);
+        await gatedPlayer.command(
+          const ['af', 'add', _bluetoothPcmSilenceFilter],
+        );
+        filterAdded = true;
+        if (!identical(gatedPlayer, _videoPlayerController) ||
+            _playerCount == 0) {
+          audioSessionHandler?.markBluetoothRouteDirty();
+          return;
+        }
+
+        await gatedPlayer.play();
+
+        audioSessionHandler?.setActive(true);
+
+        playerStatus.value = PlayerStatus.playing;
+        await Future<void>.delayed(_bluetoothPcmSilenceDuration);
       } catch (_) {
-        if (identical(player, _videoPlayerController) && _playerCount > 0) {
+        if (identical(gatedPlayer, _videoPlayerController) &&
+            _playerCount > 0) {
           audioSessionHandler?.markBluetoothRouteDirty();
         }
         rethrow;
+      } finally {
+        if (filterAdded) {
+          await _removeBluetoothPcmSilenceFilter(gatedPlayer);
+        }
       }
-      if (!identical(player, _videoPlayerController) || _playerCount == 0) {
-        return;
-      }
-      if (!audioOutputReady) {
-        audioSessionHandler?.markBluetoothRouteDirty();
-        return;
-      }
+    } else {
+      await player?.play();
+
+      audioSessionHandler?.setActive(true);
+
+      playerStatus.value = PlayerStatus.playing;
     }
-
-    await player?.play();
-
-    audioSessionHandler?.setActive(true);
-
-    playerStatus.value = PlayerStatus.playing;
     // screenManager.setOverlays(false);
   }
 
