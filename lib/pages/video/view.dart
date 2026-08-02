@@ -1244,7 +1244,15 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
 
   Widget get _initialPlayerNavigationWidget => Obx(() {
     final controller = videoDetailController.plPlayerController;
-    if (!controller.isWaitingForInitialPlay.value) {
+    final playerOutputMounted =
+        videoDetailController.videoState.value &&
+        controller.videoController != null;
+    final showInitialNavigation =
+        videoDetailController.autoPlay &&
+        (videoDetailController.blackVideoCover.value ||
+            !playerOutputMounted ||
+            controller.isWaitingForInitialPlay.value);
+    if (!showInitialNavigation) {
       return const SizedBox.shrink();
     }
 
