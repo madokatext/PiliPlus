@@ -1,5 +1,8 @@
+import 'dart:io' show Platform;
+
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:audio_session/audio_session.dart';
 
 class AudioSessionHandler {
@@ -11,6 +14,9 @@ class AudioSessionHandler {
   int _backgroundBluetoothCheckGeneration = 0;
   Future<bool>? _backgroundBluetoothCheck;
 
+  bool get bluetoothDisconnectProtectionEnabled =>
+      Platform.isAndroid && Pref.audioTrackIsPrimaryOutput;
+
   static bool _isBluetoothOutput(AudioDevice device) {
     return device.isOutput &&
         const {
@@ -21,12 +27,24 @@ class AudioSessionHandler {
   }
 
   void _exitToHomeOnBluetoothDisconnect() {
+    if (!bluetoothDisconnectProtectionEnabled) return;
     _playInterrupted = false;
     PlPlayerController.exitToHomeIfExists();
   }
 
+  void _clearBackgroundBluetoothState() {
+    _backgroundBluetoothStateSaved = false;
+    _hadBluetoothOutputBeforeBackground = false;
+    _backgroundBluetoothCheckGeneration++;
+    _backgroundBluetoothCheck = null;
+  }
+
   /// 保存进入后台前的输出状态，避免依赖后台可能丢失的设备变更事件。
   void saveBluetoothStateBeforeBackground() {
+    if (!bluetoothDisconnectProtectionEnabled) {
+      _clearBackgroundBluetoothState();
+      return;
+    }
     if (_backgroundBluetoothStateSaved) return;
     _backgroundBluetoothStateSaved = true;
     _hadBluetoothOutputBeforeBackground = _hasBluetoothOutput;
@@ -35,6 +53,10 @@ class AudioSessionHandler {
   }
 
   Future<bool> checkBluetoothStateAfterBackground() {
+    if (!bluetoothDisconnectProtectionEnabled) {
+      _clearBackgroundBluetoothState();
+      return Future<bool>.value(true);
+    }
     final activeCheck = _backgroundBluetoothCheck;
     if (activeCheck != null) return activeCheck;
     if (!_backgroundBluetoothStateSaved) return Future<bool>.value(true);
@@ -64,6 +86,7 @@ class AudioSessionHandler {
           (await session.getDevices()).any(_isBluetoothOutput);
     } catch (_) {
       if (generation != _backgroundBluetoothCheckGeneration) return false;
+      if (!bluetoothDisconnectProtectionEnabled) return true;
       if (hadBluetoothOutput) {
         // 无法确认蓝牙仍连接时禁止续播，避免恢复瞬间从扬声器泄漏声音。
         _exitToHomeOnBluetoothDisconnect();
@@ -73,6 +96,7 @@ class AudioSessionHandler {
     }
 
     if (generation != _backgroundBluetoothCheckGeneration) return false;
+    if (!bluetoothDisconnectProtectionEnabled) return true;
     _hasBluetoothOutput = hasBluetoothOutput;
     if (hadBluetoothOutput && !hasBluetoothOutput) {
       _exitToHomeOnBluetoothDisconnect();
@@ -167,7 +191,7 @@ class AudioSessionHandler {
 
     // 蓝牙断开退出首页；有线耳机拔出仍只暂停。
     session.becomingNoisyEventStream.listen((_) {
-      if (_hasBluetoothOutput) {
+      if (bluetoothDisconnectProtectionEnabled && _hasBluetoothOutput) {
         _exitToHomeOnBluetoothDisconnect();
       } else {
         PlPlayerController.pauseIfExists();

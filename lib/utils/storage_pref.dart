@@ -1413,6 +1413,10 @@ static int get playerControlDisplayDurationSeconds {
     defaultValue: AudioOutput.defaultValue,
   );
 
+  static bool get audioTrackIsPrimaryOutput =>
+      audioOutput.split(',').first.trim().toLowerCase() ==
+      AudioOutput.audiotrack.name;
+
   static bool get enableAi =>
       _setting.get(SettingBoxKey.enableAi, defaultValue: false);
 
