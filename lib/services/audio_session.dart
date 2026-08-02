@@ -6,7 +6,6 @@ class AudioSessionHandler {
   late AudioSession session;
   bool _playInterrupted = false;
   bool _hasBluetoothOutput = false;
-  bool _bluetoothRouteDirty = false;
 
   static bool _isBluetoothOutput(AudioDevice device) {
     return device.isOutput &&
@@ -17,14 +16,9 @@ class AudioSessionHandler {
         }.contains(device.type);
   }
 
-  bool consumeBluetoothRouteDirty() {
-    final routeDirty = _bluetoothRouteDirty;
-    _bluetoothRouteDirty = false;
-    return routeDirty;
-  }
-
-  void markBluetoothRouteDirty() {
-    _bluetoothRouteDirty = true;
+  void _exitToHomeOnBluetoothDisconnect() {
+    _playInterrupted = false;
+    PlPlayerController.exitToHomeIfExists();
   }
 
   Future<bool> setActive(bool active) {
@@ -48,18 +42,21 @@ class AudioSessionHandler {
 
     session.devicesChangedEventStream.listen((event) async {
       final removedBluetooth = event.devicesRemoved.any(_isBluetoothOutput);
-      if (removedBluetooth) {
-        markBluetoothRouteDirty();
-      }
       final hadBluetoothOutput = _hasBluetoothOutput;
+
+      if (removedBluetooth) {
+        _exitToHomeOnBluetoothDisconnect();
+      }
+
       try {
         _hasBluetoothOutput =
             (await session.getDevices()).any(_isBluetoothOutput);
       } catch (_) {
         // 保留上一次设备状态，仍可依据 devicesRemoved 判断断开。
       }
-      if (hadBluetoothOutput && !_hasBluetoothOutput) {
-        markBluetoothRouteDirty();
+
+      if (!removedBluetooth && hadBluetoothOutput && !_hasBluetoothOutput) {
+        _exitToHomeOnBluetoothDisconnect();
       }
     });
 
@@ -108,12 +105,13 @@ class AudioSessionHandler {
       }
     });
 
-    // 耳机拔出暂停
+    // 蓝牙断开退出首页；有线耳机拔出仍只暂停。
     session.becomingNoisyEventStream.listen((_) {
       if (_hasBluetoothOutput) {
-        markBluetoothRouteDirty();
+        _exitToHomeOnBluetoothDisconnect();
+      } else {
+        PlPlayerController.pauseIfExists();
       }
-      PlPlayerController.pauseIfExists();
       // final player = PlPlayerController.getInstance();
       // if (player.playerStatus.playing) {
       //   player.pause();
