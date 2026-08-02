@@ -98,7 +98,7 @@ dependencies:
   flutter_smart_dialog:
     git:
       url: https://github.com/bggRGjQaUbCoE/flutter_smart_dialog.git
-      ref: main
+      ref: 442c10115d9fd28d43ccbc716572da6002642797
   flutter_sortable_wrap:
     git:
       url: https://github.com/bggRGjQaUbCoE/flutter_sortable_wrap.git
