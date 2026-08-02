@@ -14,7 +14,6 @@ import 'package:PiliPlus/common/widgets/route_aware_mixin.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart';
 import 'package:PiliPlus/common/widgets/sliver/video_header.dart';
 import 'package:PiliPlus/common/widgets/svg/play_icon.dart';
-import 'package:PiliPlus/common/widgets/view_safe_area.dart';
 import 'package:PiliPlus/models/common/episode_panel_type.dart';
 import 'package:PiliPlus/models_new/pgc/pgc_info_model/result.dart';
 import 'package:PiliPlus/models_new/video/video_detail/episode.dart' as ugc;
@@ -1155,6 +1154,58 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     );
   }
 
+  Widget _coverNavigationAppBar({List<Widget>? actions}) => AppBar(
+    primary: false,
+    elevation: 0,
+    scrolledUnderElevation: 0,
+    foregroundColor: Colors.white,
+    backgroundColor: Colors.transparent,
+    automaticallyImplyLeading: false,
+    title: Row(
+      children: [
+        SizedBox(
+          width: 42,
+          height: 34,
+          child: IconButton(
+            tooltip: '返回',
+            icon: const Icon(
+              FontAwesomeIcons.arrowLeft,
+              size: 15,
+              color: Colors.white,
+              shadows: [
+                Shadow(
+                  blurRadius: 1.5,
+                  color: Colors.black,
+                ),
+              ],
+            ),
+            onPressed: Get.back,
+          ),
+        ),
+        SizedBox(
+          width: 42,
+          height: 34,
+          child: IconButton(
+            tooltip: '返回主页',
+            icon: const Icon(
+              FontAwesomeIcons.house,
+              size: 15,
+              color: Colors.white,
+              shadows: [
+                Shadow(
+                  blurRadius: 1.5,
+                  color: Colors.black,
+                ),
+              ],
+            ),
+            onPressed: videoDetailController.plPlayerController.onCloseAll,
+          ),
+        ),
+      ],
+    ),
+    actions: actions,
+  );
+
   Widget get manualPlayerWidget => Obx(() {
     if (!videoDetailController.autoPlay) {
       return Stack(
@@ -1164,56 +1215,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
             top: 0,
             left: 0,
             right: 0,
-            child: AppBar(
-              primary: false,
-              elevation: 0,
-              scrolledUnderElevation: 0,
-              foregroundColor: Colors.white,
-              backgroundColor: Colors.transparent,
-              automaticallyImplyLeading: false,
-              title: Row(
-                children: [
-                  SizedBox(
-                    width: 42,
-                    height: 34,
-                    child: IconButton(
-                      tooltip: '返回',
-                      icon: const Icon(
-                        FontAwesomeIcons.arrowLeft,
-                        size: 15,
-                        color: Colors.white,
-                        shadows: [
-                          Shadow(
-                            blurRadius: 1.5,
-                            color: Colors.black,
-                          ),
-                        ],
-                      ),
-                      onPressed: Get.back,
-                    ),
-                  ),
-                  SizedBox(
-                    width: 42,
-                    height: 34,
-                    child: IconButton(
-                      tooltip: '返回主页',
-                      icon: const Icon(
-                        FontAwesomeIcons.house,
-                        size: 15,
-                        color: Colors.white,
-                        shadows: [
-                          Shadow(
-                            blurRadius: 1.5,
-                            color: Colors.black,
-                          ),
-                        ],
-                      ),
-                      onPressed:
-                          videoDetailController.plPlayerController.onCloseAll,
-                    ),
-                  ),
-                ],
-              ),
+            child: _coverNavigationAppBar(
               actions: [
                 _moreBtn(
                   Colors.white,
@@ -1256,66 +1258,11 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       return const SizedBox.shrink();
     }
 
-    final isFullScreen = this.isFullScreen;
-    final thicknessScale = controller.playerControlBarThicknessScale;
-    Widget navigationBar = AppBar(
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      backgroundColor: Colors.transparent,
-      foregroundColor: Colors.white,
-      primary: false,
-      automaticallyImplyLeading: false,
-      toolbarHeight: 35.0 * thicknessScale,
-      flexibleSpace: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(height: 5 * thicknessScale),
-          Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: controller.playerControlHorizontalPadding,
-            ),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: PlayerNavigationButtons(
-                controller: controller,
-                isFullScreen: isFullScreen,
-                isPortrait: isPortrait,
-                height: 34.0 * thicknessScale,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-    if (!controller.removeSafeArea) {
-      navigationBar = ViewSafeArea(
-        left: isFullScreen,
-        right: isFullScreen,
-        child: navigationBar,
-      );
-    }
-    navigationBar = DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.bottomCenter,
-          end: Alignment.topCenter,
-          colors: [Colors.transparent, Color(0xBF000000)],
-          tileMode: TileMode.mirror,
-        ),
-      ),
-      child: Padding(
-        padding: EdgeInsets.only(
-          bottom: controller.playerControlBarGradientExtent,
-        ),
-        child: navigationBar,
-      ),
-    );
-
     return Positioned(
-      top: -1,
+      top: 0,
       left: 0,
       right: 0,
-      child: navigationBar,
+      child: _coverNavigationAppBar(),
     );
   });
 
