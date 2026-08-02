@@ -1107,7 +1107,7 @@ packages:
     description:
       path: media_kit
       ref: "version_1.2.5"
-      resolved-ref: 80417f190b8779506a60b9b37ba86f7bbeff9583
+      resolved-ref: b2ec018bed38fc6cfed74a9980966581bfef00c6
       url: "https://github.com/madokatext/media-kit.git"
     source: git
     version: "1.1.11"
@@ -1116,7 +1116,7 @@ packages:
     description:
       path: "libs/android/media_kit_libs_android_video"
       ref: "version_1.2.5"
-      resolved-ref: 80417f190b8779506a60b9b37ba86f7bbeff9583
+      resolved-ref: b2ec018bed38fc6cfed74a9980966581bfef00c6
       url: "https://github.com/madokatext/media-kit.git"
     source: git
     version: "1.3.7"
@@ -1125,7 +1125,7 @@ packages:
     description:
       path: "libs/ios/media_kit_libs_ios_video"
       ref: "version_1.2.5"
-      resolved-ref: 80417f190b8779506a60b9b37ba86f7bbeff9583
+      resolved-ref: b2ec018bed38fc6cfed74a9980966581bfef00c6
       url: "https://github.com/madokatext/media-kit.git"
     source: git
     version: "1.1.4"
@@ -1150,7 +1150,7 @@ packages:
     description:
       path: "libs/universal/media_kit_libs_video"
       ref: "version_1.2.5"
-      resolved-ref: 80417f190b8779506a60b9b37ba86f7bbeff9583
+      resolved-ref: b2ec018bed38fc6cfed74a9980966581bfef00c6
       url: "https://github.com/madokatext/media-kit.git"
     source: git
     version: "1.0.5"
@@ -1159,7 +1159,7 @@ packages:
     description:
       path: "libs/windows/media_kit_libs_windows_video"
       ref: "version_1.2.5"
-      resolved-ref: 80417f190b8779506a60b9b37ba86f7bbeff9583
+      resolved-ref: b2ec018bed38fc6cfed74a9980966581bfef00c6
       url: "https://github.com/madokatext/media-kit.git"
     source: git
     version: "1.0.10"
@@ -1168,7 +1168,7 @@ packages:
     description:
       path: media_kit_native_event_loop
       ref: "version_1.2.5"
-      resolved-ref: 80417f190b8779506a60b9b37ba86f7bbeff9583
+      resolved-ref: b2ec018bed38fc6cfed74a9980966581bfef00c6
       url: "https://github.com/madokatext/media-kit.git"
     source: git
     version: "1.0.9"
@@ -1177,7 +1177,7 @@ packages:
     description:
       path: media_kit_video
       ref: "version_1.2.5"
-      resolved-ref: 80417f190b8779506a60b9b37ba86f7bbeff9583
+      resolved-ref: b2ec018bed38fc6cfed74a9980966581bfef00c6
       url: "https://github.com/madokatext/media-kit.git"
     source: git
     version: "1.2.5"
