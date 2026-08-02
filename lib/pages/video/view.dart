@@ -1612,8 +1612,15 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                         width: width,
                         height: height,
                         cacheWidth: true,
-                        getPlaceHolder: () => Center(
-                          child: Image.asset(Assets.loading),
+                        getPlaceHolder: () => SizedBox(
+                          width: width,
+                          height: height,
+                          child: ColoredBox(
+                            color: Colors.black,
+                            child: Center(
+                              child: Image.asset(Assets.loading),
+                            ),
+                          ),
                         ),
                       ),
               ),
