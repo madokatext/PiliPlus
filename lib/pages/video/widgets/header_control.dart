@@ -328,6 +328,62 @@ class HeaderControl extends StatefulWidget {
   }
 }
 
+class PlayerNavigationButtons extends StatelessWidget {
+  const PlayerNavigationButtons({
+    required this.controller,
+    required this.isFullScreen,
+    required this.isPortrait,
+    required this.height,
+    super.key,
+  });
+
+  final PlPlayerController controller;
+  final bool isFullScreen;
+  final bool isPortrait;
+  final double height;
+
+  static const _width = 40.0;
+  static const _style = ButtonStyle(
+    padding: WidgetStatePropertyAll(.zero),
+  );
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      SizedBox(
+        width: _width,
+        height: height,
+        child: IconButton(
+          tooltip: '返回',
+          style: _style,
+          icon: const Icon(
+            FontAwesomeIcons.arrowLeft,
+            size: 15,
+            color: Colors.white,
+          ),
+          onPressed: () => controller.onPopInvokedWithResult(false, null),
+        ),
+      ),
+      if (!controller.isDesktopPip && (!isFullScreen || !isPortrait))
+        SizedBox(
+          width: _width,
+          height: height,
+          child: IconButton(
+            tooltip: '返回主页',
+            style: _style,
+            icon: const Icon(
+              FontAwesomeIcons.house,
+              size: 15,
+              color: Colors.white,
+            ),
+            onPressed: controller.onCloseAll,
+          ),
+        ),
+    ],
+  );
+}
+
 class HeaderControlState extends State<HeaderControl>
     with HeaderMixin, TimeBatteryMixin {
   @override
@@ -1800,37 +1856,12 @@ class HeaderControlState extends State<HeaderControl>
             ),
             child: Row(
               children: [
-              SizedBox(
-                width: btnWidth,
+              PlayerNavigationButtons(
+                controller: plPlayerController,
+                isFullScreen: isFullScreen,
+                isPortrait: isPortrait,
                 height: btnHeight,
-                child: IconButton(
-                  tooltip: '返回',
-                  style: btnStyle,
-                  icon: const Icon(
-                    FontAwesomeIcons.arrowLeft,
-                    size: 15,
-                    color: Colors.white,
-                  ),
-                  onPressed: () =>
-                      plPlayerController.onPopInvokedWithResult(false, null),
-                ),
               ),
-              if (!plPlayerController.isDesktopPip &&
-                  (!isFullScreen || !isPortrait))
-                SizedBox(
-                  width: btnWidth,
-                  height: btnHeight,
-                  child: IconButton(
-                    tooltip: '返回主页',
-                    style: btnStyle,
-                    icon: const Icon(
-                      FontAwesomeIcons.house,
-                      size: 15,
-                      color: Colors.white,
-                    ),
-                    onPressed: plPlayerController.onCloseAll,
-                  ),
-                ),
               title,
               // show current datetime
                 ...?timeBatteryWidgets,

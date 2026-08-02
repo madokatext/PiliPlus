@@ -14,6 +14,7 @@ import 'package:PiliPlus/common/widgets/route_aware_mixin.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart';
 import 'package:PiliPlus/common/widgets/sliver/video_header.dart';
 import 'package:PiliPlus/common/widgets/svg/play_icon.dart';
+import 'package:PiliPlus/common/widgets/view_safe_area.dart';
 import 'package:PiliPlus/models/common/episode_panel_type.dart';
 import 'package:PiliPlus/models_new/pgc/pgc_info_model/result.dart';
 import 'package:PiliPlus/models_new/video/video_detail/episode.dart' as ugc;
@@ -1241,6 +1242,75 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     return const SizedBox.shrink();
   });
 
+  Widget get _initialPlayerNavigationWidget => Obx(() {
+    final controller = videoDetailController.plPlayerController;
+    if (!controller.isWaitingForInitialPlay.value) {
+      return const SizedBox.shrink();
+    }
+
+    final isFullScreen = this.isFullScreen;
+    final thicknessScale = controller.playerControlBarThicknessScale;
+    Widget navigationBar = AppBar(
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      backgroundColor: Colors.transparent,
+      foregroundColor: Colors.white,
+      primary: false,
+      automaticallyImplyLeading: false,
+      toolbarHeight: 35.0 * thicknessScale,
+      flexibleSpace: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(height: 5 * thicknessScale),
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: controller.playerControlHorizontalPadding,
+            ),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: PlayerNavigationButtons(
+                controller: controller,
+                isFullScreen: isFullScreen,
+                isPortrait: isPortrait,
+                height: 34.0 * thicknessScale,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (!controller.removeSafeArea) {
+      navigationBar = ViewSafeArea(
+        left: isFullScreen,
+        right: isFullScreen,
+        child: navigationBar,
+      );
+    }
+    navigationBar = DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.bottomCenter,
+          end: Alignment.topCenter,
+          colors: [Colors.transparent, Color(0xBF000000)],
+          tileMode: TileMode.mirror,
+        ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: controller.playerControlBarGradientExtent,
+        ),
+        child: navigationBar,
+      ),
+    );
+
+    return Positioned(
+      top: -1,
+      left: 0,
+      right: 0,
+      child: navigationBar,
+    );
+  });
+
   Widget _moreBtn(Color color, {List<Shadow>? shadows}) => PopupMenuButton(
     icon: Icon(
       size: 22,
@@ -1616,6 +1686,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
           }),
         ),
         manualPlayerWidget,
+        _initialPlayerNavigationWidget,
 
         if (videoDetailController.plPlayerController.enableBlock ||
             videoDetailController.continuePlayingPart)
