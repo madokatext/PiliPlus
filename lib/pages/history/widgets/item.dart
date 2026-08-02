@@ -22,7 +22,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 class HistoryItem extends StatelessWidget {
   final HistoryItemModel item;
   final MultiSelectBase ctr;
-  final void Function(int kid, String business) onDelete;
+  final ValueChanged<HistoryItemModel> onDelete;
 
   const HistoryItem({
     super.key,
@@ -245,7 +245,7 @@ class HistoryItem extends StatelessWidget {
                       ),
                     ),
                   PopupMenuItem(
-                    onTap: () => onDelete(item.kid!, business!),
+                    onTap: () => onDelete(item),
                     height: 38,
                     child: const Row(
                       children: [
@@ -258,6 +258,23 @@ class HistoryItem extends StatelessWidget {
                 ],
               ),
             ),
+            if (item.localOnly)
+              Positioned(
+                right: 12,
+                bottom: 28,
+                width: 29,
+                child: IgnorePointer(
+                  child: Text(
+                    '本地',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 10,
+                      height: 1,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

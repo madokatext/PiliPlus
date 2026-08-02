@@ -20,6 +20,9 @@ class HistoryItemModel with MultiSelectData {
   int? kid;
   String? tagName;
   int? liveStatus;
+  final Map<String, dynamic> rawData;
+  bool localOnly;
+  bool hasLocalCopy;
 
   HistoryItemModel({
     this.title,
@@ -39,7 +42,10 @@ class HistoryItemModel with MultiSelectData {
     this.kid,
     this.tagName,
     this.liveStatus,
-  });
+    Map<String, dynamic>? rawData,
+    this.localOnly = false,
+    this.hasLocalCopy = false,
+  }) : rawData = rawData ?? <String, dynamic>{};
 
   factory HistoryItemModel.fromJson(Map<String, dynamic> json) =>
       HistoryItemModel(
@@ -62,5 +68,31 @@ class HistoryItemModel with MultiSelectData {
         kid: json['kid'] as int?,
         tagName: json['tag_name'] as String?,
         liveStatus: json['live_status'] as int?,
+        rawData: Map<String, dynamic>.from(json),
       );
+
+  Map<String, dynamic> toJson() {
+    if (rawData.isNotEmpty) {
+      return Map<String, dynamic>.from(rawData);
+    }
+    return {
+      'title': title,
+      'cover': cover,
+      'covers': covers,
+      'uri': uri,
+      'history': history.toJson(),
+      'videos': videos,
+      'author_name': authorName,
+      'author_mid': authorMid,
+      'view_at': viewAt,
+      'progress': progress,
+      'badge': badge,
+      'show_title': showTitle,
+      'duration': duration,
+      'is_fav': isFav,
+      'kid': kid,
+      'tag_name': tagName,
+      'live_status': liveStatus,
+    };
+  }
 }

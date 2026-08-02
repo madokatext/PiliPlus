@@ -789,7 +789,11 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
           .listen(_onOrientationChanged);
     }
 
-    if (!Accounts.heartbeat.isLogin || Pref.historyPause) {
+    final historyPauseAccountMid = Pref.historyPauseAccountMid;
+    if (!Accounts.heartbeat.isLogin ||
+        (Pref.historyPause &&
+            (historyPauseAccountMid == null ||
+                historyPauseAccountMid == Accounts.history.mid))) {
       enableHeart = false;
     }
 

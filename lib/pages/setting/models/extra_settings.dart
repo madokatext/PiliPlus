@@ -24,6 +24,7 @@ import 'package:PiliPlus/pages/common/slide/common_slide_page.dart';
 import 'package:PiliPlus/pages/home/controller.dart';
 import 'package:PiliPlus/pages/main/controller.dart';
 import 'package:PiliPlus/pages/setting/models/model.dart';
+import 'package:PiliPlus/pages/setting/widgets/history_archive_settings_dialog.dart';
 import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
 import 'package:PiliPlus/pages/setting/widgets/slider_dialog.dart';
 import 'package:PiliPlus/pages/video/reply/widgets/reply_item_grpc.dart';
@@ -72,6 +73,15 @@ List<SettingsModel> get extraSettings => [
       onTap: _showDownPathDialog,
     ),
   ],
+  NormalModel(
+    title: '历史记录自动归档',
+    subtitle: '增量备份官方记录并扩展本地历史搜索',
+    leading: const Icon(Icons.archive_outlined),
+    onTap: (context, setState) async {
+      await showHistoryArchiveSettingsDialog(context);
+      setState();
+    },
+  ),
   SplitModel(
     normalModel: const NormalModel.split(
       title: '空降助手',

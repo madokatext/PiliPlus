@@ -1027,6 +1027,20 @@ static bool get seekPreviewFollowGesture => _setting.get(
   static bool get recordSearchHistory =>
       _setting.get(SettingBoxKey.recordSearchHistory, defaultValue: true);
 
+  static bool get autoHistoryArchive =>
+      _setting.get(SettingBoxKey.autoHistoryArchive, defaultValue: true);
+
+  static int get historyArchiveIntervalDays {
+    final value = _setting.get(
+      SettingBoxKey.historyArchiveIntervalDays,
+      defaultValue: 7,
+    );
+    return (value is num ? value.toInt() : 7).clamp(1, 30).toInt();
+  }
+
+  static bool get silentHistoryArchive =>
+      _setting.get(SettingBoxKey.silentHistoryArchive, defaultValue: true);
+
   static String get webdavUri =>
       _setting.get(SettingBoxKey.webdavUri, defaultValue: '');
 
@@ -1480,6 +1494,11 @@ static int get playerControlDisplayDurationSeconds {
 
   static bool get historyPause =>
       _localCache.get(LocalCacheKey.historyPause, defaultValue: false);
+
+  static int? get historyPauseAccountMid {
+    final value = _localCache.get(LocalCacheKey.historyPauseAccountMid);
+    return value is num ? value.toInt() : null;
+  }
 
   static int? get quickFavId => _setting.get(SettingBoxKey.quickFavId);
 

@@ -23,4 +23,13 @@ class History {
     cid: json['cid'] == 0 ? null : json['cid'],
     business: json['business'],
   );
+
+  Map<String, dynamic> toJson() => {
+    'oid': oid,
+    'epid': epid,
+    'bvid': bvid,
+    'page': page,
+    'cid': cid,
+    'business': business,
+  };
 }

@@ -76,10 +76,10 @@ class HistoryBaseController extends GetxController {
               if (res.isSuccess) {
                 SmartDialog.showToast(pauseStatus ? '暂停观看历史' : '恢复观看历史');
                 this.pauseStatus.value = pauseStatus;
-                GStorage.localCache.put(
-                  LocalCacheKey.historyPause,
-                  pauseStatus,
-                );
+                await GStorage.localCache.putAll({
+                  LocalCacheKey.historyPause: pauseStatus,
+                  LocalCacheKey.historyPauseAccountMid: account.mid,
+                });
               } else {
                 res.toast();
               }

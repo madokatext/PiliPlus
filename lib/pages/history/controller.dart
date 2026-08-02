@@ -6,6 +6,7 @@ import 'package:PiliPlus/models_new/history/list.dart';
 import 'package:PiliPlus/models_new/history/tab.dart';
 import 'package:PiliPlus/pages/common/multi_select/multi_select_controller.dart';
 import 'package:PiliPlus/pages/history/base_controller.dart';
+import 'package:PiliPlus/services/history_archive_repository.dart';
 import 'package:PiliPlus/utils/accounts/account.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
@@ -30,6 +31,13 @@ class HistoryController
 
   int? max;
   int? viewAt;
+  static const _localPageSize = 20;
+  final _repository = HistoryArchiveRepository.instance;
+  final Set<String> _cloudKeys = {};
+  List<HistoryItemModel>? _localItems;
+  int _localOffset = 0;
+  bool _usingLocal = false;
+  bool _lastResponseWasLocal = false;
 
   @override
   RxInt get rxCount => baseCtr.checkedCount;
@@ -48,6 +56,11 @@ class HistoryController
   Future<void> onRefresh() {
     max = null;
     viewAt = null;
+    _cloudKeys.clear();
+    _localItems = null;
+    _localOffset = 0;
+    _usingLocal = false;
+    _lastResponseWasLocal = false;
     return super.onRefresh();
   }
 
@@ -59,9 +72,17 @@ class HistoryController
   @override
   bool customHandleResponse(bool isRefresh, Success<HistoryData> response) {
     HistoryData data = response.response;
+    if (_lastResponseWasLocal) {
+      isEnd = _localOffset >= (_localItems?.length ?? 0);
+      return false;
+    }
     isEnd = data.list.isNullOrEmpty;
-    max = data.list?.lastOrNull?.history.oid;
-    viewAt = data.list?.lastOrNull?.viewAt;
+    max = (data.cursorMax ?? 0) > 0
+        ? data.cursorMax
+        : data.list?.lastOrNull?.history.oid;
+    viewAt = (data.cursorViewAt ?? 0) > 0
+        ? data.cursorViewAt
+        : data.list?.lastOrNull?.viewAt;
 
     if (isRefresh && type == null) {
       if (tabs.isEmpty && data.tab?.isNotEmpty == true) {
@@ -81,7 +102,10 @@ class HistoryController
     final res = await UserHttp.historyStatus(account: account);
     if (res case Success(:final response)) {
       baseCtr.pauseStatus.value = response;
-      GStorage.localCache.put(LocalCacheKey.historyPause, response);
+      await GStorage.localCache.putAll({
+        LocalCacheKey.historyPause: response,
+        LocalCacheKey.historyPauseAccountMid: account.mid,
+      });
     } else {
       res.toast();
     }
@@ -106,18 +130,27 @@ class HistoryController
 
   Future<void> _onDelete(Set<HistoryItemModel> removeList) async {
     SmartDialog.showLoading(msg: '请求中');
-    final res = await UserHttp.delHistory(
-      removeList
-          .map((item) => '${item.history.business}_${item.kid}')
-          .join(','),
-      account: account,
-    );
-    SmartDialog.dismiss();
-    if (res.isSuccess) {
-      afterDelete(removeList);
+    final cloudItems = removeList.where((item) => !item.localOnly).toSet();
+    LoadingState<void>? cloudResult;
+    if (cloudItems.isNotEmpty) {
+      cloudResult = await UserHttp.delHistory(
+        cloudItems
+            .map((item) => '${item.history.business}_${item.kid}')
+            .join(','),
+        account: account,
+      );
+    }
+    if (cloudResult == null || cloudResult.isSuccess) {
+      await _repository.deleteItems(
+        removeList.where((item) => item.localOnly || item.hasLocalCopy),
+      );
+      _localItems?.removeWhere(removeList.contains);
+      await afterDelete(removeList);
+      SmartDialog.dismiss();
       SmartDialog.showToast('已删除');
     } else {
-      res.toast();
+      SmartDialog.dismiss();
+      cloudResult.toast();
     }
   }
 
@@ -133,12 +166,57 @@ class HistoryController
   }
 
   @override
-  Future<LoadingState<HistoryData>> customGetData() => UserHttp.historyList(
-    type: type ?? 'all',
-    max: max,
-    viewAt: viewAt,
-    account: account,
-  );
+  Future<LoadingState<HistoryData>> customGetData() async {
+    if (_usingLocal) return Success(HistoryData(list: _nextLocalPage()));
+
+    final cloudResult = await UserHttp.historyList(
+      type: type ?? 'all',
+      max: max,
+      viewAt: viewAt,
+      account: account,
+    );
+    if (cloudResult case Success(:final response)) {
+      final cloudItems = response.list ?? const <HistoryItemModel>[];
+      if (cloudItems.isNotEmpty) {
+        _lastResponseWasLocal = false;
+        _repository.markCloudItems(cloudItems);
+        _cloudKeys.addAll(cloudItems.map(_repository.recordKeyForItem));
+        return Success(response);
+      }
+      return Success(
+        HistoryData(tab: response.tab, list: _beginLocalSupplement()),
+      );
+    }
+
+    final localPage = _beginLocalSupplement();
+    if (localPage.isNotEmpty) return Success(HistoryData(list: localPage));
+    _usingLocal = false;
+    _lastResponseWasLocal = false;
+    return cloudResult;
+  }
+
+  List<HistoryItemModel> _beginLocalSupplement() {
+    _usingLocal = true;
+    _lastResponseWasLocal = true;
+    _localItems = _repository.localItems(
+      type: type,
+      excludeKeys: _cloudKeys,
+    );
+    _localOffset = 0;
+    return _nextLocalPage();
+  }
+
+  List<HistoryItemModel> _nextLocalPage() {
+    _lastResponseWasLocal = true;
+    final items = _localItems ?? const <HistoryItemModel>[];
+    if (_localOffset >= items.length) return const [];
+    final end = (_localOffset + _localPageSize)
+        .clamp(0, items.length)
+        .toInt();
+    final page = items.sublist(_localOffset, end);
+    _localOffset = end;
+    return page;
+  }
 
   @override
   void onClose() {

@@ -13,6 +13,7 @@ import 'package:PiliPlus/pages/home/view.dart';
 import 'package:PiliPlus/pages/main/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
+import 'package:PiliPlus/services/history_archive_service.dart';
 import 'package:PiliPlus/utils/android/android_helper.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/clipboard_link_handler.dart';
@@ -57,6 +58,7 @@ class _MainAppState extends PopScopeState<MainApp>
   @override
   void initState() {
     super.initState();
+    HistoryArchiveService.instance.start();
     addObserverMobile(this);
     if (PlatformUtils.isDesktop) {
       windowManager
@@ -95,6 +97,7 @@ class _MainAppState extends PopScopeState<MainApp>
   @override
   void didPopNext() {
     addObserverMobile(this);
+    HistoryArchiveService.instance.scheduleOpportunity();
     _mainController
       ..checkUnreadDynamic()
       ..checkDefaultSearch(true)
@@ -124,6 +127,7 @@ class _MainAppState extends PopScopeState<MainApp>
       trayManager.removeListener(this);
       windowManager.removeListener(this);
     }
+    HistoryArchiveService.instance.stop();
     removeObserverMobile(this);
     ClipboardLinkHandler.instance.stop();
     PiliScheme.listener?.cancel();
@@ -198,6 +202,7 @@ class _MainAppState extends PopScopeState<MainApp>
   }
 
   void _onHideWindow() {
+    HistoryArchiveService.instance.setWindowForeground(false);
     if (_mainController.pauseOnMinimize) {
       if (PlPlayerController.instance case final player?) {
         if (_mainController.isPlaying = player.playerStatus.isPlaying) {
@@ -210,6 +215,7 @@ class _MainAppState extends PopScopeState<MainApp>
   }
 
   void _onShowWindow() {
+    HistoryArchiveService.instance.setWindowForeground(true);
     if (_mainController.pauseOnMinimize && _mainController.isPlaying) {
       PlPlayerController.instance?.play();
     }
