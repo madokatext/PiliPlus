@@ -330,7 +330,7 @@ class _MainAppState extends PopScopeState<MainApp>
             final child = BottomNavigationBar(
               currentIndex: _mainController.selectedIndex.value,
               onTap: _mainController.setIndex,
-              iconSize: 16,
+              iconSize: 20,
               selectedFontSize: 12,
               unselectedFontSize: 12,
               type: .fixed,
