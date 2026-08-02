@@ -96,6 +96,7 @@ class PlPlayerController with BlockConfigMixin {
   Player? _videoPlayerController;
   VideoController? _videoController;
   Future<Player>? _playerInitTask;
+  Future<bool>? _bluetoothPlayerReloadTask;
   _InitialPlayGate? _initialPlayGate;
   int? _initialPlayReleaseGeneration;
   Timer? _mediaRecoveryTimer;
@@ -119,12 +120,6 @@ class PlPlayerController with BlockConfigMixin {
     Duration(milliseconds: 2800),
     Duration(seconds: 4),
   ];
-  static const _bluetoothPcmSilenceDuration = Duration(milliseconds: 300);
-  static const _bluetoothPcmSilenceFilter =
-      '@bluetooth_pcm_silence:lavfi=[volume=0]';
-  static const _bluetoothPcmSilenceBypassFilter =
-      '@bluetooth_pcm_silence:lavfi=[volume=1]';
-  static const _bluetoothPcmSilenceFilterLabel = '@bluetooth_pcm_silence';
   static PlPlayerController? _instance;
 
   final playerStatus = PlPlayerStatus(.playing);
@@ -3111,24 +3106,303 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
     _playbackSpeed.value = playSpeedDefault;
   }
 
-  Future<void> _removeBluetoothPcmSilenceFilter(Player player) async {
+  /// 在仍保持暂停时用同一媒体重建完整的 mpv 与视频输出实例。
+  Future<bool> _reloadMpvInstanceBeforePlay() async {
+    await _cancelInitialPlayGate();
+    if (videoPlayerSwitching.value) {
+      return false;
+    }
+    cancelVideoPlayerSwitch();
+
+    final activePlayer = _videoPlayerController;
+    final activeController = _videoController;
+    if (activePlayer == null ||
+        activeController == null ||
+        activePlayer.current.isEmpty ||
+        _playerCount == 0) {
+      return false;
+    }
+
+    if (activePlayer.state.playing) {
+      await activePlayer.pause();
+    }
+
+    final dataSourceGeneration = _dataSourceGeneration;
+    final switchGeneration = ++_videoPlayerSwitchGeneration;
+    final cancellation = Completer<void>();
+    final mpvLogSession = _mpvLogSession;
+    final currentSource = dataSource;
+    final activeState = activePlayer.state;
+    final activeMedia = activePlayer.current.last;
+    final reloadPosition = activeState.position;
+    final reloadRate = activeState.rate;
+    final activeVolumeProperty = activePlayer.getProperty('volume');
+    final activeMuteProperty = activePlayer.getProperty('mute');
+    final reloadVolume = activeVolumeProperty.isEmpty
+        ? activeState.volume.toString()
+        : activeVolumeProperty;
+    final reloadMute = activeMuteProperty.isEmpty
+        ? (isMuted ? 'yes' : 'no')
+        : activeMuteProperty;
+    final waitForVideoFrame =
+        !onlyPlayAudio.value &&
+        activeState.width > 0 &&
+        activeState.height > 0;
+
+    _videoPlayerSwitchCancellation = cancellation;
+    videoPlayerSwitching.value = true;
+
+    bool isCurrentReload() =>
+        switchGeneration == _videoPlayerSwitchGeneration &&
+        dataSourceGeneration == _dataSourceGeneration &&
+        identical(activePlayer, _videoPlayerController) &&
+        _playerCount > 0 &&
+        !cancellation.isCompleted;
+
+    late final Player replacementPlayer;
+    late final VideoController replacementController;
+    var replacementCreated = false;
+    var replacementRegistered = false;
+    var activeListenersDetached = false;
+    var committed = false;
+    StreamSubscription<PlayerLog>? replacementInitializationLogSubscription;
+
     try {
-      await player.command(
-        const ['af', 'remove', _bluetoothPcmSilenceFilterLabel],
+      final pair = await _createPlayerPair(
+        muted: true,
+        logSession: mpvLogSession,
       );
-    } catch (_) {
-      if (!identical(player, _videoPlayerController) || _playerCount == 0) {
-        return;
+      replacementPlayer = pair.player;
+      replacementController = pair.videoController;
+      replacementInitializationLogSubscription =
+          pair.initializationLogSubscription;
+      replacementCreated = true;
+      if (!isCurrentReload()) {
+        return false;
+      }
+
+      _standbyVideoPlayerController = replacementPlayer;
+      _standbyVideoController = replacementController;
+      _standbyNetworkSource = currentSource is NetworkSource
+          ? currentSource
+          : null;
+      replacementRegistered = true;
+      _bumpVideoOutputRevision();
+
+      if (isAnim && superResolutionType.value != .disable) {
+        await setShader(null, replacementPlayer);
+        if (!isCurrentReload()) {
+          return false;
+        }
+      }
+
+      final firstFrameRendered = waitForVideoFrame
+          ? replacementController.armWaitUntilFirstFrameRendered()
+          : null;
+      final reloadMedia =
+          currentSource is NetworkSource && !onlyPlayAudio.value
+          ? _mediaForNetworkSource(
+              activeMedia,
+              currentSource,
+              currentSource,
+              reloadPosition,
+            )
+          : activeMedia.copyWith(start: reloadPosition);
+
+      MpvUtils.applyRuntimeOverrides(replacementPlayer);
+      replacementPlayer
+        ..setProperty('pause', 'yes')
+        ..setProperty('mute', 'yes')
+        ..setProperty('volume', '0');
+      await replacementPlayer.open(reloadMedia, play: false);
+      replacementPlayer
+        ..setProperty('pause', 'yes')
+        ..setProperty('mute', 'yes')
+        ..setProperty('volume', '0');
+      await replacementPlayer.setRate(reloadRate);
+      if (!isCurrentReload()) {
+        return false;
+      }
+
+      if (firstFrameRendered != null) {
+        final firstFrameReady = await Future.any<bool>([
+          firstFrameRendered.then(
+            (_) => true,
+            onError: (_) => false,
+          ),
+          cancellation.future.then((_) => false),
+          Future<bool>.delayed(const Duration(seconds: 15), () => false),
+        ]);
+        if (!firstFrameReady || !isCurrentReload()) {
+          return false;
+        }
+      }
+
+      await _removeListeners();
+      activeListenersDetached = true;
+      if (!isCurrentReload()) {
+        return false;
+      }
+
+      _standbyVideoOnTop = true;
+      final promotedRevision = _bumpVideoOutputRevision();
+      final replacementPresented = await _waitForVideoOutputPresentation(
+        promotedRevision,
+        replacementController,
+        cancellation,
+      );
+      if (!replacementPresented || !isCurrentReload()) {
+        _standbyVideoOnTop = false;
+        _bumpVideoOutputRevision();
+        return false;
+      }
+
+      _standbyVideoOnTop = false;
+      _standbyVideoOnly = true;
+      final committedOutputRevision = _bumpVideoOutputRevision();
+      final committedOutputPresented = await _waitForVideoOutputPresentation(
+        committedOutputRevision,
+        replacementController,
+        cancellation,
+      );
+      if (!committedOutputPresented || !isCurrentReload()) {
+        _standbyVideoOnly = false;
+        _bumpVideoOutputRevision();
+        return false;
+      }
+
+      _standbyVideoPlayerController = null;
+      _standbyVideoController = null;
+      _standbyNetworkSource = null;
+      _standbyVideoOnly = false;
+      _videoPlayerController = replacementPlayer;
+      _videoController = replacementController;
+      _bumpVideoOutputRevision();
+      committed = true;
+
+      replacementPlayer
+        ..setProperty('volume', reloadVolume)
+        ..setProperty('mute', reloadMute)
+        ..setProperty('pause', 'yes');
+      isBuffering.value =
+          replacementPlayer.state.buffering ||
+          replacementPlayer.getProperty('paused-for-cache') == 'yes';
+      position.value = replacementPlayer.state.position.inSeconds;
+      buffered.value = replacementPlayer.state.buffer.inSeconds;
+      updateDuration(replacementPlayer.state.duration);
+      await replacementInitializationLogSubscription?.cancel();
+      replacementInitializationLogSubscription = null;
+      if (mpvLogSession != null) {
+        MpvLogService.attachPlayer(
+          replacementPlayer,
+          session: mpvLogSession,
+        );
+      }
+      _clearPostSeekWatchdogGuard();
+      _startListeners(replacementPlayer);
+      activeListenersDetached = false;
+      playerStatus.value = PlayerStatus.paused;
+      videoPlayerServiceHandler
+        ?..onPositionChange(replacementPlayer.state.position)
+        ..onStatusChange(PlayerStatus.paused, isBuffering.value, isLive);
+
+      if (mpvLogSession != null) {
+        MpvLogService.detachPlayer(activePlayer, session: mpvLogSession);
       }
       try {
-        // 若移除命令异常，先把同名滤镜替换为 1 倍增益，避免残留静音。
-        await player.command(
-          const ['af', 'add', _bluetoothPcmSilenceBypassFilter],
+        await activePlayer.dispose();
+      } catch (_) {
+        // 新实例已经接管，旧实例释放失败不应重新启用旧实例。
+      }
+      return true;
+    } catch (err, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('reload mpv instance before play failed: $err');
+        debugPrint(stackTrace.toString());
+      }
+      return committed;
+    } finally {
+      await replacementInitializationLogSubscription?.cancel();
+      if (!committed && activeListenersDetached) {
+        _standbyVideoOnTop = false;
+        _standbyVideoOnly = false;
+        final rollbackRevision = _bumpVideoOutputRevision();
+        await _waitForVideoOutputPresentation(
+          rollbackRevision,
+          activeController,
+          Completer<void>(),
         );
-        await player.command(
-          const ['af', 'remove', _bluetoothPcmSilenceFilterLabel],
-        );
-      } catch (_) {}
+        if (identical(activePlayer, _videoPlayerController) &&
+            _playerCount > 0) {
+          _startListeners(activePlayer);
+        }
+      }
+      if (!committed && replacementCreated) {
+        if (mpvLogSession != null) {
+          MpvLogService.detachPlayer(
+            replacementPlayer,
+            session: mpvLogSession,
+          );
+        }
+        if (identical(_standbyVideoPlayerController, replacementPlayer)) {
+          _standbyVideoPlayerController = null;
+          _standbyVideoController = null;
+          _standbyNetworkSource = null;
+          _standbyVideoOnTop = false;
+          _standbyVideoOnly = false;
+          final removalRevision = _bumpVideoOutputRevision();
+          final visibleController = _visibleVideoController;
+          if (visibleController != null) {
+            await _waitForVideoOutputPresentation(
+              removalRevision,
+              visibleController,
+              Completer<void>(),
+            );
+          } else {
+            await _waitForVideoOutputFrame();
+          }
+          try {
+            await replacementPlayer.dispose();
+          } catch (_) {}
+        } else if (!replacementRegistered) {
+          try {
+            await replacementPlayer.dispose();
+          } catch (_) {}
+        }
+      }
+      if (identical(_videoPlayerSwitchCancellation, cancellation)) {
+        _videoPlayerSwitchCancellation = null;
+        videoPlayerSwitching.value = false;
+      }
+    }
+  }
+
+  Future<bool> _ensureBluetoothMpvReloadBeforePlay() async {
+    final activeTask = _bluetoothPlayerReloadTask;
+    if (activeTask != null) {
+      return activeTask;
+    }
+    if (!Platform.isAndroid ||
+        _videoPlayerController == null ||
+        !(audioSessionHandler?.consumeBluetoothRouteDirty() ?? false)) {
+      return true;
+    }
+
+    final reloadTask = _reloadMpvInstanceBeforePlay();
+    _bluetoothPlayerReloadTask = reloadTask;
+    try {
+      final reloaded = await reloadTask;
+      if (!reloaded) {
+        audioSessionHandler?.markBluetoothRouteDirty();
+      }
+      return reloaded;
+    } catch (_) {
+      audioSessionHandler?.markBluetoothRouteDirty();
+      return false;
+    } finally {
+      if (identical(_bluetoothPlayerReloadTask, reloadTask)) {
+        _bluetoothPlayerReloadTask = null;
+      }
     }
   }
 
@@ -3169,49 +3443,15 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
       await seekTo(Duration.zero, isSeek: false);
     }
 
-    final player = _videoPlayerController;
-    final useBluetoothPcmSilenceGate =
-        Platform.isAndroid &&
-        player != null &&
-        (audioSessionHandler?.consumeBluetoothRouteDirty() ?? false);
-    if (useBluetoothPcmSilenceGate) {
-      final gatedPlayer = player!;
-      bool filterAdded = false;
-      try {
-        await gatedPlayer.command(
-          const ['af', 'add', _bluetoothPcmSilenceFilter],
-        );
-        filterAdded = true;
-        if (!identical(gatedPlayer, _videoPlayerController) ||
-            _playerCount == 0) {
-          audioSessionHandler?.markBluetoothRouteDirty();
-          return;
-        }
-
-        await gatedPlayer.play();
-
-        audioSessionHandler?.setActive(true);
-
-        playerStatus.value = PlayerStatus.playing;
-        await Future<void>.delayed(_bluetoothPcmSilenceDuration);
-      } catch (_) {
-        if (identical(gatedPlayer, _videoPlayerController) &&
-            _playerCount > 0) {
-          audioSessionHandler?.markBluetoothRouteDirty();
-        }
-        rethrow;
-      } finally {
-        if (filterAdded) {
-          await _removeBluetoothPcmSilenceFilter(gatedPlayer);
-        }
-      }
-    } else {
-      await player?.play();
-
-      audioSessionHandler?.setActive(true);
-
-      playerStatus.value = PlayerStatus.playing;
+    if (!await _ensureBluetoothMpvReloadBeforePlay()) {
+      return;
     }
+
+    await _videoPlayerController?.play();
+
+    audioSessionHandler?.setActive(true);
+
+    playerStatus.value = PlayerStatus.playing;
     // screenManager.setOverlays(false);
   }
 
