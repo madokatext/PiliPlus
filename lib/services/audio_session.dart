@@ -23,6 +23,10 @@ class AudioSessionHandler {
     return routeDirty;
   }
 
+  void markBluetoothRouteDirty() {
+    _bluetoothRouteDirty = true;
+  }
+
   Future<bool> setActive(bool active) {
     return session.setActive(active);
   }
@@ -45,7 +49,7 @@ class AudioSessionHandler {
     session.devicesChangedEventStream.listen((event) async {
       final removedBluetooth = event.devicesRemoved.any(_isBluetoothOutput);
       if (removedBluetooth) {
-        _bluetoothRouteDirty = true;
+        markBluetoothRouteDirty();
       }
       final hadBluetoothOutput = _hasBluetoothOutput;
       try {
@@ -55,7 +59,7 @@ class AudioSessionHandler {
         // 保留上一次设备状态，仍可依据 devicesRemoved 判断断开。
       }
       if (hadBluetoothOutput && !_hasBluetoothOutput) {
-        _bluetoothRouteDirty = true;
+        markBluetoothRouteDirty();
       }
     });
 
@@ -107,7 +111,7 @@ class AudioSessionHandler {
     // 耳机拔出暂停
     session.becomingNoisyEventStream.listen((_) {
       if (_hasBluetoothOutput) {
-        _bluetoothRouteDirty = true;
+        markBluetoothRouteDirty();
       }
       PlPlayerController.pauseIfExists();
       // final player = PlPlayerController.getInstance();
