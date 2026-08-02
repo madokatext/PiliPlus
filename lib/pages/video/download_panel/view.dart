@@ -65,12 +65,16 @@ class _DownloadPanelState extends State<DownloadPanel> {
   final DownloadService _downloadService = Get.find<DownloadService>();
   final ListController _listController = ListController();
 
-  late final cidSet = widget.cidSet;
+  final Set<int> cidSet = {};
+  final Set<int> completedCidSet = {};
   VideoQuality _quality = VideoQuality.fromCode(Pref.defaultVideoQa);
 
   @override
   void initState() {
     super.initState();
+    cidSet.addAll(widget.cidSet);
+    completedCidSet.addAll(_downloadService.downloadList.map((e) => e.cid));
+    _downloadService.flagNotifier.add(_syncDownloadState);
     if (widget.index != -1) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _listController.jumpToItem(
@@ -84,8 +88,22 @@ class _DownloadPanelState extends State<DownloadPanel> {
 
   @override
   void dispose() {
+    _downloadService.flagNotifier.remove(_syncDownloadState);
     _listController.dispose();
     super.dispose();
+  }
+
+  void _syncDownloadState() {
+    cidSet
+      ..clear()
+      ..addAll(_downloadService.downloadList.map((e) => e.cid))
+      ..addAll(_downloadService.waitDownloadQueue.map((e) => e.cid));
+    completedCidSet
+      ..clear()
+      ..addAll(_downloadService.downloadList.map((e) => e.cid));
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -212,6 +230,7 @@ class _DownloadPanelState extends State<DownloadPanel> {
                             ugcIntroController: widget.ugcIntroController!,
                             bvid: episode.bvid ?? IdUtils.av2bv(episode.aid!),
                             cidSet: cidSet,
+                            completedCidSet: completedCidSet,
                             onDownload: (Part part) => _onDownload(
                               index: index,
                               episode: part,
@@ -241,20 +260,6 @@ class _DownloadPanelState extends State<DownloadPanel> {
     bool isDownloadAll = false,
     ugc.EpisodeItem? parent,
   }) {
-    final cid = episode.cid;
-    // on download
-    if (cid == null) {
-      SmartDialog.showToast('null cid');
-      return false;
-    }
-
-    if (cidSet.contains(cid)) {
-      if (kDebugMode) {
-        SmartDialog.showToast('downloaded');
-      }
-      return false;
-    }
-
     if (kReleaseMode && episode.badge == '会员' && Accounts.mainEqVideo) {
       if (vipStatus != 1) {
         if (!isDownloadAll) {
@@ -271,17 +276,34 @@ class _DownloadPanelState extends State<DownloadPanel> {
           SmartDialog.showToast('hasParts');
         }
         if (isDownloadAll) {
+          var hasNewDownload = false;
           for (int i = 0; i < pages.length; i++) {
-            _onDownload(
-              index: i,
-              episode: pages[i],
-              parent: episode,
-            );
+            hasNewDownload =
+                _onDownload(
+                  index: i,
+                  episode: pages[i],
+                  parent: episode,
+                ) ||
+                hasNewDownload;
           }
-          return true;
+          return hasNewDownload;
         }
         return false;
       }
+    }
+
+    final cid = episode.cid;
+    // on download
+    if (cid == null) {
+      SmartDialog.showToast('null cid');
+      return false;
+    }
+
+    if (cidSet.contains(cid)) {
+      if (kDebugMode) {
+        SmartDialog.showToast('downloaded');
+      }
+      return false;
     }
 
     try {
@@ -389,7 +411,25 @@ class _DownloadPanelState extends State<DownloadPanel> {
             return Material(
               type: MaterialType.transparency,
               child: InkWell(
-                onTap: () {
+                onTap: () async {
+                  if (hasParts) {
+                    final confirmed = await showConfirmDialog(
+                      context: context,
+                      title: const Text('是否缓存该视频的全部分P？'),
+                    );
+                    if (!confirmed || !context.mounted) {
+                      return;
+                    }
+                    if (_onDownload(
+                      index: index,
+                      episode: episode,
+                      isFromList: true,
+                      isDownloadAll: true,
+                    )) {
+                      setState(() {});
+                    }
+                    return;
+                  }
                   if (_onDownload(
                     index: index,
                     episode: episode,
@@ -511,11 +551,13 @@ class _DownloadPanelState extends State<DownloadPanel> {
                                 bottom: 0,
                                 right: 0,
                                 child: Icon(
-                                  size: 13,
+                                  size: 18,
                                   color: theme.colorScheme.secondary.withValues(
                                     alpha: 0.8,
                                   ),
-                                  FontAwesomeIcons.circleDown,
+                                  completedCidSet.contains(cid)
+                                      ? FontAwesomeIcons.circleCheck
+                                      : FontAwesomeIcons.circleDown,
                                 ),
                               ),
                           ],
@@ -568,9 +610,12 @@ class _DownloadPanelState extends State<DownloadPanel> {
           ),
           _buildBottomBtn(
             text: '查看缓存',
-            onTap: () => Navigator.of(context).push(
-              GetPageRoute(page: () => const DownloadPage()),
-            ),
+            onTap: () async {
+              await Navigator.of(context).push(
+                GetPageRoute(page: () => const DownloadPage()),
+              );
+              _syncDownloadState();
+            },
           ),
         ],
       ),

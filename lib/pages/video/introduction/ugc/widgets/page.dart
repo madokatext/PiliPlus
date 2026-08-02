@@ -23,6 +23,7 @@ class PagesPanel extends StatefulWidget {
     required this.ugcIntroController,
     this.onDownload,
     this.cidSet,
+    this.completedCidSet,
   });
 
   final List<Part>? list;
@@ -34,6 +35,7 @@ class PagesPanel extends StatefulWidget {
   final UgcIntroController ugcIntroController;
 
   final Set<int>? cidSet;
+  final Set<int>? completedCidSet;
   final bool Function(Part part)? onDownload;
 
   @override
@@ -221,11 +223,14 @@ class _PagesPanelState extends State<PagesPanel> {
                           ),
                           if (widget.cidSet?.contains(item.cid) ?? false)
                             Icon(
-                              size: 13,
+                              size: 18,
                               color: theme.colorScheme.secondary.withValues(
                                 alpha: 0.8,
                               ),
-                              FontAwesomeIcons.circleDown,
+                              (widget.completedCidSet?.contains(item.cid) ??
+                                      false)
+                                  ? FontAwesomeIcons.circleCheck
+                                  : FontAwesomeIcons.circleDown,
                             ),
                         ],
                       ),
