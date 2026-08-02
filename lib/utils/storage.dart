@@ -12,6 +12,7 @@ import 'package:PiliPlus/utils/default_settings.dart';
 import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/recommend_history.dart';
 import 'package:PiliPlus/utils/set_int_adapter.dart';
+import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:hive_ce/hive.dart';
@@ -85,6 +86,8 @@ abstract final class GStorage {
       ).then((res) => recommendWatchHistory = res),
     ]);
 
+    await _migrateLegacySettings();
+
     await Future.wait([
       _putMissingDefaults(setting, defaultSettingValues),
       _putMissingDefaults(video, defaultVideoValues),
@@ -119,6 +122,16 @@ abstract final class GStorage {
     };
     if (missingDefaults.isNotEmpty) {
       await box.putAll(missingDefaults);
+    }
+  }
+
+  static Future<void> _migrateLegacySettings() async {
+    if (!setting.containsKey(SettingBoxKey.danmakuMergeMode) &&
+        setting.containsKey(SettingBoxKey.mergeDanmaku)) {
+      await setting.put(
+        SettingBoxKey.danmakuMergeMode,
+        setting.get(SettingBoxKey.mergeDanmaku) == true ? 1 : 0,
+      );
     }
   }
 

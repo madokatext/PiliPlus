@@ -560,6 +560,11 @@ static int get rcmdRefreshCount {
   static bool get danmakuMassiveMode =>
       _setting.get(SettingBoxKey.danmakuMassiveMode, defaultValue: true);
 
+  static bool get liveDanmakuMassiveMode => _setting.get(
+    SettingBoxKey.liveDanmakuMassiveMode,
+    defaultValue: false,
+  );
+
   static bool get danmakuFixedV =>
       _setting.get(SettingBoxKey.danmakuFixedV, defaultValue: false);
 

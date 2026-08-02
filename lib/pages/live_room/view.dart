@@ -1080,14 +1080,20 @@ class _LiveDanmakuState extends State<LiveDanmaku> {
     if (oldWidget.notFullscreen != widget.notFullscreen &&
         !DanmakuOptions.sameFontScale) {
       plPlayerController.danmakuController?.updateOption(
-        DanmakuOptions.get(notFullscreen: widget.notFullscreen),
+        DanmakuOptions.get(
+          notFullscreen: widget.notFullscreen,
+          isLive: true,
+        ),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final option = DanmakuOptions.get(notFullscreen: widget.notFullscreen);
+    final option = DanmakuOptions.get(
+      notFullscreen: widget.notFullscreen,
+      isLive: true,
+    );
     return Obx(
       () => AnimatedOpacity(
         opacity: plPlayerController.enableShowLiveDanmaku.value

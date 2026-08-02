@@ -156,11 +156,9 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
     );
     if (result == null) return;
     final key = Pref.customThemeToneKey(_toneBrightness, role);
-    if (result == 0) {
-      await GStorage.setting.delete(key);
-    } else {
-      await GStorage.setting.put(key, result);
-    }
+    // 0 是有效的用户覆盖值，必须显式保存；删键会使启动时的非零
+    // 默认值再次补写，导致用户设置被悄然恢复。
+    await GStorage.setting.put(key, result);
     if (!mounted) return;
     setState(() {});
     Get.updateMyAppTheme();

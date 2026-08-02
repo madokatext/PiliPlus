@@ -494,13 +494,6 @@ List<SettingsModel> get extraSettings => [
     defaultVal: true,
   ),
   const SwitchModel(
-    title: '合并弹幕',
-    subtitle: '合并一段时间内获取到的相同弹幕',
-    leading: Icon(Icons.merge),
-    setKey: SettingBoxKey.mergeDanmaku,
-    defaultVal: false,
-  ),
-  const SwitchModel(
     title: '显示热门推荐',
     subtitle: '热门页面显示每周必看等推荐内容入口',
     leading: Icon(Icons.local_fire_department_outlined),

@@ -68,6 +68,7 @@ const Map<String, Object> defaultSettingValues = {
   'danmakuFontScaleFS': 1.2,
   'danmakuLineHeight': 1.3,
   'danmakuMassiveMode': true,
+  'liveDanmakuMassiveMode': false,
   'danmakuMergeMode': 2,
   'danmakuOpacity': 0.9,
   'danmakuShadowRadius': 0.0,

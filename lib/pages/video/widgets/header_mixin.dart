@@ -78,6 +78,7 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
         void setOptions() => danmakuController?.updateOption(
           DanmakuOptions.get(
             notFullscreen: !isFullScreen,
+            isLive: isLive,
             speed: plPlayerController.playbackSpeed,
           ),
         );
@@ -363,10 +364,17 @@ const Text('按类型屏蔽'),
                       spacing: 10,
                       children: [
                         ActionRowLineItem(
-                          selectStatus: DanmakuOptions.danmakuMassiveMode,
+                          selectStatus: isLive
+                              ? DanmakuOptions.liveDanmakuMassiveMode
+                              : DanmakuOptions.danmakuMassiveMode,
                           onTap: () {
-                            DanmakuOptions.danmakuMassiveMode =
-                                !DanmakuOptions.danmakuMassiveMode;
+                            if (isLive) {
+                              DanmakuOptions.liveDanmakuMassiveMode =
+                                  !DanmakuOptions.liveDanmakuMassiveMode;
+                            } else {
+                              DanmakuOptions.danmakuMassiveMode =
+                                  !DanmakuOptions.danmakuMassiveMode;
+                            }
                             setState(() {});
                             setOptions();
                           },

@@ -36,12 +36,14 @@ static double burstDanmakuFontScale =
   static bool danmakuFixedV = Pref.danmakuFixedV;
   static bool danmakuStatic2Scroll = Pref.danmakuStatic2Scroll;
   static bool danmakuMassiveMode = Pref.danmakuMassiveMode;
+  static bool liveDanmakuMassiveMode = Pref.liveDanmakuMassiveMode;
   static double danmakuLineHeight = Pref.danmakuLineHeight;
 
   static bool get sameFontScale => danmakuFontScale == danmakuFontScaleFS;
 
   static DanmakuOption get({
     required bool notFullscreen,
+    bool isLive = false,
     double speed = 1.0,
   }) {
     final fontFamilies = LocalFontManager.danmakuFontFamilies;
@@ -60,7 +62,7 @@ static double burstDanmakuFontScale =
       strokeWidth: danmakuStrokeWidth,
       shadowRadius: danmakuShadowRadius,
       scrollFixedVelocity: danmakuFixedV,
-      massiveMode: danmakuMassiveMode,
+      massiveMode: isLive ? liveDanmakuMassiveMode : danmakuMassiveMode,
       static2Scroll: danmakuStatic2Scroll,
       safeArea: true,
       lineHeight: danmakuLineHeight,
@@ -101,6 +103,7 @@ static Future<void> saveMergeSettings() async {
       SettingBoxKey.danmakuFontWeight: danmakuFontWeight,
       SettingBoxKey.danmakuLineHeight: danmakuLineHeight,
       SettingBoxKey.danmakuMassiveMode: danmakuMassiveMode,
+      SettingBoxKey.liveDanmakuMassiveMode: liveDanmakuMassiveMode,
       SettingBoxKey.danmakuStatic2Scroll: danmakuStatic2Scroll,
       SettingBoxKey.danmakuFixedV: danmakuFixedV,
       SettingBoxKey.danmakuWeight: danmakuWeight,
