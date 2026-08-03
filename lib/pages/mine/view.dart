@@ -22,6 +22,8 @@ import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
+import 'package:PiliPlus/utils/storage_key.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/material.dart' hide ListTile;
 import 'package:flutter/services.dart' show rootBundle;
@@ -41,7 +43,6 @@ class MinePage extends StatefulWidget {
 class _MediaPageState extends CommonPageState<MinePage>
     with AutomaticKeepAliveClientMixin, RouteAware, RouteAwareMixin {
   static const _quoteAsset = 'assets/data/hitokoto.txt';
-  static const _quoteIndexKey = 'mineQuoteIndex';
   static Future<List<String>>? _quotesFuture;
   static int? _nextQuoteIndex;
 
@@ -73,14 +74,14 @@ class _MediaPageState extends CommonPageState<MinePage>
       );
     }
     if (_wasCurrentMinePage) {
-      unawaited(_rotateQuote());
+      _refreshQuote();
     }
   }
 
   void _handlePageSelection() {
     final isCurrentMinePage = _isCurrentMinePage;
     if (isCurrentMinePage && !_wasCurrentMinePage) {
-      unawaited(_rotateQuote());
+      _refreshQuote();
     }
     _wasCurrentMinePage = isCurrentMinePage;
   }
@@ -88,9 +89,21 @@ class _MediaPageState extends CommonPageState<MinePage>
   @override
   void didPopNext() {
     if (widget.showBackBtn || _isCurrentMinePage) {
-      unawaited(_rotateQuote());
+      _refreshQuote();
     }
     super.didPopNext();
+  }
+
+  void _refreshQuote() {
+    if (Pref.showMineQuote) {
+      unawaited(_rotateQuote());
+      return;
+    }
+
+    _quoteRequest++;
+    if (_quote != null && mounted) {
+      setState(() => _quote = null);
+    }
   }
 
   static Future<List<String>> _loadQuotes() async {
@@ -113,20 +126,23 @@ class _MediaPageState extends CommonPageState<MinePage>
     final request = ++_quoteRequest;
     try {
       final quotes = await (_quotesFuture ??= _loadQuotes());
-      if (quotes.isEmpty) {
+      if (quotes.isEmpty ||
+          !mounted ||
+          request != _quoteRequest ||
+          !Pref.showMineQuote) {
         return;
       }
 
       _nextQuoteIndex ??=
-          (GStorage.localCache.get(_quoteIndexKey) as int? ?? 0) %
+          (GStorage.localCache.get(LocalCacheKey.mineQuoteIndex) as int? ?? 0) %
           quotes.length;
       final index = _nextQuoteIndex!;
       _nextQuoteIndex = (index + 1) % quotes.length;
-      unawaited(GStorage.localCache.put(_quoteIndexKey, _nextQuoteIndex));
+      unawaited(
+        GStorage.localCache.put(LocalCacheKey.mineQuoteIndex, _nextQuoteIndex),
+      );
 
-      if (mounted && request == _quoteRequest) {
-        setState(() => _quote = _formatQuote(quotes[index]));
-      }
+      setState(() => _quote = _formatQuote(quotes[index]));
     } catch (_) {
       // The bundled quote file is optional UI content; keep the page usable if
       // the asset cannot be loaded.

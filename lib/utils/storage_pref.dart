@@ -676,6 +676,9 @@ static int get rcmdRefreshCount {
     defaultValue: false,
   );
 
+  static bool get showMineQuote =>
+      _setting.get(SettingBoxKey.showMineQuote, defaultValue: true);
+
   static bool get savedRcmdTip =>
       _setting.get(SettingBoxKey.savedRcmdTip, defaultValue: true);
 

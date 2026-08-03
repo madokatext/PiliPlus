@@ -378,6 +378,13 @@ List<SettingsModel> get styleSettings => [
     getSubtitle: () => '当前启动页：${Pref.defaultHomePage.label}',
     onTap: _showDefHomeDialog,
   ),
+  const SwitchModel(
+    title: '我的页显示语录',
+    subtitle: '关闭后保留当前轮换位置',
+    leading: Icon(Icons.format_quote),
+    setKey: SettingBoxKey.showMineQuote,
+    defaultVal: true,
+  ),
   const NormalModel(
     title: '滑动动画弹簧参数',
     leading: Icon(Icons.chrome_reader_mode_outlined),
