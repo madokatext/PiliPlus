@@ -13,7 +13,7 @@ abstract final class Assets {
   static const topicHeader = 'assets/images/topic-header-bg.png';
   static const trendingBanner = 'assets/images/trending_banner.png';
   static const ai = 'assets/images/ai.png';
-  static const error = 'assets/images/error.svg';
+  static const error = 'assets/images/error.png';
 
   static const livingChart = 'assets/images/live.gif';
   static const livingStatic = 'assets/images/live.png';
