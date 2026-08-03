@@ -13,6 +13,7 @@ import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart'
     show RefreshScrollPhysics;
 import 'package:flutter/foundation.dart' show clampDouble;
 import 'package:flutter/material.dart' hide RefreshIndicator;
+import 'package:flutter/rendering.dart' show ScrollDirection;
 
 /// The distance from the child's top or bottom [edgeOffset] where
 /// the refresh indicator will settle. During the drag that exposes the refresh
@@ -142,6 +143,7 @@ class RefreshIndicator extends StatefulWidget {
     this.strokeWidth = RefreshProgressIndicator.defaultStrokeWidth,
     this.elevation = 2.0,
     this.isClampingScrollPhysics = false,
+    this.requireInitialDownwardDrag = false,
     required this.child,
   }) : assert(elevation >= 0.0);
 
@@ -201,6 +203,13 @@ class RefreshIndicator extends StatefulWidget {
 
   final bool isClampingScrollPhysics;
 
+  /// Whether pull-to-refresh may only start when the current drag's initial
+  /// scroll direction is toward the leading edge.
+  ///
+  /// This keeps a drag that starts by stretching the trailing overscroll in
+  /// that mode even if the pointer reverses before it is lifted.
+  final bool requireInitialDownwardDrag;
+
   @override
   RefreshIndicatorState createState() => RefreshIndicatorState();
 }
@@ -219,6 +228,8 @@ class RefreshIndicatorState extends State<RefreshIndicator>
   RefreshIndicatorStatus? _status;
   late Future<void> _pendingRefreshFuture;
   double? _dragOffset;
+  bool _isTrackingDirectDrag = false;
+  bool? _initialDragTowardRefresh;
   late Color _effectiveValueColor;
   // late Color _backgroundColor;
 
@@ -301,19 +312,71 @@ class RefreshIndicatorState extends State<RefreshIndicator>
     // If the notification.dragDetails is null, this scroll is not triggered by
     // user dragging. It may be a result of ScrollController.jumpTo or ballistic scroll.
     // In this case, we don't want to trigger the refresh indicator.
+    final isDirectDragNotification =
+        (notification is ScrollStartNotification &&
+            notification.dragDetails != null) ||
+        (notification is ScrollUpdateNotification &&
+            notification.dragDetails != null);
+    final isValidatedDirectionNotification =
+        widget.requireInitialDownwardDrag &&
+        _isTrackingDirectDrag &&
+        _initialDragTowardRefresh == true &&
+        ((notification is UserScrollNotification &&
+                notification.direction == ScrollDirection.forward) ||
+            (notification is OverscrollNotification &&
+                notification.dragDetails != null));
     return _status == null &&
-        ((notification is ScrollStartNotification &&
-                notification.dragDetails != null) ||
-            (notification is ScrollUpdateNotification &&
-                notification.dragDetails != null)) &&
+        (isDirectDragNotification || isValidatedDirectionNotification) &&
+        (!widget.requireInitialDownwardDrag ||
+            _initialDragTowardRefresh == true) &&
         notification.metrics.extentBefore == 0.0 &&
         _start();
+  }
+
+  void _trackInitialDragDirection(ScrollNotification notification) {
+    if (!widget.requireInitialDownwardDrag) {
+      return;
+    }
+
+    if (notification is ScrollStartNotification &&
+        notification.dragDetails != null) {
+      _isTrackingDirectDrag = true;
+      _initialDragTowardRefresh = null;
+      return;
+    }
+
+    if (!_isTrackingDirectDrag || _initialDragTowardRefresh != null) {
+      return;
+    }
+
+    if (notification is UserScrollNotification &&
+        notification.direction != ScrollDirection.idle) {
+      _initialDragTowardRefresh =
+          notification.direction == ScrollDirection.forward;
+    } else if (notification is ScrollUpdateNotification &&
+        notification.dragDetails != null) {
+      final scrollDelta = notification.scrollDelta;
+      if (scrollDelta != null && scrollDelta != 0.0) {
+        _initialDragTowardRefresh = scrollDelta < 0.0;
+      }
+    } else if (notification is OverscrollNotification &&
+        notification.dragDetails != null) {
+      if (notification.overscroll != 0.0) {
+        _initialDragTowardRefresh = notification.overscroll < 0.0;
+      }
+    }
+  }
+
+  void _finishDirectDrag() {
+    _isTrackingDirectDrag = false;
+    _initialDragTowardRefresh = null;
   }
 
   bool _handleScrollNotification(ScrollNotification notification) {
     if (!widget.notificationPredicate(notification)) {
       return false;
     }
+    _trackInitialDragDirection(notification);
     if (_shouldStart(notification)) {
       setState(() {
         _status = RefreshIndicatorStatus.drag;
@@ -354,6 +417,7 @@ class RefreshIndicatorState extends State<RefreshIndicator>
           // do nothing
           break;
       }
+      _finishDirectDrag();
     }
     return false;
   }

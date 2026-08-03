@@ -81,6 +81,7 @@ bool onNotificationType2(ScrollNotification notification) {
             type: .transparency,
             child: refreshIndicator(
               onRefresh: controller.onRefresh,
+              requireInitialDownwardDrag: true,
               child: onBuild(
                 ListView(
                   padding: const .only(bottom: 100),
