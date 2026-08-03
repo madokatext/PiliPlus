@@ -43,6 +43,41 @@ class MinePage extends StatefulWidget {
 class _MediaPageState extends CommonPageState<MinePage>
     with AutomaticKeepAliveClientMixin, RouteAware, RouteAwareMixin {
   static const _quoteAsset = 'assets/data/hitokoto.txt';
+  static const _quoteBreakPunctuation = <String>{
+    '，',
+    ',',
+    '。',
+    '.',
+    '！',
+    '!',
+    '？',
+    '?',
+    '；',
+    ';',
+    '：',
+    ':',
+    '、',
+    '…',
+    '—',
+    '～',
+    '~',
+  };
+  static const _quoteClosingPunctuation = <String>{
+    '”',
+    '’',
+    '"',
+    "'",
+    '）',
+    ')',
+    '】',
+    ']',
+    '〕',
+    '}',
+    '》',
+    '〉',
+    '」',
+    '』',
+  };
   static Future<List<String>>? _quotesFuture;
   static int? _nextQuoteIndex;
 
@@ -115,11 +150,112 @@ class _MediaPageState extends CommonPageState<MinePage>
         .toList(growable: false);
   }
 
-  static String _formatQuote(String quote) {
-    return quote.replaceAllMapped(
-      RegExp(r'([,，])[ \t]*'),
-      (match) => '${match.group(1)}\n',
+  static List<({String text, bool leadingSpace})> _splitQuoteClauses(
+    String quote,
+  ) {
+    final clauses = <({String text, bool leadingSpace})>[];
+    var buffer = StringBuffer();
+    var leadingSpace = false;
+    var canBreak = false;
+    var hasBoundaryWhitespace = false;
+
+    void flush() {
+      if (buffer.isNotEmpty) {
+        clauses.add((text: buffer.toString(), leadingSpace: leadingSpace));
+        buffer = StringBuffer();
+      }
+    }
+
+    for (final rune in quote.runes) {
+      final char = String.fromCharCode(rune);
+      if (canBreak && char.trim().isEmpty) {
+        hasBoundaryWhitespace = true;
+        continue;
+      }
+
+      if (canBreak &&
+          !_quoteBreakPunctuation.contains(char) &&
+          !_quoteClosingPunctuation.contains(char)) {
+        flush();
+        leadingSpace = hasBoundaryWhitespace;
+        canBreak = false;
+        hasBoundaryWhitespace = false;
+      }
+
+      buffer.write(char);
+      if (_quoteBreakPunctuation.contains(char)) {
+        canBreak = true;
+      }
+    }
+    flush();
+    return clauses;
+  }
+
+  static String _wrapQuote({
+    required String quote,
+    required double maxWidth,
+    required TextStyle? style,
+    required TextScaler textScaler,
+    required TextDirection textDirection,
+    required Locale? locale,
+  }) {
+    if (quote.isEmpty || maxWidth <= 0 || !maxWidth.isFinite) {
+      return quote;
+    }
+
+    final clauses = _splitQuoteClauses(quote);
+    if (clauses.length <= 1) {
+      return quote;
+    }
+
+    final painter = TextPainter(
+      textDirection: textDirection,
+      textScaler: textScaler,
+      locale: locale,
     );
+
+    int lineCount(String text) {
+      painter
+        ..text = TextSpan(text: text, style: style)
+        ..layout(maxWidth: maxWidth);
+      return painter.computeLineMetrics().length;
+    }
+
+    final lines = <String>[];
+    var current = '';
+    var currentLineCount = 0;
+    try {
+      for (final clause in clauses) {
+        if (current.isEmpty) {
+          current = clause.text;
+          currentLineCount = lineCount(current);
+          continue;
+        }
+
+        final separator = clause.leadingSpace ? ' ' : '';
+        final candidate = '$current$separator${clause.text}';
+        final candidateLineCount = lineCount(candidate);
+
+        // 能独占一行的短句必须整体移到下一行；只有单句本身过长时，
+        // 才保留 Flutter 的句内自动折行，并继续利用其最后一行的余量。
+        if (candidateLineCount > currentLineCount &&
+            lineCount(clause.text) == 1) {
+          lines.add(current);
+          current = clause.text;
+          currentLineCount = 1;
+        } else {
+          current = candidate;
+          currentLineCount = candidateLineCount;
+        }
+      }
+    } finally {
+      painter.dispose();
+    }
+
+    if (current.isNotEmpty) {
+      lines.add(current);
+    }
+    return lines.join('\n');
   }
 
   Future<void> _rotateQuote() async {
@@ -142,7 +278,7 @@ class _MediaPageState extends CommonPageState<MinePage>
         GStorage.localCache.put(LocalCacheKey.mineQuoteIndex, _nextQuoteIndex),
       );
 
-      setState(() => _quote = _formatQuote(quotes[index]));
+      setState(() => _quote = quotes[index]);
     } catch (_) {
       // The bundled quote file is optional UI content; keep the page usable if
       // the asset cannot be loaded.
@@ -236,13 +372,26 @@ bool onNotificationType2(ScrollNotification notification) {
   Widget _buildQuote(ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-      child: Center(
-        child: Text(
-          _quote ?? '',
-          textAlign: TextAlign.center,
-          overflow: TextOverflow.fade,
-          style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
-        ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final style = theme.textTheme.bodyMedium?.copyWith(height: 1.6);
+          final quote = _wrapQuote(
+            quote: _quote ?? '',
+            maxWidth: constraints.maxWidth,
+            style: style,
+            textScaler: MediaQuery.textScalerOf(context),
+            textDirection: Directionality.of(context),
+            locale: Localizations.maybeLocaleOf(context),
+          );
+          return Center(
+            child: Text(
+              quote,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.fade,
+              style: style,
+            ),
+          );
+        },
       ),
     );
   }
