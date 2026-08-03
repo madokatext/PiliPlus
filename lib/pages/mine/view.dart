@@ -150,6 +150,14 @@ class _MediaPageState extends CommonPageState<MinePage>
         .toList(growable: false);
   }
 
+  static bool _isHanRune(int rune) {
+    return (rune >= 0x3400 && rune <= 0x4DBF) ||
+        (rune >= 0x4E00 && rune <= 0x9FFF) ||
+        (rune >= 0xF900 && rune <= 0xFAFF) ||
+        (rune >= 0x20000 && rune <= 0x2FA1F) ||
+        (rune >= 0x30000 && rune <= 0x323AF);
+  }
+
   static List<({String text, bool leadingSpace})> _splitQuoteClauses(
     String quote,
   ) {
@@ -166,10 +174,39 @@ class _MediaPageState extends CommonPageState<MinePage>
       }
     }
 
-    for (final rune in quote.runes) {
+    final runes = quote.runes.toList(growable: false);
+    for (var i = 0; i < runes.length; i++) {
+      final rune = runes[i];
       final char = String.fromCharCode(rune);
-      if (canBreak && char.trim().isEmpty) {
-        hasBoundaryWhitespace = true;
+      if (char.trim().isEmpty) {
+        var next = i + 1;
+        while (next < runes.length &&
+            String.fromCharCode(runes[next]).trim().isEmpty) {
+          next++;
+        }
+
+        if (canBreak) {
+          hasBoundaryWhitespace = true;
+          i = next - 1;
+          continue;
+        }
+
+        final previousRune = i > 0 ? runes[i - 1] : null;
+        final nextRune = next < runes.length ? runes[next] : null;
+        if (previousRune != null &&
+            nextRune != null &&
+            _isHanRune(previousRune) &&
+            _isHanRune(nextRune)) {
+          flush();
+          leadingSpace = true;
+          i = next - 1;
+          continue;
+        }
+
+        for (var whitespace = i; whitespace < next; whitespace++) {
+          buffer.writeCharCode(runes[whitespace]);
+        }
+        i = next - 1;
         continue;
       }
 
