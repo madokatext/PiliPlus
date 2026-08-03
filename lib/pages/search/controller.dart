@@ -9,11 +9,9 @@ import 'package:PiliPlus/models_new/search/search_trending/data.dart';
 import 'package:PiliPlus/utils/extension/get_ext.dart';
 import 'package:PiliPlus/utils/extension/string_ext.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
-import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 import 'package:stream_transform/stream_transform.dart';
 
@@ -121,6 +119,7 @@ class SSearchController extends GetxController
     super.onInit();
     final params = Get.parameters;
     hintText = params['hintText'];
+    initIndex = Get.arguments?['initIndex'] ?? 0;
     final text = params['text'];
     if (text != null) {
       controller.text = text;
@@ -172,7 +171,7 @@ class SSearchController extends GetxController
   }
 
   // 搜索
-  Future<void> submit() async {
+  void submit() {
     if (controller.text.isEmpty) {
       if (hintText.isNullOrEmpty) {
         return;
@@ -189,29 +188,16 @@ class SSearchController extends GetxController
     }
 
     searchFocusNode.unfocus();
-    if (scrollController.hasClients) {
-      scrollController.jumpTo(scrollController.position.minScrollExtent);
-    }
-    await Get.toNamed(
+    Get.offNamedUntil<void>(
       '/searchResult',
+      ModalRoute.withName('/'),
       parameters: {
-        'tag': tag,
         'keyword': controller.text,
       },
       arguments: {
         'initIndex': initIndex,
-        'fromSearch': true,
       },
     );
-    searchFocusNode.requestFocus();
-    refreshSuggestions();
-    if (PlatformUtils.isDesktop) {
-      SchedulerBinding.instance.addPostFrameCallback((_) {
-        controller.selection = TextSelection.collapsed(
-          offset: controller.text.length,
-        );
-      });
-    }
   }
 
   Future<void> queryRecommendList() async {
