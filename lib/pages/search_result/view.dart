@@ -78,16 +78,10 @@ class _SearchResultPageState extends State<SearchResultPage>
           ),
         ),
         title: GestureDetector(
-          onTap: () {
-            if (_isFromSearch) {
-              Get.back();
-            } else {
-              Get.offNamed(
-                '/search',
-                parameters: {'text': _searchResultController.keyword},
-              );
-            }
-          },
+          onTap: () => Get.toNamed(
+            '/search',
+            parameters: {'text': _searchResultController.keyword},
+          ),
           behavior: HitTestBehavior.opaque,
           child: SizedBox(
             width: double.infinity,
