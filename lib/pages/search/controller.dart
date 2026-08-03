@@ -128,6 +128,7 @@ class SSearchController extends GetxController
     if (searchSuggestion) {
       subInit();
       searchSuggestList = <SearchSuggestItem>[].obs;
+      refreshSuggestions();
     }
 
     if (enableSearchRcmd) {
@@ -148,6 +149,13 @@ class SSearchController extends GetxController
       } else {
         ctr!.add(value);
       }
+    }
+  }
+
+  void refreshSuggestions() {
+    final value = controller.text;
+    if (searchSuggestion && value.isNotEmpty) {
+      unawaited(onValueChanged(value));
     }
   }
 
@@ -192,6 +200,7 @@ class SSearchController extends GetxController
       },
     );
     searchFocusNode.requestFocus();
+    refreshSuggestions();
     if (PlatformUtils.isDesktop) {
       SchedulerBinding.instance.addPostFrameCallback((_) {
         controller.selection = TextSelection.collapsed(
@@ -216,6 +225,7 @@ class SSearchController extends GetxController
   @override
   Future<void> onValueChanged(String value) async {
     final res = await SearchHttp.searchSuggest(term: value);
+    if (value != controller.text) return;
     if (res case Success(:final response)) {
       if (response.tag?.isNotEmpty == true) {
         searchSuggestList.value = response.tag!;

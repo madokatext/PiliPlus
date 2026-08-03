@@ -121,6 +121,7 @@ class _SearchPageState extends State<SearchPage> {
       focusNode: _searchController.searchFocusNode,
       controller: _searchController.controller,
       textInputAction: TextInputAction.search,
+      onTap: _searchController.refreshSuggestions,
       onChanged: _searchController.onChange,
       decoration: InputDecoration(
         visualDensity: .standard,
