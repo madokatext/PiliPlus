@@ -86,6 +86,7 @@ class SSearchController extends GetxController
   final String tag;
 
   final searchFocusNode = FocusNode();
+  final scrollController = ScrollController(keepScrollOffset: false);
   final controller = TextEditingController();
   final _baseCtr = Get.putOrFind(BaseSearchController.new);
 
@@ -188,6 +189,9 @@ class SSearchController extends GetxController
     }
 
     searchFocusNode.unfocus();
+    if (scrollController.hasClients) {
+      scrollController.jumpTo(scrollController.position.minScrollExtent);
+    }
     await Get.toNamed(
       '/searchResult',
       parameters: {
@@ -253,6 +257,7 @@ class SSearchController extends GetxController
   void onClose() {
     subDispose();
     searchFocusNode.dispose();
+    scrollController.dispose();
     controller.dispose();
     super.onClose();
   }

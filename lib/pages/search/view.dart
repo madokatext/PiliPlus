@@ -62,6 +62,7 @@ class _SearchPageState extends State<SearchPage> {
       body: Padding(
         padding: .only(left: padding.left, right: padding.right),
         child: CustomScrollView(
+          controller: _searchController.scrollController,
           slivers: [
             if (_searchController.searchSuggestion) _buildSearchSuggest(),
             if (isPortrait) ...[
