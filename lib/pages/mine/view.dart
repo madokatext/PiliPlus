@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
+import 'package:PiliPlus/common/widgets/route_aware_mixin.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models/common/nav_bar_config.dart';
 import 'package:PiliPlus/models_new/fav/fav_folder/list.dart';
@@ -22,6 +24,7 @@ import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/material.dart' hide ListTile;
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -36,16 +39,105 @@ class MinePage extends StatefulWidget {
 }
 
 class _MediaPageState extends CommonPageState<MinePage>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin, RouteAware, RouteAwareMixin {
+  static const _quoteAsset = 'assets/data/hitokoto.txt';
+  static const _quoteIndexKey = 'mineQuoteIndex';
+  static Future<List<String>>? _quotesFuture;
+  static int? _nextQuoteIndex;
+
   final MineController controller = Get.putOrFind(MineController.new);
   late final MainController _mainController = Get.find<MainController>();
+  Worker? _selectedIndexWorker;
+  bool _wasCurrentMinePage = false;
+  int _quoteRequest = 0;
+  String? _quote;
 
   @override
   bool get wantKeepAlive => true;
 
-  bool get _isCurrentMinePage =>
-    _mainController.navigationBars[_mainController.selectedIndex.value] ==
-    NavigationBarType.mine;
+  bool get _isCurrentMinePage {
+    final index = _mainController.selectedIndex.value;
+    return index >= 0 &&
+        index < _mainController.navigationBars.length &&
+        _mainController.navigationBars[index] == NavigationBarType.mine;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _wasCurrentMinePage = widget.showBackBtn || _isCurrentMinePage;
+    if (!widget.showBackBtn) {
+      _selectedIndexWorker = ever<int>(
+        _mainController.selectedIndex,
+        (_) => _handlePageSelection(),
+      );
+    }
+    if (_wasCurrentMinePage) {
+      unawaited(_rotateQuote());
+    }
+  }
+
+  void _handlePageSelection() {
+    final isCurrentMinePage = _isCurrentMinePage;
+    if (isCurrentMinePage && !_wasCurrentMinePage) {
+      unawaited(_rotateQuote());
+    }
+    _wasCurrentMinePage = isCurrentMinePage;
+  }
+
+  @override
+  void didPopNext() {
+    if (widget.showBackBtn || _isCurrentMinePage) {
+      unawaited(_rotateQuote());
+    }
+    super.didPopNext();
+  }
+
+  static Future<List<String>> _loadQuotes() async {
+    final content = await rootBundle.loadString(_quoteAsset);
+    return const LineSplitter()
+        .convert(content)
+        .map((quote) => quote.trim())
+        .where((quote) => quote.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  static String _formatQuote(String quote) {
+    return quote.replaceAllMapped(
+      RegExp(r'([,，])[ \t]*'),
+      (match) => '${match.group(1)}\n',
+    );
+  }
+
+  Future<void> _rotateQuote() async {
+    final request = ++_quoteRequest;
+    try {
+      final quotes = await (_quotesFuture ??= _loadQuotes());
+      if (quotes.isEmpty) {
+        return;
+      }
+
+      _nextQuoteIndex ??=
+          (GStorage.localCache.get(_quoteIndexKey) as int? ?? 0) %
+          quotes.length;
+      final index = _nextQuoteIndex!;
+      _nextQuoteIndex = (index + 1) % quotes.length;
+      unawaited(GStorage.localCache.put(_quoteIndexKey, _nextQuoteIndex));
+
+      if (mounted && request == _quoteRequest) {
+        setState(() => _quote = _formatQuote(quotes[index]));
+      }
+    } catch (_) {
+      // The bundled quote file is optional UI content; keep the page usable if
+      // the asset cannot be loaded.
+    }
+  }
+
+  @override
+  void dispose() {
+    _selectedIndexWorker?.dispose();
+    super.dispose();
+  }
 
 @override
 bool onNotificationType1(UserScrollNotification notification) {
@@ -83,17 +175,38 @@ bool onNotificationType2(ScrollNotification notification) {
               onRefresh: controller.onRefresh,
               requireInitialDownwardDrag: true,
               child: onBuild(
-                ListView(
-                  padding: const .only(bottom: 100),
+                CustomScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  children: [
-                    _buildUserInfo(theme, secondary),
-                    _buildActions(secondary),
-                    Obx(
-                      () => controller.loadingState.value is Loading
-                          ? const SizedBox.shrink()
-                          : _buildFav(theme, secondary),
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Column(
+                        children: [
+                          _buildUserInfo(theme, secondary),
+                          _buildActions(secondary),
+                          Obx(
+                            () => controller.loadingState.value is Loading
+                                ? const SizedBox.shrink()
+                                : _buildFav(theme, secondary),
+                          ),
+                        ],
+                      ),
                     ),
+                    SliverLayoutBuilder(
+                      builder: (context, constraints) {
+                        const bottomPadding = 100.0;
+                        final availableHeight =
+                            constraints.viewportMainAxisExtent -
+                            constraints.precedingScrollExtent -
+                            bottomPadding;
+                        return SliverToBoxAdapter(
+                          child: SizedBox(
+                            height: availableHeight > 0 ? availableHeight : 0,
+                            child: _buildQuote(theme),
+                          ),
+                        );
+                      },
+                    ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 100)),
                   ],
                 ),
               ),
@@ -101,6 +214,20 @@ bool onNotificationType2(ScrollNotification notification) {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildQuote(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+      child: Center(
+        child: Text(
+          _quote ?? '',
+          textAlign: TextAlign.center,
+          overflow: TextOverflow.fade,
+          style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
+        ),
+      ),
     );
   }
 

@@ -270,6 +270,7 @@ flutter:
       platforms: [linux, macos]
     - path: assets/images/live/
     - path: assets/images/paycoins/
+    - path: assets/data/
     - path: assets/shaders/
 
   fonts:
