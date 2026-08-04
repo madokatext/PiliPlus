@@ -343,10 +343,6 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       ..addPositionListener(positionListener);
 
     if (!videoDetailController.isFileSource) {
-      if (videoDetailController.isQuerying) {
-        if (kDebugMode) debugPrint('handlePlay: querying');
-        return null;
-      }
       if (videoDetailController.videoUrl == null ||
           videoDetailController.audioUrl == null) {
         if (kDebugMode) {
