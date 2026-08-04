@@ -51,6 +51,7 @@ import 'package:PiliPlus/plugin/pl_player/widgets/forward_seek.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/mpv_video_output.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/mpv_convert_webp.dart';
 import 'package:PiliPlus/plugin/pl_player/widgets/play_pause_btn.dart';
+import 'package:PiliPlus/plugin/pl_player/widgets/player_instance_status_overlay.dart';
 import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/utils/android/bindings.g.dart';
 import 'package:PiliPlus/utils/connectivity_utils.dart';
@@ -102,6 +103,7 @@ class PLVideoPlayer extends StatefulWidget {
     this.showViewPoints,
     this.fill = Colors.black,
     this.alignment = Alignment.center,
+    this.showPlayerInstanceStatusOverlay = true,
     super.key,
   });
 
@@ -125,6 +127,7 @@ class PLVideoPlayer extends StatefulWidget {
   final VoidCallback? showViewPoints;
   final Color fill;
   final Alignment alignment;
+  final bool showPlayerInstanceStatusOverlay;
 
   @override
   State<PLVideoPlayer> createState() => _PLVideoPlayerState();
@@ -166,116 +169,6 @@ ui.PointerDeviceKind? _gesturePointerKind;
   final RxString _mpvOutputFps = '-- FPS'.obs;
   final RxString _mpvDroppedFrames = '--'.obs;
   Timer? _mpvOutputFpsTimer;
-  late final bool _showPlayerInstanceStatus = Pref.showPlayerInstanceStatus;
-  final RxInt _playerInstanceStatusRevision = 0.obs;
-  Timer? _playerInstanceStatusTimer;
-
-  Widget get _playerInstanceStatusOverlay => IgnorePointer(
-    child: Align(
-      alignment: const Alignment(-0.72, 0),
-      child: Obx(() {
-        _playerInstanceStatusRevision.value;
-        plPlayerController.videoOutputRevision.value;
-        plPlayerController.dataStatus.value;
-        final statuses = plPlayerController.playerInstanceGateStatuses;
-        final cdns = [
-          plPlayerController.mainPlayerCdnName ?? '--',
-          plPlayerController.standbyPlayerCdnName ?? '--',
-        ];
-        final hasSources = [
-          plPlayerController.mainPlayerHasVideoSource,
-          plPlayerController.standbyPlayerHasVideoSource,
-        ];
-
-        Color conditionColor(PlayerGateConditionState state) => switch (state) {
-          .met => const Color(0xFF8DE5A1),
-          .waiting => const Color(0xFFFFD166),
-          .bypassed => const Color(0xFFB9C2CC),
-          .failed => const Color(0xFFFF7B7B),
-        };
-
-        String conditionPrefix(PlayerGateConditionState state) =>
-            switch (state) {
-              .met => '✓',
-              .waiting => '○',
-              .bypassed => '↷',
-              .failed => '×',
-            };
-
-        Widget buildInstanceStatus(int index) {
-          final status = statuses[index];
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '${status.name} [${cdns[index]}] · ${hasSources[index] ? '已加载视频源' : '未加载视频源'}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 1),
-              Text(
-                '${status.playerState} · ${status.gateState}',
-                style: const TextStyle(
-                  color: Color(0xFFD5D9DE),
-                  fontSize: 9,
-                ),
-              ),
-              if (status.conditions.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 3,
-                  children: status.conditions.map((condition) {
-                    final detail = condition.detail;
-                    return Text(
-                      '${conditionPrefix(condition.state)} ${condition.label}${detail == null ? '' : ' $detail'}',
-                      style: TextStyle(
-                        color: conditionColor(condition.state),
-                        fontSize: 9,
-                        fontFamily: 'Monospace',
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ],
-          );
-        }
-
-        return Container(
-          constraints: BoxConstraints(
-            maxWidth: math.min(maxWidth * 0.9, 620),
-            maxHeight: maxHeight * 0.96,
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.72),
-            borderRadius: const BorderRadius.all(Radius.circular(7)),
-            border: Border.all(color: Colors.white24),
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                buildInstanceStatus(0),
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 5),
-                  child: Divider(height: 1, color: Colors.white24),
-                ),
-                buildInstanceStatus(1),
-              ],
-            ),
-          ),
-        );
-      }),
-    ),
-  );
-
   void _updateMpvOutputFps() {
     var label = '-- FPS';
     var droppedFrames = '--';
@@ -423,12 +316,6 @@ ui.PointerDeviceKind? _gesturePointerKind;
   @override
   void initState() {
     super.initState();
-    if (_showPlayerInstanceStatus) {
-      _playerInstanceStatusTimer = Timer.periodic(
-        const Duration(milliseconds: 200),
-        (_) => _playerInstanceStatusRevision.value++,
-      );
-    }
     addObserverMobile(this);
 
     _transformationController = TransformationController();
@@ -592,7 +479,6 @@ ui.PointerDeviceKind? _gesturePointerKind;
     _brightnessListener?.cancel();
     _controlsListener?.cancel();
     _mpvOutputFpsTimer?.cancel();
-    _playerInstanceStatusTimer?.cancel();
     _animationController.dispose();
     _transformationController.dispose();
     _removeDmAction();
@@ -2478,7 +2364,12 @@ if (!isLive)
                 : const SizedBox.shrink();
           }),
 
-        if (_showPlayerInstanceStatus) _playerInstanceStatusOverlay,
+        if (widget.showPlayerInstanceStatusOverlay)
+          PlayerInstanceStatusOverlay(
+            controller: plPlayerController,
+            maxWidth: maxWidth,
+            maxHeight: maxHeight,
+          ),
       ],
       ),
     );
