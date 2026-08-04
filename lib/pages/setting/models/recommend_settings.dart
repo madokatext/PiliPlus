@@ -137,7 +137,7 @@ List<SettingsModel> get recommendSettings => [
   ),
   SwitchModel(
     title: '过滤器也应用于详情页相关视频',
-    subtitle: '其它（如热门视频、搜索等）均不受过滤器影响，无法豁免相关视频中的已关注UP',
+    subtitle: '推荐历史过滤除外；其它（如热门视频、搜索等）均不受过滤器影响，无法豁免相关视频中的已关注UP',
     leading: const Icon(Icons.explore_outlined),
     setKey: SettingBoxKey.applyFilterToRelatedVideos,
     defaultVal: true,
