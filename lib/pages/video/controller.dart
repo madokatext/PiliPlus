@@ -878,7 +878,11 @@ class VideoDetailController extends GetxController
     if (!isPageActive) return;
     final revealCoverOnInit =
         showVideoCover.value && (autoplay ?? _autoPlay.value);
-    Duration? seek = defaultST ?? playedTime;
+    Duration? seek = defaultST;
+    final playedTimeMilliseconds = playedTime?.inMilliseconds;
+    if (seek == null && playedTimeMilliseconds != null) {
+      seek = _resumePosition(playedTimeMilliseconds);
+    }
     if (isInteractiveVideo) {
       seek ??= Duration.zero;
     } else if (seek == null || seek == Duration.zero) {
