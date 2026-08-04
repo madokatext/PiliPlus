@@ -1928,8 +1928,6 @@ backgroundColor: gestureProgressColor.withValues(alpha: 0.24),
             ),
           ),
 
-        if (_showPlayerInstanceStatus) _playerInstanceStatusOverlay,
-
         if (plPlayerController.enableTapDm)
           Obx(
             () {
@@ -2479,6 +2477,8 @@ if (!isLive)
                   )
                 : const SizedBox.shrink();
           }),
+
+        if (_showPlayerInstanceStatus) _playerInstanceStatusOverlay,
       ],
       ),
     );
