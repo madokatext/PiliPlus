@@ -1896,7 +1896,7 @@ backgroundColor: gestureProgressColor.withValues(alpha: 0.24),
                   child: buildLongPressSpeedStyleToast(
   child: Obx(
     () => Text(
-      '${plPlayerController.enableAutoLongPressSpeed ? (plPlayerController.longPressStatus.value ? plPlayerController.lastPlaybackSpeed : plPlayerController.playbackSpeed) * 2 : plPlayerController.longPressSpeed}倍速中',
+      '${plPlayerController.enableAutoLongPressSpeed ? (plPlayerController.longPressStatus.value ? plPlayerController.lastPlaybackSpeed : plPlayerController.playbackSpeed) * 2 : plPlayerController.longPressSpeed} 倍速中',
       style: longPressSpeedToastTextStyle,
     ),
   ),
