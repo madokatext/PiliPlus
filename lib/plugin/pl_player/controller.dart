@@ -200,7 +200,7 @@ class PlPlayerController with BlockConfigMixin {
   final RxBool isWaitingForInitialPlay = false.obs;
 
   bool get shouldShowBufferingOverlay =>
-      dataStatus.loading ||
+      (_autoPlay && dataStatus.loading) ||
       isWaitingForInitialPlay.value ||
       (isBuffering.value && playerStatus.isPlaying);
 
@@ -1371,7 +1371,6 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
 
     _initialPlayGate = gate;
     _lastInitialPlayGate = null;
-    isWaitingForInitialPlay.value = true;
     unawaited(
       firstFrameRendered.then<void>(
         (_) => gate.firstFrameReady = true,
@@ -1430,6 +1429,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
   ) async {
     final player = _videoPlayerController;
     if (player == null || !identical(gate.player, player)) return;
+    isWaitingForInitialPlay.value = true;
 
     final readyDeadline = DateTime.now().add(const Duration(seconds: 15));
     final firstFrameReady = await Future.any<bool>([
