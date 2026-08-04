@@ -78,18 +78,89 @@ typedef _PlayerPair = ({
   StreamSubscription<PlayerLog>? initializationLogSubscription,
 });
 
+enum PlayerGateConditionState { met, waiting, bypassed, failed }
+
+class PlayerGateConditionStatus {
+  const PlayerGateConditionStatus({
+    required this.label,
+    required this.state,
+    this.detail,
+  });
+
+  final String label;
+  final PlayerGateConditionState state;
+  final String? detail;
+}
+
+class PlayerInstanceGateStatus {
+  const PlayerInstanceGateStatus({
+    required this.name,
+    required this.playerState,
+    required this.gateState,
+    this.conditions = const [],
+  });
+
+  final String name;
+  final String playerState;
+  final String gateState;
+  final List<PlayerGateConditionStatus> conditions;
+}
+
 class _InitialPlayGate {
   _InitialPlayGate({
     required this.generation,
     required this.player,
     required this.firstFrameRendered,
+    required this.isCurrentDataSource,
   });
 
   final int generation;
   final Player player;
   final Future<void> firstFrameRendered;
+  final bool Function() isCurrentDataSource;
   final Completer<void> canceled = Completer<void>();
   bool active = true;
+  bool firstFrameReady = false;
+  bool firstFrameFailed = false;
+  bool released = false;
+  bool outputReady = false;
+  bool dataSourceCurrent = true;
+  bool generationCurrent = true;
+  bool mainInstanceCurrent = true;
+}
+
+class _StandbyPlayerGateDiagnostics {
+  _StandbyPlayerGateDiagnostics({
+    required this.player,
+    required this.outputRectRequired,
+  });
+
+  final Player player;
+  final bool outputRectRequired;
+  String phase = '创建实例';
+  bool switchCurrent = true;
+  bool firstFrameRendered = false;
+  bool firstFrameFailed = false;
+  bool outputRectMatched = false;
+  bool renderedAfterOutputConfiguration = false;
+  bool mediaDimensionsReady = false;
+  bool notBuffering = false;
+  bool notPausedForCache = false;
+  bool prebufferReady = false;
+  double prebufferedAhead = 0;
+  double requiredPrebuffer = 0;
+  bool alignmentBufferReady = false;
+  double alignmentBufferedAhead = 0;
+  double requiredAlignmentBuffer = 0;
+  bool clockAligned = false;
+  int clockDrift = 0;
+  int allowedClockDrift = 0;
+  bool forceHandoff = false;
+  bool forceDeadlineReached = false;
+  bool mediaRecognized = false;
+  bool activeMediaNeverLoaded = false;
+  bool topOutputPresented = false;
+  bool standbyOnlyPresented = false;
 }
 
 class PlPlayerController with BlockConfigMixin {
@@ -97,6 +168,8 @@ class PlPlayerController with BlockConfigMixin {
   VideoController? _videoController;
   Future<Player>? _playerInitTask;
   _InitialPlayGate? _initialPlayGate;
+  _InitialPlayGate? _lastInitialPlayGate;
+  _StandbyPlayerGateDiagnostics? _promotedPlayerGateDiagnostics;
   int? _initialPlayReleaseGeneration;
   Timer? _mediaRecoveryTimer;
   bool _mediaRecoveryRunning = false;
@@ -172,6 +245,7 @@ final RxInt seekStartPosition = 0.obs;
   int? _pendingVideoOutputRevision;
   VideoController? _pendingVideoOutputController;
   Completer<void>? _pendingVideoOutputPresentation;
+  _StandbyPlayerGateDiagnostics? _standbyPlayerGateDiagnostics;
   final RxInt videoOutputRevision = 0.obs;
   final RxBool videoPlayerSwitching = false.obs;
 
@@ -360,6 +434,213 @@ final RxInt seekStartPosition = 0.obs;
 
   String? get standbyPlayerCdnName =>
       _standbyNetworkSource?.cdnService?.name;
+
+  List<PlayerInstanceGateStatus> get playerInstanceGateStatuses => [
+    _mainInstanceGateStatus,
+    _standbyInstanceGateStatus,
+  ];
+
+  String _playerStateLabel(Player? player) {
+    if (player == null) return '未创建';
+    try {
+      final state = player.state;
+      final pause = player.getProperty('pause') == 'yes'
+          ? 'pause=yes'
+          : 'pause=no';
+      if (state.completed) return '已结束 · $pause';
+      if (state.buffering) return '缓冲中 · $pause';
+      return '${state.playing ? '播放中' : '已暂停'} · $pause';
+    } catch (_) {
+      return '状态不可用';
+    }
+  }
+
+  PlayerGateConditionStatus _condition(
+    String label,
+    bool met, {
+    String? detail,
+    bool bypassed = false,
+    bool failed = false,
+  }) => PlayerGateConditionStatus(
+    label: label,
+    detail: detail,
+    state: failed
+        ? .failed
+        : bypassed
+        ? .bypassed
+        : met
+        ? .met
+        : .waiting,
+  );
+
+  PlayerInstanceGateStatus get _mainInstanceGateStatus {
+    final promoted = _promotedPlayerGateDiagnostics;
+    if (promoted != null && identical(promoted.player, _videoPlayerController)) {
+      return _standbyGateStatus(promoted, name: '主实例', promoted: true);
+    }
+
+    final gate = _initialPlayGate ?? _lastInitialPlayGate;
+    if (gate == null || !identical(gate.player, _videoPlayerController)) {
+      return PlayerInstanceGateStatus(
+        name: '主实例',
+        playerState: _playerStateLabel(_videoPlayerController),
+        gateState: _shouldGateInitialPlay
+            ? '暂无起播门控'
+            : '当前播放模式无需起播门控',
+      );
+    }
+
+    var currentVo = '';
+    try {
+      currentVo = gate.player.getProperty('current-vo').trim().toLowerCase();
+    } catch (_) {}
+    gate
+      ..outputReady = currentVo.isNotEmpty && currentVo != 'null'
+      ..dataSourceCurrent = gate.isCurrentDataSource()
+      ..generationCurrent = gate.generation == _dataSourceGeneration
+      ..mainInstanceCurrent = identical(gate.player, _videoPlayerController);
+
+    return PlayerInstanceGateStatus(
+      name: '主实例',
+      playerState: _playerStateLabel(_videoPlayerController),
+      gateState: gate.active
+          ? '起播暂停门控中'
+          : gate.released
+          ? '起播暂停门控已解除'
+          : '起播暂停门控已取消',
+      conditions: [
+        _condition(
+          '首帧已渲染',
+          gate.firstFrameReady,
+          failed: gate.firstFrameFailed,
+        ),
+        _condition(
+          'mpv 视频输出已初始化',
+          gate.outputReady,
+          detail: currentVo.isEmpty || currentVo == 'null'
+              ? 'current-vo=--'
+              : currentVo,
+        ),
+        _condition('数据源仍有效', gate.dataSourceCurrent),
+        _condition('数据源代次一致', gate.generationCurrent),
+        _condition('仍为当前主实例', gate.mainInstanceCurrent),
+      ],
+    );
+  }
+
+  PlayerInstanceGateStatus get _standbyInstanceGateStatus {
+    final diagnostics = _standbyPlayerGateDiagnostics;
+    if (diagnostics == null ||
+        !identical(diagnostics.player, _standbyVideoPlayerController)) {
+      return PlayerInstanceGateStatus(
+        name: '备实例',
+        playerState: _playerStateLabel(_standbyVideoPlayerController),
+        gateState: '未创建，无交接暂停门控',
+      );
+    }
+    return _standbyGateStatus(diagnostics, name: '备实例');
+  }
+
+  PlayerInstanceGateStatus _standbyGateStatus(
+    _StandbyPlayerGateDiagnostics diagnostics, {
+    required String name,
+    bool promoted = false,
+  }) {
+    try {
+      final state = diagnostics.player.state;
+      diagnostics
+        ..mediaDimensionsReady = state.width > 0 && state.height > 0
+        ..notBuffering = !state.buffering
+        ..notPausedForCache =
+            diagnostics.player.getProperty('paused-for-cache') != 'yes'
+        ..mediaRecognized =
+            diagnostics.firstFrameRendered ||
+            (state.width > 0 && state.height > 0) ||
+            state.duration > Duration.zero;
+    } catch (_) {}
+    final strictBypassed = diagnostics.forceHandoff;
+    final alignmentBypassed =
+        strictBypassed || diagnostics.activeMediaNeverLoaded;
+    return PlayerInstanceGateStatus(
+      name: name,
+      playerState: _playerStateLabel(diagnostics.player),
+      gateState: promoted ? '交接暂停门控已解除' : diagnostics.phase,
+      conditions: [
+        _condition('切换任务仍有效', diagnostics.switchCurrent),
+        _condition(
+          '首帧已渲染',
+          diagnostics.firstFrameRendered,
+          bypassed:
+              strictBypassed && !diagnostics.firstFrameRendered,
+          failed: diagnostics.firstFrameFailed,
+        ),
+        _condition(
+          '无首帧渲染错误',
+          !diagnostics.firstFrameFailed,
+          failed: diagnostics.firstFrameFailed,
+        ),
+        _condition(
+          '输出尺寸匹配',
+          diagnostics.outputRectMatched,
+          bypassed:
+              strictBypassed || !diagnostics.outputRectRequired,
+        ),
+        _condition(
+          '尺寸配置后已有新帧',
+          diagnostics.renderedAfterOutputConfiguration,
+          bypassed:
+              strictBypassed || !diagnostics.outputRectRequired,
+        ),
+        _condition(
+          '已识别媒体尺寸',
+          diagnostics.mediaDimensionsReady,
+          bypassed: strictBypassed,
+        ),
+        _condition(
+          '未处于 buffering',
+          diagnostics.notBuffering,
+          bypassed: strictBypassed,
+        ),
+        _condition(
+          '未被 cache 暂停',
+          diagnostics.notPausedForCache,
+          bypassed: strictBypassed,
+        ),
+        _condition(
+          '严格前向缓存达标',
+          diagnostics.prebufferReady,
+          bypassed: strictBypassed,
+          detail:
+              '${diagnostics.prebufferedAhead.toStringAsFixed(2)}/${diagnostics.requiredPrebuffer.toStringAsFixed(2)}s',
+        ),
+        _condition(
+          '交接缓存达标',
+          diagnostics.alignmentBufferReady,
+          bypassed: alignmentBypassed,
+          detail:
+              '${diagnostics.alignmentBufferedAhead.toStringAsFixed(2)}/${diagnostics.requiredAlignmentBuffer.toStringAsFixed(2)}s',
+        ),
+        _condition(
+          '播放时钟同步',
+          diagnostics.clockAligned,
+          bypassed: alignmentBypassed,
+          detail: '${diagnostics.clockDrift}/${diagnostics.allowedClockDrift}ms',
+        ),
+        _condition(
+          '强制接管超时已到',
+          diagnostics.forceDeadlineReached,
+          bypassed: !diagnostics.forceHandoff,
+        ),
+        _condition(
+          '强制接管已识别媒体',
+          diagnostics.mediaRecognized,
+          bypassed: !diagnostics.forceHandoff,
+        ),
+        _condition('备用纹理已置顶呈现', diagnostics.topOutputPresented),
+        _condition('已仅呈现备用纹理', diagnostics.standbyOnlyPresented),
+      ],
+    );
+  }
 
   bool isMuted = false;
 
@@ -887,6 +1168,8 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
 
     final dataSourceGeneration = ++_dataSourceGeneration;
     await _cancelInitialPlayGate();
+    _lastInitialPlayGate = null;
+    _promotedPlayerGateDiagnostics = null;
     bool isCurrentDataSource() =>
         dataSourceGeneration == _dataSourceGeneration &&
         (videoPageTag == null || isVideoPageActive(videoPageTag));
@@ -1077,19 +1360,28 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     Player player,
     int generation,
     Future<void> firstFrameRendered,
+    bool Function() isCurrentDataSource,
   ) {
     final gate = _InitialPlayGate(
       generation: generation,
       player: player,
       firstFrameRendered: firstFrameRendered,
+      isCurrentDataSource: isCurrentDataSource,
     );
 
     _initialPlayGate = gate;
+    _lastInitialPlayGate = null;
     isWaitingForInitialPlay.value = true;
+    unawaited(
+      firstFrameRendered.then<void>(
+        (_) => gate.firstFrameReady = true,
+        onError: (_) => gate.firstFrameFailed = true,
+      ),
+    );
     try {
       _holdInitialPlay(gate);
     } catch (_) {
-      _finishInitialPlayGate(gate);
+      _finishInitialPlayGate(gate, released: false);
       rethrow;
     }
     return gate;
@@ -1118,7 +1410,8 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
           .getProperty('current-vo')
           .trim()
           .toLowerCase();
-      if (currentVo.isNotEmpty && currentVo != 'null') {
+      gate.outputReady = currentVo.isNotEmpty && currentVo != 'null';
+      if (gate.outputReady) {
         return true;
       }
 
@@ -1141,8 +1434,14 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     final readyDeadline = DateTime.now().add(const Duration(seconds: 15));
     final firstFrameReady = await Future.any<bool>([
       gate.firstFrameRendered.then(
-        (_) => true,
-        onError: (_) => false,
+        (_) {
+          gate.firstFrameReady = true;
+          return true;
+        },
+        onError: (_) {
+          gate.firstFrameFailed = true;
+          return false;
+        },
       ),
       gate.canceled.future.then((_) => false),
       Future<bool>.delayed(const Duration(seconds: 15), () => false),
@@ -1184,14 +1483,19 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     }
   }
 
-  void _finishInitialPlayGate(_InitialPlayGate gate) {
+  void _finishInitialPlayGate(
+    _InitialPlayGate gate, {
+    bool released = true,
+  }) {
     if (!gate.active) return;
     gate.active = false;
+    gate.released = released;
     if (!gate.canceled.isCompleted) {
       gate.canceled.complete();
     }
     if (identical(_initialPlayGate, gate)) {
       _initialPlayGate = null;
+      _lastInitialPlayGate = gate;
       isWaitingForInitialPlay.value = false;
     }
   }
@@ -1211,6 +1515,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       isWaitingForInitialPlay.value = false;
     }
     gate.active = false;
+    _lastInitialPlayGate = gate;
     if (!gate.canceled.isCompleted) {
       gate.canceled.complete();
     }
@@ -1231,6 +1536,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
   void _discardInitialPlayGate() {
     final gate = _initialPlayGate;
     _initialPlayGate = null;
+    _lastInitialPlayGate = null;
     isWaitingForInitialPlay.value = false;
     if (gate == null || !gate.active) return;
     gate.active = false;
@@ -1473,6 +1779,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
               player!,
               dataSourceGeneration,
               videoController.armWaitUntilFirstFrameRendered(),
+              isCurrentDataSource,
             );
           }
         },
@@ -1485,7 +1792,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       return gate;
     } catch (_) {
       if (gate case final gate?) {
-        _finishInitialPlayGate(gate);
+        _finishInitialPlayGate(gate, released: false);
       }
       rethrow;
     }
@@ -2056,6 +2363,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     _standbyVideoPlayerController = null;
     _standbyVideoController = null;
     _standbyNetworkSource = null;
+    _standbyPlayerGateDiagnostics = null;
     _standbyVideoOnTop = false;
     _standbyVideoOnly = false;
     videoPlayerSwitching.value = false;
@@ -2178,6 +2486,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     var committed = false;
     var activeListenersDetached = false;
     var resumeActiveOnFailure = false;
+    _StandbyPlayerGateDiagnostics? diagnostics;
     StreamSubscription<PlayerLog>? standbyInitializationLogSubscription;
 
     try {
@@ -2197,6 +2506,13 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       _standbyVideoPlayerController = standbyPlayer;
       _standbyVideoController = standbyController;
       _standbyNetworkSource = targetSource;
+      final requireConfiguredAndroidOutput =
+          Platform.isAndroid && Pref.useMpvVideoScaling;
+      diagnostics = _StandbyPlayerGateDiagnostics(
+        player: standbyPlayer,
+        outputRectRequired: requireConfiguredAndroidOutput,
+      )..activeMediaNeverLoaded = activeMediaNeverLoaded;
+      _standbyPlayerGateDiagnostics = diagnostics;
       standbyRegistered = true;
       _bumpVideoOutputRevision();
 
@@ -2249,8 +2565,7 @@ var forceHandoff = false;
 
 var firstFrameRendered = false;
       var firstFrameFailed = false;
-      final requireConfiguredAndroidOutput =
-          Platform.isAndroid && Pref.useMpvVideoScaling;
+      final gateDiagnostics = diagnostics!;
       Rect? configuredOutputRect;
       Duration? positionWhenOutputConfigured;
       var renderedAfterOutputConfiguration =
@@ -2258,6 +2573,9 @@ var firstFrameRendered = false;
 
       bool standbyOutputReady() {
         if (!requireConfiguredAndroidOutput) {
+          gateDiagnostics
+            ..outputRectMatched = true
+            ..renderedAfterOutputConfiguration = true;
           return true;
         }
 
@@ -2273,6 +2591,9 @@ var firstFrameRendered = false;
           configuredOutputRect = null;
           positionWhenOutputConfigured = null;
           renderedAfterOutputConfiguration = false;
+          gateDiagnostics
+            ..outputRectMatched = false
+            ..renderedAfterOutputConfiguration = false;
           return false;
         }
 
@@ -2285,14 +2606,19 @@ var firstFrameRendered = false;
           configuredOutputRect = null;
           positionWhenOutputConfigured = null;
           renderedAfterOutputConfiguration = false;
+          gateDiagnostics
+            ..outputRectMatched = false
+            ..renderedAfterOutputConfiguration = false;
           return false;
         }
+        gateDiagnostics.outputRectMatched = true;
 
         if (configuredOutputRect != targetRect ||
             positionWhenOutputConfigured == null) {
           configuredOutputRect = targetRect;
           positionWhenOutputConfigured = standbyPlayer.state.position;
           renderedAfterOutputConfiguration = false;
+          gateDiagnostics.renderedAfterOutputConfiguration = false;
           return false;
         }
 
@@ -2303,24 +2629,39 @@ var firstFrameRendered = false;
                   .abs();
           renderedAfterOutputConfiguration = progress >= 20;
         }
+        gateDiagnostics.renderedAfterOutputConfiguration =
+            renderedAfterOutputConfiguration;
         return renderedAfterOutputConfiguration;
       }
 
       unawaited(
         standbyController.waitUntilFirstFrameRendered.then<void>(
-          (_) => firstFrameRendered = true,
+          (_) {
+            firstFrameRendered = true;
+            gateDiagnostics.firstFrameRendered = true;
+          },
           onError: (_) {
             firstFrameFailed = true;
+            gateDiagnostics.firstFrameFailed = true;
           },
         ),
       );
 bool canForceHandoff() {
   final state = standbyPlayer.state;
 
+  gateDiagnostics
+    ..switchCurrent = isCurrentSwitch()
+    ..mediaDimensionsReady = state.width > 0 && state.height > 0
+    ..notBuffering = !state.buffering
+    ..notPausedForCache =
+        standbyPlayer.getProperty('paused-for-cache') != 'yes'
+    ..mediaRecognized =
+        firstFrameRendered ||
+        (state.width > 0 && state.height > 0) ||
+        state.duration > Duration.zero;
+
   return !firstFrameFailed &&
-      (firstFrameRendered ||
-          (state.width > 0 && state.height > 0) ||
-          state.duration > Duration.zero);
+      gateDiagnostics.mediaRecognized;
 }
       final configuredWait =
           double.tryParse(activePlayer.getProperty('cache-pause-wait')) ?? 1.0;
@@ -2347,6 +2688,7 @@ bool canForceHandoff() {
       }
 
       var bufferReady = false;
+      gateDiagnostics.phase = '等待严格预缓冲门控';
 
 while (isCurrentSwitch()) {
   final now = DateTime.now();
@@ -2360,13 +2702,17 @@ while (isCurrentSwitch()) {
   // 到达强制接管时间后，必须先确认备用实例已经识别到媒体。
 // 如果连首帧、分辨率和时长都没有获得，说明它可能根本没有打开成功，
 // 此时保留仍能播放的旧实例。
-if (forceDeadline != null &&
+  if (forceDeadline != null &&
     !now.isBefore(forceDeadline)) {
   if (!canForceHandoff()) {
     return false;
   }
 
   forceHandoff = true;
+  gateDiagnostics
+    ..forceHandoff = true
+    ..forceDeadlineReached = true
+    ..phase = '强制接管：等待媒体识别';
   break;
 }
 
@@ -2380,6 +2726,17 @@ if (forceDeadline != null &&
   final bufferedAhead =
       (standbyPlayer.state.buffer - target).inMilliseconds /
       Duration.millisecondsPerSecond;
+  final requiredPrebuffer = requiredBufferAt(target);
+  final state = standbyPlayer.state;
+  gateDiagnostics
+    ..switchCurrent = isCurrentSwitch()
+    ..mediaDimensionsReady = state.width > 0 && state.height > 0
+    ..notBuffering = !state.buffering
+    ..notPausedForCache =
+        standbyPlayer.getProperty('paused-for-cache') != 'yes'
+    ..prebufferedAhead = bufferedAhead
+    ..requiredPrebuffer = requiredPrebuffer
+    ..prebufferReady = bufferedAhead >= requiredPrebuffer;
 
   if (firstFrameRendered &&
       standbyOutputReady() &&
@@ -2387,7 +2744,7 @@ if (forceDeadline != null &&
       standbyPlayer.state.height > 0 &&
       !standbyPlayer.state.buffering &&
       standbyPlayer.getProperty('paused-for-cache') != 'yes' &&
-      bufferedAhead >= requiredBufferAt(target)) {
+      gateDiagnostics.prebufferReady) {
     bufferReady = true;
     break;
   }
@@ -2458,6 +2815,9 @@ if ((!bufferReady && !forceHandoff) ||
     );
 
 var aligned = forceHandoff || activeMediaNeverLoaded;
+      gateDiagnostics
+        ..forceHandoff = forceHandoff
+        ..phase = aligned ? '交接门控已满足' : '等待时钟与交接缓存门控';
 
       while (!forceHandoff &&
     !activeMediaNeverLoaded &&
@@ -2474,11 +2834,27 @@ var aligned = forceHandoff || activeMediaNeverLoaded;
         // media_kit/mpv 的 position 状态并不是逐帧更新。
         // 播放状态下使用 450 ms 容差，避免状态采样延迟导致永远不交接。
         final allowedDrift = shouldPlay ? 450 : 150;
+        final requiredAlignmentBuffer = min(
+          0.25,
+          requiredBufferAt(target),
+        );
+        final state = standbyPlayer.state;
+        gateDiagnostics
+          ..switchCurrent = isCurrentSwitch()
+          ..notBuffering = !state.buffering
+          ..notPausedForCache =
+              standbyPlayer.getProperty('paused-for-cache') != 'yes'
+          ..alignmentBufferedAhead = bufferedAhead
+          ..requiredAlignmentBuffer = requiredAlignmentBuffer
+          ..alignmentBufferReady = bufferedAhead >= requiredAlignmentBuffer
+          ..clockDrift = drift
+          ..allowedClockDrift = allowedDrift
+          ..clockAligned = drift <= allowedDrift;
 
         if (!standbyPlayer.state.buffering &&
             standbyPlayer.getProperty('paused-for-cache') != 'yes' &&
             drift <= allowedDrift &&
-            bufferedAhead >= min(0.25, requiredBufferAt(target))) {
+            gateDiagnostics.alignmentBufferReady) {
           aligned = true;
           break;
         }
@@ -2499,6 +2875,9 @@ if (!aligned &&
     forceDeadline != null &&
     !DateTime.now().isBefore(forceDeadline)) {
   forceHandoff = true;
+  gateDiagnostics
+    ..forceHandoff = true
+    ..forceDeadlineReached = true;
   aligned = true;
 }
       if (!aligned || !isCurrentSwitch()) {
@@ -2538,6 +2917,15 @@ if (!aligned &&
               .abs();
 
       final allowedHandoffDrift = handoffPlaying ? 450 : 150;
+      gateDiagnostics
+        ..phase = '最终复检交接门控'
+        ..switchCurrent = isCurrentSwitch()
+        ..notBuffering = !standbyPlayer.state.buffering
+        ..notPausedForCache =
+            standbyPlayer.getProperty('paused-for-cache') != 'yes'
+        ..clockDrift = handoffDrift
+        ..allowedClockDrift = allowedHandoffDrift
+        ..clockAligned = handoffDrift <= allowedHandoffDrift;
 
       if (!forceHandoff &&
     (standbyPlayer.state.buffering ||
@@ -2568,6 +2956,7 @@ if (!isCurrentSwitch() ||
         standbyController,
         cancellation,
       );
+      gateDiagnostics.topOutputPresented = standbyPresented;
       if (!standbyPresented ||
           firstFrameFailed ||
           !isCurrentSwitch()) {
@@ -2586,6 +2975,7 @@ if (!isCurrentSwitch() ||
         standbyController,
         cancellation,
       );
+      gateDiagnostics.standbyOnlyPresented = committedOutputPresented;
       if (!committedOutputPresented ||
           firstFrameFailed ||
           !isCurrentSwitch()) {
@@ -2597,6 +2987,9 @@ if (!isCurrentSwitch() ||
       _standbyVideoPlayerController = null;
       _standbyVideoController = null;
       _standbyNetworkSource = null;
+      _standbyPlayerGateDiagnostics = null;
+      _promotedPlayerGateDiagnostics = gateDiagnostics
+        ..phase = '交接暂停门控已解除';
       _standbyVideoOnly = false;
       _videoPlayerController = standbyPlayer;
       _videoController = standbyController;
@@ -2693,6 +3086,11 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
     } finally {
       await standbyInitializationLogSubscription?.cancel();
       if (!committed && standbyCreated) {
+        if (diagnostics case final diagnostics?) {
+          diagnostics
+            ..switchCurrent = isCurrentSwitch()
+            ..phase = '交接暂停门控未解除';
+        }
         if (mpvLogSession != null) {
           MpvLogService.detachPlayer(
             standbyPlayer,
@@ -2703,6 +3101,7 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
           _standbyVideoPlayerController = null;
           _standbyVideoController = null;
           _standbyNetworkSource = null;
+          _standbyPlayerGateDiagnostics = null;
           _standbyVideoOnTop = false;
           _standbyVideoOnly = false;
           final removalRevision = _bumpVideoOutputRevision();
