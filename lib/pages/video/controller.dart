@@ -1001,7 +1001,7 @@ class VideoDetailController extends GetxController
       return;
     }
     isQuerying = true;
-    await _restoreSteinHistoryIfNeeded();
+    final resumeSteinHistory = await _restoreSteinHistoryIfNeeded();
     if (!isPageActive) {
       isQuerying = false;
       return;
@@ -1071,7 +1071,9 @@ class VideoDetailController extends GetxController
             milliseconds: (duration - 5000).clamp(0, duration).toInt(),
           );
         } else if (isInteractiveVideo) {
-          defaultST = Duration.zero;
+          defaultST = resumeSteinHistory
+              ? _resumeSteinPosition(data.lastPlayTime)
+              : Duration.zero;
         } else if (progress != null) {
           defaultST = Duration(milliseconds: progress);
         } else {
@@ -1286,19 +1288,19 @@ class VideoDetailController extends GetxController
   bool _seekSteinProgressToEnd = false;
   bool _selectingSteinChoice = false;
 
-  Future<void> _restoreSteinHistoryIfNeeded() async {
-    if (graphVersion != null) return;
+  Future<bool> _restoreSteinHistoryIfNeeded() async {
+    if (graphVersion != null) return false;
 
     try {
       final introCtr = Get.find<UgcIntroController>(tag: heroTag);
-      if (!introCtr.videoDetail.value.hasInteractiveVideoLabel) return;
+      if (!introCtr.videoDetail.value.hasInteractiveVideoLabel) return false;
       isInteractiveVideo = true;
 
       final res = await VideoHttp.playInfo(bvid: bvid, cid: cid.value);
       if (res case Success(:final response)) {
         final interaction = response.interaction;
         graphVersion = interaction?.graphVersion;
-        if (graphVersion == null) return;
+        if (graphVersion == null) return false;
 
         final edgeInfo = await getSteinEdgeInfo();
         final historyNode = interaction?.historyNode;
@@ -1319,10 +1321,28 @@ class VideoDetailController extends GetxController
             Get.find<UgcIntroController>(tag: heroTag).cid.value = historyCid;
           } catch (_) {}
         }
+        return true;
       }
     } catch (e) {
       if (kDebugMode) debugPrint('_restoreSteinHistoryIfNeeded: $e');
     }
+    return false;
+  }
+
+  Duration _resumeSteinPosition(int progress) {
+    if (progress <= 0) return Duration.zero;
+
+    final duration = data.timeLength;
+    if (duration == null || duration <= 0) {
+      return Duration(milliseconds: progress);
+    }
+
+    // Interactive progress is commonly saved at the choice near EOF. Keep
+    // enough video before it for the player and choice overlay to initialize.
+    final latestSafePosition = (duration - 5000).clamp(0, duration).toInt();
+    return Duration(
+      milliseconds: progress.clamp(0, latestSafePosition).toInt(),
+    );
   }
 
   Future<EdgeInfoData?> getSteinEdgeInfo([int? edgeId]) async {
