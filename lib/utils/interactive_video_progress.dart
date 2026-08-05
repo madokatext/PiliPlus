@@ -58,13 +58,11 @@ class InteractiveVideoProgressEntry {
     required this.edgeId,
     required this.cid,
     this.title,
-    this.choicePositionMs,
   });
 
   final int edgeId;
   final int cid;
   final String? title;
-  final int? choicePositionMs;
 
   StoryList toStory({required int cursor, required bool isCurrent}) =>
       StoryList(
@@ -79,7 +77,6 @@ class InteractiveVideoProgressEntry {
     'edgeId': edgeId,
     'cid': cid,
     if (title != null) 'title': title!,
-    if (choicePositionMs != null) 'choicePositionMs': choicePositionMs!,
   };
 
   static InteractiveVideoProgressEntry? fromJson(Object? value) {
@@ -87,15 +84,11 @@ class InteractiveVideoProgressEntry {
     final edgeId = value['edgeId'];
     final cid = value['cid'];
     final title = value['title'];
-    final choicePositionMs = value['choicePositionMs'];
     if (edgeId is! int || cid is! int || cid == 0) return null;
     return InteractiveVideoProgressEntry(
       edgeId: edgeId,
       cid: cid,
       title: title is String && title.isNotEmpty ? title : null,
-      choicePositionMs: choicePositionMs is int && choicePositionMs >= 0
-          ? choicePositionMs
-          : null,
     );
   }
 }

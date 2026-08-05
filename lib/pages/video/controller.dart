@@ -1000,14 +1000,10 @@ class VideoDetailController extends GetxController
     }
     if (isQuerying) return;
     isQuerying = true;
-    final resumeSteinProgress = _restoreLocalSteinProgressIfNeeded();
+    _restoreLocalSteinProgressIfNeeded();
     if (!isPageActive) {
       isQuerying = false;
       return;
-    }
-    final seekSteinProgressToEnd = !fromReset && _seekSteinProgressToEnd;
-    if (seekSteinProgressToEnd) {
-      _seekSteinProgressToEnd = false;
     }
     if (plPlayerController.enableSponsorBlock && isBlock && !fromReset) {
       querySponsorBlock(bvid: bvid, cid: cid.value);
@@ -1064,10 +1060,7 @@ class VideoDetailController extends GetxController
 
       if (!fromReset) {
         final progress = args.remove('progress');
-        if (seekSteinProgressToEnd || resumeSteinProgress) {
-          defaultST = _steinChoicePosition();
-          _steinSeekPositionMs = null;
-        } else if (isInteractiveVideo) {
+        if (isInteractiveVideo) {
           defaultST = Duration.zero;
         } else if (progress != null) {
           defaultST = Duration(milliseconds: progress);
@@ -1280,53 +1273,32 @@ class VideoDetailController extends GetxController
   EdgeInfoData? steinEdgeInfo;
   late final RxList<StoryList> steinProgressList = <StoryList>[].obs;
   late final RxBool showSteinEdgeInfo = false.obs;
-  bool _seekSteinProgressToEnd = false;
-  int? _steinSeekPositionMs;
   bool _selectingSteinChoice = false;
   bool _steinProgressInitialized = false;
   InteractiveVideoProgress? _localSteinProgress;
 
-  bool _restoreLocalSteinProgressIfNeeded() {
-    if (_steinProgressInitialized || graphVersion != null) return false;
+  void _restoreLocalSteinProgressIfNeeded() {
+    if (_steinProgressInitialized || graphVersion != null) return;
     _steinProgressInitialized = true;
 
     try {
       final introCtr = Get.find<UgcIntroController>(tag: heroTag);
-      if (!introCtr.videoDetail.value.hasInteractiveVideoLabel) return false;
+      if (!introCtr.videoDetail.value.hasInteractiveVideoLabel) return;
       isInteractiveVideo = true;
 
       final progress = InteractiveVideoProgressRepository.get(bvid);
-      if (progress == null) return false;
+      if (progress == null) return;
       _localSteinProgress = progress;
       steinProgressList.assignAll(progress.toStoryList());
 
-      final historyCid = progress.currentEntry.cid;
-      if (historyCid != cid.value) {
-        cid.value = historyCid;
-        introCtr.cid.value = historyCid;
+      final restoredCid = progress.currentEntry.cid;
+      if (restoredCid != cid.value) {
+        cid.value = restoredCid;
+        introCtr.cid.value = restoredCid;
       }
-      return true;
     } catch (e) {
       if (kDebugMode) debugPrint('_restoreLocalSteinProgressIfNeeded: $e');
-      return false;
     }
-  }
-
-  Duration _steinChoicePosition() {
-    final duration = data.timeLength ?? 0;
-    final localProgress = _localSteinProgress;
-    final pendingPosition = _steinSeekPositionMs;
-    var choicePosition = duration;
-    if (pendingPosition != null) {
-      if (pendingPosition >= 0) choicePosition = pendingPosition;
-    } else if (localProgress != null) {
-      choicePosition =
-          localProgress.entries[localProgress.currentIndex].choicePositionMs ??
-          duration;
-    }
-    return Duration(
-      milliseconds: (choicePosition - 5000).clamp(0, duration).toInt(),
-    );
   }
 
   Future<EdgeInfoData?> getSteinEdgeInfo([int? edgeId]) async {
@@ -1371,8 +1343,6 @@ class VideoDetailController extends GetxController
           edgeId: edgeId,
           cid: cid.value,
           title: choice.option,
-          choicePositionMs:
-              edgeInfo.edges?.questions?.firstOrNull?.startTime,
         );
       }
     } catch (e) {
@@ -1386,30 +1356,13 @@ class VideoDetailController extends GetxController
     if (progress.cid == null || progress.edgeId == null) return;
 
     try {
-      _seekSteinProgressToEnd = true;
-      final progressIndex = progress.cursor;
-      final localProgress = _localSteinProgress;
-      if (localProgress != null &&
-          progressIndex != null &&
-          progressIndex >= 0 &&
-          progressIndex < localProgress.entries.length) {
-        _steinSeekPositionMs =
-            localProgress.entries[progressIndex].choicePositionMs ?? -1;
-      }
       final changed = await Get.find<UgcIntroController>(
         tag: heroTag,
       ).onChangeEpisode(progress, isStein: true);
-      if (!changed) {
-        _seekSteinProgressToEnd = false;
-        _steinSeekPositionMs = null;
-        return;
-      }
-      _steinSeekPositionMs = null;
+      if (!changed) return;
       await _setCurrentLocalSteinProgress(progress.cursor);
       await getSteinEdgeInfo(progress.edgeId);
     } catch (e) {
-      _seekSteinProgressToEnd = false;
-      _steinSeekPositionMs = null;
       if (kDebugMode) debugPrint('rewindSteinProgress: $e');
     }
   }
@@ -1418,7 +1371,6 @@ class VideoDetailController extends GetxController
     required int edgeId,
     required int cid,
     String? title,
-    int? choicePositionMs,
   }) async {
     final current = _localSteinProgress;
     final entries = current == null
@@ -1429,7 +1381,6 @@ class VideoDetailController extends GetxController
         edgeId: edgeId,
         cid: cid,
         title: title,
-        choicePositionMs: choicePositionMs,
       ),
     );
     await _saveLocalSteinProgress(
@@ -1675,8 +1626,6 @@ class VideoDetailController extends GetxController
         isInteractiveVideo = false;
         graphVersion = null;
         steinProgressList.clear();
-        _seekSteinProgressToEnd = false;
-        _steinSeekPositionMs = null;
         steinEdgeInfo = null;
         _steinProgressInitialized = false;
         _localSteinProgress = null;
