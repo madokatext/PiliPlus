@@ -1609,6 +1609,11 @@ static int get playerControlDisplayDurationSeconds {
     defaultValue: PlatformUtils.isMobile,
   );
 
+  static bool get showBatteryPercentage => _setting.get(
+    SettingBoxKey.showBatteryPercentage,
+    defaultValue: true,
+  );
+
   static bool get showMpvOutputFps => _setting.get(
     SettingBoxKey.showMpvOutputFps,
     defaultValue: false,

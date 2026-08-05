@@ -130,6 +130,7 @@ mixin TimeBatteryMixin<T extends StatefulWidget> on State<T> {
   late final _battery = Battery();
   late final RxnInt _batteryLevel = RxnInt();
   late final _showBatteryLevel = Pref.showBatteryLevel;
+  late final _showBatteryPercentage = Pref.showBatteryPercentage;
   void getBatteryLevelIfNeeded() {
     if (!_showCurrTime || !_showBatteryLevel) return;
     EasyThrottle.throttle(
@@ -153,13 +154,19 @@ mixin TimeBatteryMixin<T extends StatefulWidget> on State<T> {
               if (batteryLevel == null) {
                 return const SizedBox.shrink();
               }
-              return Text(
-                '$batteryLevel%',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                ),
-              );
+              return _showBatteryPercentage
+                  ? Text(
+                      '$batteryLevel%',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                      ),
+                    )
+                  : Icon(
+                      _batteryIcon(batteryLevel),
+                      color: Colors.white,
+                      size: 16,
+                    );
             },
           ),
           const SizedBox(width: 10),
@@ -177,6 +184,17 @@ mixin TimeBatteryMixin<T extends StatefulWidget> on State<T> {
     }
     return null;
   }
+
+  static IconData _batteryIcon(int level) => switch (level) {
+    <= 0 => Icons.battery_0_bar,
+    <= 15 => Icons.battery_1_bar,
+    <= 30 => Icons.battery_2_bar,
+    <= 45 => Icons.battery_3_bar,
+    <= 60 => Icons.battery_4_bar,
+    <= 75 => Icons.battery_5_bar,
+    <= 90 => Icons.battery_6_bar,
+    _ => Icons.battery_full,
+  };
 }
 
 class HeaderControl extends StatefulWidget {

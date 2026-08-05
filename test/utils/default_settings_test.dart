@@ -18,6 +18,7 @@ void main() {
     expect(defaultSettingValues['danmakuMassiveMode'], isTrue);
     expect(defaultSettingValues['liveDanmakuMassiveMode'], isFalse);
     expect(defaultSettingValues['rememberDanmakuSwitchState'], isFalse);
+    expect(defaultSettingValues['showBatteryPercentage'], isTrue);
     expect(defaultSettingValues['showBufferingInfo'], isTrue);
     expect(defaultVideoValues['cacheVideoFit'], 1);
     expect(defaultSettingValues['recommendHistoryFilterSettings'], {

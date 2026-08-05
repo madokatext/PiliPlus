@@ -138,6 +138,13 @@ if (PlatformUtils.isMobile)
     defaultVal: PlatformUtils.isMobile,
   ),
   const SwitchModel(
+    title: '电池电量显示百分比',
+    subtitle: '关闭后显示竖排电量图标',
+    leading: Icon(Icons.battery_full),
+    setKey: SettingBoxKey.showBatteryPercentage,
+    defaultVal: true,
+  ),
+  const SwitchModel(
     title: '显示 mpv 帧率与丢帧',
     subtitle:
         '帧率：根据最近 10 帧估算的每秒输出画面数；'
