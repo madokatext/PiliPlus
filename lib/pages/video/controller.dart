@@ -34,6 +34,7 @@ import 'package:PiliPlus/models_new/video/video_detail/page.dart';
 import 'package:PiliPlus/models_new/video/video_pbp/data.dart';
 import 'package:PiliPlus/models_new/video/video_play_info/subtitle.dart';
 import 'package:PiliPlus/models_new/video/video_stein_edgeinfo/data.dart';
+import 'package:PiliPlus/models_new/video/video_stein_edgeinfo/story_list.dart';
 import 'package:PiliPlus/pages/audio/view.dart';
 import 'package:PiliPlus/pages/common/publish/publish_route.dart';
 import 'package:PiliPlus/pages/search/widgets/search_text.dart';
@@ -999,6 +1000,10 @@ class VideoDetailController extends GetxController
       return;
     }
     isQuerying = true;
+    final seekSteinProgressToEnd = !fromReset && _seekSteinProgressToEnd;
+    if (seekSteinProgressToEnd) {
+      _seekSteinProgressToEnd = false;
+    }
     if (plPlayerController.enableSponsorBlock && isBlock && !fromReset) {
       querySponsorBlock(bvid: bvid, cid: cid.value);
     }
@@ -1054,7 +1059,12 @@ class VideoDetailController extends GetxController
 
       if (!fromReset) {
         final progress = args.remove('progress');
-        if (isInteractiveVideo) {
+        if (seekSteinProgressToEnd) {
+          final duration = data.timeLength ?? 0;
+          defaultST = Duration(
+            milliseconds: (duration - 5000).clamp(0, duration).toInt(),
+          );
+        } else if (isInteractiveVideo) {
           defaultST = Duration.zero;
         } else if (progress != null) {
           defaultST = Duration(milliseconds: progress);
@@ -1265,7 +1275,9 @@ class VideoDetailController extends GetxController
   bool isInteractiveVideo = false;
   int? graphVersion;
   EdgeInfoData? steinEdgeInfo;
+  late final RxList<StoryList> steinProgressList = <StoryList>[].obs;
   late final RxBool showSteinEdgeInfo = false.obs;
+  bool _seekSteinProgressToEnd = false;
 
   Future<void> getSteinEdgeInfo([int? edgeId]) async {
     steinEdgeInfo = null;
@@ -1279,7 +1291,25 @@ class VideoDetailController extends GetxController
         },
       );
       if (res.data['code'] == 0) {
-        steinEdgeInfo = EdgeInfoData.fromJson(res.data['data']);
+        final edgeInfo = EdgeInfoData.fromJson(res.data['data']);
+        steinEdgeInfo = edgeInfo;
+        final progressEntries = edgeInfo.storyList?.asMap().entries.toList()
+          ?..removeWhere(
+            (entry) => entry.value.cid == null || entry.value.edgeId == null,
+          )
+          ..sort((a, b) {
+            final aCursor = a.value.cursor;
+            final bCursor = b.value.cursor;
+            if (aCursor == null) {
+              return bCursor == null ? a.key.compareTo(b.key) : 1;
+            }
+            if (bCursor == null) return -1;
+            final result = aCursor.compareTo(bCursor);
+            return result == 0 ? a.key.compareTo(b.key) : result;
+          });
+        steinProgressList.assignAll(
+          progressEntries?.map((entry) => entry.value) ?? const <StoryList>[],
+        );
       } else {
         if (kDebugMode) {
           debugPrint('getSteinEdgeInfo error: ${res.data['message']}');
@@ -1287,6 +1317,25 @@ class VideoDetailController extends GetxController
       }
     } catch (e) {
       if (kDebugMode) debugPrint('getSteinEdgeInfo: $e');
+    }
+  }
+
+  Future<void> rewindSteinProgress(StoryList progress) async {
+    if (progress.cid == null || progress.edgeId == null) return;
+
+    try {
+      _seekSteinProgressToEnd = true;
+      final changed = await Get.find<UgcIntroController>(
+        tag: heroTag,
+      ).onChangeEpisode(progress, isStein: true);
+      if (!changed) {
+        _seekSteinProgressToEnd = false;
+        return;
+      }
+      await getSteinEdgeInfo(progress.edgeId);
+    } catch (e) {
+      _seekSteinProgressToEnd = false;
+      if (kDebugMode) debugPrint('rewindSteinProgress: $e');
     }
   }
 
@@ -1497,6 +1546,8 @@ class VideoDetailController extends GetxController
       if (!isStein) {
         isInteractiveVideo = false;
         graphVersion = null;
+        steinProgressList.clear();
+        _seekSteinProgressToEnd = false;
       }
       steinEdgeInfo = null;
       showSteinEdgeInfo.value = false;

@@ -3,6 +3,7 @@ enum BottomControlType {
   pre,
   next,
   time,
+  steinProgress,
   episode,
   fit,
   subtitle,

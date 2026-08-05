@@ -26,6 +26,7 @@ import 'package:PiliPlus/models/common/video/video_quality.dart';
 import 'package:PiliPlus/models/video/play/url.dart';
 import 'package:PiliPlus/models_new/video/video_detail/episode.dart' as ugc;
 import 'package:PiliPlus/models_new/video/video_detail/ugc_season.dart';
+import 'package:PiliPlus/models_new/video/video_stein_edgeinfo/story_list.dart';
 import 'package:PiliPlus/pages/common/common_intro_controller.dart';
 import 'package:PiliPlus/pages/danmaku/danmaku_model.dart';
 import 'package:PiliPlus/pages/live_room/widgets/bottom_control.dart'
@@ -576,6 +577,64 @@ ui.PointerDeviceKind? _gesturePointerKind;
               ),
             ),
 
+      /// 互动视频进度回溯
+      BottomControlType.steinProgress => Obx(
+        () {
+          final progressList = videoDetailController.steinProgressList;
+          if (progressList.isEmpty) {
+            return const SizedBox.shrink();
+          }
+          final currentProgress = progressList.firstWhereOrNull(
+            (item) => item.isCurrent == 1,
+          );
+          final menuMaxWidth = (maxWidth - 32).clamp(112.0, 280.0).toDouble();
+          return PopupMenuButton<StoryList>(
+            tooltip: '进度回溯',
+            requestFocus: false,
+            initialValue: currentProgress ?? progressList.last,
+            color: Colors.black.withValues(alpha: 0.8),
+            constraints: BoxConstraints(
+              minWidth: math.min(160.0, menuMaxWidth),
+              maxWidth: menuMaxWidth,
+              maxHeight: math.max(
+                35.0,
+                maxHeight - controlHeight - 16,
+              ),
+            ),
+            itemBuilder: (context) => progressList
+                .mapIndexed(
+                  (index, item) => PopupMenuItem<StoryList>(
+                    height: 35,
+                    padding: const EdgeInsets.only(left: 30, right: 10),
+                    value: item,
+                    onTap: () => videoDetailController.rewindSteinProgress(
+                      item,
+                    ),
+                    child: Text(
+                      '${index + 1}.${item.title ?? '未命名分段'}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: playerMenuItemTextStyle(
+                        context,
+                        selected: item.isCurrent == 1,
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
+            child: SizedBox(
+              width: widgetWidth,
+              height: controlHeight,
+              child: const Icon(
+                Icons.history,
+                size: 22,
+                color: Colors.white,
+              ),
+            ),
+          );
+        },
+      ),
+
       /// 高能进度条
       BottomControlType.dmChart => Obx(
         () {
@@ -984,6 +1043,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
         isFullScreen || plPlayerController.isDesktopPip || maxWidth >= 500;
     final List<BottomControlType> userSpecifyItemRight = [
       // PlayerBar 会把这一组整体贴右；第一项就是右侧组最左侧按钮。
+      if (isNotFileSource) .steinProgress,
       if (isFullScreen) .danmakuToggle,
       if (isNotFileSource && plPlayerController.showDmChart) .dmChart,
       if (isNotFileSource && plPlayerController.showViewPoints) .viewPoints,
