@@ -1285,9 +1285,13 @@ class VideoDetailController extends GetxController
   bool _seekSteinProgressToEnd = false;
 
   Future<void> _restoreSteinHistoryIfNeeded() async {
-    if (!isInteractiveVideo || graphVersion != null) return;
+    if (graphVersion != null) return;
 
     try {
+      final introCtr = Get.find<UgcIntroController>(tag: heroTag);
+      if (!introCtr.videoDetail.value.hasInteractiveVideoLabel) return;
+      isInteractiveVideo = true;
+
       final res = await VideoHttp.playInfo(bvid: bvid, cid: cid.value);
       if (res case Success(:final response)) {
         final interaction = response.interaction;
@@ -1401,7 +1405,7 @@ class VideoDetailController extends GetxController
       late final introCtr = Get.find<UgcIntroController>(tag: heroTag);
       if (isUgc && graphVersion == null) {
         try {
-          if (introCtr.videoDetail.value.rights?.isSteinGate == 1) {
+          if (introCtr.videoDetail.value.hasInteractiveVideoLabel) {
             isInteractiveVideo = true;
             graphVersion = response.interaction?.graphVersion;
             getSteinEdgeInfo();

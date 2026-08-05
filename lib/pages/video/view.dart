@@ -191,7 +191,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         return;
       }
       videoDetailController.isInteractiveVideo =
-          ugcIntroController.videoDetail.value.rights?.isSteinGate == 1;
+          ugcIntroController.videoDetail.value.hasInteractiveVideoLabel;
     }
 
     await videoDetailController.queryVideoUrl(autoFullScreenFlag: true);

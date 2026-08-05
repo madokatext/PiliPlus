@@ -420,7 +420,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
                 isDark ? colorScheme.onError : colorScheme.onErrorContainer,
               ),
               const TextSpan(text: ' '),
-            ] else if (videoDetail.rights?.isSteinGate == 1) ...[
+            ] else if (videoDetail.hasInteractiveVideoLabel) ...[
               _labelWidget(
                 '互动视频',
                 colorScheme.secondaryContainer,

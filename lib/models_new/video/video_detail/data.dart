@@ -35,6 +35,9 @@ class VideoDetailData {
   String? redirectUrl;
   bool isPageReversed = false;
 
+  bool get hasInteractiveVideoLabel =>
+      isUpowerExclusive != true && rights?.isSteinGate == 1;
+
   VideoDetailData({
     this.bvid,
     this.aid,
