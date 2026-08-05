@@ -25,6 +25,7 @@ import 'package:PiliPlus/pages/dynamics/widgets/vote.dart';
 import 'package:PiliPlus/pages/member/widget/medal_widget.dart';
 import 'package:PiliPlus/pages/save_panel/view.dart';
 import 'package:PiliPlus/pages/video/controller.dart';
+import 'package:PiliPlus/pages/video/reply/widgets/reply_divider.dart';
 import 'package:PiliPlus/pages/video/reply/widgets/zan_grpc.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
@@ -120,12 +121,7 @@ class ReplyItemGrpc extends StatelessWidget {
         mainAxisSize: .min,
         children: [
           child,
-          Divider(
-            indent: 55,
-            endIndent: 15,
-            height: 0.3,
-            color: colorScheme.outline.withValues(alpha: 0.08),
-          ),
+          const ReplyDivider(),
         ],
       );
     }
