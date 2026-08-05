@@ -1740,12 +1740,10 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                                 visualDensity: VisualDensity.compact,
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
-                              onPressed: () {
-                                ugcIntroController.onChangeEpisode(
+                              onPressed: () async {
+                                await videoDetailController.selectSteinChoice(
                                   item,
-                                  isStein: true,
                                 );
-                                videoDetailController.getSteinEdgeInfo(item.id);
                               },
                               child: Text(item.option!),
                             );

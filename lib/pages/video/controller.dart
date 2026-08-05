@@ -33,6 +33,7 @@ import 'package:PiliPlus/models_new/video/video_detail/episode.dart' as ugc;
 import 'package:PiliPlus/models_new/video/video_detail/page.dart';
 import 'package:PiliPlus/models_new/video/video_pbp/data.dart';
 import 'package:PiliPlus/models_new/video/video_play_info/subtitle.dart';
+import 'package:PiliPlus/models_new/video/video_stein_edgeinfo/choice.dart';
 import 'package:PiliPlus/models_new/video/video_stein_edgeinfo/data.dart';
 import 'package:PiliPlus/models_new/video/video_stein_edgeinfo/story_list.dart';
 import 'package:PiliPlus/pages/audio/view.dart';
@@ -1283,6 +1284,7 @@ class VideoDetailController extends GetxController
   late final RxList<StoryList> steinProgressList = <StoryList>[].obs;
   late final RxBool showSteinEdgeInfo = false.obs;
   bool _seekSteinProgressToEnd = false;
+  bool _selectingSteinChoice = false;
 
   Future<void> _restoreSteinHistoryIfNeeded() async {
     if (graphVersion != null) return;
@@ -1300,6 +1302,9 @@ class VideoDetailController extends GetxController
 
         final edgeInfo = await getSteinEdgeInfo();
         final historyNode = interaction?.historyNode;
+        final currentStory = edgeInfo?.storyList?.firstWhereOrNull(
+          (item) => item.isCurrent == 1,
+        );
         StoryList? historyStory;
         if (historyNode?.nodeId case final nodeId?) {
           historyStory = edgeInfo?.storyList?.firstWhereOrNull(
@@ -1307,11 +1312,7 @@ class VideoDetailController extends GetxController
           );
         }
         final historyCid =
-            historyStory?.cid ??
-            historyNode?.cid ??
-            edgeInfo?.storyList
-                ?.firstWhereOrNull((item) => item.isCurrent == 1)
-                ?.cid;
+            currentStory?.cid ?? historyStory?.cid ?? historyNode?.cid;
         if (historyCid != null && historyCid != 0 && historyCid != cid.value) {
           cid.value = historyCid;
           try {
@@ -1365,6 +1366,24 @@ class VideoDetailController extends GetxController
       if (kDebugMode) debugPrint('getSteinEdgeInfo: $e');
     }
     return null;
+  }
+
+  Future<void> selectSteinChoice(Choice choice) async {
+    final edgeId = choice.id;
+    if (_selectingSteinChoice || edgeId == null) return;
+
+    _selectingSteinChoice = true;
+    try {
+      final edgeInfo = await getSteinEdgeInfo(edgeId);
+      if (edgeInfo == null) return;
+      await Get.find<UgcIntroController>(
+        tag: heroTag,
+      ).onChangeEpisode(choice, isStein: true);
+    } catch (e) {
+      if (kDebugMode) debugPrint('selectSteinChoice: $e');
+    } finally {
+      _selectingSteinChoice = false;
+    }
   }
 
   Future<void> rewindSteinProgress(StoryList progress) async {
@@ -1595,8 +1614,8 @@ class VideoDetailController extends GetxController
         graphVersion = null;
         steinProgressList.clear();
         _seekSteinProgressToEnd = false;
+        steinEdgeInfo = null;
       }
-      steinEdgeInfo = null;
       showSteinEdgeInfo.value = false;
     }
   }

@@ -502,8 +502,8 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
         ..onReset(isStein: isStein)
         ..bvid = bvid
         ..aid = aid
-        ..cid.value = cid
-        ..queryVideoUrl();
+        ..cid.value = cid;
+      final queryVideo = videoDetailCtr.queryVideoUrl();
 
       if (this.bvid != bvid) {
         reload = true;
@@ -550,6 +550,9 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
 
       this.cid.value = cid;
       queryOnlineTotal();
+      if (isStein) {
+        await queryVideo;
+      }
       return true;
     } catch (e) {
       if (kDebugMode) debugPrint('ugc onChangeEpisode: $e');
