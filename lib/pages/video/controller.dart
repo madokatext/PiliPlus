@@ -1000,6 +1000,11 @@ class VideoDetailController extends GetxController
       return;
     }
     isQuerying = true;
+    await _restoreSteinHistoryIfNeeded();
+    if (!isPageActive) {
+      isQuerying = false;
+      return;
+    }
     final seekSteinProgressToEnd = !fromReset && _seekSteinProgressToEnd;
     if (seekSteinProgressToEnd) {
       _seekSteinProgressToEnd = false;
@@ -1278,6 +1283,30 @@ class VideoDetailController extends GetxController
   late final RxList<StoryList> steinProgressList = <StoryList>[].obs;
   late final RxBool showSteinEdgeInfo = false.obs;
   bool _seekSteinProgressToEnd = false;
+
+  Future<void> _restoreSteinHistoryIfNeeded() async {
+    if (!isInteractiveVideo || graphVersion != null) return;
+
+    try {
+      final res = await VideoHttp.playInfo(bvid: bvid, cid: cid.value);
+      if (res case Success(:final response)) {
+        final interaction = response.interaction;
+        graphVersion = interaction?.graphVersion;
+        if (graphVersion == null) return;
+
+        final historyCid = interaction?.historyNode?.cid;
+        if (historyCid != null && historyCid != 0 && historyCid != cid.value) {
+          cid.value = historyCid;
+          try {
+            Get.find<UgcIntroController>(tag: heroTag).cid.value = historyCid;
+          } catch (_) {}
+        }
+        unawaited(getSteinEdgeInfo());
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('_restoreSteinHistoryIfNeeded: $e');
+    }
+  }
 
   Future<void> getSteinEdgeInfo([int? edgeId]) async {
     steinEdgeInfo = null;
