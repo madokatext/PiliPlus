@@ -458,6 +458,14 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
     BaseEpisodeItem episode, {
     bool isStein = false,
   }) async {
+    final steinStopwatch = Stopwatch()..start();
+    if (isStein) {
+      videoDetailCtr.addSteinProgressDebugEvent(
+        '分集切换',
+        '收到互动节点：type=${episode.runtimeType}, bvid=${episode.bvid ?? bvid}, '
+            'aid=${episode.aid ?? '待换算'}, cid=${episode.cid ?? '待查询'}',
+      );
+    }
     try {
       final String bvid = episode.bvid ?? this.bvid;
       final int aid = episode.aid ?? IdUtils.bv2av(bvid);
@@ -471,6 +479,13 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
         }
       }
       if (cid == null) {
+        if (isStein) {
+          videoDetailCtr.addSteinProgressDebugEvent(
+            '分集切换',
+            '终止：无法解析目标 CID，耗时=${steinStopwatch.elapsedMilliseconds}ms',
+            level: SteinProgressDebugLevel.error,
+          );
+        }
         return false;
       }
 
@@ -503,6 +518,13 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
         ..bvid = bvid
         ..aid = aid
         ..cid.value = cid;
+      if (isStein) {
+        videoDetailCtr.addSteinProgressDebugEvent(
+          '分集切换',
+          '状态已切换：bvid=$bvid, aid=$aid, cid=$cid；开始串行请求播放地址',
+          level: SteinProgressDebugLevel.success,
+        );
+      }
       final queryVideo = videoDetailCtr.queryVideoUrl();
 
       if (this.bvid != bvid) {
@@ -552,9 +574,22 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
       queryOnlineTotal();
       if (isStein) {
         await queryVideo;
+        videoDetailCtr.addSteinProgressDebugEvent(
+          '分集切换',
+          '播放地址 Future 已结束：cid=$cid, isQuerying=${videoDetailCtr.isQuerying}, '
+              '耗时=${steinStopwatch.elapsedMilliseconds}ms',
+          level: SteinProgressDebugLevel.info,
+        );
       }
       return true;
     } catch (e) {
+      if (isStein) {
+        videoDetailCtr.addSteinProgressDebugEvent(
+          '分集切换',
+          '异常：耗时=${steinStopwatch.elapsedMilliseconds}ms, $e',
+          level: SteinProgressDebugLevel.error,
+        );
+      }
       if (kDebugMode) debugPrint('ugc onChangeEpisode: $e');
       return false;
     }

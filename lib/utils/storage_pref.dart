@@ -1629,6 +1629,11 @@ static int get playerControlDisplayDurationSeconds {
     defaultValue: false,
   );
 
+  static bool get showSteinProgressDebug => _setting.get(
+    SettingBoxKey.showSteinProgressDebug,
+    defaultValue: false,
+  );
+
   static FollowOrderType get followOrderType =>
       FollowOrderType.values[_setting.get(
         SettingBoxKey.followOrderType,

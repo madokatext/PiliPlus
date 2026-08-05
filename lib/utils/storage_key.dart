@@ -41,6 +41,7 @@ abstract final class SettingBoxKey {
       showMpvOutputFps = 'showMpvOutputFps',
       showBufferingInfo = 'showBufferingInfo',
       showPlayerInstanceStatus = 'showPlayerInstanceStatus',
+      showSteinProgressDebug = 'showSteinProgressDebug',
       playerVolume = 'playerVolume',
       maxVolume = 'maxVolume';
 
