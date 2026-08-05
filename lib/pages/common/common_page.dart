@@ -12,6 +12,7 @@ abstract class CommonPageState<T extends StatefulWidget> extends State<T> {
   final _mainController = Get.find<MainController>();
 
   bool get needsCorrection => false;
+  int get maxScrollNotificationDepth => 1;
 
 /// 当前页面中会随 barOffset 改变布局高度的区域实际高度。
 double get collapsibleExtent => Style.topBarHeight;
@@ -44,7 +45,7 @@ double get collapsibleExtent => Style.topBarHeight;
 
   bool onNotificationType1(UserScrollNotification notification) {
   if (!_mainController.useBottomNav ||
-      notification.depth > 1 ||
+      notification.depth > maxScrollNotificationDepth ||
       notification.metrics.axis == .horizontal) {
     return false;
   }
@@ -83,7 +84,7 @@ double _convertScrollDelta(double scrollDelta) {
 }
 bool onNotificationType2(ScrollNotification notification) {
   if (!_mainController.useBottomNav ||
-      notification.depth > 1 ||
+      notification.depth > maxScrollNotificationDepth ||
       notification.metrics.axis == .horizontal) {
     return false;
   }

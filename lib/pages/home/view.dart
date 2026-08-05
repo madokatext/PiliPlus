@@ -2,6 +2,7 @@ import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/custom_height_widget.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart';
+import 'package:PiliPlus/models/common/home_tab_type.dart';
 import 'package:PiliPlus/pages/common/common_page.dart';
 import 'package:PiliPlus/pages/home/controller.dart';
 import 'package:PiliPlus/pages/main/controller.dart';
@@ -28,6 +29,15 @@ class _HomePageState extends CommonPageState<HomePage>
 
   @override
   bool get needsCorrection => _homeController.hideTopBar;
+
+  // 分区右栏的滚动通知会依次穿过分区和主页的两个 TabBarView。
+  @override
+  int get maxScrollNotificationDepth {
+    final index = _homeController.tabController.index;
+    return _homeController.tabs[index] == HomeTabType.rank
+        ? 2
+        : super.maxScrollNotificationDepth;
+  }
 
   @override
   bool get wantKeepAlive => true;
