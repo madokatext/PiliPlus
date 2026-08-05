@@ -1294,21 +1294,33 @@ class VideoDetailController extends GetxController
         graphVersion = interaction?.graphVersion;
         if (graphVersion == null) return;
 
-        final historyCid = interaction?.historyNode?.cid;
+        final edgeInfo = await getSteinEdgeInfo();
+        final historyNode = interaction?.historyNode;
+        StoryList? historyStory;
+        if (historyNode?.nodeId case final nodeId?) {
+          historyStory = edgeInfo?.storyList?.firstWhereOrNull(
+            (item) => item.nodeId == nodeId,
+          );
+        }
+        final historyCid =
+            historyStory?.cid ??
+            historyNode?.cid ??
+            edgeInfo?.storyList
+                ?.firstWhereOrNull((item) => item.isCurrent == 1)
+                ?.cid;
         if (historyCid != null && historyCid != 0 && historyCid != cid.value) {
           cid.value = historyCid;
           try {
             Get.find<UgcIntroController>(tag: heroTag).cid.value = historyCid;
           } catch (_) {}
         }
-        unawaited(getSteinEdgeInfo());
       }
     } catch (e) {
       if (kDebugMode) debugPrint('_restoreSteinHistoryIfNeeded: $e');
     }
   }
 
-  Future<void> getSteinEdgeInfo([int? edgeId]) async {
+  Future<EdgeInfoData?> getSteinEdgeInfo([int? edgeId]) async {
     steinEdgeInfo = null;
     try {
       final res = await Request().get(
@@ -1339,6 +1351,7 @@ class VideoDetailController extends GetxController
         steinProgressList.assignAll(
           progressEntries?.map((entry) => entry.value) ?? const <StoryList>[],
         );
+        return edgeInfo;
       } else {
         if (kDebugMode) {
           debugPrint('getSteinEdgeInfo error: ${res.data['message']}');
@@ -1347,6 +1360,7 @@ class VideoDetailController extends GetxController
     } catch (e) {
       if (kDebugMode) debugPrint('getSteinEdgeInfo: $e');
     }
+    return null;
   }
 
   Future<void> rewindSteinProgress(StoryList progress) async {
