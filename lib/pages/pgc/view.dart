@@ -92,6 +92,10 @@ class _PgcPageState extends State<PgcPage> with AutomaticKeepAliveClientMixin {
                   0,
                   response.indexWhere((item) => item.isToday == 1),
                 );
+                final tabKeys = List<GlobalKey>.generate(
+                  response.length,
+                  (_) => GlobalKey(),
+                );
                 return DefaultTabController(
                   initialIndex: initialIndex,
                   length: response.length,
@@ -100,9 +104,18 @@ class _PgcPageState extends State<PgcPage> with AutomaticKeepAliveClientMixin {
                       Row(
                         children: [
                           const SizedBox(width: 16),
-                          Text(
-                            '追番时间表',
-                            style: theme.textTheme.titleMedium,
+                          Builder(
+                            builder: (context) => GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onDoubleTap: () => _centerTimelineTab(
+                                DefaultTabController.of(context),
+                                tabKeys,
+                              ),
+                              child: Text(
+                                '追番时间表',
+                                style: theme.textTheme.titleMedium,
+                              ),
+                            ),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
@@ -134,9 +147,12 @@ class _PgcPageState extends State<PgcPage> with AutomaticKeepAliveClientMixin {
                                   ).labelStyle?.copyWith(fontSize: 14) ??
                                   const TextStyle(fontSize: 14),
                               dividerColor: Colors.transparent,
-                              tabs: response.map(
-                                (item) {
+                              tabs: List.generate(
+                                response.length,
+                                (index) {
+                                  final item = response[index];
                                   return Tab(
+                                    key: tabKeys[index],
                                     text:
                                         '${item.date} ${item.isToday == 1 ? '今天' : '周${const [
                                                 '一',
@@ -149,7 +165,7 @@ class _PgcPageState extends State<PgcPage> with AutomaticKeepAliveClientMixin {
                                               ][item.dayOfWeek! - 1]}'}',
                                   );
                                 },
-                              ).toList(),
+                              ),
                             ),
                           ),
                         ],
@@ -203,6 +219,23 @@ class _PgcPageState extends State<PgcPage> with AutomaticKeepAliveClientMixin {
       ),
     ),
   };
+
+  void _centerTimelineTab(
+    TabController tabController,
+    List<GlobalKey> tabKeys,
+  ) {
+    final itemContext = tabKeys[tabController.index].currentContext;
+    final renderObject = itemContext?.findRenderObject();
+    if (itemContext == null || renderObject == null) {
+      return;
+    }
+    Scrollable.of(itemContext).position.ensureVisible(
+      renderObject,
+      alignment: 0.5,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOutCubic,
+    );
+  }
 
   List<Widget> _buildRcmd(ThemeData theme) => [
     _buildRcmdTitle(theme),
