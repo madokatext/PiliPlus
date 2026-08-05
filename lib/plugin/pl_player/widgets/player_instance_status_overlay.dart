@@ -33,7 +33,27 @@ class _PlayerInstanceStatusOverlayState
   late final bool _showSteinProgress =
       Pref.showSteinProgressDebug && widget.videoDetailController != null;
   final RxInt _revision = 0.obs;
+  final ScrollController _steinLogScrollController = ScrollController();
+  SteinProgressDebugEvent? _latestSteinDebugEvent;
+  bool _steinLogScrollScheduled = false;
   Timer? _timer;
+
+  void _scrollSteinLogToLatest(List<SteinProgressDebugEvent> events) {
+    final latestEvent = events.isEmpty ? null : events.first;
+    if (latestEvent == null || identical(latestEvent, _latestSteinDebugEvent)) {
+      return;
+    }
+    _latestSteinDebugEvent = latestEvent;
+    if (_steinLogScrollScheduled) return;
+    _steinLogScrollScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _steinLogScrollScheduled = false;
+      if (!mounted || !_steinLogScrollController.hasClients) return;
+      _steinLogScrollController.jumpTo(
+        _steinLogScrollController.position.maxScrollExtent,
+      );
+    });
+  }
 
   @override
   void initState() {
@@ -49,6 +69,7 @@ class _PlayerInstanceStatusOverlayState
   @override
   void dispose() {
     _timer?.cancel();
+    _steinLogScrollController.dispose();
     super.dispose();
   }
 
@@ -58,10 +79,9 @@ class _PlayerInstanceStatusOverlayState
       return const SizedBox.shrink();
     }
 
-    return IgnorePointer(
-      child: Align(
-        alignment: const Alignment(-0.72, 0),
-        child: Obx(() {
+    final overlay = Align(
+      alignment: const Alignment(-0.72, 0),
+      child: Obx(() {
           _revision.value;
           final controller = widget.controller;
           final videoController = widget.videoDetailController;
@@ -78,6 +98,9 @@ class _PlayerInstanceStatusOverlayState
                   growable: false,
                 )
               : const <SteinProgressDebugEvent>[];
+          if (_showSteinProgress) {
+            _scrollSteinLogToLatest(debugEvents);
+          }
 
           Color conditionColor(PlayerGateConditionState state) =>
               switch (state) {
@@ -108,6 +131,12 @@ class _PlayerInstanceStatusOverlayState
             .warning => '!',
             .error => '×',
           };
+
+          String formatTime(DateTime time) =>
+              '${time.hour.toString().padLeft(2, '0')}:'
+              '${time.minute.toString().padLeft(2, '0')}:'
+              '${time.second.toString().padLeft(2, '0')}.'
+              '${time.millisecond.toString().padLeft(3, '0')}';
 
           Widget buildInstanceStatus(int index) {
             final status = statuses![index];
@@ -168,12 +197,6 @@ class _PlayerInstanceStatusOverlayState
             final cid = videoController.cid.value;
             videoController.showSteinEdgeInfo.value;
 
-            String formatTime(DateTime time) =>
-                '${time.hour.toString().padLeft(2, '0')}:'
-                '${time.minute.toString().padLeft(2, '0')}:'
-                '${time.second.toString().padLeft(2, '0')}.'
-                '${time.millisecond.toString().padLeft(3, '0')}';
-
             return Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,47 +239,58 @@ class _PlayerInstanceStatusOverlayState
                     fontFamily: 'Monospace',
                   ),
                 ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 5),
-                  child: Divider(height: 1, color: Colors.white24),
-                ),
-                if (debugEvents.isEmpty)
-                  const Text(
-                    '等待链路事件',
-                    style: TextStyle(
-                      color: Color(0xFFFFD166),
-                      fontSize: 9,
-                      fontFamily: 'Monospace',
-                    ),
-                  )
-                else
-                  ...debugEvents.map(
-                    (event) => Padding(
-                      padding: const EdgeInsets.only(bottom: 5),
-                      child: Text.rich(
-                        TextSpan(
-                          style: const TextStyle(
-                            color: Color(0xFFD5D9DE),
-                            fontSize: 9,
-                            fontFamily: 'Monospace',
-                            height: 1.2,
-                          ),
-                          children: [
-                            TextSpan(
-                              text:
-                                  '${debugPrefix(event.level)} ${formatTime(event.time)} ${event.stage}\n',
-                              style: TextStyle(
-                                color: debugColor(event.level),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            TextSpan(text: event.detail),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
               ],
+            );
+          }
+
+          Widget buildSteinLog() {
+            if (debugEvents.isEmpty) {
+              return const Text(
+                '等待链路事件',
+                style: TextStyle(
+                  color: Color(0xFFFFD166),
+                  fontSize: 9,
+                  fontFamily: 'Monospace',
+                ),
+              );
+            }
+            return Scrollbar(
+              controller: _steinLogScrollController,
+              child: SingleChildScrollView(
+                controller: _steinLogScrollController,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: debugEvents.reversed
+                      .map(
+                        (event) => Padding(
+                          padding: const EdgeInsets.only(bottom: 5, right: 8),
+                          child: Text.rich(
+                            TextSpan(
+                              style: const TextStyle(
+                                color: Color(0xFFD5D9DE),
+                                fontSize: 9,
+                                fontFamily: 'Monospace',
+                                height: 1.2,
+                              ),
+                              children: [
+                                TextSpan(
+                                  text:
+                                      '${debugPrefix(event.level)} ${formatTime(event.time)} ${event.stage}\n',
+                                  style: TextStyle(
+                                    color: debugColor(event.level),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                TextSpan(text: event.detail),
+                              ],
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(growable: false),
+                ),
+              ),
             );
           }
 
@@ -271,31 +305,36 @@ class _PlayerInstanceStatusOverlayState
               borderRadius: const BorderRadius.all(Radius.circular(7)),
               border: Border.all(color: Colors.white24),
             ),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (_showPlayerInstances) ...[
-                    buildInstanceStatus(0),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 5),
-                      child: Divider(height: 1, color: Colors.white24),
-                    ),
-                    buildInstanceStatus(1),
-                  ],
-                  if (_showPlayerInstances && _showSteinProgress)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 5),
-                      child: Divider(height: 1, color: Colors.white24),
-                    ),
-                  if (_showSteinProgress) buildSteinStatus(),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (_showPlayerInstances) ...[
+                  buildInstanceStatus(0),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 5),
+                    child: Divider(height: 1, color: Colors.white24),
+                  ),
+                  buildInstanceStatus(1),
                 ],
-              ),
+                if (_showPlayerInstances && _showSteinProgress)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 5),
+                    child: Divider(height: 1, color: Colors.white24),
+                  ),
+                if (_showSteinProgress) ...[
+                  buildSteinStatus(),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 5),
+                    child: Divider(height: 1, color: Colors.white24),
+                  ),
+                  Flexible(child: buildSteinLog()),
+                ],
+              ],
             ),
           );
-        }),
-      ),
+      }),
     );
+    return _showSteinProgress ? overlay : IgnorePointer(child: overlay);
   }
 }
