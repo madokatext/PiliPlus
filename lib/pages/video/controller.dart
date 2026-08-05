@@ -47,6 +47,7 @@ import 'package:PiliPlus/pages/video/medialist/view.dart';
 import 'package:PiliPlus/pages/video/note/view.dart';
 import 'package:PiliPlus/pages/video/post_panel/view.dart';
 import 'package:PiliPlus/pages/video/send_danmaku/view.dart';
+import 'package:PiliPlus/pages/video/stein_progress_debug.dart';
 import 'package:PiliPlus/pages/video/widgets/header_control.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/data_source.dart';
@@ -77,22 +78,6 @@ import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:get/get.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:media_kit/media_kit.dart' hide Subtitle;
-
-enum SteinProgressDebugLevel { info, success, warning, error }
-
-class SteinProgressDebugEvent {
-  const SteinProgressDebugEvent({
-    required this.time,
-    required this.stage,
-    required this.detail,
-    required this.level,
-  });
-
-  final DateTime time;
-  final String stage;
-  final String detail;
-  final SteinProgressDebugLevel level;
-}
 
 class VideoDetailController extends GetxController
     with GetTickerProviderStateMixin, BlockMixin {
