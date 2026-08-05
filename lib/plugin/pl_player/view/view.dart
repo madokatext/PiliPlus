@@ -2427,7 +2427,6 @@ if (!isLive)
         if (widget.showPlayerInstanceStatusOverlay)
           PlayerInstanceStatusOverlay(
             controller: plPlayerController,
-            videoDetailController: widget.videoDetailController,
             maxWidth: maxWidth,
             maxHeight: maxHeight,
           ),

@@ -47,7 +47,6 @@ import 'package:PiliPlus/pages/video/medialist/view.dart';
 import 'package:PiliPlus/pages/video/note/view.dart';
 import 'package:PiliPlus/pages/video/post_panel/view.dart';
 import 'package:PiliPlus/pages/video/send_danmaku/view.dart';
-import 'package:PiliPlus/pages/video/stein_progress_debug.dart';
 import 'package:PiliPlus/pages/video/widgets/header_control.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/data_source.dart';
@@ -61,6 +60,7 @@ import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/extension/nested_scroll_ext.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/extension/size_ext.dart';
+import 'package:PiliPlus/utils/interactive_video_progress.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
@@ -891,97 +891,46 @@ class VideoDetailController extends GetxController
     } else if (seek == null || seek == Duration.zero) {
       seek = getFirstSegment();
     }
-    final traceSteinLoad =
-        showSteinProgressDebug &&
-        (isInteractiveVideo || steinProgressDebugEvents.isNotEmpty);
-    final loadStopwatch = Stopwatch()..start();
-    if (traceSteinLoad) {
-      steinProgressDebugState = '提交播放器数据源';
-      addSteinProgressDebugEvent(
-        '播放器加载',
-        'setDataSource 开始：bvid=$bvid, cid=${cid.value}, seek=${seek?.inMilliseconds}ms, '
-            'duration=${data.timeLength}ms, autoplay=${autoplay ?? _autoPlay.value}, '
-            'defaultST=${defaultST?.inMilliseconds}ms, playedTime=${playedTime?.inMilliseconds}ms',
-      );
-    }
-    try {
-      await plPlayerController.setDataSource(
-        isFileSource
-            ? FileSource(
-                dir: args['dirPath'],
-                typeTag: entry.typeTag!,
-                isMp4: entry.mediaType == 1,
-                hasDashAudio: entry.hasDashAudio,
-              )
-            : _networkSource(),
-        seekTo: seek,
-        duration: data.timeLength == null
-            ? null
-            : Duration(milliseconds: data.timeLength!),
-        isVertical: isVertical.value,
-        aid: aid,
-        bvid: bvid,
-        cid: cid.value,
-        autoplay: autoplay ?? _autoPlay.value,
-        epid: isUgc ? null : epId,
-        seasonId: isUgc ? null : seasonId,
-        pgcType: isUgc ? null : pgcType,
-        videoType: videoType,
-        onVideoOutputReady: () {
-          if (!isPageActive) return;
-          videoState.value = true;
-          if (traceSteinLoad) {
-            addSteinProgressDebugEvent(
-              '播放器输出',
-              'onVideoOutputReady：cid=${cid.value}, '
-                  '耗时=${loadStopwatch.elapsedMilliseconds}ms',
-              level: SteinProgressDebugLevel.success,
-            );
-          }
-        },
-        onInit: () {
-          if (!isPageActive) return;
-          if (revealCoverOnInit) {
-            showVideoCover.value = false;
-            blackVideoCover.value = false;
-          }
-          setSubtitle(vttSubtitlesIndex.value);
-          if (traceSteinLoad) {
-            addSteinProgressDebugEvent(
-              '播放器初始化',
-              'onInit：cid=${cid.value}, position=${plPlayerController.positionInMilliseconds}ms, '
-                  '耗时=${loadStopwatch.elapsedMilliseconds}ms',
-              level: SteinProgressDebugLevel.success,
-            );
-          }
-        },
-        width: firstVideo.width,
-        height: firstVideo.height,
-        volume: volume,
-        autoFullScreenFlag: autoFullScreenFlag,
-        videoPageTag: heroTag,
-      );
-      if (traceSteinLoad) {
-        steinProgressDebugState = '播放器数据源加载完成';
-        addSteinProgressDebugEvent(
-          '播放器加载',
-          'setDataSource 返回：cid=${cid.value}, seek=${seek?.inMilliseconds}ms, '
-              '耗时=${loadStopwatch.elapsedMilliseconds}ms',
-          level: SteinProgressDebugLevel.success,
-        );
-      }
-    } catch (e) {
-      if (traceSteinLoad) {
-        steinProgressDebugState = '播放器数据源加载异常';
-        addSteinProgressDebugEvent(
-          '播放器加载',
-          'setDataSource 异常：cid=${cid.value}, seek=${seek?.inMilliseconds}ms, '
-              '耗时=${loadStopwatch.elapsedMilliseconds}ms, ${_steinDebugText(e)}',
-          level: SteinProgressDebugLevel.error,
-        );
-      }
-      rethrow;
-    }
+    await plPlayerController.setDataSource(
+      isFileSource
+          ? FileSource(
+              dir: args['dirPath'],
+              typeTag: entry.typeTag!,
+              isMp4: entry.mediaType == 1,
+              hasDashAudio: entry.hasDashAudio,
+            )
+          : _networkSource(),
+      seekTo: seek,
+      duration: data.timeLength == null
+          ? null
+          : Duration(milliseconds: data.timeLength!),
+      isVertical: isVertical.value,
+      aid: aid,
+      bvid: bvid,
+      cid: cid.value,
+      autoplay: autoplay ?? _autoPlay.value,
+      epid: isUgc ? null : epId,
+      seasonId: isUgc ? null : seasonId,
+      pgcType: isUgc ? null : pgcType,
+      videoType: videoType,
+      onVideoOutputReady: () {
+        if (!isPageActive) return;
+        videoState.value = true;
+      },
+      onInit: () {
+        if (!isPageActive) return;
+        if (revealCoverOnInit) {
+          showVideoCover.value = false;
+          blackVideoCover.value = false;
+        }
+        setSubtitle(vttSubtitlesIndex.value);
+      },
+      width: firstVideo.width,
+      height: firstVideo.height,
+      volume: volume,
+      autoFullScreenFlag: autoFullScreenFlag,
+      videoPageTag: heroTag,
+    );
 
     if (!isPageActive) return;
 
@@ -1047,45 +996,13 @@ class VideoDetailController extends GetxController
     bool autoFullScreenFlag = false,
   }) async {
     if (isFileSource) {
-      addSteinProgressDebugEvent(
-        '播放地址',
-        '离线文件源，跳过互动视频在线历史恢复链路',
-        level: SteinProgressDebugLevel.warning,
-      );
       return _initPlayerIfNeeded(autoFullScreenFlag);
     }
-    if (isQuerying) {
-      addSteinProgressDebugEvent(
-        '播放地址',
-        '忽略重复请求：isQuerying=true, bvid=$bvid, cid=${cid.value}',
-        level: SteinProgressDebugLevel.warning,
-      );
-      return;
-    }
+    if (isQuerying) return;
     isQuerying = true;
-    final queryStopwatch = Stopwatch()..start();
-    addSteinProgressDebugEvent(
-      '播放地址',
-      '链路开始：bvid=$bvid, cid=${cid.value}, fromReset=$fromReset, '
-          'autoFullScreen=$autoFullScreenFlag, graphVersion=$graphVersion',
-    );
-    final resumeSteinHistory = await _restoreSteinHistoryIfNeeded();
-    addSteinProgressDebugEvent(
-      '历史恢复结果',
-      'resumeSteinHistory=$resumeSteinHistory, interactive=$isInteractiveVideo, '
-          'graphVersion=$graphVersion, cid=${cid.value}',
-      level: resumeSteinHistory
-          ? SteinProgressDebugLevel.success
-          : SteinProgressDebugLevel.info,
-    );
+    final resumeSteinProgress = _restoreLocalSteinProgressIfNeeded();
     if (!isPageActive) {
       isQuerying = false;
-      steinProgressDebugState = '页面失活，终止加载';
-      addSteinProgressDebugEvent(
-        '播放地址',
-        '终止：历史恢复后 pageActive=false，耗时=${queryStopwatch.elapsedMilliseconds}ms',
-        level: SteinProgressDebugLevel.warning,
-      );
       return;
     }
     final seekSteinProgressToEnd = !fromReset && _seekSteinProgressToEnd;
@@ -1126,14 +1043,6 @@ class VideoDetailController extends GetxController
             : Pref.defaultAudioQaCellular;
     }
 
-    final requestedCid = cid.value;
-    final videoUrlStopwatch = Stopwatch()..start();
-    addSteinProgressDebugEvent(
-      'videoUrl 请求',
-      '发送：bvid=$bvid, cid=$requestedCid, videoType=${_actualVideoType ?? videoType}, '
-          'fromReset=$fromReset, historyRestored=$resumeSteinHistory, '
-          'rewindToEnd=$seekSteinProgressToEnd',
-    );
     final result = await VideoHttp.videoUrl(
       cid: cid.value,
       bvid: bvid,
@@ -1148,15 +1057,6 @@ class VideoDetailController extends GetxController
     if (result case Success(:final response)) {
       data = response;
 
-      addSteinProgressDebugEvent(
-        'videoUrl 响应',
-        '成功：requestedCid=$requestedCid, activeCid=${cid.value}, '
-            'lastPlayTime=${data.lastPlayTime}ms, duration=${data.timeLength}ms, '
-            'dash=${data.dash != null}, durl=${data.durl != null}, '
-            '耗时=${videoUrlStopwatch.elapsedMilliseconds}ms',
-        level: SteinProgressDebugLevel.success,
-      );
-
       languages.value = data.language?.items;
       currLang.value = data.curLanguage;
 
@@ -1164,41 +1064,16 @@ class VideoDetailController extends GetxController
 
       if (!fromReset) {
         final progress = args.remove('progress');
-        if (seekSteinProgressToEnd) {
-          final duration = data.timeLength ?? 0;
-          defaultST = Duration(
-            milliseconds: (duration - 5000).clamp(0, duration).toInt(),
-          );
-          addSteinProgressDebugEvent(
-            '续播决策',
-            'progress 来源=进度回溯，duration=$duration, '
-                'seek=${defaultST?.inMilliseconds}ms；结尾前保留 5000ms',
-            level: SteinProgressDebugLevel.success,
-          );
+        if (seekSteinProgressToEnd || resumeSteinProgress) {
+          defaultST = _steinChoicePosition();
+          _steinSeekPositionMs = null;
         } else if (isInteractiveVideo) {
-          defaultST = resumeSteinHistory
-              ? _resumeSteinPosition(data.lastPlayTime)
-              : Duration.zero;
-          addSteinProgressDebugEvent(
-            '续播决策',
-            'progress 来源=${resumeSteinHistory ? 'videoUrl.lastPlayTime' : '互动节点切换默认起点'}, '
-                'raw=${data.lastPlayTime}ms, seek=${defaultST?.inMilliseconds}ms, '
-                'routeProgress=${progress ?? 'null'}',
-            level: resumeSteinHistory
-                ? SteinProgressDebugLevel.success
-                : SteinProgressDebugLevel.info,
-          );
+          defaultST = Duration.zero;
         } else if (progress != null) {
           defaultST = Duration(milliseconds: progress);
         } else {
           defaultST = _resumePosition(data.lastPlayTime);
         }
-      } else if (isInteractiveVideo) {
-        addSteinProgressDebugEvent(
-          '续播决策',
-          'fromReset=true，不改写 defaultST=${defaultST?.inMilliseconds}ms',
-          level: SteinProgressDebugLevel.info,
-        );
       }
 
       if (!isUgc && !fromReset && plPlayerController.enablePgcSkip) {
@@ -1232,11 +1107,6 @@ class VideoDetailController extends GetxController
         currentVideoQa.value = videoQuality;
         await _initPlayerIfNeeded(autoFullScreenFlag);
         isQuerying = false;
-        addSteinProgressDebugEvent(
-          '播放地址',
-          '链路完成（durl）：cid=${cid.value}, 总耗时=${queryStopwatch.elapsedMilliseconds}ms',
-          level: SteinProgressDebugLevel.success,
-        );
         return;
       }
       if (data.dash == null) {
@@ -1248,12 +1118,6 @@ class VideoDetailController extends GetxController
           plPlayerController.triggerFullScreen(status: false);
         }
         isQuerying = false;
-        steinProgressDebugState = '播放资源不存在';
-        addSteinProgressDebugEvent(
-          '播放地址',
-          '终止：dash 与可用 durl 均为空，cid=${cid.value}',
-          level: SteinProgressDebugLevel.error,
-        );
         return;
       }
       final List<VideoItem> videoList = data.dash!.video!;
@@ -1319,13 +1183,6 @@ class VideoDetailController extends GetxController
       }
       await _initPlayerIfNeeded(autoFullScreenFlag);
     } else {
-      steinProgressDebugState = '播放地址请求失败';
-      addSteinProgressDebugEvent(
-        'videoUrl 响应',
-        '失败：requestedCid=$requestedCid, result=${_steinDebugText(result)}, '
-            '耗时=${videoUrlStopwatch.elapsedMilliseconds}ms',
-        level: SteinProgressDebugLevel.error,
-      );
       _autoPlay.value = false;
       blackVideoCover.value = false;
       videoState.value = false;
@@ -1335,14 +1192,6 @@ class VideoDetailController extends GetxController
       result.toast();
     }
     isQuerying = false;
-    addSteinProgressDebugEvent(
-      '播放地址',
-      '链路结束：cid=${cid.value}, interactive=$isInteractiveVideo, '
-          'defaultST=${defaultST?.inMilliseconds}ms, 总耗时=${queryStopwatch.elapsedMilliseconds}ms',
-      level: result.isSuccess
-          ? SteinProgressDebugLevel.success
-          : SteinProgressDebugLevel.error,
-    );
   }
 
   late final List<PostSegmentModel> postList = <PostSegmentModel>[];
@@ -1432,245 +1281,56 @@ class VideoDetailController extends GetxController
   late final RxList<StoryList> steinProgressList = <StoryList>[].obs;
   late final RxBool showSteinEdgeInfo = false.obs;
   bool _seekSteinProgressToEnd = false;
+  int? _steinSeekPositionMs;
   bool _selectingSteinChoice = false;
+  bool _steinProgressInitialized = false;
+  InteractiveVideoProgress? _localSteinProgress;
 
-  late final bool showSteinProgressDebug = Pref.showSteinProgressDebug;
-  final RxList<SteinProgressDebugEvent> steinProgressDebugEvents =
-      <SteinProgressDebugEvent>[].obs;
-  String steinProgressDebugState = '等待检测互动视频';
+  bool _restoreLocalSteinProgressIfNeeded() {
+    if (_steinProgressInitialized || graphVersion != null) return false;
+    _steinProgressInitialized = true;
 
-  bool get selectingSteinChoice => _selectingSteinChoice;
-  bool get seekSteinProgressToEnd => _seekSteinProgressToEnd;
-
-  void addSteinProgressDebugEvent(
-    String stage,
-    String detail, {
-    SteinProgressDebugLevel level = SteinProgressDebugLevel.info,
-  }) {
-    if (!showSteinProgressDebug) return;
-    steinProgressDebugEvents.insert(
-      0,
-      SteinProgressDebugEvent(
-        time: DateTime.now(),
-        stage: stage,
-        detail: detail,
-        level: level,
-      ),
-    );
-    if (steinProgressDebugEvents.length > 80) {
-      steinProgressDebugEvents.removeRange(
-        80,
-        steinProgressDebugEvents.length,
-      );
-    }
-  }
-
-  String _steinDebugText(Object? value, [int maxLength = 800]) {
-    final text = value?.toString() ?? 'null';
-    return text.length <= maxLength
-        ? text
-        : '${text.substring(0, maxLength)}...';
-  }
-
-  String _steinStoryDebug(StoryList? story) => story == null
-      ? 'null'
-      : 'node=${story.nodeId}, edge=${story.edgeId}, cid=${story.cid}, '
-            'current=${story.isCurrent}, cursor=${story.cursor}, '
-            'start=${story.startPos}, title=${story.title ?? '--'}';
-
-  Future<bool> _restoreSteinHistoryIfNeeded() async {
-    if (graphVersion != null) {
-      steinProgressDebugState = '已有 graphVersion，跳过历史恢复';
-      addSteinProgressDebugEvent(
-        '历史检测',
-        '跳过：graphVersion=$graphVersion，cid=${cid.value}；本次视为节点内切换，不重复读取历史',
-        level: SteinProgressDebugLevel.warning,
-      );
-      return false;
-    }
-
-    final stopwatch = Stopwatch()..start();
-    final initialCid = cid.value;
-    steinProgressDebugState = '检查互动视频标签';
-    addSteinProgressDebugEvent(
-      '历史检测',
-      '开始：bvid=$bvid, cid=$initialCid, pageActive=$isPageActive',
-    );
     try {
       final introCtr = Get.find<UgcIntroController>(tag: heroTag);
-      final hasInteractiveLabel =
-          introCtr.videoDetail.value.hasInteractiveVideoLabel;
-      if (!hasInteractiveLabel) {
-        steinProgressDebugState = '详情中没有互动视频标签';
-        addSteinProgressDebugEvent(
-          '历史检测',
-          '结束：hasInteractiveVideoLabel=false，耗时=${stopwatch.elapsedMilliseconds}ms',
-          level: SteinProgressDebugLevel.warning,
-        );
-        return false;
-      }
+      if (!introCtr.videoDetail.value.hasInteractiveVideoLabel) return false;
       isInteractiveVideo = true;
 
-      steinProgressDebugState = '请求 playInfo 历史节点';
-      addSteinProgressDebugEvent(
-        'playInfo 请求',
-        '发送：bvid=$bvid, cid=${cid.value}',
-      );
-      final res = await VideoHttp.playInfo(bvid: bvid, cid: cid.value);
-      if (res case Success(:final response)) {
-        final interaction = response.interaction;
-        graphVersion = interaction?.graphVersion;
-        final historyNode = interaction?.historyNode;
-        addSteinProgressDebugEvent(
-          'playInfo 响应',
-          '成功：耗时=${stopwatch.elapsedMilliseconds}ms, graphVersion=$graphVersion, '
-              'historyNode={node=${historyNode?.nodeId}, cid=${historyNode?.cid}, '
-              'title=${historyNode?.title ?? '--'}}',
-          level: SteinProgressDebugLevel.success,
-        );
-        if (graphVersion == null) {
-          steinProgressDebugState = 'playInfo 未返回 graphVersion';
-          addSteinProgressDebugEvent(
-            '历史恢复',
-            '终止：interaction=${interaction == null ? 'null' : 'present'}，无法请求 edgeinfo_v2',
-            level: SteinProgressDebugLevel.error,
-          );
-          return false;
-        }
+      final progress = InteractiveVideoProgressRepository.get(bvid);
+      if (progress == null) return false;
+      _localSteinProgress = progress;
+      steinProgressList.assignAll(progress.toStoryList());
 
-        final edgeInfo = await getSteinEdgeInfo();
-        final currentStory = edgeInfo?.storyList?.firstWhereOrNull(
-          (item) => item.isCurrent == 1,
-        );
-        StoryList? historyStory;
-        if (historyNode?.nodeId case final nodeId?) {
-          historyStory = edgeInfo?.storyList?.firstWhereOrNull(
-            (item) => item.nodeId == nodeId,
-          );
-        }
-        final historyCid =
-            currentStory?.cid ?? historyStory?.cid ?? historyNode?.cid;
-        final source = currentStory != null
-            ? 'story_list.is_current'
-            : historyStory != null
-            ? 'story_list.node_id'
-            : historyNode?.cid != null
-            ? 'interaction.history_node.cid'
-            : 'none';
-        addSteinProgressDebugEvent(
-          '历史节点匹配',
-          '优先级结果=$source -> cid=$historyCid\n'
-              'currentStory: ${_steinStoryDebug(currentStory)}\n'
-              'historyStory: ${_steinStoryDebug(historyStory)}\n'
-              'historyNode: node=${historyNode?.nodeId}, cid=${historyNode?.cid}, '
-              'title=${historyNode?.title ?? '--'}',
-          level: historyCid == null || historyCid == 0
-              ? SteinProgressDebugLevel.warning
-              : SteinProgressDebugLevel.success,
-        );
-        if (historyCid != null && historyCid != 0 && historyCid != cid.value) {
-          final oldCid = cid.value;
-          cid.value = historyCid;
-          try {
-            Get.find<UgcIntroController>(tag: heroTag).cid.value = historyCid;
-            addSteinProgressDebugEvent(
-              'CID 同步',
-              'VideoDetailController 与 UgcIntroController: $oldCid -> $historyCid',
-              level: SteinProgressDebugLevel.success,
-            );
-          } catch (e) {
-            addSteinProgressDebugEvent(
-              'CID 同步',
-              'VideoDetailController 已更新 $oldCid -> $historyCid；简介控制器同步失败：${_steinDebugText(e)}',
-              level: SteinProgressDebugLevel.warning,
-            );
-          }
-        } else {
-          addSteinProgressDebugEvent(
-            'CID 选择',
-            historyCid == null || historyCid == 0
-                ? '未得到有效历史 CID，保持 cid=${cid.value}'
-                : '历史 CID 与当前相同，保持 cid=${cid.value}',
-            level: historyCid == null || historyCid == 0
-                ? SteinProgressDebugLevel.warning
-                : SteinProgressDebugLevel.info,
-          );
-        }
-        steinProgressDebugState = edgeInfo == null
-            ? '历史元数据完成，节点信息加载失败'
-            : '历史节点恢复完成';
-        addSteinProgressDebugEvent(
-          '历史恢复',
-          '完成：initialCid=$initialCid, resolvedCid=${cid.value}, '
-              'edgeInfo=${edgeInfo == null ? 'null' : 'present'}, '
-              '总耗时=${stopwatch.elapsedMilliseconds}ms',
-          level: edgeInfo == null
-              ? SteinProgressDebugLevel.warning
-              : SteinProgressDebugLevel.success,
-        );
-        return true;
-      } else {
-        steinProgressDebugState = 'playInfo 请求失败';
-        addSteinProgressDebugEvent(
-          'playInfo 响应',
-          '失败：耗时=${stopwatch.elapsedMilliseconds}ms, result=${_steinDebugText(res)}',
-          level: SteinProgressDebugLevel.error,
-        );
+      final historyCid = progress.current.cid;
+      if (historyCid != cid.value) {
+        cid.value = historyCid;
+        introCtr.cid.value = historyCid;
       }
+      return true;
     } catch (e) {
-      steinProgressDebugState = '历史恢复发生异常';
-      addSteinProgressDebugEvent(
-        '历史恢复',
-        '异常：耗时=${stopwatch.elapsedMilliseconds}ms, ${_steinDebugText(e)}',
-        level: SteinProgressDebugLevel.error,
-      );
-      if (kDebugMode) debugPrint('_restoreSteinHistoryIfNeeded: $e');
+      if (kDebugMode) debugPrint('_restoreLocalSteinProgressIfNeeded: $e');
+      return false;
     }
-    return false;
   }
 
-  Duration _resumeSteinPosition(int progress) {
-    if (progress <= 0) {
-      addSteinProgressDebugEvent(
-        '续播定位',
-        'lastPlayTime=$progress，使用 0ms',
-        level: SteinProgressDebugLevel.warning,
-      );
-      return Duration.zero;
+  Duration _steinChoicePosition() {
+    final duration = data.timeLength ?? 0;
+    final localProgress = _localSteinProgress;
+    final pendingPosition = _steinSeekPositionMs;
+    var choicePosition = duration;
+    if (pendingPosition != null) {
+      if (pendingPosition >= 0) choicePosition = pendingPosition;
+    } else if (localProgress != null) {
+      choicePosition =
+          localProgress.entries[localProgress.currentIndex].choicePositionMs ??
+          duration;
     }
-
-    final duration = data.timeLength;
-    if (duration == null || duration <= 0) {
-      addSteinProgressDebugEvent(
-        '续播定位',
-        'lastPlayTime=$progress, duration=$duration；时长无效，直接使用 ${progress}ms',
-        level: SteinProgressDebugLevel.warning,
-      );
-      return Duration(milliseconds: progress);
-    }
-
-    // Interactive progress is commonly saved at the choice near EOF. Keep
-    // enough video before it for the player and choice overlay to initialize.
-    final latestSafePosition = (duration - 5000).clamp(0, duration).toInt();
-    final resolved = progress.clamp(0, latestSafePosition).toInt();
-    addSteinProgressDebugEvent(
-      '续播定位',
-      'lastPlayTime=$progress, duration=$duration, latestSafe=$latestSafePosition, '
-          'seek=$resolved, clamped=${resolved != progress}',
-      level: SteinProgressDebugLevel.success,
+    return Duration(
+      milliseconds: (choicePosition - 5000).clamp(0, duration).toInt(),
     );
-    return Duration(milliseconds: resolved);
   }
 
   Future<EdgeInfoData?> getSteinEdgeInfo([int? edgeId]) async {
     steinEdgeInfo = null;
-    final stopwatch = Stopwatch()..start();
-    steinProgressDebugState = '请求互动节点信息';
-    addSteinProgressDebugEvent(
-      'edgeinfo_v2 请求',
-      '发送：bvid=$bvid, graphVersion=$graphVersion, edgeId=${edgeId ?? '省略'}, '
-          'cid=${cid.value}',
-    );
     try {
       final res = await Request().get(
         '/x/stein/edgeinfo_v2',
@@ -1683,61 +1343,13 @@ class VideoDetailController extends GetxController
       if (res.data['code'] == 0) {
         final edgeInfo = EdgeInfoData.fromJson(res.data['data']);
         steinEdgeInfo = edgeInfo;
-        final rawStories = edgeInfo.storyList;
-        final progressEntries = rawStories?.asMap().entries.toList()
-          ?..removeWhere(
-            (entry) => entry.value.cid == null || entry.value.edgeId == null,
-          )
-          ..sort((a, b) {
-            final aCursor = a.value.cursor;
-            final bCursor = b.value.cursor;
-            if (aCursor == null) {
-              return bCursor == null ? a.key.compareTo(b.key) : 1;
-            }
-            if (bCursor == null) return -1;
-            final result = aCursor.compareTo(bCursor);
-            return result == 0 ? a.key.compareTo(b.key) : result;
-          });
-        steinProgressList.assignAll(
-          progressEntries?.map((entry) => entry.value) ?? const <StoryList>[],
-        );
-        final storyDetails = rawStories?.asMap().entries.map((entry) {
-          return '#${entry.key}: ${_steinStoryDebug(entry.value)}';
-        }).join('\n');
-        final choiceCount = edgeInfo.edges?.questions?.fold<int>(
-          0,
-          (count, question) => count + (question.choices?.length ?? 0),
-        );
-        steinProgressDebugState = '互动节点信息加载完成';
-        addSteinProgressDebugEvent(
-          'edgeinfo_v2 响应',
-          '成功：耗时=${stopwatch.elapsedMilliseconds}ms, requestedEdge=${edgeId ?? '省略'}, '
-              'stories=${rawStories?.length ?? 0}, validProgress=${steinProgressList.length}, '
-              'questions=${edgeInfo.edges?.questions?.length ?? 0}, choices=${choiceCount ?? 0}\n'
-              '${storyDetails?.isNotEmpty == true ? storyDetails : 'story_list 为空'}',
-          level: SteinProgressDebugLevel.success,
-        );
         return edgeInfo;
       } else {
-        steinProgressDebugState = '互动节点接口返回错误';
-        addSteinProgressDebugEvent(
-          'edgeinfo_v2 响应',
-          '失败：耗时=${stopwatch.elapsedMilliseconds}ms, code=${res.data['code']}, '
-              'message=${_steinDebugText(res.data['message'])}, edgeId=${edgeId ?? '省略'}',
-          level: SteinProgressDebugLevel.error,
-        );
         if (kDebugMode) {
           debugPrint('getSteinEdgeInfo error: ${res.data['message']}');
         }
       }
     } catch (e) {
-      steinProgressDebugState = '互动节点信息加载异常';
-      addSteinProgressDebugEvent(
-        'edgeinfo_v2 响应',
-        '异常：耗时=${stopwatch.elapsedMilliseconds}ms, edgeId=${edgeId ?? '省略'}, '
-            '${_steinDebugText(e)}',
-        level: SteinProgressDebugLevel.error,
-      );
       if (kDebugMode) debugPrint('getSteinEdgeInfo: $e');
     }
     return null;
@@ -1745,54 +1357,25 @@ class VideoDetailController extends GetxController
 
   Future<void> selectSteinChoice(Choice choice) async {
     final edgeId = choice.id;
-    if (_selectingSteinChoice || edgeId == null) {
-      addSteinProgressDebugEvent(
-        '节点选择',
-        '忽略：busy=$_selectingSteinChoice, edgeId=$edgeId, cid=${choice.cid}, '
-            'option=${choice.option ?? '--'}',
-        level: SteinProgressDebugLevel.warning,
-      );
-      return;
-    }
+    if (_selectingSteinChoice || edgeId == null) return;
 
     _selectingSteinChoice = true;
-    final stopwatch = Stopwatch()..start();
-    steinProgressDebugState = '加载选择的互动节点';
-    addSteinProgressDebugEvent(
-      '节点选择',
-      '开始：edgeId=$edgeId, choiceCid=${choice.cid}, currentCid=${cid.value}, '
-          'option=${choice.option ?? '--'}',
-    );
     try {
       final edgeInfo = await getSteinEdgeInfo(edgeId);
-      if (edgeInfo == null) {
-        addSteinProgressDebugEvent(
-          '节点选择',
-          '终止：edgeId=$edgeId 的节点信息加载失败',
-          level: SteinProgressDebugLevel.error,
-        );
-        return;
-      }
+      if (edgeInfo == null) return;
       final changed = await Get.find<UgcIntroController>(
         tag: heroTag,
       ).onChangeEpisode(choice, isStein: true);
-      steinProgressDebugState = changed ? '互动节点切换完成' : '互动节点切换未执行';
-      addSteinProgressDebugEvent(
-        '节点选择',
-        '结束：changed=$changed, edgeId=$edgeId, targetCid=${choice.cid}, '
-            'activeCid=${cid.value}, 耗时=${stopwatch.elapsedMilliseconds}ms',
-        level: changed
-            ? SteinProgressDebugLevel.success
-            : SteinProgressDebugLevel.warning,
-      );
+      if (changed) {
+        await _appendLocalSteinProgress(
+          edgeId: edgeId,
+          cid: cid.value,
+          title: choice.option,
+          choicePositionMs:
+              edgeInfo.edges?.questions?.firstOrNull?.startTime,
+        );
+      }
     } catch (e) {
-      steinProgressDebugState = '互动节点切换异常';
-      addSteinProgressDebugEvent(
-        '节点选择',
-        '异常：edgeId=$edgeId, 耗时=${stopwatch.elapsedMilliseconds}ms, '
-            '${_steinDebugText(e)}',
-        level: SteinProgressDebugLevel.error,
-      );
       if (kDebugMode) debugPrint('selectSteinChoice: $e');
     } finally {
       _selectingSteinChoice = false;
@@ -1800,59 +1383,82 @@ class VideoDetailController extends GetxController
   }
 
   Future<void> rewindSteinProgress(StoryList progress) async {
-    if (progress.cid == null || progress.edgeId == null) {
-      addSteinProgressDebugEvent(
-        '进度回溯',
-        '忽略无效记录：${_steinStoryDebug(progress)}',
-        level: SteinProgressDebugLevel.warning,
-      );
-      return;
-    }
+    if (progress.cid == null || progress.edgeId == null) return;
 
-    final stopwatch = Stopwatch()..start();
     try {
       _seekSteinProgressToEnd = true;
-      steinProgressDebugState = '回溯互动视频进度';
-      addSteinProgressDebugEvent(
-        '进度回溯',
-        '开始：${_steinStoryDebug(progress)}；下一节点起播将定位到结尾前 5 秒',
-      );
+      final progressIndex = progress.cursor;
+      final localProgress = _localSteinProgress;
+      if (localProgress != null &&
+          progressIndex != null &&
+          progressIndex >= 0 &&
+          progressIndex < localProgress.entries.length) {
+        _steinSeekPositionMs =
+            localProgress.entries[progressIndex].choicePositionMs ?? -1;
+      }
       final changed = await Get.find<UgcIntroController>(
         tag: heroTag,
       ).onChangeEpisode(progress, isStein: true);
       if (!changed) {
         _seekSteinProgressToEnd = false;
-        steinProgressDebugState = '进度回溯未执行';
-        addSteinProgressDebugEvent(
-          '进度回溯',
-          '分集切换返回 false，已撤销结尾定位标记；耗时=${stopwatch.elapsedMilliseconds}ms',
-          level: SteinProgressDebugLevel.warning,
-        );
+        _steinSeekPositionMs = null;
         return;
       }
-      final edgeInfo = await getSteinEdgeInfo(progress.edgeId);
-      steinProgressDebugState = edgeInfo == null
-          ? '回溯节点已切换，节点信息失败'
-          : '互动视频进度回溯完成';
-      addSteinProgressDebugEvent(
-        '进度回溯',
-        '结束：changed=true, activeCid=${cid.value}, edgeInfo=${edgeInfo == null ? 'null' : 'present'}, '
-            '耗时=${stopwatch.elapsedMilliseconds}ms',
-        level: edgeInfo == null
-            ? SteinProgressDebugLevel.warning
-            : SteinProgressDebugLevel.success,
-      );
+      _steinSeekPositionMs = null;
+      await _setCurrentLocalSteinProgress(progress.cursor);
+      await getSteinEdgeInfo(progress.edgeId);
     } catch (e) {
       _seekSteinProgressToEnd = false;
-      steinProgressDebugState = '互动视频进度回溯异常';
-      addSteinProgressDebugEvent(
-        '进度回溯',
-        '异常：已撤销结尾定位标记，耗时=${stopwatch.elapsedMilliseconds}ms, '
-            '${_steinDebugText(e)}',
-        level: SteinProgressDebugLevel.error,
-      );
+      _steinSeekPositionMs = null;
       if (kDebugMode) debugPrint('rewindSteinProgress: $e');
     }
+  }
+
+  Future<void> _appendLocalSteinProgress({
+    required int edgeId,
+    required int cid,
+    String? title,
+    int? choicePositionMs,
+  }) async {
+    final current = _localSteinProgress;
+    final entries = current == null
+        ? <InteractiveVideoProgressEntry>[]
+        : current.entries.take(current.currentIndex + 1).toList();
+    entries.add(
+      InteractiveVideoProgressEntry(
+        edgeId: edgeId,
+        cid: cid,
+        title: title,
+        choicePositionMs: choicePositionMs,
+      ),
+    );
+    await _saveLocalSteinProgress(
+      InteractiveVideoProgress(
+        entries: entries,
+        currentIndex: entries.length - 1,
+      ),
+    );
+  }
+
+  Future<void> _setCurrentLocalSteinProgress(int? index) async {
+    final current = _localSteinProgress;
+    if (current == null ||
+        index == null ||
+        index < 0 ||
+        index >= current.entries.length) {
+      return;
+    }
+    await _saveLocalSteinProgress(
+      InteractiveVideoProgress(entries: current.entries, currentIndex: index),
+    );
+  }
+
+  Future<void> _saveLocalSteinProgress(
+    InteractiveVideoProgress progress,
+  ) async {
+    _localSteinProgress = progress;
+    steinProgressList.assignAll(progress.toStoryList());
+    await InteractiveVideoProgressRepository.put(bvid, progress);
   }
 
   late bool continuePlayingPart = Pref.continuePlayingPart;
@@ -1874,37 +1480,23 @@ class VideoDetailController extends GetxController
       late final introCtr = Get.find<UgcIntroController>(tag: heroTag);
       if (isUgc && graphVersion == null) {
         try {
-          final hasInteractiveLabel =
-              introCtr.videoDetail.value.hasInteractiveVideoLabel;
-          addSteinProgressDebugEvent(
-            '播放信息补充检测',
-            'playInfo 成功：hasInteractiveVideoLabel=$hasInteractiveLabel, '
-                'responseGraph=${response.interaction?.graphVersion}, '
-                'historyNode=${response.interaction?.historyNode?.nodeId}, cid=${cid.value}',
-            level: hasInteractiveLabel
-                ? SteinProgressDebugLevel.success
-                : SteinProgressDebugLevel.info,
-          );
-          if (hasInteractiveLabel) {
+          if (introCtr.videoDetail.value.hasInteractiveVideoLabel) {
             isInteractiveVideo = true;
             graphVersion = response.interaction?.graphVersion;
-            steinProgressDebugState = graphVersion == null
-                ? '补充检测缺少 graphVersion'
-                : '补充检测发现互动视频';
-            getSteinEdgeInfo();
+            if (graphVersion != null) {
+              unawaited(
+                getSteinEdgeInfo(_localSteinProgress?.current.edgeId),
+              );
+            }
           }
         } catch (e) {
-          steinProgressDebugState = '播放信息补充检测异常';
-          addSteinProgressDebugEvent(
-            '播放信息补充检测',
-            '异常：${_steinDebugText(e)}',
-            level: SteinProgressDebugLevel.error,
-          );
           if (kDebugMode) debugPrint('handle stein: $e');
         }
       }
 
-      if (isUgc && continuePlayingPart) {
+      if (isInteractiveVideo) {
+        continuePlayingPart = false;
+      } else if (isUgc && continuePlayingPart) {
         continuePlayingPart = false;
         final lastCid = response.lastPlayCid;
         if (lastCid != null && lastCid != 0 && lastCid != cid.value) {
@@ -2040,19 +1632,6 @@ class VideoDetailController extends GetxController
   }
 
   void onReset({bool isStein = false}) {
-    if (showSteinProgressDebug) {
-      if (!isStein) {
-        steinProgressDebugEvents.clear();
-      }
-      steinProgressDebugState = isStein ? '准备切换互动节点' : '视频状态已重置';
-      addSteinProgressDebugEvent(
-        '状态重置',
-        'isStein=$isStein, bvid=$bvid, cid=${cid.value}, '
-            'interactive=$isInteractiveVideo, graphVersion=$graphVersion, '
-            'rewindToEnd=$_seekSteinProgressToEnd',
-        level: SteinProgressDebugLevel.info,
-      );
-    }
     if (isFileSource) {
       cacheLocalProgress();
     }
@@ -2097,7 +1676,10 @@ class VideoDetailController extends GetxController
         graphVersion = null;
         steinProgressList.clear();
         _seekSteinProgressToEnd = false;
+        _steinSeekPositionMs = null;
         steinEdgeInfo = null;
+        _steinProgressInitialized = false;
+        _localSteinProgress = null;
       }
       showSteinEdgeInfo.value = false;
     }

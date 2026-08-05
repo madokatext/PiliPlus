@@ -242,13 +242,6 @@ List<SettingsModel> get videoSettings => [
     setKey: SettingBoxKey.showPlayerInstanceStatus,
     defaultVal: false,
   ),
-  const SwitchModel(
-    title: '显示互动视频进度链路',
-    subtitle: '显示历史节点获取、匹配、续播定位及节点加载的完整调试信息',
-    leading: Icon(Icons.account_tree_outlined),
-    setKey: SettingBoxKey.showSteinProgressDebug,
-    defaultVal: false,
-  ),
 ];
 
 Future<void> _showCDNDialog(BuildContext context, VoidCallback setState) async {

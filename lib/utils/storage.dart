@@ -26,6 +26,7 @@ abstract final class GStorage {
   static late final Box<dynamic> setting;
   static late final Box<dynamic> video;
   static late final Box<int> watchProgress;
+  static late final Box<dynamic> interactiveVideoProgress;
   static late final Box<dynamic> recommendExposureHistory;
   static late final Box<dynamic> recommendWatchHistory;
   static late final Box<Uint8List>? reply;
@@ -74,6 +75,12 @@ abstract final class GStorage {
           return deletedEntries > 4;
         },
       ).then((res) => watchProgress = res),
+      Hive.openBox(
+        'interactiveVideoProgress',
+        compactionStrategy: (entries, deletedEntries) {
+          return deletedEntries > 20 && deletedEntries > entries;
+        },
+      ).then((res) => interactiveVideoProgress = res),
       Hive.openBox(
         'recommendExposureHistory',
         compactionStrategy: (entries, deletedEntries) =>
@@ -126,6 +133,9 @@ abstract final class GStorage {
   }
 
   static Future<void> _migrateLegacySettings() async {
+    if (setting.containsKey('showSteinProgressDebug')) {
+      await setting.delete('showSteinProgressDebug');
+    }
     if (!setting.containsKey(SettingBoxKey.danmakuMergeMode) &&
         setting.containsKey(SettingBoxKey.mergeDanmaku)) {
       await setting.put(
@@ -205,6 +215,7 @@ abstract final class GStorage {
       video.compact(),
       Accounts.account.compact(),
       watchProgress.compact(),
+      interactiveVideoProgress.compact(),
       recommendExposureHistory.compact(),
       recommendWatchHistory.compact(),
       ?reply?.compact(),
@@ -221,6 +232,7 @@ abstract final class GStorage {
       video.close(),
       Accounts.account.close(),
       watchProgress.close(),
+      interactiveVideoProgress.close(),
       recommendExposureHistory.close(),
       recommendWatchHistory.close(),
       ?reply?.close(),
@@ -237,6 +249,7 @@ abstract final class GStorage {
       video.clear(),
       Accounts.clear(),
       watchProgress.clear(),
+      interactiveVideoProgress.clear(),
       recommendExposureHistory.clear(),
       recommendWatchHistory.clear(),
       ?reply?.clear(),

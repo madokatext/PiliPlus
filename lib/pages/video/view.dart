@@ -1762,7 +1762,6 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         ),
         PlayerInstanceStatusOverlay(
           controller: videoDetailController.plPlayerController,
-          videoDetailController: videoDetailController,
           maxWidth: width,
           maxHeight: height,
         ),
