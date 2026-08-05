@@ -121,9 +121,23 @@ mixin TimeBatteryMixin<T extends StatefulWidget> on State<T> {
 
   bool _showCurrTime = false;
   void showCurrTimeIfNeeded(bool isFullScreen) {
-    _showCurrTime = !isPortrait && (isFullScreen || !horizontalScreen);
+    final showCurrTime = !isPortrait && (isFullScreen || !horizontalScreen);
+    if (_showCurrTime == showCurrTime) return;
+    _showCurrTime = showCurrTime;
     if (!_showCurrTime) {
       stopClock();
+    } else if (plPlayerController.showControls.value &&
+        !plPlayerController.controlsLock.value) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted ||
+            !_showCurrTime ||
+            !plPlayerController.showControls.value ||
+            plPlayerController.controlsLock.value) {
+          return;
+        }
+        startClock();
+        getBatteryLevelIfNeeded();
+      });
     }
   }
 
