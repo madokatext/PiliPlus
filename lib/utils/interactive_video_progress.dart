@@ -10,7 +10,9 @@ class InteractiveVideoProgress {
   final List<InteractiveVideoProgressEntry> entries;
   final int currentIndex;
 
-  StoryList get current => entries[currentIndex].toStory(
+  InteractiveVideoProgressEntry get currentEntry => entries[currentIndex];
+
+  StoryList get current => currentEntry.toStory(
     cursor: currentIndex,
     isCurrent: true,
   );

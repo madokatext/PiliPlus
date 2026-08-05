@@ -1300,7 +1300,7 @@ class VideoDetailController extends GetxController
       _localSteinProgress = progress;
       steinProgressList.assignAll(progress.toStoryList());
 
-      final historyCid = progress.current.cid;
+      final historyCid = progress.currentEntry.cid;
       if (historyCid != cid.value) {
         cid.value = historyCid;
         introCtr.cid.value = historyCid;
@@ -1485,7 +1485,7 @@ class VideoDetailController extends GetxController
             graphVersion = response.interaction?.graphVersion;
             if (graphVersion != null) {
               unawaited(
-                getSteinEdgeInfo(_localSteinProgress?.current.edgeId),
+                getSteinEdgeInfo(_localSteinProgress?.currentEntry.edgeId),
               );
             }
           }
