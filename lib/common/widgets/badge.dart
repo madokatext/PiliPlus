@@ -11,6 +11,7 @@ class PBadge extends StatelessWidget {
   final double? right;
   final double? bottom;
   final double? left;
+  final double? maxWidth;
   final EdgeInsets? padding;
 
   final PBadgeType type;
@@ -27,6 +28,7 @@ class PBadge extends StatelessWidget {
     this.right,
     this.bottom,
     this.left,
+    this.maxWidth,
     this.type = PBadgeType.primary,
     this.size = PBadgeSize.medium,
     this.isStack = true,
@@ -88,6 +90,9 @@ class PBadge extends StatelessWidget {
         : const .all(.circular(4));
 
     Widget content = Container(
+      constraints: maxWidth == null
+          ? null
+          : BoxConstraints(maxWidth: maxWidth!),
       padding: padding ?? paddingStyle,
       decoration: BoxDecoration(
         borderRadius: br,
@@ -96,6 +101,8 @@ class PBadge extends StatelessWidget {
       ),
       child: Text(
         text!,
+        maxLines: maxWidth == null ? null : 1,
+        overflow: maxWidth == null ? null : TextOverflow.ellipsis,
         textScaler: textScaleFactor != null ? .linear(textScaleFactor!) : null,
         style: TextStyle(
           height: 1,

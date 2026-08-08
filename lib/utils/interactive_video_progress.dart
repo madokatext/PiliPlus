@@ -12,6 +12,12 @@ class InteractiveVideoProgress {
 
   InteractiveVideoProgressEntry get currentEntry => entries[currentIndex];
 
+  String get cardLabel {
+    final title = currentEntry.title?.trim();
+    final displayTitle = title == null || title.isEmpty ? '未命名章节' : title;
+    return '第${currentIndex + 1}章 · $displayTitle';
+  }
+
   StoryList get current => currentEntry.toStory(
     cursor: currentIndex,
     isCurrent: true,

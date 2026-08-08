@@ -10,6 +10,7 @@ import 'package:PiliPlus/models/horizontal_video_model.dart';
 import 'package:PiliPlus/models_new/video/video_detail/dimension.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
+import 'package:PiliPlus/utils/interactive_video_progress.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:flutter/material.dart';
@@ -102,6 +103,10 @@ class VideoCardH extends StatelessWidget {
                         final double maxHeight = boxConstraints.maxHeight;
 
                         final progress = videoItem.progress;
+                        final interactiveProgressLabel =
+                            InteractiveVideoProgressRepository.get(
+                              videoItem.bvid ?? '',
+                            )?.cardLabel;
 
                         return Stack(
                           clipBehavior: .none,
@@ -122,7 +127,15 @@ class VideoCardH extends StatelessWidget {
                                   _ => .primary,
                                 },
                               ),
-                            if (progress != null && progress != 0) ...[
+                            if (interactiveProgressLabel != null)
+                              PBadge(
+                                text: interactiveProgressLabel,
+                                right: 6,
+                                bottom: 8,
+                                maxWidth: maxWidth - 12,
+                                type: .gray,
+                              )
+                            else if (progress != null && progress != 0) ...[
                               PBadge(
                                 text: progress == -1
                                     ? '已看完'

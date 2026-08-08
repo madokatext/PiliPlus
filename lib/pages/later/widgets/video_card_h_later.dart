@@ -11,6 +11,7 @@ import 'package:PiliPlus/models/common/stat_type.dart';
 import 'package:PiliPlus/models_new/later/list.dart';
 import 'package:PiliPlus/pages/later/controller.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
+import 'package:PiliPlus/utils/interactive_video_progress.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:flutter/material.dart';
@@ -90,6 +91,10 @@ class VideoCardHLater extends StatelessWidget {
                     final double maxWidth = boxConstraints.maxWidth;
                     final double maxHeight = boxConstraints.maxHeight;
                     num? progress = videoItem.progress;
+                    final interactiveProgressLabel =
+                        InteractiveVideoProgressRepository.get(
+                          videoItem.bvid ?? '',
+                        )?.cardLabel;
                     return Stack(
                       clipBehavior: Clip.none,
                       children: [
@@ -125,7 +130,15 @@ class VideoCardHLater extends StatelessWidget {
                             top: 6.0,
                             right: 6.0,
                           ),
-                        if (progress != null && progress != 0) ...[
+                        if (interactiveProgressLabel != null)
+                          PBadge(
+                            text: interactiveProgressLabel,
+                            right: 6,
+                            bottom: 8,
+                            maxWidth: maxWidth - 12,
+                            type: PBadgeType.gray,
+                          )
+                        else if (progress != null && progress != 0) ...[
                           PBadge(
                             text: progress == -1
                                 ? '已看完'

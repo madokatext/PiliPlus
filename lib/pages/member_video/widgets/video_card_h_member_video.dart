@@ -11,6 +11,7 @@ import 'package:PiliPlus/models_new/space/space_archive/item.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/extension/dimension_ext.dart';
+import 'package:PiliPlus/utils/interactive_video_progress.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:flutter/material.dart';
@@ -91,6 +92,10 @@ class VideoCardHMemberVideo extends StatelessWidget {
                       builder: (context, boxConstraints) {
                         final double maxWidth = boxConstraints.maxWidth;
                         final double maxHeight = boxConstraints.maxHeight;
+                        final interactiveProgressLabel =
+                            InteractiveVideoProgressRepository.get(
+                              videoItem.bvid ?? '',
+                            )?.cardLabel;
                         return Stack(
                           clipBehavior: Clip.none,
                           children: [
@@ -130,7 +135,15 @@ class VideoCardHMemberVideo extends StatelessWidget {
                                     ? PBadgeType.error
                                     : PBadgeType.primary,
                               ),
-                            if (videoItem.history != null) ...[
+                            if (interactiveProgressLabel != null)
+                              PBadge(
+                                text: interactiveProgressLabel,
+                                right: 6.0,
+                                bottom: 6.0,
+                                maxWidth: maxWidth - 12,
+                                type: PBadgeType.gray,
+                              )
+                            else if (videoItem.history != null) ...[
                               Builder(
                                 builder: (context) {
                                   try {

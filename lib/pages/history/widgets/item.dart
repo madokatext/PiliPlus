@@ -12,6 +12,7 @@ import 'package:PiliPlus/pages/common/multi_select/base.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
+import 'package:PiliPlus/utils/interactive_video_progress.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:flutter/material.dart';
@@ -38,6 +39,9 @@ class HistoryItem extends StatelessWidget {
     int aid = item.history.oid!;
     String bvid = item.history.bvid ?? IdUtils.av2bv(aid);
     final business = item.history.business;
+    final interactiveProgressLabel = business == 'archive'
+        ? InteractiveVideoProgressRepository.get(bvid)?.cardLabel
+        : null;
     final enableMultiSelect = ctr.enableMultiSelect.value;
 
     final onLongPress = enableMultiSelect
@@ -135,7 +139,15 @@ class HistoryItem extends StatelessWidget {
                               height: maxHeight,
                               borderRadius: Style.cardRadius,
                             ),
-                            if (hasDuration)
+                            if (interactiveProgressLabel != null)
+                              PBadge(
+                                text: interactiveProgressLabel,
+                                right: 6.0,
+                                bottom: 8.0,
+                                maxWidth: maxWidth - 12,
+                                type: PBadgeType.gray,
+                              )
+                            else if (hasDuration)
                               PBadge(
                                 text: item.progress == -1
                                     ? '已看完'
@@ -160,7 +172,8 @@ class HistoryItem extends StatelessWidget {
                                     ? PBadgeType.gray
                                     : PBadgeType.primary,
                               ),
-                            if (hasDuration &&
+                            if (interactiveProgressLabel == null &&
+                                hasDuration &&
                                 item.progress != null &&
                                 item.progress != 0)
                               Positioned(
