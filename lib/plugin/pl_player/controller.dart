@@ -123,6 +123,10 @@ class _InitialPlayGate {
   bool firstFrameReady = false;
   bool firstFrameFailed = false;
   bool released = false;
+  bool releaseRequested = false;
+  bool fallbackCheckScheduled = false;
+  bool fallbackReleaseAttempted = false;
+  Timer? fallbackReleaseTimer;
   bool outputReady = false;
   bool dataSourceCurrent = true;
   bool generationCurrent = true;
@@ -1371,6 +1375,8 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
 
     _initialPlayGate = gate;
     _lastInitialPlayGate = null;
+    gate.releaseRequested = _autoPlay;
+    _scheduleInitialPlayFallbackCheck(gate);
     unawaited(
       firstFrameRendered.then<void>(
         (_) => gate.firstFrameReady = true,
@@ -1389,6 +1395,68 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
   void _holdInitialPlay(_InitialPlayGate gate) {
     if (!gate.active) return;
     gate.player.setProperty('pause', 'yes');
+  }
+
+  void _scheduleInitialPlayFallbackCheck(_InitialPlayGate gate) {
+    if (gate.fallbackCheckScheduled) return;
+    gate.fallbackCheckScheduled = true;
+    gate.fallbackReleaseTimer = Timer(const Duration(seconds: 5), () {
+      gate.fallbackReleaseTimer = null;
+      _tryInitialPlayFallbackRelease(gate);
+    });
+  }
+
+  void _tryInitialPlayFallbackRelease(_InitialPlayGate gate) {
+    if (!gate.active ||
+        gate.fallbackReleaseAttempted ||
+        !gate.releaseRequested ||
+        !identical(_initialPlayGate, gate) ||
+        gate.generation != _dataSourceGeneration ||
+        !gate.isCurrentDataSource() ||
+        !identical(gate.player, _videoPlayerController) ||
+        _playerCount == 0 ||
+        !_shouldGateInitialPlay ||
+        videoPlayerSwitching.value ||
+        _videoNetworkFailed ||
+        _mediaRecoveryRunning ||
+        _mediaRecoveryTimer != null ||
+        _pausedForVideoStall ||
+        WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+      return;
+    }
+
+    final player = gate.player;
+    try {
+      final state = player.state;
+      final currentVo = player
+          .getProperty('current-vo')
+          .trim()
+          .toLowerCase();
+      final pausedForCache = player.getProperty('paused-for-cache') == 'yes';
+      final pauseHeld = player.getProperty('pause') == 'yes';
+      gate.outputReady = currentVo.isNotEmpty && currentVo != 'null';
+      if (player.current.isEmpty ||
+          state.completed ||
+          state.buffering ||
+          pausedForCache ||
+          state.width <= 0 ||
+          state.height <= 0 ||
+          !gate.outputReady ||
+          !pauseHeld) {
+        return;
+      }
+
+      // 首帧 Future 偶发漏回调时，以上底层状态已经足以证明真实视频输出
+      // 就绪。直接解除 mpv pause，绕过可能卡住的正常回调链；每个门控最多
+      // 只执行一次这条额外放行路径。
+      gate.fallbackReleaseAttempted = true;
+      player.setProperty('pause', 'no');
+      audioSessionHandler?.setActive(true);
+      playerStatus.value = PlayerStatus.playing;
+      _finishInitialPlayGate(gate);
+    } catch (_) {
+      // 播放器可能恰好被替换或释放；一次性检查不追赶新的数据源。
+    }
   }
 
   Future<bool> _waitForInitialPlayOutput(
@@ -1428,7 +1496,12 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     bool Function() isCurrentDataSource,
   ) async {
     final player = _videoPlayerController;
-    if (player == null || !identical(gate.player, player)) return;
+    if (!gate.active ||
+        player == null ||
+        !identical(gate.player, player)) {
+      return;
+    }
+    gate.releaseRequested = true;
     isWaitingForInitialPlay.value = true;
 
     final readyDeadline = DateTime.now().add(const Duration(seconds: 15));
@@ -1456,6 +1529,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         );
     if (!outputReady ||
         !gate.active ||
+        !gate.releaseRequested ||
         !isCurrentDataSource() ||
         gate.generation != _dataSourceGeneration ||
         !identical(player, _videoPlayerController)) {
@@ -1490,6 +1564,8 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     if (!gate.active) return;
     gate.active = false;
     gate.released = released;
+    gate.fallbackReleaseTimer?.cancel();
+    gate.fallbackReleaseTimer = null;
     if (!gate.canceled.isCompleted) {
       gate.canceled.complete();
     }
@@ -1515,6 +1591,8 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       isWaitingForInitialPlay.value = false;
     }
     gate.active = false;
+    gate.fallbackReleaseTimer?.cancel();
+    gate.fallbackReleaseTimer = null;
     _lastInitialPlayGate = gate;
     if (!gate.canceled.isCompleted) {
       gate.canceled.complete();
@@ -1540,6 +1618,8 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     isWaitingForInitialPlay.value = false;
     if (gate == null || !gate.active) return;
     gate.active = false;
+    gate.fallbackReleaseTimer?.cancel();
+    gate.fallbackReleaseTimer = null;
     if (!gate.canceled.isCompleted) {
       gate.canceled.complete();
     }
@@ -3559,6 +3639,10 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
 
   /// 暂停播放
   Future<void> pause({bool notify = true, bool isInterrupt = false}) async {
+    final initialGate = _initialPlayGate;
+    if (initialGate != null && initialGate.active) {
+      initialGate.releaseRequested = false;
+    }
     if (_pausedForVideoStall) {
       _resumeAfterVideoRecovery = false;
       if (_videoPlayerController case final player?) {
