@@ -60,6 +60,8 @@ class _PlayerBufferingOverlayState extends State<PlayerBufferingOverlay> {
       widget.controller.videoPlayerController,
       widget.controller.standbyVideoPlayerController,
     ];
+    var totalCacheSpeed = 0.0;
+    var hasValidCacheSpeed = false;
     for (final player in players) {
       if (player == null) {
         continue;
@@ -73,12 +75,13 @@ class _PlayerBufferingOverlayState extends State<PlayerBufferingOverlay> {
             cacheSpeed < 0) {
           continue;
         }
-        return cacheSpeed;
+        totalCacheSpeed += cacheSpeed;
+        hasValidCacheSpeed = true;
       } catch (_) {
-        // 主实例尚未提供有效速度时继续尝试备用实例。
+        // 单个实例尚未提供有效速度时仍统计另一个实例。
       }
     }
-    return null;
+    return hasValidCacheSpeed ? totalCacheSpeed : null;
   }
 
   void _updateBufferingSpeed() {
