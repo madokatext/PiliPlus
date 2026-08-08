@@ -73,6 +73,7 @@ class _FavSearchPageState
             ..order.value = value
             ..onReload(),
           itemBuilder: (context) => FavOrderType.values
+              .where((e) => e != FavOrderType.mtimeAsc)
               .map(
                 (e) => PopupMenuItem(
                   value: e,

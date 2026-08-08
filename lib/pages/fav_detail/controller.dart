@@ -148,6 +148,9 @@ class FavDetailController
         ps: 20,
         mediaId: mediaId,
         order: order.value,
+        mediaCount: folderInfo.value.mediaCount > 0
+            ? folderInfo.value.mediaCount
+            : null,
       );
 
   void toViewPlayAll() {
