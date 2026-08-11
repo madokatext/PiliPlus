@@ -94,6 +94,8 @@ class ReplyItemGrpc extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = ColorScheme.of(context);
+    final canOpenReplyDetails =
+        replyLevel != 1 || replyItem.count > Int64.ZERO;
 
     void showMore() => showModalBottomSheet(
       context: context,
@@ -128,7 +130,9 @@ class ReplyItemGrpc extends StatelessWidget {
     return Material(
       type: MaterialType.transparency,
       child: InkWell(
-        onTap: () => replyReply?.call(replyItem, null),
+        onTap: canOpenReplyDetails
+            ? () => replyReply?.call(replyItem, null)
+            : null,
         onLongPress: showMore,
         onSecondaryTap: PlatformUtils.isMobile ? null : showMore,
         child: child,
