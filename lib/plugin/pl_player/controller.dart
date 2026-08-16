@@ -4184,10 +4184,14 @@ void onSeekStart({bool fromGesture = false}) {
     );
   }
 
+  static const _previewRequestMaxAttempts = 3;
+  static const _previewRetryBaseDelay = Duration(milliseconds: 500);
+
   late final Map<String, ui.Image> previewCache = {};
   final Map<String, Future<ui.Image?>> _previewLoadTasks = {};
   LoadingState<VideoShotData>? videoShot;
   Future<void>? _videoShotTask;
+  bool _preloadVideoShotImagesRequested = false;
   int _previewGeneration = 0;
   int get previewGeneration => _previewGeneration;
   int? _pendingPreviewSeconds;
@@ -4230,6 +4234,9 @@ late final seekPreviewScale = Pref.seekPreviewScale;
   }
 
   void _loadVideoShot({bool preloadImages = false}) {
+    if (preloadImages) {
+      _preloadVideoShotImagesRequested = true;
+    }
     if (_videoShotTask != null ||
         isLive ||
         isFileSource ||
@@ -4250,6 +4257,79 @@ late final seekPreviewScale = Pref.seekPreviewScale;
     );
   }
 
+  bool _isCurrentPreviewRequest(
+    int generation, {
+    String? bvid,
+    int? cid,
+  }) =>
+      generation == _previewGeneration &&
+      (bvid == null || _bvid == bvid) &&
+      (cid == null || this.cid == cid);
+
+  Future<bool> _waitForPreviewRetry(
+    int attempt,
+    int generation, {
+    String? bvid,
+    int? cid,
+  }) async {
+    if (attempt >= _previewRequestMaxAttempts ||
+        !_isCurrentPreviewRequest(generation, bvid: bvid, cid: cid)) {
+      return false;
+    }
+
+    await Future<void>.delayed(
+      Duration(
+        milliseconds:
+            _previewRetryBaseDelay.inMilliseconds * (1 << (attempt - 1)),
+      ),
+    );
+    return _isCurrentPreviewRequest(generation, bvid: bvid, cid: cid);
+  }
+
+  Future<LoadingState<VideoShotData>?> _requestVideoShotWithRetry(
+    int generation,
+    String requestBvid,
+    int requestCid,
+  ) async {
+    LoadingState<VideoShotData> result = const Error(null);
+    for (var attempt = 1; attempt <= _previewRequestMaxAttempts; attempt++) {
+      if (!_isCurrentPreviewRequest(
+        generation,
+        bvid: requestBvid,
+        cid: requestCid,
+      )) {
+        return null;
+      }
+
+      try {
+        result = await VideoHttp.videoshot(
+          bvid: requestBvid,
+          cid: requestCid,
+        );
+      } catch (err) {
+        result = Error(err.toString());
+      }
+      if (result case Success(:final response)) {
+        if (response.index.isNotEmpty &&
+            response.image.isNotEmpty &&
+            response.image.every((url) => url.isNotEmpty)) {
+          return result;
+        }
+        result = const Error('Invalid videoshot response');
+      }
+
+      if (!await _waitForPreviewRetry(
+        attempt,
+        generation,
+        bvid: requestBvid,
+        cid: requestCid,
+      )) {
+        break;
+      }
+    }
+    return result;
+  }
+
   Future<void> _fetchVideoShot(
     int generation,
     String requestBvid,
@@ -4257,13 +4337,17 @@ late final seekPreviewScale = Pref.seekPreviewScale;
     required bool preloadImages,
   }) async {
     try {
-      final result = await VideoHttp.videoshot(
-        bvid: requestBvid,
-        cid: requestCid,
+      final result = await _requestVideoShotWithRetry(
+        generation,
+        requestBvid,
+        requestCid,
       );
-      if (generation != _previewGeneration ||
-          _bvid != requestBvid ||
-          cid != requestCid) {
+      if (result == null ||
+          !_isCurrentPreviewRequest(
+            generation,
+            bvid: requestBvid,
+            cid: requestCid,
+          )) {
         return;
       }
 
@@ -4273,20 +4357,16 @@ late final seekPreviewScale = Pref.seekPreviewScale;
         if (seconds != null && isSeeking.value) {
           _applyPreviewIndex(response, seconds);
         }
-        if (preloadImages) {
+        if (preloadImages || _preloadVideoShotImagesRequested) {
           await _preloadVideoShotImages(response, generation);
         }
       }
-    } catch (err) {
-      if (generation == _previewGeneration &&
-          _bvid == requestBvid &&
-          cid == requestCid) {
-        videoShot = Error(err.toString());
-      }
     } finally {
-      if (generation == _previewGeneration &&
-          _bvid == requestBvid &&
-          cid == requestCid) {
+      if (_isCurrentPreviewRequest(
+        generation,
+        bvid: requestBvid,
+        cid: requestCid,
+      )) {
         _videoShotTask = null;
       }
     }
@@ -4324,7 +4404,7 @@ late final seekPreviewScale = Pref.seekPreviewScale;
     }
 
     late final Future<ui.Image?> task;
-    task = _decodeVideoShotImage(url).then((image) {
+    task = _decodeVideoShotImage(url, generation).then((image) {
       if (image == null) return null;
       if (generation != _previewGeneration) {
         image.dispose();
@@ -4348,29 +4428,56 @@ late final seekPreviewScale = Pref.seekPreviewScale;
     return task;
   }
 
-  Future<ui.Image?> _decodeVideoShotImage(String url) async {
-    try {
-      final file = await CacheManager.manager.getSingleFile(
-        ImageUtils.safeThumbnailUrl(url),
-        key: Utils.getFileName(url, fileExt: false),
-        headers: Constants.baseHeaders,
-      );
-      final codec = await ui.instantiateImageCodecFromBuffer(
-        await ui.ImmutableBuffer.fromFilePath(file.path),
-      );
-      try {
-        return (await codec.getNextFrame()).image;
-      } finally {
-        codec.dispose();
+  Future<ui.Image?> _decodeVideoShotImage(
+    String url,
+    int generation,
+  ) async {
+    String? cacheKey;
+    for (var attempt = 1; attempt <= _previewRequestMaxAttempts; attempt++) {
+      if (!_isCurrentPreviewRequest(generation)) {
+        return null;
       }
-    } catch (_) {
-      return null;
+
+      try {
+        cacheKey ??= Utils.getFileName(url, fileExt: false);
+        final file = await CacheManager.manager.getSingleFile(
+          ImageUtils.safeThumbnailUrl(url),
+          key: cacheKey,
+          headers: Constants.baseHeaders,
+        );
+        if (!_isCurrentPreviewRequest(generation)) {
+          return null;
+        }
+
+        final codec = await ui.instantiateImageCodecFromBuffer(
+          await ui.ImmutableBuffer.fromFilePath(file.path),
+        );
+        try {
+          return (await codec.getNextFrame()).image;
+        } finally {
+          codec.dispose();
+        }
+      } catch (_) {
+        if (!_isCurrentPreviewRequest(generation)) {
+          return null;
+        }
+        if (cacheKey != null) {
+          try {
+            await CacheManager.manager.removeFile(cacheKey);
+          } catch (_) {}
+        }
+        if (!await _waitForPreviewRetry(attempt, generation)) {
+          return null;
+        }
+      }
     }
+    return null;
   }
 
   void _clearPreview() {
     _previewGeneration++;
     _videoShotTask = null;
+    _preloadVideoShotImagesRequested = false;
     _pendingPreviewSeconds = null;
     showPreview.value = false;
     previewIndex.value = null;
