@@ -1,4 +1,4 @@
-name: AI Chinese string scan
+name: AI Chinese slang rewrite
 
 on:
   push:
@@ -7,24 +7,61 @@ on:
     paths:
       - .github/workflows/ai-cn-string-scan.yml
       - tool/ai_scan_cn_strings.py
+      - tool/ai_blackify_cn_strings.py
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  scan:
+  rewrite:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-      - name: Scan Chinese string literals
+
+      - name: Scan original Chinese strings
         run: python3 tool/ai_scan_cn_strings.py
-      - name: Upload scan bundle
+
+      - name: Apply slang rewrite
+        run: python3 tool/ai_blackify_cn_strings.py
+
+      - name: Check patch whitespace
+        run: git diff --check
+
+      - name: Set up Flutter SDK for Dart syntax validation
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+
+      - name: Parse all changed Dart files
+        shell: bash
+        run: |
+          git diff --name-only -z -- '*.dart' | xargs -0 -r dart format --output=none
+
+      - name: Upload complete rewrite report
         uses: actions/upload-artifact@v4
         with:
-          name: chinese-string-scan-v2
-          path: scan_bundle
+          name: chinese-slang-rewrite-report
+          path: |
+            scan_bundle/summary.json
+            scan_bundle/scan.json
+            scan_bundle/blackify_report.json
           if-no-files-found: error
           retention-days: 1
+
+      - name: Commit rewritten app sources
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add android ios lib macos
+          if git diff --cached --quiet; then
+            echo "No source changes to commit"
+            exit 0
+          fi
+          git commit -m "feat: blackify Chinese UI strings"
+          git push origin HEAD:ai/black-slang-cn-strings
