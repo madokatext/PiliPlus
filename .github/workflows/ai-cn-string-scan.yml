@@ -1,0 +1,191 @@
+name: AI Chinese string scan
+
+on:
+  push:
+    branches:
+      - ai/black-slang-cn-strings
+    paths:
+      - .github/workflows/ai-cn-string-scan.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Scan Chinese string literals
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from __future__ import annotations
+          import json, re, shutil
+          from pathlib import Path
+
+          ROOT = Path('.')
+          OUT = Path('scan_bundle')
+          FILES_OUT = OUT / 'files'
+          OUT.mkdir(exist_ok=True)
+          FILES_OUT.mkdir(parents=True, exist_ok=True)
+
+          allowed_ext = {
+              '.dart', '.java', '.kt', '.kts', '.gradle', '.xml', '.json', '.arb',
+              '.yaml', '.yml', '.plist', '.swift', '.m', '.mm', '.cpp', '.cc', '.c',
+              '.h', '.hpp', '.js', '.ts', '.html', '.htm', '.css', '.cmake'
+          }
+          allowed_names = {'CMakeLists.txt', 'pubspec.yaml', 'analysis_options.yaml', 'distribute_options.yaml'}
+          excluded_parts = {'.git', '.dart_tool', 'build', '.idea', '.vscode', '.github'}
+          zh_re = re.compile(r'[\u3400-\u4dbf\u4e00-\u9fff]')
+
+          def line_no(text: str, pos: int) -> int:
+              return text.count('\n', 0, pos) + 1
+
+          def one_line_context(text: str, pos: int) -> str:
+              a = text.rfind('\n', 0, pos) + 1
+              b = text.find('\n', pos)
+              if b < 0: b = len(text)
+              return text[a:b].strip()[:500]
+
+          def code_strings(text: str):
+              i, n = 0, len(text)
+              while i < n:
+                  # line comment
+                  if text.startswith('//', i):
+                      j = text.find('\n', i + 2)
+                      i = n if j < 0 else j + 1
+                      continue
+                  # block comment (supports nesting, useful for Dart)
+                  if text.startswith('/*', i):
+                      depth, j = 1, i + 2
+                      while j < n and depth:
+                          if text.startswith('/*', j):
+                              depth += 1; j += 2
+                          elif text.startswith('*/', j):
+                              depth -= 1; j += 2
+                          else:
+                              j += 1
+                      i = j
+                      continue
+                  ch = text[i]
+                  if ch not in "'\"":
+                      i += 1
+                      continue
+                  q = ch
+                  triple = text.startswith(q * 3, i)
+                  delim = q * (3 if triple else 1)
+                  raw = i > 0 and text[i-1] in 'rR' and (i < 2 or not (text[i-2].isalnum() or text[i-2] == '_'))
+                  start = i
+                  j = i + len(delim)
+                  while j < n:
+                      if text.startswith(delim, j):
+                          end = j + len(delim)
+                          inner = text[i+len(delim):j]
+                          yield start, end, delim, raw, inner
+                          i = end
+                          break
+                      if not raw and text[j] == '\\':
+                          j += 2
+                      else:
+                          j += 1
+                  else:
+                      i = start + 1
+              return
+
+          records = []
+          candidate_paths = set()
+
+          for path in ROOT.rglob('*'):
+              if not path.is_file():
+                  continue
+              rel = path.as_posix()
+              if any(part in excluded_parts for part in path.parts):
+                  continue
+              if path.suffix.lower() not in allowed_ext and path.name not in allowed_names:
+                  continue
+              try:
+                  text = path.read_text(encoding='utf-8')
+              except Exception:
+                  continue
+
+              seen_ranges = set()
+              for start, end, delim, raw, inner in code_strings(text):
+                  if not zh_re.search(inner):
+                      continue
+                  rec = {
+                      'path': rel,
+                      'line': line_no(text, start),
+                      'kind': 'string_literal',
+                      'delimiter': delim,
+                      'raw': raw,
+                      'literal_raw': text[start:end],
+                      'inner_raw': inner,
+                      'context': one_line_context(text, start),
+                  }
+                  records.append(rec)
+                  candidate_paths.add(rel)
+                  seen_ranges.add((start, end))
+
+              # XML/HTML/plist text nodes not enclosed in quotes.
+              if path.suffix.lower() in {'.xml', '.html', '.htm', '.plist'}:
+                  for m in re.finditer(r'>([^<>]+)<', text, re.S):
+                      val = m.group(1)
+                      if not zh_re.search(val):
+                          continue
+                      s, e = m.start(1), m.end(1)
+                      if any(a <= s and e <= b for a,b in seen_ranges):
+                          continue
+                      records.append({
+                          'path': rel, 'line': line_no(text, s), 'kind': 'text_node',
+                          'delimiter': '', 'raw': False, 'literal_raw': val,
+                          'inner_raw': val, 'context': one_line_context(text, s),
+                      })
+                      candidate_paths.add(rel)
+
+              # YAML allows unquoted Chinese scalars. Capture only non-comment content.
+              if path.suffix.lower() in {'.yaml', '.yml'}:
+                  offset = 0
+                  for ln in text.splitlines(True):
+                      body = ln.rstrip('\r\n')
+                      stripped = body.lstrip()
+                      if stripped and not stripped.startswith('#') and zh_re.search(body):
+                          # avoid duplicating a quoted scalar already captured
+                          if not any(a <= offset + body.find(body.strip()) < b for a,b in seen_ranges):
+                              records.append({
+                                  'path': rel, 'line': line_no(text, offset), 'kind': 'yaml_line',
+                                  'delimiter': '', 'raw': False, 'literal_raw': body,
+                                  'inner_raw': body, 'context': body.strip()[:500],
+                              })
+                              candidate_paths.add(rel)
+                      offset += len(ln)
+
+          records.sort(key=lambda x: (x['path'], x['line'], x['kind'], x['literal_raw']))
+          for rel in sorted(candidate_paths):
+              dst = FILES_OUT / rel
+              dst.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copy2(rel, dst)
+
+          (OUT / 'scan.json').write_text(json.dumps(records, ensure_ascii=False, indent=2), encoding='utf-8')
+          (OUT / 'candidate_files.txt').write_text('\n'.join(sorted(candidate_paths)) + '\n', encoding='utf-8')
+          summary = {
+              'occurrences': len(records),
+              'candidate_files': len(candidate_paths),
+              'unique_inner_raw': len({r['inner_raw'] for r in records}),
+          }
+          (OUT / 'summary.json').write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding='utf-8')
+          print(json.dumps(summary, ensure_ascii=False))
+          print('Candidate files:')
+          print('\n'.join(sorted(candidate_paths)))
+          PY
+
+      - name: Upload scan bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: chinese-string-scan
+          path: scan_bundle
+          if-no-files-found: error
+          retention-days: 1
