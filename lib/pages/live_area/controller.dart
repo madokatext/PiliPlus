@@ -62,7 +62,7 @@ class LiveAreaController extends CommonListController<List<AreaList>?, AreaList>
       );
       if (res.isSuccess) {
         isEditing.value = !isEditing.value;
-        SmartDialog.showToast('设置成功');
+        SmartDialog.showToast('调参焊死，包成的');
       } else {
         res.toast();
       }

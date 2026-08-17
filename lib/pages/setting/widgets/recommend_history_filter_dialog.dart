@@ -45,7 +45,7 @@ class _RecommendHistoryFilterDialogState
   Widget build(BuildContext context) {
     return AlertDialog(
       constraints: Style.dialogFixedConstraints,
-      title: const Text('近期推荐历史过滤'),
+      title: const Text('近期算法喂饭电子案底过滤'),
       content: SizedBox(
         width: 430,
         child: SingleChildScrollView(
@@ -55,19 +55,19 @@ class _RecommendHistoryFilterDialogState
             children: [
               SwitchListTile.adaptive(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('过滤近期已推荐或看过的视频'),
+                title: const Text('过滤近期已算法喂饭或看过的电子榨菜'),
                 value: _enabled,
                 onChanged: (value) => setState(() => _enabled = value),
               ),
               const Divider(),
-              const Text('过去时间'),
+              const Text('过去时间，已老实'),
               const SizedBox(height: 8),
               Row(
                 children: [
                   _numberSelect(
                     value: _days,
                     values: List.generate(31, (index) => index),
-                    suffix: '天',
+                    suffix: '天，曼波',
                     onChanged: (value) {
                       setState(() {
                         _days = value;
@@ -84,7 +84,7 @@ class _RecommendHistoryFilterDialogState
                     values: _days == 30
                         ? const [0]
                         : List.generate(24, (index) => index),
-                    suffix: '小时',
+                    suffix: '小时，不是哥们',
                     onChanged: _days == 30
                         ? null
                         : (value) => setState(() => _hours = value),
@@ -95,7 +95,7 @@ class _RecommendHistoryFilterDialogState
                     values: _days == 30
                         ? const [0]
                         : List.generate(60, (index) => index),
-                    suffix: '分',
+                    suffix: '分，这把高端局',
                     onChanged: _days == 30
                         ? null
                         : (value) => setState(() => _minutes = value),
@@ -104,27 +104,27 @@ class _RecommendHistoryFilterDialogState
               ),
               const SizedBox(height: 18),
               _thresholdRow(
-                label: '推荐次数',
+                label: '算法喂饭次数',
                 value: _exposureThreshold,
                 onChanged: (value) =>
                     setState(() => _exposureThreshold = value),
               ),
               const SizedBox(height: 12),
               _thresholdRow(
-                label: '观看次数',
+                label: '观看次数，这把高端局',
                 value: _watchThreshold,
                 onChanged: (value) => setState(() => _watchThreshold = value),
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
-                  const Expanded(child: Text('每次至少观看')),
+                  const Expanded(child: Text('每次至少观看，已老实')),
                   SizedBox(
                     width: 92,
                     child: _plainSelect(
                       value: _watchMinutes,
                       values: List.generate(6, (index) => index),
-                      suffix: '分',
+                      suffix: '分，这把高端局',
                       onChanged: (value) {
                         setState(() {
                           _watchMinutes = value;
@@ -143,7 +143,7 @@ class _RecommendHistoryFilterDialogState
                       values: _watchMinutes == 5
                           ? const [0]
                           : List.generate(60, (index) => index),
-                      suffix: '秒',
+                      suffix: '秒，这把高端局',
                       onChanged: _watchMinutes == 5
                           ? null
                           : (value) => setState(() => _watchSeconds = value),
@@ -156,8 +156,8 @@ class _RecommendHistoryFilterDialogState
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.query_stats_outlined),
-                title: const Text('统计'),
-                subtitle: const Text('查看已记录的推荐与观看历史数据'),
+                title: const Text('统计，曼波'),
+                subtitle: const Text('扒拉看看已电子脚印的算法喂饭与观看电子案底赛博粮，我嘞个豆'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: _showStatistics,
               ),
@@ -168,7 +168,7 @@ class _RecommendHistoryFilterDialogState
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('取消'),
+          child: const Text('不整了，撤！'),
         ),
         FilledButton(
           style: FilledButton.styleFrom(
@@ -180,7 +180,7 @@ class _RecommendHistoryFilterDialogState
             ),
           ),
           onPressed: _save,
-          child: const Text('保存'),
+          child: const Text('焊死这个配置'),
         ),
       ],
     );
@@ -193,13 +193,13 @@ class _RecommendHistoryFilterDialogState
   }) {
     return Row(
       children: [
-        Expanded(child: Text('同一视频$label达到')),
+        Expanded(child: Text('同一电子榨菜$label达到')),
         SizedBox(
           width: 92,
           child: _plainSelect(
             value: value,
             values: List.generate(6, (index) => index),
-            suffix: '次',
+            suffix: '次，曼波',
             onChanged: onChanged,
           ),
         ),
@@ -314,9 +314,9 @@ class _RecommendHistoryStatisticsDialogState
       constraints: Style.dialogFixedConstraints,
       title: Row(
         children: [
-          const Expanded(child: Text('历史数据统计')),
+          const Expanded(child: Text('电子案底赛博粮统计')),
           IconButton(
-            tooltip: '刷新统计',
+            tooltip: '重新投胎统计',
             onPressed: _reload,
             icon: const Icon(Icons.refresh),
           ),
@@ -338,7 +338,7 @@ class _RecommendHistoryStatisticsDialogState
                 child: FilledButton.tonalIcon(
                   onPressed: _reload,
                   icon: const Icon(Icons.refresh),
-                  label: const Text('统计加载失败，重试'),
+                  label: const Text('统计疯狂搬赛博粮寄了，再赌一把，包的'),
                 ),
               );
             }
@@ -349,7 +349,7 @@ class _RecommendHistoryStatisticsDialogState
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('关闭'),
+          child: const Text('啪一下封印'),
         ),
       ],
     );
@@ -361,116 +361,116 @@ class _RecommendHistoryStatisticsDialogState
   ) {
     return ListView(
       children: [
-        _sectionTitle(context, '存储'),
+        _sectionTitle(context, '存储，CPU 都看沉默了'),
         _statRow(
           context,
-          '数据库总大小',
+          '赛博粮库总大小',
           _formatBytes(statistics.totalDatabaseBytes),
         ),
         _statRow(
           context,
-          '推荐数据库大小',
+          '算法喂饭赛博粮库大小，鼠鼠我啊',
           _formatBytes(statistics.exposureDatabaseBytes),
         ),
         _statRow(
           context,
-          '观看数据库大小',
+          '观看赛博粮库大小，不是哥们',
           _formatBytes(statistics.watchDatabaseBytes),
         ),
         _statRow(
           context,
-          '推荐数据库键数',
+          '算法喂饭赛博粮库键数，已老实',
           '${statistics.exposureDatabaseEntryCount}',
         ),
         _statRow(
           context,
-          '观看数据库键数',
+          '观看赛博粮库键数',
           '${statistics.watchDatabaseEntryCount}',
         ),
         _statRow(
           context,
-          '数据保留期限',
-          '${recommendHistoryRetention.inDays} 天',
+          '赛博粮保留期限',
+          '${recommendHistoryRetention.inDays} 天，优势在我',
         ),
-        _sectionTitle(context, '保留期总计'),
-        _statRow(context, '账号作用域', '${statistics.scopeCount}'),
-        _statRow(context, '推荐展示记录', '${statistics.recommendationCount}'),
+        _sectionTitle(context, '保留期总计，我嘞个豆'),
+        _statRow(context, '赛博户口作用域', '${statistics.scopeCount}'),
+        _statRow(context, '算法喂饭展示电子脚印', '${statistics.recommendationCount}'),
         _statRow(
           context,
-          '推荐视频（去重）',
+          '算法喂饭电子榨菜（去重），CPU 都看沉默了',
           '${statistics.recommendedVideoCount}',
         ),
-        _statRow(context, '观看会话记录', '${statistics.watchCount}'),
+        _statRow(context, '观看会话电子脚印，不是哥们', '${statistics.watchCount}'),
         _statRow(
           context,
-          '观看视频（去重）',
+          '观看电子榨菜（去重），优势在我',
           '${statistics.watchedVideoCount}',
         ),
-        _statRow(context, '已结束观看会话', '${statistics.completedWatchCount}'),
+        _statRow(context, '已结束观看会话，不是哥们', '${statistics.completedWatchCount}'),
         _statRow(
           context,
-          '累计有效播放时长',
+          '累计有效开炫时长，鼠鼠我啊',
           _formatDuration(statistics.activePlayedMs),
         ),
         _statRow(
           context,
-          '平均每次观看时长',
+          '平均每次观看时长，优势在我',
           _formatDuration(statistics.averageActivePlayedMs),
         ),
         _statRow(
           context,
-          '推荐 UGC 视频（去重）',
+          '算法喂饭 UGC 电子榨菜（去重）',
           '${statistics.recommendedUgcVideoCount}',
         ),
         _statRow(
           context,
-          '推荐 PGC 视频（去重）',
+          '算法喂饭 PGC 电子榨菜（去重）',
           '${statistics.recommendedPgcVideoCount}',
         ),
         _statRow(
           context,
-          '观看 UGC 视频（去重）',
+          '观看 UGC 电子榨菜（去重）',
           '${statistics.watchedUgcVideoCount}',
         ),
         _statRow(
           context,
-          '观看 PGC 视频（去重）',
+          '观看 PGC 电子榨菜（去重）',
           '${statistics.watchedPgcVideoCount}',
         ),
         _statRow(
           context,
-          '最早记录',
+          '最早电子脚印',
           _formatDateTime(statistics.oldestRecordAt),
         ),
         _statRow(
           context,
-          '最新记录',
+          '最新电子脚印',
           _formatDateTime(statistics.newestRecordAt),
         ),
-        _sectionTitle(context, '当前账号'),
+        _sectionTitle(context, '眼下这坨赛博户口'),
         _statRow(
           context,
-          '推荐展示记录',
+          '算法喂饭展示电子脚印',
           '${statistics.currentScopeRecommendationCount}',
         ),
         _statRow(
           context,
-          '推荐视频（去重）',
+          '算法喂饭电子榨菜（去重），CPU 都看沉默了',
           '${statistics.currentScopeRecommendedVideoCount}',
         ),
         _statRow(
           context,
-          '观看会话记录',
+          '观看会话电子脚印，不是哥们',
           '${statistics.currentScopeWatchCount}',
         ),
         _statRow(
           context,
-          '观看视频（去重）',
+          '观看电子榨菜（去重），优势在我',
           '${statistics.currentScopeWatchedVideoCount}',
         ),
-        ..._windowRows(context, '近 24 小时', statistics.lastDay),
-        ..._windowRows(context, '近 7 天', statistics.lastWeek),
-        ..._windowRows(context, '近 30 天', statistics.lastMonth),
+        ..._windowRows(context, '近 24 小时，属实绷不住', statistics.lastDay),
+        ..._windowRows(context, '近 7 天，我嘞个豆', statistics.lastWeek),
+        ..._windowRows(context, '近 30 天，CPU 都看沉默了', statistics.lastMonth),
       ],
     );
   }
@@ -481,21 +481,21 @@ class _RecommendHistoryStatisticsDialogState
     RecommendHistoryWindowStatistics statistics,
   ) => [
     _sectionTitle(context, title),
-    _statRow(context, '推荐展示记录', '${statistics.recommendationCount}'),
+    _statRow(context, '算法喂饭展示电子脚印', '${statistics.recommendationCount}'),
     _statRow(
       context,
-      '推荐视频（去重）',
+      '算法喂饭电子榨菜（去重），CPU 都看沉默了',
       '${statistics.recommendedVideoCount}',
     ),
-    _statRow(context, '观看会话记录', '${statistics.watchCount}'),
+    _statRow(context, '观看会话电子脚印，不是哥们', '${statistics.watchCount}'),
     _statRow(
       context,
-      '观看视频（去重）',
+      '观看电子榨菜（去重），优势在我',
       '${statistics.watchedVideoCount}',
     ),
     _statRow(
       context,
-      '累计有效播放时长',
+      '累计有效开炫时长，鼠鼠我啊',
       _formatDuration(statistics.activePlayedMs),
     ),
   ];
@@ -542,7 +542,7 @@ class _RecommendHistoryStatisticsDialogState
   }
 
   String _formatBytes(int? bytes) {
-    if (bytes == null) return '不可用';
+    if (bytes == null) return '不可用，鼠鼠我啊';
     const units = ['B', 'KB', 'MB', 'GB', 'TB'];
     var value = bytes.toDouble();
     var unit = 0;
@@ -556,21 +556,21 @@ class _RecommendHistoryStatisticsDialogState
   }
 
   String _formatDuration(int milliseconds) {
-    if (milliseconds <= 0) return '0 秒';
+    if (milliseconds <= 0) return '0 秒，已老实';
     final duration = Duration(milliseconds: milliseconds);
     final parts = <String>[];
-    if (duration.inDays > 0) parts.add('${duration.inDays} 天');
+    if (duration.inDays > 0) parts.add('${duration.inDays} 天，我嘞个豆');
     final hours = duration.inHours % 24;
-    if (hours > 0) parts.add('$hours 小时');
+    if (hours > 0) parts.add('$hours 小时，我嘞个豆');
     final minutes = duration.inMinutes % 60;
-    if (minutes > 0) parts.add('$minutes 分');
+    if (minutes > 0) parts.add('$minutes 分，CPU 都看沉默了');
     final seconds = duration.inSeconds % 60;
-    if (seconds > 0 || parts.isEmpty) parts.add('$seconds 秒');
+    if (seconds > 0 || parts.isEmpty) parts.add('$seconds 秒，CPU 都看沉默了');
     return parts.join(' ');
   }
 
   String _formatDateTime(DateTime? value) {
-    if (value == null) return '暂无';
+    if (value == null) return '暂无，包的';
     final local = value.toLocal();
     String twoDigits(int part) => part.toString().padLeft(2, '0');
     return '${local.year}-${twoDigits(local.month)}-${twoDigits(local.day)} '

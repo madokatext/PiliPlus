@@ -118,12 +118,12 @@ class _PgcReviewPostPanelState extends State<PgcReviewPostPanel> {
               final score = _score.value;
               return Text(
                 switch (score) {
-                  1 => '很差',
-                  2 => '较差',
-                  3 => '还行',
-                  4 => '很好',
-                  5 => '佳作',
-                  _ => '轻触评分',
+                  1 => '很差，已老实',
+                  2 => '较差，优势在我',
+                  3 => '还行，优势在我',
+                  4 => '很好，已老实',
+                  5 => '佳作，鼠鼠我啊',
+                  _ => '轻触评分，鼠鼠我啊',
                 },
                 style: TextStyle(
                   fontSize: 16,
@@ -173,7 +173,7 @@ class _PgcReviewPostPanelState extends State<PgcReviewPostPanel> {
                         color: color,
                       ),
                       Text(
-                        ' 分享到动态',
+                        ' 到处扩散到互联网近况，优势在我',
                         style: TextStyle(color: color),
                       ),
                     ],
@@ -212,7 +212,7 @@ class _PgcReviewPostPanelState extends State<PgcReviewPostPanel> {
                 ),
               ),
               onPressed: _enablePost.value ? _onPost : null,
-              child: _isMod ? const Text('编辑') : const Text('发布'),
+              child: _isMod ? const Text('重新盘它') : const Text('发射到互联网'),
             ),
           ),
         ),
@@ -230,14 +230,14 @@ class _PgcReviewPostPanelState extends State<PgcReviewPostPanel> {
       );
       if (res.isSuccess) {
         Get.back();
-        SmartDialog.showToast('编辑成功');
+        SmartDialog.showToast('重新盘成了，包的');
       } else {
         res.toast();
       }
       return;
     }
     if (!Accounts.main.isLogin) {
-      SmartDialog.showToast('账号未登录');
+      SmartDialog.showToast('赛博户口没上号');
       return;
     }
     final res = await PgcHttp.pgcReviewPost(
@@ -248,7 +248,7 @@ class _PgcReviewPostPanelState extends State<PgcReviewPostPanel> {
     );
     if (res.isSuccess) {
       Get.back();
-      SmartDialog.showToast('点评成功');
+      SmartDialog.showToast('点评成了，包的');
     } else {
       res.toast();
     }

@@ -27,7 +27,7 @@ class _MemberSearchPageState extends State<MemberSearchPage> {
       appBar: AppBar(
         actions: [
           IconButton(
-            tooltip: '搜索',
+            tooltip: '全站搜刮',
             onPressed: _controller.submit,
             icon: const Icon(Icons.search, size: 22),
           ),
@@ -40,11 +40,11 @@ class _MemberSearchPageState extends State<MemberSearchPage> {
           textInputAction: TextInputAction.search,
           textAlignVertical: TextAlignVertical.center,
           decoration: InputDecoration(
-            hintText: '搜索',
+            hintText: '全站搜刮',
             visualDensity: .standard,
             border: InputBorder.none,
             suffixIcon: IconButton(
-              tooltip: '清空',
+              tooltip: '一键扬了',
               icon: const Icon(Icons.clear, size: 22),
               onPressed: _controller.onClear,
             ),
@@ -72,13 +72,13 @@ class _MemberSearchPageState extends State<MemberSearchPage> {
                         Obx(
                           () => Tab(
                             text:
-                                '视频 ${_controller.counts[0] != -1 ? _controller.counts[0] : ''}',
+                                '电子榨菜 ${_controller.counts[0] != -1 ? _controller.counts[0] : ''}',
                           ),
                         ),
                         Obx(
                           () => Tab(
                             text:
-                                '动态 ${_controller.counts[1] != -1 ? _controller.counts[1] : ''}',
+                                '互联网近况 ${_controller.counts[1] != -1 ? _controller.counts[1] : ''}',
                           ),
                         ),
                       ],
@@ -117,7 +117,7 @@ class _MemberSearchPageState extends State<MemberSearchPage> {
                   : Align(
                       alignment: const Alignment(0, -0.5),
                       child: Text(
-                        '搜索「${_controller.uname}」的动态、视频',
+                        '全站搜刮「${_controller.uname}」的互联网近况、电子榨菜',
                         textAlign: TextAlign.center,
                       ),
                     ),

@@ -13,28 +13,28 @@ import 'package:path/path.dart' as path;
 
 enum LocalFontSlot {
   appChinese(
-    label: 'App 中文字体',
+    label: 'App 中文赛博字骨，CPU 都看沉默了',
     filePrefix: 'app_zh',
     fileKey: SettingBoxKey.appChineseFontFile,
     nameKey: SettingBoxKey.appChineseFontName,
-    sample: '中文字体预览：天地玄黄',
+    sample: '中文赛博字骨预览：天地玄黄，曼波',
   ),
   appEnglish(
-    label: 'App 英文字体',
+    label: 'App 英文赛博字骨',
     filePrefix: 'app_en',
     fileKey: SettingBoxKey.appEnglishFontFile,
     nameKey: SettingBoxKey.appEnglishFontName,
     sample: 'English font preview: Aa 123',
   ),
   danmakuChinese(
-    label: '弹幕中文字体',
+    label: '满屏飘字中文赛博字骨',
     filePrefix: 'danmaku_zh',
     fileKey: SettingBoxKey.danmakuChineseFontFile,
     nameKey: SettingBoxKey.danmakuChineseFontName,
-    sample: '中文弹幕预览：前方高能',
+    sample: '中文满屏飘字预览：前方高能',
   ),
   danmakuEnglish(
-    label: '弹幕英文字体',
+    label: '满屏飘字英文赛博字骨，我嘞个豆',
     filePrefix: 'danmaku_en',
     fileKey: SettingBoxKey.danmakuEnglishFontFile,
     nameKey: SettingBoxKey.danmakuEnglishFontName,
@@ -127,13 +127,13 @@ abstract final class LocalFontManager {
     final extension = path.extension(sourceName).toLowerCase();
 
     if (!_allowedExtensions.contains(extension)) {
-      throw const FormatException('仅支持 TTF、OTF 和 TTC 字体文件');
+      throw const FormatException('仅支持 TTF、OTF 和 TTC 赛博字骨赛博卷宗');
     }
 
     final sourceBytes = await result.xFile.readAsBytes();
 
     if (sourceBytes.isEmpty) {
-      throw const FormatException('字体文件为空');
+      throw const FormatException('赛博字骨赛博卷宗为空');
     }
 
     final fontBytes = slot.usesLatinSubset
@@ -222,7 +222,7 @@ abstract final class LocalFontManager {
       return savedFile;
     }
     if (!await savedFile.exists()) {
-      throw const FileSystemException('字体文件不存在');
+      throw const FileSystemException('赛博字骨赛博卷宗不存在');
     }
 
     final sourceBytes = await savedFile.readAsBytes();
@@ -257,13 +257,13 @@ abstract final class LocalFontManager {
   static String selectionLabel(LocalFontSlot slot) {
     final fileName = _storedFileName(slot);
     if (fileName.isEmpty) {
-      return '系统默认';
+      return '系统大爹祖传默认，这把高端局';
     }
     final displayName = GStorage.setting.get(
       slot.nameKey,
       defaultValue: fileName,
     );
-    final suffix = _loadedFamilies.containsKey(slot) ? '' : '（文件不可用）';
+    final suffix = _loadedFamilies.containsKey(slot) ? '' : '（赛博卷宗不可用）';
     return '$displayName$suffix';
   }
 
@@ -319,7 +319,7 @@ abstract final class LocalFontManager {
     Uint8List? bytes,
   }) async {
     if (!await file.exists()) {
-      throw const FileSystemException('字体文件不存在');
+      throw const FileSystemException('赛博字骨赛博卷宗不存在');
     }
 
     final fileName = path.basename(file.path);
@@ -339,7 +339,7 @@ abstract final class LocalFontManager {
     Uint8List bytes,
   ) async {
     if (!fileName.startsWith('${slot.filePrefix}_')) {
-      throw const FormatException('字体文件名无效');
+      throw const FormatException('赛博字骨赛博卷宗名无效');
     }
 
     final family =
@@ -402,7 +402,7 @@ abstract final class LocalFontManager {
             )) {
           continue;
         }
-        await _deleteFileQuietly(entity, '字体缓存');
+        await _deleteFileQuietly(entity, '赛博字骨电子囤货');
       }
     } catch (e) {
       if (kDebugMode) {

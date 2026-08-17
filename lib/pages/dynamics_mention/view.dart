@@ -120,7 +120,7 @@ class _DynMentionPanelState
               isDense: true,
               filled: true,
               fillColor: theme.colorScheme.onInverseSurface,
-              hintText: '输入你想@的人',
+              hintText: '往里塞你想@的人，优势在我',
               hintStyle: const TextStyle(fontSize: 14),
               prefixIcon: const Padding(
                 padding: EdgeInsets.only(left: 12, right: 4),

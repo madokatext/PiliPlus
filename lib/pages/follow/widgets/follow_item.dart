@@ -41,7 +41,7 @@ class FollowItem extends StatelessWidget {
           backgroundColor: isFollow ? colorScheme.onInverseSurface : null,
         ),
         child: Text(
-          '${isFollow ? '已' : ''}关注',
+          '${isFollow ? '已' : ''}赛博蹲点，启动！',
           style: const TextStyle(fontSize: 12),
         ),
       );

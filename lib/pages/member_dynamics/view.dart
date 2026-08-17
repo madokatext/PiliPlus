@@ -47,7 +47,7 @@ class _MemberDynamicsPageState extends State<MemberDynamicsPage>
     return widget.mid == null
         ? Scaffold(
             resizeToAvoidBottomInset: false,
-            appBar: AppBar(title: const Text('我的动态')),
+            appBar: AppBar(title: const Text('我的互联网近况')),
             body: Padding(
               padding: EdgeInsets.only(
                 left: padding.left,

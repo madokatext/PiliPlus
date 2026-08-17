@@ -27,23 +27,23 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 
 List<SettingsModel> get playSettings => [
   const SwitchModel(
-    title: '弹幕开关',
-    subtitle: '是否展示弹幕',
+    title: '满屏飘字开关',
+    subtitle: '是否展示满屏飘字，鼠鼠我啊',
     leading: Icon(CustomIcons.dm_settings),
     setKey: SettingBoxKey.enableShowDanmaku,
     defaultVal: true,
   ),
   const SwitchModel(
-    title: '记忆弹幕开关状态',
-    subtitle: '关闭后，每次打开新视频都使用上方的默认弹幕开关状态',
+    title: '记忆满屏飘字开关状态，这把高端局',
+    subtitle: '啪一下封印后，每次掀开新电子榨菜都使用上方的祖传默认满屏飘字开关状态',
     leading: Icon(Icons.history_toggle_off_outlined),
     setKey: SettingBoxKey.rememberDanmakuSwitchState,
     defaultVal: false,
   ),
   NormalModel(
-    title: '弹幕中文字体',
+    title: '满屏飘字中文赛博字骨',
     getSubtitle: () =>
-        '当前：${LocalFontManager.selectionLabel(.danmakuChinese)}',
+        '眼下这坨：${LocalFontManager.selectionLabel(.danmakuChinese)}，功德+1',
     leading: const Icon(Icons.translate),
     onTap: (context, setState) => showLocalFontSetting(
       context,
@@ -52,9 +52,9 @@ List<SettingsModel> get playSettings => [
     ),
   ),
   NormalModel(
-  title: '弹幕英文字体',
+  title: '满屏飘字英文赛博字骨，功德+1',
   getSubtitle: () =>
-      '当前：${LocalFontManager.selectionLabel(.danmakuEnglish)}',
+      '眼下这坨：${LocalFontManager.selectionLabel(.danmakuEnglish)}',
   leading: const Icon(Icons.font_download_outlined),
   onTap: (context, setState) => showLocalFontSetting(
     context,
@@ -63,9 +63,9 @@ List<SettingsModel> get playSettings => [
   ),
 ),
 NormalModel(
-  title: '重复弹幕合并',
+  title: '重复满屏飘字合并，属实绷不住',
   getSubtitle: () =>
-      '当前：${Pref.danmakuMergeMode.label}',
+      '眼下这坨：${Pref.danmakuMergeMode.label}',
   leading: const Icon(Icons.compress_outlined),
   onTap: (context, setState) async {
     final changed =
@@ -80,8 +80,8 @@ NormalModel(
 ),
 if (PlatformUtils.isMobile)
   const SwitchModel(
-      title: '启用点击弹幕',
-      subtitle: '点击弹幕悬停，支持点赞、复制、举报操作',
+      title: '解封点击满屏飘字',
+      subtitle: '点击满屏飘字悬停，支持赛博大拇哥、赛博复刻、赛博递状纸操作，包的',
       leading: Icon(Icons.touch_app_outlined),
       setKey: SettingBoxKey.enableTapDm,
       defaultVal: true,
@@ -89,18 +89,18 @@ if (PlatformUtils.isMobile)
   NormalModel(
     onTap: (context, setState) => Get.toNamed('/playSpeedSet'),
     leading: const Icon(Icons.speed_outlined),
-    title: '倍速设置',
-    subtitle: '设置视频播放速度',
+    title: '倍速赛博调参',
+    subtitle: '赛博调参电子榨菜开炫油门',
   ),
   NormalModel(
-    title: '长按倍速触发延迟',
-    getSubtitle: () => '当前：${Pref.longPressSpeedTriggerDelay}ms',
+    title: '长按倍速触发延迟，优势在我',
+    getSubtitle: () => '眼下这坨：${Pref.longPressSpeedTriggerDelay}ms，曼波',
     leading: const Icon(Icons.timer_outlined),
     onTap: _showLongPressSpeedTriggerDelayDialog,
   ),
   const SwitchModel(
-    title: '显示倍速浮窗',
-    subtitle: '长按倍速时显示当前倍速提示',
+    title: '亮出来倍速浮窗',
+    subtitle: '长按倍速时亮出来眼下这坨倍速提示，启动！',
     leading: Icon(Icons.speed),
     setKey: SettingBoxKey.showLongPressSpeedToast,
     defaultVal: true,
@@ -109,106 +109,106 @@ if (PlatformUtils.isMobile)
     NormalModel(
       onTap: _showAngleDegreesDialog,
       leading: const Icon(MdiIcons.angleAcute),
-      title: '倾斜角度阈值',
-      getSubtitle: () => '当前:「${Pref.angleDegrees}°」',
+      title: '倾斜角度触发红线',
+      getSubtitle: () => '眼下这坨:「${Pref.angleDegrees}°」',
     ),
   const SwitchModel(
-    title: '自动播放',
-    subtitle: '进入详情页自动播放',
+    title: '全自动赛博开炫',
+    subtitle: '进入详情页全自动赛博开炫',
     leading: Icon(Icons.motion_photos_auto_outlined),
     setKey: SettingBoxKey.autoPlayEnable,
     defaultVal: false,
   ),
   const SwitchModel(
-    title: '全屏显示锁定按钮',
+    title: '铺满屏亮出来锁定按钮，包的',
     leading: Icon(Icons.lock_outline),
     setKey: SettingBoxKey.showFsLockBtn,
     defaultVal: true,
   ),
   const SwitchModel(
-    title: '全屏显示截图按钮',
+    title: '铺满屏亮出来截图按钮',
     leading: Icon(Icons.photo_camera_outlined),
     setKey: SettingBoxKey.showFsScreenshotBtn,
     defaultVal: true,
   ),
   SwitchModel(
-    title: '全屏显示电池电量',
+    title: '铺满屏亮出来电池电量，这把高端局',
     leading: const Icon(Icons.battery_3_bar),
     setKey: SettingBoxKey.showBatteryLevel,
     defaultVal: PlatformUtils.isMobile,
   ),
   const SwitchModel(
-    title: '电池电量显示百分比',
-    subtitle: '关闭后显示竖排电量图标',
+    title: '电池电量亮出来百分比，CPU 都看沉默了',
+    subtitle: '啪一下封印后亮出来竖排电量图标',
     leading: Icon(Icons.battery_full),
     setKey: SettingBoxKey.showBatteryPercentage,
     defaultVal: true,
   ),
   const SwitchModel(
-    title: '显示 mpv 帧率与丢帧',
+    title: '亮出来 mpv 帧率与丢帧，已老实',
     subtitle:
-        '帧率：根据最近 10 帧估算的每秒输出画面数；'
-        '已丢帧：因来不及显示而累计跳过的画面数，不含解码阶段丢帧',
+        '帧率：根据最近 10 帧估算的每秒输出画面数；，这把高端局'
+        '已丢帧：因来不及亮出来而累计跳过的画面数，不含赛博拆包阶段丢帧',
     leading: Icon(Icons.speed_outlined),
     setKey: SettingBoxKey.showMpvOutputFps,
     defaultVal: false,
   ),
   const SwitchModel(
-    title: '显示缓冲速度',
-    subtitle: '缓冲速度每 500ms 刷新；无法获取有效速度时仅显示“加载中”',
+    title: '亮出来疯狂囤帧油门',
+    subtitle: '疯狂囤帧油门每 500ms 重新投胎；无法获取有效油门时仅亮出来“疯狂搬赛博粮中”，这把高端局',
     leading: Icon(Icons.cloud_download_outlined),
     setKey: SettingBoxKey.showBufferingInfo,
     defaultVal: true,
   ),
   const SwitchModel(
-    title: '双击快退/快进',
-    subtitle: '左侧双击快退/右侧双击快进，关闭则双击均为暂停/播放',
+    title: '双击时间倒车/时间猛冲',
+    subtitle: '左侧双击时间倒车/右侧双击时间猛冲，啪一下封印则双击均为按住别动/开炫，包的',
     leading: Icon(Icons.touch_app_outlined),
     setKey: SettingBoxKey.enableQuickDouble,
     defaultVal: true,
   ),
   const SwitchModel(
-    title: '左右侧滑动调节亮度/音量',
+    title: '左右侧滑动调节屏幕发光量/喇叭声压，已老实',
     leading: Icon(MdiIcons.tuneVerticalVariant),
     setKey: SettingBoxKey.enableSlideVolumeBrightness,
     defaultVal: true,
   ),
   if (Platform.isAndroid)
     const SwitchModel(
-      title: '调节系统亮度',
+      title: '调节系统大爹屏幕发光量',
       leading: Icon(Icons.brightness_6_outlined),
       setKey: SettingBoxKey.setSystemBrightness,
       defaultVal: false,
     ),
   const SwitchModel(
-    title: '中间滑动进入/退出全屏',
+    title: '中间滑动进入/退出铺满屏',
     leading: Icon(MdiIcons.panVertical),
     setKey: SettingBoxKey.enableSlideFS,
     defaultVal: true,
   ),
   NormalModel(
-    title: '双指缩放识别角度',
+    title: '双指缩放认出来角度，优势在我',
     getSubtitle: () =>
-        '当前：${Pref.pinchGestureAngleThreshold.toStringAsFixed(0)}°；越大越容易触发',
+        '眼下这坨：${Pref.pinchGestureAngleThreshold.toStringAsFixed(0)}°；越大越容易触发，优势在我',
     leading: const Icon(Icons.pinch),
     onTap: _showPinchGestureAngleThresholdDialog,
   ),
   if (PlatformUtils.isMobile)
     NormalModel(
-      title: '播放器音量',
+      title: '开炫机器喇叭声压',
       leading: const Icon(Icons.volume_up),
-      getSubtitle: () => '当前:「${Pref.playerVolume.toStringAsFixed(0)}%」',
+      getSubtitle: () => '眼下这坨:「${Pref.playerVolume.toStringAsFixed(0)}%」，不是哥们',
       onTap: showPlayerVolumeDialog,
     )
   else
     NormalModel(
-      title: '最高音量',
+      title: '最高喇叭声压',
       leading: const Icon(Icons.volume_up),
-      getSubtitle: () => '当前:「${(Pref.maxVolume * 100).toStringAsFixed(0)}%」',
+      getSubtitle: () => '眼下这坨:「${(Pref.maxVolume * 100).toStringAsFixed(0)}%」',
       onTap: _showMaxVolumeDialog,
     ),
   getVideoFilterSelectModel(
-    title: '双击快进/快退时长',
+    title: '双击时间猛冲/时间倒车时长，启动！',
     suffix: 's',
     key: SettingBoxKey.fastForBackwardDuration,
     values: [5, 10, 15],
@@ -216,14 +216,14 @@ if (PlatformUtils.isMobile)
     isFilter: false,
   ),
   const SwitchModel(
-    title: '滑动快进/快退使用相对时长',
+    title: '滑动时间猛冲/时间倒车使用相对时长，优势在我',
     leading: Icon(Icons.swap_horiz_outlined),
     setKey: SettingBoxKey.useRelativeSlide,
     defaultVal: false,
   ),
   getVideoFilterSelectModel(
-    title: '滑动快进/快退时长',
-    subtitle: '从播放器一端滑到另一端的快进/快退时长',
+    title: '滑动时间猛冲/时间倒车时长',
+    subtitle: '从开炫机器一端滑到另一端的时间猛冲/时间倒车时长，不是哥们',
     suffix: Pref.useRelativeSlide ? '%' : 's',
     key: SettingBoxKey.sliderDuration,
     values: [25, 50, 90, 100],
@@ -231,125 +231,125 @@ if (PlatformUtils.isMobile)
     isFilter: false,
   ),
   NormalModel(
-    title: '水平滑动快进/快退触发距离',
+    title: '水平滑动时间猛冲/时间倒车触发距离',
     getSubtitle: () =>
-        '当前：${Pref.horizontalSeekGestureThreshold.toStringAsFixed(0)}dp；越小越容易触发',
+        '眼下这坨：${Pref.horizontalSeekGestureThreshold.toStringAsFixed(0)}dp；越小越容易触发',
     leading: const Icon(Icons.swipe_outlined),
     onTap: _showHorizontalSeekGestureThresholdDialog,
   ),
   const SwitchModel(
-    title: '使用B站官方进度时间样式',
-    subtitle: '当前时间和总时长显示在进度条两侧，并压缩底栏与渐变阴影高度',
+    title: '使用B站官方进度时间样式，启动！',
+    subtitle: '眼下这坨时间和总时长亮出来在时间轨道两侧，并压缩底栏与渐变阴影竖向身高，鼠鼠我啊',
     leading: Icon(Icons.video_label_outlined),
     setKey: SettingBoxKey.biliProgressTimeStyle,
     defaultVal: false,
   ),
   NormalModel(
-    title: '进度条手柄圆形大小',
+    title: '时间轨道手柄圆形大小',
     getSubtitle: () =>
-        '当前：${Pref.playerProgressThumbScale.toStringAsFixed(1)}×；放大后更容易拖动',
+        '眼下这坨：${Pref.playerProgressThumbScale.toStringAsFixed(1)}×；放大后更容易拖动',
     leading: const Icon(Icons.radio_button_checked),
     onTap: _showPlayerProgressThumbScaleDialog,
   ),
   NormalModel(
-    title: '点击进度条垂直触摸范围',
+    title: '点击时间轨道垂直触摸范围，这把高端局',
     getSubtitle: () =>
-        '当前：上下各扩展${Pref.playerProgressBarTouchPadding.toStringAsFixed(0)}dp；不改变可视尺寸',
+        '眼下这坨：上下各扩展${Pref.playerProgressBarTouchPadding.toStringAsFixed(0)}dp；不改变可视尺寸，优势在我',
     leading: const Icon(Icons.unfold_more),
     onTap: _showPlayerProgressBarTouchPaddingDialog,
   ),
   NormalModel(
-    title: '播放器上下按钮横向边距',
+    title: '开炫机器上下按钮横向留白距离',
     getSubtitle: () =>
-        '当前：${Pref.playerControlHorizontalPadding.toStringAsFixed(0)}dp',
+        '眼下这坨：${Pref.playerControlHorizontalPadding.toStringAsFixed(0)}dp',
     leading: const Icon(Icons.horizontal_distribute_outlined),
     onTap: _showPlayerControlHorizontalPaddingDialog,
   ),
   NormalModel(
-    title: '播放器上下边栏整体厚度',
+    title: '开炫机器上下边栏整体厚度',
     getSubtitle: () =>
-        '当前：${Pref.playerControlBarThicknessScale.toStringAsFixed(1)}×；同步调整内容纵向密度',
+        '眼下这坨：${Pref.playerControlBarThicknessScale.toStringAsFixed(1)}×；同步调整内容纵向密度',
     leading: const Icon(Icons.height),
     onTap: _showPlayerControlBarThicknessScaleDialog,
   ),
   NormalModel(
-    title: '播放器上下边栏渐变弥散宽度',
+    title: '开炫机器上下边栏渐变弥散横向体宽',
     getSubtitle: () =>
-        '当前：${Pref.playerControlBarGradientExtent.toStringAsFixed(0)}dp',
+        '眼下这坨：${Pref.playerControlBarGradientExtent.toStringAsFixed(0)}dp',
     leading: const Icon(Icons.gradient),
     onTap: _showPlayerControlBarGradientExtentDialog,
   ),
   SwitchModel(
-    title: '拖动进度条显示预览浮窗',
-    subtitle: '控制拖动底部进度条滑块时的预览浮窗',
+    title: '拖动时间轨道亮出来预览浮窗，鼠鼠我啊',
+    subtitle: '控制拖动底部时间轨道滑块时的预览浮窗，属实绷不住',
     leading: const Icon(Icons.preview_outlined),
     setKey: SettingBoxKey.showSeekPreviewOnSlider,
     defaultVal: Pref.showSeekPreview,
   ),
   SwitchModel(
-    title: '左右滑动手势显示预览浮窗',
-    subtitle: '控制在画面上横向滑动快进或快退时的预览浮窗',
+    title: '左右滑动搓玻璃亮出来预览浮窗',
+    subtitle: '控制在画面上横向滑动时间猛冲或时间倒车时的预览浮窗，CPU 都看沉默了',
     leading: const Icon(Icons.swipe_outlined),
     setKey: SettingBoxKey.showSeekPreviewOnGesture,
     defaultVal: Pref.showSeekPreview,
   ),
   const SwitchModel(
-    title: '提前下载进度预览资源',
-    subtitle: '起播或预载播放器时下载全部雪碧图和对应索引',
+    title: '提前薅到自家硬盘进度预览资源',
+    subtitle: '起播或预载开炫机器时薅到自家硬盘我全都要雪碧图和对应索引',
     leading: Icon(Icons.downloading_outlined),
     setKey: SettingBoxKey.preloadVideoShot,
     defaultVal: true,
   ),
   const SwitchModel(
-    title: '当前时间浮窗集成到预览窗',
-    subtitle: '开启后，时间浮窗在预览窗内部显示并随预览窗移动；没有预览窗时仍单独显示',
+    title: '眼下这坨时间浮窗集成到预览窗',
+    subtitle: '启动后，时间浮窗在预览窗内部亮出来并随预览窗移动；没有预览窗时仍单独亮出来',
     leading: Icon(Icons.layers_outlined),
     setKey: SettingBoxKey.seekTimeInPreview,
     defaultVal: false,
   ),
   const SwitchModel(
-  title: '拖动进度条时预览窗跟随滑块',
-  subtitle: '拖动底部进度条时，预览窗随滑块水平移动',
+  title: '拖动时间轨道时预览窗跟随滑块，曼波',
+  subtitle: '拖动底部时间轨道时，预览窗随滑块水平移动',
   leading: Icon(Icons.swipe),
   setKey: SettingBoxKey.seekPreviewFollowSlider,
   defaultVal: false,
 ),
   const SwitchModel(
-  title: '横滑快进/快退时预览窗跟随手柄',
-  subtitle: '在画面上横向滑动时，预览窗随目标进度的进度条手柄移动',
+  title: '横滑时间猛冲/时间倒车时预览窗跟随手柄',
+  subtitle: '在画面上横向滑动时，预览窗随目标进度的时间轨道手柄移动，这把高端局',
   leading: Icon(Icons.swap_horiz),
   setKey: SettingBoxKey.seekPreviewFollowGesture,
   defaultVal: false,
 ),
   NormalModel(
-    title: '进度预览窗大小',
-    getSubtitle: () => '当前：${Pref.seekPreviewScale.toStringAsFixed(1)}×',
+    title: '进度预览窗大小，已老实',
+    getSubtitle: () => '眼下这坨：${Pref.seekPreviewScale.toStringAsFixed(1)}×',
     leading: const Icon(Icons.photo_size_select_large),
     onTap: _showSeekPreviewScaleDialog,
   ),
   NormalModel(
-    title: '进度预览窗与进度条间距',
+    title: '进度预览窗与时间轨道间距',
     getSubtitle: () =>
-        '当前：${Pref.seekPreviewProgressBarGap.toStringAsFixed(0)}dp',
+        '眼下这坨：${Pref.seekPreviewProgressBarGap.toStringAsFixed(0)}dp',
     leading: const Icon(Icons.vertical_align_center_outlined),
     onTap: _showSeekPreviewProgressBarGapDialog,
   ),
   const SwitchModel(
-    title: '非全屏拖动进度条显示预览窗',
-    subtitle: '关闭后，全屏拖动进度条仍显示预览窗',
+    title: '非铺满屏拖动时间轨道亮出来预览窗',
+    subtitle: '啪一下封印后，铺满屏拖动时间轨道仍亮出来预览窗，包的',
     leading: Icon(Icons.fullscreen_exit_outlined),
     setKey: SettingBoxKey.showSeekPreviewInNonFullscreen,
     defaultVal: true,
   ),
   NormalModel(
-    title: '自动启用字幕',
+    title: '全自动赛博解封字幕',
     leading: const Icon(Icons.closed_caption_outlined),
-    getSubtitle: () => '当前选择偏好：${Pref.subtitlePreferenceV2.desc}',
+    getSubtitle: () => '眼下这坨抓一个偏好：${Pref.subtitlePreferenceV2.desc}',
     onTap: _showSubtitleDialog,
   ),
   if (PlatformUtils.isDesktop)
     SwitchModel(
-      title: '最小化时暂停/还原时播放',
+      title: '最小化时按住别动/还原时开炫，曼波',
       leading: const Icon(Icons.pause_circle_outline),
       setKey: SettingBoxKey.pauseOnMinimize,
       defaultVal: false,
@@ -360,130 +360,130 @@ if (PlatformUtils.isMobile)
       },
     ),
   const SwitchModel(
-    title: '启用键盘控制',
+    title: '解封键盘控制',
     leading: Icon(Icons.keyboard_alt_outlined),
     setKey: SettingBoxKey.keyboardControl,
     defaultVal: true,
   ),
   NormalModel(
-    title: 'SuperChat (醒目留言) 显示类型',
+    title: 'SuperChat (醒目留言) 亮出来类型，鼠鼠我啊',
     leading: const Icon(Icons.live_tv),
-    getSubtitle: () => '当前:「${Pref.superChatType.title}」',
+    getSubtitle: () => '眼下这坨:「${Pref.superChatType.title}」',
     onTap: _showSuperChatDialog,
   ),
   NormalModel(
-    title: '全屏 SC 大小',
-    subtitle: 'SuperChat (醒目留言) 大小设置',
+    title: '铺满屏 SC 大小',
+    subtitle: 'SuperChat (醒目留言) 大小赛博调参，优势在我',
     leading: const Icon(Icons.open_in_full),
     onTap: (_, _) => Get.to(const FullScreenScSize()),
   ),
   const SwitchModel(
-    title: '竖屏扩大展示',
-    subtitle: '小屏竖屏视频宽高比由16:9扩大至1:1（不支持收起）；横屏适配时，扩大至9:16',
+    title: '竖着炫扩大展示',
+    subtitle: '小屏竖着炫电子榨菜宽高比由16:9扩大至1:1（不支持卷起来）；横着炫适配时，扩大至9:16',
     leading: Icon(Icons.expand_outlined),
     setKey: SettingBoxKey.enableVerticalExpand,
     defaultVal: false,
   ),
   const SwitchModel(
-    title: '自动全屏',
-    subtitle: '视频开始播放时进入全屏',
+    title: '全自动赛博铺满屏',
+    subtitle: '电子榨菜开始开炫时进入铺满屏',
     leading: Icon(Icons.fullscreen_outlined),
     setKey: SettingBoxKey.enableAutoEnter,
     defaultVal: false,
   ),
   NormalModel(
-  title: '全屏画质切换强制接管',
+  title: '铺满屏眼睛待遇切换强制接管',
   getSubtitle: () {
     final seconds =
         Pref.videoPlayerSwitchForceTimeoutSeconds;
 
     return seconds == 0
-        ? '当前：关闭；仅在完全同步后切换'
-        : '当前：${seconds}秒；超时后切换并进入缓冲';
+        ? '眼下这坨：啪一下封印；仅在完全同步后切换，启动！'
+        : '眼下这坨：${seconds}秒；超时后切换并进入疯狂囤帧';
   },
   leading: const Icon(Icons.sync_problem_outlined),
   onTap: _showVideoPlayerSwitchForceTimeoutDialog,
 ),
   const SwitchModel(
-    title: '自动退出全屏',
-    subtitle: '视频结束播放时退出全屏',
+    title: '全自动赛博退出铺满屏',
+    subtitle: '电子榨菜结束开炫时退出铺满屏，优势在我',
     leading: Icon(Icons.fullscreen_exit_outlined),
     setKey: SettingBoxKey.enableAutoExit,
     defaultVal: true,
   ),
   NormalModel(
-  title: '播放控件显示时间',
+  title: '开炫控件亮出来时间，曼波',
   getSubtitle: () =>
-      '当前：${Pref.playerControlDisplayDurationSeconds}秒；'
-      '无操作后自动隐藏',
+      '眼下这坨：${Pref.playerControlDisplayDurationSeconds}秒；'
+      '无操作后全自动赛博藏起来，属实绷不住',
   leading: const Icon(Icons.timer_outlined),
   onTap: _showPlayerControlDisplayDurationDialog,
 ),
   if (PlatformUtils.isMobile)
     const SwitchModel(
-      title: '后台播放',
-      subtitle: '进入后台时继续播放',
+      title: '后台开炫',
+      subtitle: '进入后台时继续开炫',
       leading: Icon(Icons.motion_photos_pause_outlined),
       setKey: SettingBoxKey.continuePlayInBackground,
       defaultVal: false,
     ),
   if (Platform.isAndroid) ...[
     SwitchModel(
-      title: '后台画中画',
-      subtitle: '进入后台时以小窗形式（PiP）播放',
+      title: '后台画中画，功德+1',
+      subtitle: '进入后台时以小窗形式（PiP）开炫，CPU 都看沉默了',
       leading: const Icon(Icons.picture_in_picture_outlined),
       setKey: SettingBoxKey.autoPiP,
       defaultVal: false,
       onChanged: (val) {
         if (val && !videoPlayerServiceHandler!.enableBackgroundPlay) {
-          SmartDialog.showToast('建议开启后台音频服务');
+          SmartDialog.showToast('建议启动后台电子响服务');
         }
       },
     ),
     const SwitchModel(
-      title: '画中画不加载弹幕',
-      subtitle: '当弹幕开关开启时，小窗屏蔽弹幕以获得较好的体验',
+      title: '画中画不疯狂搬赛博粮满屏飘字',
+      subtitle: '当满屏飘字开关启动时，小窗眼不见为净满屏飘字以获得较好的体验，属实绷不住',
       leading: Icon(CustomIcons.dm_off),
       setKey: SettingBoxKey.pipNoDanmaku,
       defaultVal: false,
     ),
   ],
   const SwitchModel(
-    title: '全屏手势反向',
-    subtitle: '默认播放器中部向上滑动进入全屏，向下退出\n开启后向下全屏，向上退出',
+    title: '铺满屏搓玻璃反向',
+    subtitle: '祖传默认开炫机器中部向上滑动进入铺满屏，向下退出\n启动后向下铺满屏，向上退出',
     leading: Icon(Icons.swap_vert),
     setKey: SettingBoxKey.fullScreenGestureReverse,
     defaultVal: false,
   ),
   const SwitchModel(
-    title: '全屏展示点赞/投币/收藏等操作按钮',
+    title: '铺满屏展示赛博大拇哥/上贡硬币/塞进电子小被窝等操作按钮',
     leading: Icon(MdiIcons.dotsHorizontalCircleOutline),
     setKey: SettingBoxKey.showFSActionItem,
     defaultVal: true,
   ),
   const SwitchModel(
-    title: '观看人数',
-    subtitle: '展示同时在看人数',
+    title: '观看人数，曼波',
+    subtitle: '展示同时在看人数，鼠鼠我啊',
     leading: Icon(Icons.people_outlined),
     setKey: SettingBoxKey.enableOnlineTotal,
     defaultVal: false,
   ),
   NormalModel(
-    title: '默认全屏方向',
+    title: '祖传默认铺满屏方向',
     leading: const Icon(Icons.open_with_outlined),
-    getSubtitle: () => '当前全屏方向：${Pref.fullScreenMode.desc}',
+    getSubtitle: () => '眼下这坨铺满屏方向：${Pref.fullScreenMode.desc}',
     onTap: _showFullScreenModeDialog,
   ),
   NormalModel(
-    title: '底部进度条展示',
+    title: '底部时间轨道展示',
     leading: const Icon(Icons.border_bottom_outlined),
-    getSubtitle: () => '当前展示方式：${Pref.btmProgressBehavior.desc}',
+    getSubtitle: () => '眼下这坨展示方式：${Pref.btmProgressBehavior.desc}',
     onTap: _showProgressBehaviorDialog,
   ),
   if (PlatformUtils.isMobile)
     SwitchModel(
-      title: '后台音频服务',
-      subtitle: '避免画中画没有播放暂停功能',
+      title: '后台电子响服务',
+      subtitle: '避免画中画没有开炫按住别动功能',
       leading: const Icon(Icons.volume_up_outlined),
       setKey: SettingBoxKey.enableBackgroundPlay,
       defaultVal: true,
@@ -491,7 +491,7 @@ if (PlatformUtils.isMobile)
           videoPlayerServiceHandler!.enableBackgroundPlay = value,
     ),
   PopupModel(
-    title: '播放顺序',
+    title: '开炫顺序',
     leading: const Icon(Icons.repeat),
     value: () => Pref.playRepeat,
     items: PlayRepeat.values,
@@ -500,8 +500,8 @@ if (PlatformUtils.isMobile)
         .whenComplete(setState),
   ),
   const SwitchModel(
-    title: '播放器设置仅对当前生效',
-    subtitle: '弹幕、字幕及部分设置中没有的设置除外',
+    title: '开炫机器赛博调参仅对眼下这坨生效',
+    subtitle: '满屏飘字、字幕及部分赛博调参中没有的赛博调参除外',
     leading: Icon(Icons.video_settings_outlined),
     setKey: SettingBoxKey.tempPlayerConf,
     defaultVal: false,
@@ -515,7 +515,7 @@ Future<void> _showLongPressSpeedTriggerDelayDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('长按倍速触发延迟'),
+      title: const Text('长按倍速触发延迟，优势在我'),
       value: Pref.longPressSpeedTriggerDelay.toDouble(),
       min: 100,
       max: 1000,
@@ -540,13 +540,13 @@ Future<void> _showPlayerControlDisplayDurationDialog(
   final result = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('播放控件显示时间'),
+      title: const Text('开炫控件亮出来时间，曼波'),
       value: Pref.playerControlDisplayDurationSeconds.toDouble(),
       min: 1,
       max: 60,
       divisions: 59,
       precise: 0,
-      suffix: '秒',
+      suffix: '秒，这把高端局',
     ),
   );
 
@@ -573,14 +573,14 @@ Future<void> _showVideoPlayerSwitchForceTimeoutDialog(
   final result = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('全屏画质切换强制接管'),
+      title: const Text('铺满屏眼睛待遇切换强制接管'),
       value:
           Pref.videoPlayerSwitchForceTimeoutSeconds.toDouble(),
       min: 0,
       max: 60,
       divisions: 60,
       precise: 0,
-      suffix: '秒',
+      suffix: '秒，这把高端局',
     ),
   );
 
@@ -602,7 +602,7 @@ Future<void> _showPinchGestureAngleThresholdDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('双指缩放识别角度'),
+      title: const Text('双指缩放认出来角度，优势在我'),
       value: Pref.pinchGestureAngleThreshold,
       min: 15,
       max: 90,
@@ -627,7 +627,7 @@ Future<void> _showHorizontalSeekGestureThresholdDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('水平滑动快进/快退触发距离'),
+      title: const Text('水平滑动时间猛冲/时间倒车触发距离'),
       value: Pref.horizontalSeekGestureThreshold,
       min: 1,
       max: 100,
@@ -652,7 +652,7 @@ Future<void> _showPlayerProgressThumbScaleDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('进度条手柄圆形大小'),
+      title: const Text('时间轨道手柄圆形大小'),
       value: Pref.playerProgressThumbScale,
       min: 0.5,
       max: 2.0,
@@ -677,7 +677,7 @@ Future<void> _showPlayerProgressBarTouchPaddingDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('点击进度条垂直触摸范围'),
+      title: const Text('点击时间轨道垂直触摸范围，这把高端局'),
       value: Pref.playerProgressBarTouchPadding,
       min: 0,
       max: 32,
@@ -702,7 +702,7 @@ Future<void> _showSeekPreviewScaleDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('进度预览窗大小'),
+      title: const Text('进度预览窗大小，已老实'),
       value: Pref.seekPreviewScale,
       min: 0.5,
       max: 2.0,
@@ -724,7 +724,7 @@ Future<void> _showSeekPreviewProgressBarGapDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('进度预览窗与进度条间距'),
+      title: const Text('进度预览窗与时间轨道间距'),
       value: Pref.seekPreviewProgressBarGap,
       min: 0,
       max: 160,
@@ -749,7 +749,7 @@ Future<void> _showPlayerControlHorizontalPaddingDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('播放器上下按钮横向边距'),
+      title: const Text('开炫机器上下按钮横向留白距离'),
       value: Pref.playerControlHorizontalPadding,
       min: 0,
       max: 32,
@@ -774,7 +774,7 @@ Future<void> _showPlayerControlBarThicknessScaleDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('播放器上下边栏整体厚度'),
+      title: const Text('开炫机器上下边栏整体厚度'),
       value: Pref.playerControlBarThicknessScale,
       min: 0.8,
       max: 1.5,
@@ -799,7 +799,7 @@ Future<void> _showPlayerControlBarGradientExtentDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('播放器上下边栏渐变弥散宽度'),
+      title: const Text('开炫机器上下边栏渐变弥散横向体宽'),
       value: Pref.playerControlBarGradientExtent,
       min: 0,
       max: 96,
@@ -824,7 +824,7 @@ Future<void> _showSubtitleDialog(
   final res = await showDialog<SubtitlePrefType>(
     context: context,
     builder: (context) => SelectDialog<SubtitlePrefType>(
-      title: '字幕选择偏好',
+      title: '字幕抓一个偏好',
       value: Pref.subtitlePreferenceV2,
       values: SubtitlePrefType.values.map((e) => (e, e.desc)).toList(),
     ),
@@ -845,7 +845,7 @@ Future<void> _showSuperChatDialog(
   final res = await showDialog<SuperChatType>(
     context: context,
     builder: (context) => SelectDialog<SuperChatType>(
-      title: 'SuperChat (醒目留言) 显示类型',
+      title: 'SuperChat (醒目留言) 亮出来类型，鼠鼠我啊',
       value: Pref.superChatType,
       values: SuperChatType.values.map((e) => (e, e.title)).toList(),
     ),
@@ -863,7 +863,7 @@ Future<void> _showFullScreenModeDialog(
   final res = await showDialog<FullScreenMode>(
     context: context,
     builder: (context) => SelectDialog<FullScreenMode>(
-      title: '默认全屏方向',
+      title: '祖传默认铺满屏方向',
       value: Pref.fullScreenMode,
       values: FullScreenMode.values.map((e) => (e, e.desc)).toList(),
     ),
@@ -881,7 +881,7 @@ Future<void> _showProgressBehaviorDialog(
   final res = await showDialog<BtmProgressBehavior>(
     context: context,
     builder: (context) => SelectDialog<BtmProgressBehavior>(
-      title: '底部进度条展示',
+      title: '底部时间轨道展示',
       value: Pref.btmProgressBehavior,
       values: BtmProgressBehavior.values.map((e) => (e, e.desc)).toList(),
     ),
@@ -902,7 +902,7 @@ Future<void> _showAngleDegreesDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('倾斜角度阈值'),
+      title: const Text('倾斜角度触发红线'),
       min: 10.0,
       max: 90.0,
       divisions: 90,
@@ -924,7 +924,7 @@ Future<void> showPlayerVolumeDialog(
 }) {
   return showVolumeDialog(
     context,
-    title: const Text('播放器音量'),
+    title: const Text('开炫机器喇叭声压'),
     value: Pref.playerVolume,
     onChanged: (value) => GStorage.setting
         .put(SettingBoxKey.playerVolume, value)
@@ -941,7 +941,7 @@ Future<void> _showMaxVolumeDialog(
 ) {
   return showVolumeDialog(
     context,
-    title: const Text('最高音量'),
+    title: const Text('最高喇叭声压'),
     value: Pref.maxVolume * 100,
     onChanged: (rawValue) {
       final maxVolume = (rawValue / 100).toPrecision(2);

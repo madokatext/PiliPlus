@@ -46,7 +46,7 @@ class FansController extends FollowTypeController {
       loadingState
         ..value.data!.removeAt(index)
         ..refresh();
-      SmartDialog.showToast('移除成功');
+      SmartDialog.showToast('踢出群聊成了，包的');
     } else {
       res.toast();
     }

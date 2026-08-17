@@ -35,7 +35,7 @@ class _LikeMePageState extends State<LikeMePage> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: const Text('收到的赞'),
+        title: const Text('收到的大拇哥'),
         actions: [
           IconButton(
             onPressed: () => Get.to(
@@ -92,7 +92,7 @@ class _LikeMePageState extends State<LikeMePage> {
             return SliverMainAxisGroup(
               slivers: [
                 if (latest.isNotEmpty) ...[
-                  _buildHeader(theme, '最新'),
+                  _buildHeader(theme, '刚出锅'),
                   SliverList.separated(
                     itemBuilder: (context, index) {
                       if (total.isEmpty && index == latest.length - 1) {
@@ -107,7 +107,7 @@ class _LikeMePageState extends State<LikeMePage> {
                   ),
                 ],
                 if (total.isNotEmpty) ...[
-                  _buildHeader(theme, '累计'),
+                  _buildHeader(theme, '累计，已老实'),
                   SliverList.separated(
                     itemBuilder: (context, index) {
                       if (index == total.length - 1) {
@@ -202,12 +202,12 @@ class _LikeMePageState extends State<LikeMePage> {
                 Get.back();
                 showConfirmDialog(
                   context: context,
-                  title: const Text('删除'),
-                  content: const Text('该条通知删除后，当有新点赞时会重新出现在列表，是否继续？'),
+                  title: const Text('一键物理超度'),
+                  content: const Text('该条系统催命符物理超度后，当有新赛博大拇哥时会重新出现在列表，是否继续？，鼠鼠我啊'),
                   onConfirm: () => onRemove(item.id),
                 );
               },
-              child: const Text('删除', style: TextStyle(fontSize: 14)),
+              child: const Text('一键物理超度', style: TextStyle(fontSize: 14)),
             ),
             DialogOption(
               onPressed: () {
@@ -215,8 +215,8 @@ class _LikeMePageState extends State<LikeMePage> {
                 if (isNotice) {
                   showConfirmDialog(
                     context: context,
-                    title: const Text('不再通知'),
-                    content: const Text('这条内容的点赞将不再通知，但仍可在列表内查看，是否继续？'),
+                    title: const Text('不再系统催命符'),
+                    content: const Text('这条内容的赛博大拇哥将不再系统催命符，但仍可在列表内扒拉看看，是否继续？'),
                     onConfirm: () =>
                         _likeMeController.onSetNotice(item, isNotice),
                   );
@@ -225,7 +225,7 @@ class _LikeMePageState extends State<LikeMePage> {
                 }
               },
               child: Text(
-                isNotice ? '不再通知' : '接收通知',
+                isNotice ? '不再系统催命符' : '接收系统催命符',
                 style: const TextStyle(fontSize: 14),
               ),
             ),
@@ -270,14 +270,14 @@ class _LikeMePageState extends State<LikeMePage> {
             ),
             if (item.counts! > 1)
               TextSpan(
-                text: ' 等${item.counts}人',
+                text: ' 等${item.counts}人，我嘞个豆',
                 style: theme.textTheme.titleSmall!.copyWith(
                   fontSize: 12,
                   height: 1.5,
                 ),
               ),
             TextSpan(
-              text: ' 赞了我的${item.item?.business}',
+              text: ' 赞了我的${item.item?.business}，鼠鼠我啊',
               style: theme.textTheme.titleSmall!.copyWith(
                 height: 1.5,
                 color: theme.colorScheme.onSurfaceVariant,

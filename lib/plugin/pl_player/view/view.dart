@@ -533,7 +533,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
       BottomControlType.pre => ComBtn(
         width: widgetWidth,
         height: controlHeight,
-        tooltip: '上一集',
+        tooltip: '上一集，包的',
         icon: const Icon(
           Icons.skip_previous,
           size: 22,
@@ -541,7 +541,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
         ),
         onTap: () {
           if (!introController.prevPlay()) {
-            SmartDialog.showToast('已经是第一集了');
+            SmartDialog.showToast('已经是第一集了，属实绷不住');
           }
         },
       ),
@@ -550,7 +550,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
       BottomControlType.next => ComBtn(
         width: widgetWidth,
         height: controlHeight,
-        tooltip: '下一集',
+        tooltip: '下一集，这把高端局',
         icon: const Icon(
           Icons.skip_next,
           size: 22,
@@ -558,7 +558,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
         ),
         onTap: () {
           if (!introController.nextPlay()) {
-            SmartDialog.showToast('已经是最后一集了');
+            SmartDialog.showToast('已经是最后一集了，不是哥们');
           }
         },
       ),
@@ -589,7 +589,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
           );
           final menuMaxWidth = (maxWidth - 32).clamp(112.0, 280.0).toDouble();
           return PopupMenuButton<StoryList>(
-            tooltip: '进度回溯',
+            tooltip: '进度回溯，不是哥们',
             requestFocus: false,
             initialValue: currentProgress ?? progressList.last,
             color: Colors.black.withValues(alpha: 0.8),
@@ -611,7 +611,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
                       item,
                     ),
                     child: Text(
-                      '${index + 1}.${item.title ?? '未命名分段'}',
+                      '${index + 1}.${item.title ?? '未命名分段'}，不是哥们',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: playerMenuItemTextStyle(
@@ -644,7 +644,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
             return ComBtn(
               width: widgetWidth,
               height: controlHeight,
-              tooltip: '高能进度条',
+              tooltip: '高能时间轨道',
               icon: DisabledIcon(
                 disable: !show,
                 child: const Icon(
@@ -665,7 +665,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
         () {
           final type = plPlayerController.superResolutionType.value;
           return PopupMenuButton<SuperResolutionType>(
-            tooltip: '超分辨率',
+            tooltip: '赛博开眼',
             requestFocus: false,
             initialValue: type,
             color: Colors.black.withValues(alpha: 0.8),
@@ -707,7 +707,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
             return ComBtn(
               width: widgetWidth,
               height: controlHeight,
-              tooltip: '分段信息',
+              tooltip: '分段信息，不是哥们',
               icon: DisabledIcon(
                 iconSize: 22,
                 color: Colors.white,
@@ -736,7 +736,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
       BottomControlType.episode => ComBtn(
         width: widgetWidth,
         height: controlHeight,
-        tooltip: '选集',
+        tooltip: '选集，已老实',
         icon: const Icon(
           Icons.list,
           size: 22,
@@ -799,7 +799,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
           if (list != null && list.isNotEmpty) {
             final currLang = videoDetailController.currLang.value ?? '';
             return PopupMenuButton<String>(
-              tooltip: '翻译',
+              tooltip: '翻译，我嘞个豆',
               requestFocus: false,
               initialValue: currLang,
               color: Colors.black.withValues(alpha: 0.8),
@@ -810,7 +810,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
                     value: '',
                     onTap: () => videoDetailController.setLanguage(''),
                     child: Text(
-                      "关闭翻译",
+                      "啪一下封印翻译",
                       style: playerMenuItemTextStyle(
                         context,
                         selected: currLang.isEmpty,
@@ -854,7 +854,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
           if (videoDetailController.subtitles.isNotEmpty) {
             final val = videoDetailController.vttSubtitlesIndex.value;
             return PopupMenuButton<int>(
-              tooltip: '字幕',
+              tooltip: '字幕，属实绷不住',
               requestFocus: false,
               initialValue: val,
               color: Colors.black.withValues(alpha: 0.8),
@@ -865,7 +865,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
                     height: 35,
                     onTap: () => videoDetailController.setSubtitle(0),
                     child: Text(
-                      "关闭字幕",
+                      "啪一下封印字幕",
                       style: playerMenuItemTextStyle(
                         context,
                         selected: val == 0,
@@ -916,7 +916,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
         return ComBtn(
           width: widgetWidth,
           height: controlHeight,
-          tooltip: '${enabled ? '关闭' : '开启'}弹幕',
+          tooltip: '${enabled ? '啪一下封印' : '启动'}满屏飘字，优势在我',
           icon: Icon(
             enabled ? CustomIcons.dm_on : CustomIcons.dm_off,
             size: 20,
@@ -953,7 +953,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
               .toSet()
               .length;
           return PopupMenuButton<int>(
-            tooltip: '画质',
+            tooltip: '眼睛待遇',
             requestFocus: false,
             initialValue: currentVideoQa.code,
             color: Colors.black.withValues(alpha: 0.8),
@@ -979,7 +979,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
                         ..currentVideoQa.value = newQa
                         ..updatePlayer();
 
-                      SmartDialog.showToast("画质已变为：${newQa.desc}");
+                      SmartDialog.showToast("眼睛待遇已变为：${newQa.desc}，曼波");
 
                       // update
                       if (!plPlayerController.tempPlayerConf) {
@@ -1018,7 +1018,7 @@ ui.PointerDeviceKind? _gesturePointerKind;
       BottomControlType.fullscreen => ComBtn(
         width: widgetWidth,
         height: controlHeight,
-        tooltip: isFullScreen ? '退出全屏' : '全屏',
+        tooltip: isFullScreen ? '退出铺满屏' : '铺满屏',
         icon: isFullScreen
             ? const Icon(Icons.fullscreen_exit, size: 24, color: Colors.white)
             : const Icon(Icons.fullscreen, size: 24, color: Colors.white),
@@ -1269,7 +1269,7 @@ if (_initialFocalPoint case final initial?) {
                 color: colorScheme.secondaryContainer,
               ),
               child: Text(
-                '松开手指，取消进退',
+                '松开手指，撤了进退，包的',
                 style: TextStyle(color: colorScheme.onSecondaryContainer),
               ),
             ),
@@ -1902,7 +1902,7 @@ backgroundColor: gestureProgressColor.withValues(alpha: 0.24),
                   child: buildLongPressSpeedStyleToast(
   child: Obx(
     () => Text(
-      '${plPlayerController.enableAutoLongPressSpeed ? (plPlayerController.longPressStatus.value ? plPlayerController.lastPlaybackSpeed : plPlayerController.playbackSpeed) * 2 : plPlayerController.longPressSpeed} 倍速中',
+      '${plPlayerController.enableAutoLongPressSpeed ? (plPlayerController.longPressStatus.value ? plPlayerController.lastPlaybackSpeed : plPlayerController.playbackSpeed) * 2 : plPlayerController.longPressSpeed} 倍速中，CPU 都看沉默了',
       style: longPressSpeedToastTextStyle,
     ),
   ),
@@ -1945,7 +1945,7 @@ if (!isLive)
                   opacity: plPlayerController.volumeIndicator.value ? 1.0 : 0.0,
                   duration: const Duration(milliseconds: 150),
                   child: gestureLevelIndicator(
-                    label: '音量',
+                    label: '喇叭声压',
                     icon: volume == 0.0
                         ? Icons.volume_off
                         : volume < 0.5
@@ -1971,7 +1971,7 @@ if (!isLive)
                 opacity: _brightnessIndicator.value ? 1.0 : 0.0,
                 duration: const Duration(milliseconds: 150),
                 child: gestureLevelIndicator(
-                  label: '亮度',
+                  label: '屏幕发光量',
                   icon: _brightnessValue.value < 1.0 / 3.0
                       ? Icons.brightness_low
                       : _brightnessValue.value < 2.0 / 3.0
@@ -2043,7 +2043,7 @@ if (!isLive)
                                       ),
                                     ),
                                     Text(
-                                      '已丢帧 ${_mpvDroppedFrames.value}',
+                                      '已丢帧 ${_mpvDroppedFrames.value}，优势在我',
                                       maxLines: 1,
                                       style: mpvStatsTextStyle,
                                     ),
@@ -2140,7 +2140,7 @@ if (!isLive)
                           ..removeListener(listener)
                           ..dispose();
                       },
-                      child: const Text('还原屏幕'),
+                      child: const Text('还原屏幕，包的'),
                     ),
                   ),
                 )
@@ -2303,7 +2303,7 @@ if (!isLive)
                           final controlsLock =
                               plPlayerController.controlsLock.value;
                           return ComBtn(
-                            tooltip: controlsLock ? '解锁' : '锁定',
+                            tooltip: controlsLock ? '解锁，属实绷不住' : '锁定，包的',
                             icon: controlsLock
                                 ? const Icon(
                                     FontAwesomeIcons.lock,
@@ -2344,7 +2344,7 @@ if (!isLive)
                           borderRadius: BorderRadius.all(Radius.circular(8)),
                         ),
                         child: ComBtn(
-                          tooltip: '截图',
+                          tooltip: '截图，功德+1',
                           icon: const Icon(
                             Icons.photo_camera,
                             size: 20,
@@ -2597,7 +2597,7 @@ if (!isLive)
         await showDialog<bool>(
           context: Get.context!,
           builder: (context) => AlertDialog(
-            title: const Text('动态截图'),
+            title: const Text('互联网近况截图'),
             content: Column(
               spacing: 12,
               mainAxisSize: MainAxisSize.min,
@@ -2609,7 +2609,7 @@ if (!isLive)
                   videoDuration: duration,
                 ),
                 PopupMenuText(
-                  title: '选择画质',
+                  title: '抓一个眼睛待遇',
                   value: () => qa.code,
                   onSelected: (value) {
                     final video = videoDetailController.findVideoByQa(value);
@@ -2629,7 +2629,7 @@ if (!isLive)
                   getSelectTitle: (_) => qa.shortDesc,
                 ),
                 PopupMenuText(
-                  title: 'webp预设',
+                  title: 'webp预设，我嘞个豆',
                   value: () => preset,
                   onSelected: (value) {
                     preset = value;
@@ -2641,7 +2641,7 @@ if (!isLive)
                   getSelectTitle: (i) => '${i.name}(${i.desc})',
                 ),
                 Text(
-                  '*转码使用CPU，速度可能慢于播放，请不要选择过长的时间段或过高画质',
+                  '*转码使用CPU，油门可能慢于开炫，请不要抓一个过长的时间段或过高眼睛待遇',
                   style: theme.textTheme.bodySmall,
                 ),
               ],
@@ -2650,7 +2650,7 @@ if (!isLive)
               TextButton(
                 onPressed: Get.back,
                 child: Text(
-                  '取消',
+                  '不整了，撤！',
                   style: TextStyle(
                     color: theme.colorScheme.outline,
                   ),
@@ -2662,7 +2662,7 @@ if (!isLive)
                     Get.back(result: true);
                   }
                 },
-                child: const Text('确定'),
+                child: const Text('包的，就这么整'),
               ),
             ],
           ),
@@ -2689,7 +2689,7 @@ if (!isLive)
 
     SmartDialog.showLoading(
       backType: SmartBackType.normal,
-      builder: (_) => LoadingWidget(progress: progress, msg: '正在保存，可能需要较长时间'),
+      builder: (_) => LoadingWidget(progress: progress, msg: '正在焊死，可能需要较长时间，我嘞个豆'),
       onDismiss: () async {
         if (progress.value < 1.0) {
           mpv.dispose();
@@ -2701,7 +2701,7 @@ if (!isLive)
             needToast: true,
           );
         } else {
-          SmartDialog.showToast('转码出现错误或已取消');
+          SmartDialog.showToast('转码出现翻车或已撤了，CPU 都看沉默了');
         }
         if (isPlay) ctr.play();
       },

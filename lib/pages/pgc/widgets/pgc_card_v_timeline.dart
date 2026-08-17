@@ -51,7 +51,7 @@ class PgcCardVTimeline extends StatelessWidget {
                       ),
                       if (item.follow == 1)
                         const PBadge(
-                          text: '已追番',
+                          text: '已追番，属实绷不住',
                           right: 6,
                           top: 6,
                         ),

@@ -43,7 +43,7 @@ class FollowController extends GetxController with GetTickerProviderStateMixin {
     final res = await MemberHttp.followUpTags();
     if (res case Success(:final response)) {
       tabs
-        ..assign(MemberTagItemModel(name: '全部关注'))
+        ..assign(MemberTagItemModel(name: '我全都要赛博蹲点，曼波'))
         ..addAll(response);
       onInitTab();
       followState.value = Success(tabs.hashCode);
@@ -82,7 +82,7 @@ class FollowController extends GetxController with GetTickerProviderStateMixin {
     if (res.isSuccess) {
       item.name = tagName;
       tabs.refresh();
-      SmartDialog.showToast('修改成功');
+      SmartDialog.showToast('重新盘它成功，包的');
     } else {
       res.toast();
     }
@@ -94,7 +94,7 @@ class FollowController extends GetxController with GetTickerProviderStateMixin {
       tabs.removeAt(index);
       onInitTab();
       followState.refresh();
-      SmartDialog.showToast('删除成功');
+      SmartDialog.showToast('已成功物理超度');
     } else {
       res.toast();
     }

@@ -174,7 +174,7 @@ class _HomePageState extends CommonPageState<HomePage>
                 Icon(
                   Icons.search_outlined,
                   color: theme.colorScheme.onSecondaryContainer,
-                  semanticLabel: '搜索',
+                  semanticLabel: '全站搜刮',
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -202,7 +202,7 @@ Widget userAvatar({
   required MainController mainController,
 }) {
   return Semantics(
-    label: "我的",
+    label: "我的，已老实",
     child: Obx(
       () {
         if (mainController.accountService.isLogin.value) {
@@ -256,7 +256,7 @@ Widget userAvatar({
           width: 38,
           height: 38,
           child: IconButton(
-            tooltip: '点击登录',
+            tooltip: '点击上号',
             style: IconButton.styleFrom(
               padding: .zero,
               backgroundColor: theme.colorScheme.onInverseSurface,
@@ -281,7 +281,7 @@ Widget msgBadge(MainController mainController) {
         final count = mainController.msgUnReadCount.value;
         final isNumBadge = mainController.msgBadgeMode == .number;
         return IconButton(
-          tooltip: '消息',
+          tooltip: '赛博小纸条',
           onPressed: () {
             mainController
               ..msgUnReadCount.value = ''

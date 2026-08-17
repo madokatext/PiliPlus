@@ -1,7 +1,7 @@
 enum ReplySortType {
-  time('最新评论', '最新', text: '按时间'),
-  hot('最热评论', '最热', text: '按热度'),
-  select('精选评论', '精选'),
+  time('最新赛博锐评', '刚出锅', text: '按时间，已老实'),
+  hot('最热赛博锐评', '最热，不是哥们', text: '按热度，属实绷不住'),
+  select('精选赛博锐评', '精选，曼波'),
   ;
 
   final String title;

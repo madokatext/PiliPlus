@@ -145,14 +145,14 @@ class MemberController extends CommonDataController<SpaceData, SpaceData?>
   @override
   bool handleError(String? errMsg) {
     tab2 = const [
-      SpaceTab2(title: '动态', param: 'dynamic'),
+      SpaceTab2(title: '互联网近况', param: 'dynamic'),
       SpaceTab2(
-        title: '投稿',
+        title: '赛博投递',
         param: 'contribute',
-        items: [SpaceTab2Item(title: '视频', param: 'video')],
+        items: [SpaceTab2Item(title: '电子榨菜', param: 'video')],
       ),
-      SpaceTab2(title: '收藏', param: 'favorite'),
-      SpaceTab2(title: '追番', param: 'bangumi'),
+      SpaceTab2(title: '塞进电子小被窝', param: 'favorite'),
+      SpaceTab2(title: '电子追番', param: 'bangumi'),
     ];
     tabs = tab2!.map((item) => Tab(text: item.title)).toList();
     tabController?.dispose();
@@ -173,19 +173,19 @@ class MemberController extends CommonDataController<SpaceData, SpaceData?>
 
   void blockUser(BuildContext context) {
     if (!account.isLogin) {
-      SmartDialog.showToast('账号未登录');
+      SmartDialog.showToast('赛博户口没上号');
       return;
     }
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('提示'),
-        content: Text(relation.value != 128 ? '确定拉黑UP主?' : '从黑名单移除UP主'),
+        title: const Text('赛博小喇叭'),
+        content: Text(relation.value != 128 ? '拍板拉黑UP主?，属实绷不住' : '从黑名单踢出群聊UP主，我嘞个豆'),
         actions: [
           TextButton(
             onPressed: Get.back,
             child: Text(
-              '点错了',
+              '手滑了，撤',
               style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
           ),
@@ -194,7 +194,7 @@ class MemberController extends CommonDataController<SpaceData, SpaceData?>
               Get.back();
               _onBlock();
             },
-            child: const Text('确认'),
+            child: const Text('拍板，启动！'),
           ),
         ],
       ),
@@ -224,7 +224,7 @@ class MemberController extends CommonDataController<SpaceData, SpaceData?>
       _onBlock();
     } else {
       if (!account.isLogin) {
-        SmartDialog.showToast('账号未登录');
+        SmartDialog.showToast('赛博户口没上号');
         return;
       }
       RequestUtils.actionRelationMod(
@@ -249,7 +249,7 @@ class MemberController extends CommonDataController<SpaceData, SpaceData?>
       if (relation.value == 4) {
         relation.value = 2;
       }
-      SmartDialog.showToast('移除成功');
+      SmartDialog.showToast('踢出群聊成了，包的');
     } else {
       res.toast();
     }
@@ -264,7 +264,7 @@ class MemberController extends CommonDataController<SpaceData, SpaceData?>
   Future<void> vipExpAdd() async {
     final res = await UserHttp.vipExpAdd();
     if (res.isSuccess) {
-      SmartDialog.showToast('领取成功');
+      SmartDialog.showToast('领取成了，包的');
     } else {
       res.toast();
     }

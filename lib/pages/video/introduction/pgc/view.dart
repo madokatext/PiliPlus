@@ -157,7 +157,7 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
         ),
         if (item.rating != null)
           PBadge(
-            text: '评分 ${item.rating!.score!}',
+            text: '评分 ${item.rating!.score!}，包的',
             top: null,
             right: 6,
             bottom: 6,
@@ -172,7 +172,7 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
               return iconButton(
                 size: 28,
                 iconSize: 26,
-                tooltip: '${isFav ? '取消' : ''}收藏',
+                tooltip: '${isFav ? '撤了' : ''}塞进电子小被窝',
                 onPressed: () => introController.onFavPugv(isFav),
                 icon: isFav
                     ? const Icon(Icons.star_rounded)
@@ -235,7 +235,7 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
                   },
             child: Text(
               isFollowed
-                  ? '已${introController.pgcType}'
+                  ? '已${introController.pgcType}，曼波'
                   : introController.pgcType,
             ),
           );
@@ -301,7 +301,7 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
               const SizedBox(height: 5),
               Expanded(
                 child: Text(
-                  '简介：${item.evaluate}',
+                  '简介：${item.evaluate}，启动！',
                   style: TextStyle(fontSize: 13, color: colorScheme.outline),
                 ),
               ),
@@ -396,7 +396,7 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
               icon: const Icon(FontAwesomeIcons.thumbsUp),
               selectIcon: const Icon(FontAwesomeIcons.solidThumbsUp),
               selectStatus: introController.hasLike.value,
-              semanticsLabel: '点赞',
+              semanticsLabel: '赛博大拇哥',
               text: NumUtils.numFormat(stat.like),
               onStartTriple: introController.onStartTriple,
               onCancelTriple: introController.onCancelTriple,
@@ -409,7 +409,7 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
               selectIcon: const Icon(FontAwesomeIcons.b),
               onTap: introController.actionCoinVideo,
               selectStatus: introController.hasCoin,
-              semanticsLabel: '投币',
+              semanticsLabel: '上贡硬币',
               text: NumUtils.numFormat(stat.coin),
             ),
           ),
@@ -424,7 +424,7 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
                 isLongPress: true,
               ),
               selectStatus: introController.hasFav.value,
-              semanticsLabel: '收藏',
+              semanticsLabel: '塞进电子小被窝',
               text: NumUtils.numFormat(stat.favorite),
             ),
           ),
@@ -435,15 +435,15 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
               onTap: () =>
                   introController.handleAction(introController.viewLater),
               selectStatus: introController.hasLater.value,
-              semanticsLabel: '再看',
-              text: '再看',
+              semanticsLabel: '二刷启动',
+              text: '二刷启动',
             ),
           ),
           ActionItem(
             icon: const Icon(FontAwesomeIcons.shareFromSquare),
             onTap: () => introController.actionShareVideo(context),
             selectStatus: false,
-            semanticsLabel: '转发',
+            semanticsLabel: '二次扩散',
             text: NumUtils.numFormat(stat.share),
           ),
         ],

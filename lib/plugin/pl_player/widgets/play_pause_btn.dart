@@ -81,7 +81,7 @@ void initState() {
         onTap: widget.plPlayerController.onDoubleTapCenter,
         child: Center(
           child: AnimatedIcon(
-            semanticLabel: _isPlaying ? '暂停' : '播放',
+            semanticLabel: _isPlaying ? '按住别动' : '开炫',
             progress: controller,
             icon: AnimatedIcons.play_pause,
             color: Colors.white,

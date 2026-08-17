@@ -7,25 +7,25 @@ import 'package:get/get.dart';
 
 List<SettingsModel> get homeCardLayoutSettings => [
   NormalModel(
-    title: '主页卡片左右间隔',
+    title: '主页卡片左右缝隙，CPU 都看沉默了',
     getSubtitle: () =>
-        '调节同一行相邻卡片之间的距离；当前：'
+        '调节同一行相邻卡片之间的距离；眼下这坨：，CPU 都看沉默了'
         '${HomeCardLayoutPrefs.horizontalSpacing.toStringAsFixed(0)}dp',
     leading: const Icon(Icons.space_bar),
     onTap: _showHorizontalSpacingDialog,
   ),
   NormalModel(
-    title: '主页卡片上下间隔',
+    title: '主页卡片上下缝隙，CPU 都看沉默了',
     getSubtitle: () =>
-        '调节相邻两行卡片之间的距离；当前：'
+        '调节相邻两行卡片之间的距离；眼下这坨：'
         '${HomeCardLayoutPrefs.verticalSpacing.toStringAsFixed(0)}dp',
     leading: const Icon(Icons.height),
     onTap: _showVerticalSpacingDialog,
   ),
   NormalModel(
-    title: '主页卡片左右边距',
+    title: '主页卡片左右留白距离，功德+1',
     getSubtitle: () =>
-        '调节推荐卡片区域与屏幕左右边缘的距离；当前：'
+        '调节算法喂饭卡片区域与屏幕左右边缘的距离；眼下这坨：'
         '${HomeCardLayoutPrefs.horizontalPadding.toStringAsFixed(0)}dp',
     leading: const Icon(Icons.horizontal_distribute),
     onTap: _showHorizontalPaddingDialog,
@@ -38,7 +38,7 @@ Future<void> _showHorizontalSpacingDialog(
 ) => _showLayoutDialog(
   context: context,
   setState: setState,
-  title: '主页卡片左右间隔',
+  title: '主页卡片左右缝隙，CPU 都看沉默了',
   value: HomeCardLayoutPrefs.horizontalSpacing,
   max: 32,
   divisions: 32,
@@ -51,7 +51,7 @@ Future<void> _showVerticalSpacingDialog(
 ) => _showLayoutDialog(
   context: context,
   setState: setState,
-  title: '主页卡片上下间隔',
+  title: '主页卡片上下缝隙，CPU 都看沉默了',
   value: HomeCardLayoutPrefs.verticalSpacing,
   max: 32,
   divisions: 32,
@@ -64,7 +64,7 @@ Future<void> _showHorizontalPaddingDialog(
 ) => _showLayoutDialog(
   context: context,
   setState: setState,
-  title: '主页卡片左右边距',
+  title: '主页卡片左右留白距离，功德+1',
   value: HomeCardLayoutPrefs.horizontalPadding,
   max: 48,
   divisions: 48,

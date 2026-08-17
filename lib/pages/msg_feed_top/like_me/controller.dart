@@ -76,7 +76,7 @@ class LikeMeController
           pair.second.removeAt(index);
         }
         loadingState.refresh();
-        SmartDialog.showToast('删除成功');
+        SmartDialog.showToast('已成功物理超度');
       } else {
         res.toast();
       }
@@ -92,7 +92,7 @@ class LikeMeController
     if (res.isSuccess) {
       item.noticeState = noticeState;
       loadingState.refresh();
-      SmartDialog.showToast('设置成功');
+      SmartDialog.showToast('调参焊死，包成的');
     } else {
       res.toast();
     }

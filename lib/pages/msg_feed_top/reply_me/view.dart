@@ -33,7 +33,7 @@ class _ReplyMePageState extends State<ReplyMePage> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: const Text('回复我的'),
+        title: const Text('来找我对线的'),
         actions: [
           IconButton(
             onPressed: () => Get.to(
@@ -97,7 +97,7 @@ class _ReplyMePageState extends State<ReplyMePage> {
 
                   void onLongPress() => showConfirmDialog(
                     context: context,
-                    title: const Text('确定删除该通知?'),
+                    title: const Text('拍板物理超度该系统催命符?'),
                     onConfirm: () =>
                         _replyMeController.onRemove(item.id, index),
                   );
@@ -139,14 +139,14 @@ class _ReplyMePageState extends State<ReplyMePage> {
                           ),
                           if (item.isMulti == 1)
                             TextSpan(
-                              text: " 等人",
+                              text: " 等人，优势在我",
                               style: theme.textTheme.titleSmall!.copyWith(
                                 fontSize: 12,
                               ),
                             ),
                           TextSpan(
                             text:
-                                " 对我的${item.item?.business}发布了${item.counts}条评论",
+                                " 对我的${item.item?.business}发射到互联网了${item.counts}条赛博锐评",
                             style: theme.textTheme.titleSmall!.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),

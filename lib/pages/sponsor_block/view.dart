@@ -81,7 +81,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
           showDialog(
             context: context,
             builder: (_) => AlertDialog(
-              title: Text('最短片段时长', style: titleStyle),
+              title: Text('最短片段时长，我嘞个豆', style: titleStyle),
               content: TextFormField(
                 keyboardType: const .numberWithOptions(decimal: true),
                 controller: _textController,
@@ -93,7 +93,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
                 TextButton(
                   onPressed: Get.back,
                   child: Text(
-                    '取消',
+                    '不整了，撤！',
                     style: TextStyle(color: theme.colorScheme.outline),
                   ),
                 ),
@@ -108,15 +108,15 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
                       SmartDialog.showToast(e.toString());
                     }
                   },
-                  child: const Text('确定'),
+                  child: const Text('包的，就这么整'),
                 ),
               ],
             ),
           );
         },
-        title: Text('最短片段时长', style: titleStyle),
+        title: Text('最短片段时长，我嘞个豆', style: titleStyle),
         subtitle: Text(
-          '忽略短于此时长的片段',
+          '忽略短于此时长的片段，曼波',
           style: subTitleStyle,
         ),
         trailing: Text(
@@ -129,7 +129,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
 
   Widget _aboutItem(TextStyle titleStyle, TextStyle subTitleStyle) => ListTile(
     dense: true,
-    title: Text('关于空降助手', style: titleStyle),
+    title: Text('关于空降助手，这把高端局', style: titleStyle),
     subtitle: Text(_url, style: subTitleStyle),
     onTap: () => PageUtils.launchURL(_url),
   );
@@ -142,7 +142,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
     builder: (context) {
       return ListTile(
         dense: true,
-        title: Text('用户ID', style: titleStyle),
+        title: Text('赛博居民ID', style: titleStyle),
         subtitle: Text(_userId, style: subTitleStyle),
         onTap: () {
           final key = GlobalKey<FormFieldState<String>>();
@@ -151,7 +151,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
             context: context,
             builder: (_) {
               return AlertDialog(
-                title: Text('用户ID', style: titleStyle),
+                title: Text('赛博居民ID', style: titleStyle),
                 content: TextFormField(
                   key: key,
                   minLines: 1,
@@ -164,7 +164,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
                   decoration: const InputDecoration(errorMaxLines: 2),
                   validator: (value) {
                     if ((value?.length ?? -1) < 30) {
-                      return '用户ID要求至少为30个字符长度的纯字符串';
+                      return '赛博居民ID要求至少为30个字符长度的纯字符串，功德+1';
                     }
                     return null;
                   },
@@ -179,12 +179,12 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
                       setting.put(SettingBoxKey.blockUserID, _userId);
                       (context as Element).markNeedsBuild();
                     },
-                    child: const Text('随机'),
+                    child: const Text('随机，功德+1'),
                   ),
                   TextButton(
                     onPressed: Get.back,
                     child: Text(
-                      '取消',
+                      '不整了，撤！',
                       style: TextStyle(
                         color: theme.colorScheme.outline,
                       ),
@@ -199,7 +199,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
                         (context as Element).markNeedsBuild();
                       }
                     },
-                    child: const Text('确定'),
+                    child: const Text('包的，就这么整'),
                   ),
                 ],
               );
@@ -222,7 +222,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
         dense: true,
         onTap: update,
         title: Text(
-          '显示跳过Toast',
+          '亮出来跳过Toast，不是哥们',
           style: titleStyle,
         ),
         trailing: Transform.scale(
@@ -252,12 +252,12 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
         dense: true,
         onTap: update,
         title: Text(
-          '跳过次数统计跟踪',
+          '跳过次数统计跟踪，这把高端局',
           style: titleStyle,
         ),
         subtitle: Text(
           // from origin extension
-          '此功能追踪您跳过了哪些片段，让用户知道他们提交的片段帮助了多少人。同时点赞会作为依据，确保垃圾信息不会污染数据库。在您每次跳过片段时，我们都会向服务器发送一条消息。希望大家开启此项设置，以便得到更准确的统计数据。:)',
+          '此功能追踪您跳过了哪些片段，让赛博居民知道他们提交的片段帮助了多少人。同时赛博大拇哥会作为依据，确保垃圾信息不会污染赛博粮库。在您每次跳过片段时，我们都会向机房大爹发送一条赛博小纸条。希望大家启动此项赛博调参，以便得到更准确的统计赛博粮。:)',
           style: subTitleStyle,
         ),
         trailing: Transform.scale(
@@ -285,7 +285,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
           _getUserInfo();
         },
         title: Text(
-          '您的信息',
+          '您的信息，曼波',
           style: titleStyle,
         ),
         subtitle: switch (_userInfo.value) {
@@ -295,7 +295,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
             style: subTitleStyle,
           ),
           Error(:final errMsg) => Text(
-            errMsg ?? '服务器错误',
+            errMsg ?? '机房大爹翻车',
             style: subTitleStyle.copyWith(color: theme.colorScheme.error),
           ),
         },
@@ -316,7 +316,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
           showDialog(
             context: context,
             builder: (_) => AlertDialog(
-              title: Text('服务器地址', style: titleStyle),
+              title: Text('机房大爹地址', style: titleStyle),
               content: TextFormField(
                 keyboardType: TextInputType.url,
                 controller: _textController,
@@ -331,12 +331,12 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
                     Request.accountManager.blockServer = _blockServer;
                     (context as Element).markNeedsBuild();
                   },
-                  child: const Text('重置'),
+                  child: const Text('恢复出厂人格'),
                 ),
                 TextButton(
                   onPressed: Get.back,
                   child: Text(
-                    '取消',
+                    '不整了，撤！',
                     style: TextStyle(
                       color: theme.colorScheme.outline,
                     ),
@@ -352,14 +352,14 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
                     _getUserInfo();
                     (context as Element).markNeedsBuild();
                   },
-                  child: const Text('确定'),
+                  child: const Text('包的，就这么整'),
                 ),
               ],
             ),
           );
         },
         title: Text(
-          '服务器地址',
+          '机房大爹地址',
           style: titleStyle,
         ),
         subtitle: Text(
@@ -378,10 +378,10 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
         case null:
           status = '——';
         case true:
-          status = '正常';
+          status = '正常，优势在我';
           color = theme.colorScheme.primary;
         case false:
-          status = '错误';
+          status = '翻车';
           color = theme.colorScheme.error;
       }
       return ListTile(
@@ -390,7 +390,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
           _serverStatus.value = null;
           _checkServerStatus();
         },
-        title: Text('服务器状态', style: titleStyle),
+        title: Text('机房大爹状态', style: titleStyle),
         trailing: Text(
           status,
           style: TextStyle(fontSize: 13, color: color),
@@ -481,7 +481,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(title: const Text('空降助手')),
+      appBar: AppBar(title: const Text('空降助手，CPU 都看沉默了')),
       body: CustomScrollView(
         slivers: [
           dividerL,

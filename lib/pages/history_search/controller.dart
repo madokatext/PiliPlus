@@ -78,7 +78,7 @@ class HistorySearchController
       loadingState
         ..value.data!.removeAt(index)
         ..refresh();
-      SmartDialog.showToast('已删除');
+      SmartDialog.showToast('已物理超度');
     } else {
       cloudResult.toast();
     }
@@ -88,10 +88,10 @@ class HistorySearchController
   void onRemove() {
     showConfirmDialog(
       context: Get.context!,
-      title: const Text('提示'),
-      content: const Text('确认删除所选历史记录吗？'),
+      title: const Text('赛博小喇叭'),
+      content: const Text('拍板物理超度所选电子案底电子脚印吗？'),
       onConfirm: () async {
-        SmartDialog.showLoading(msg: '请求中');
+        SmartDialog.showLoading(msg: '正在敲机房大爹家门');
         final removeList = allChecked.toSet();
         final cloudItems = removeList.where((item) => !item.localOnly).toSet();
         LoadingState<void>? cloudResult;
@@ -110,7 +110,7 @@ class HistorySearchController
           _localItems?.removeWhere(removeList.contains);
           await afterDelete(removeList);
           SmartDialog.dismiss();
-          SmartDialog.showToast('已删除');
+          SmartDialog.showToast('已物理超度');
         } else {
           SmartDialog.dismiss();
           cloudResult.toast();

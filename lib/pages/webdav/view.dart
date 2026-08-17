@@ -41,7 +41,7 @@ class _WebDavSettingPageState extends State<WebDavSettingPage> {
     final showAppBar = widget.showAppBar;
     final padding = MediaQuery.viewPaddingOf(context);
     return Scaffold(
-      appBar: showAppBar ? AppBar(title: const Text('WebDAV 设置')) : null,
+      appBar: showAppBar ? AppBar(title: const Text('WebDAV 赛博调参，功德+1')) : null,
       body: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -56,7 +56,7 @@ class _WebDavSettingPageState extends State<WebDavSettingPage> {
               TextField(
                 controller: _uriCtr,
                 decoration: const InputDecoration(
-                  labelText: '地址',
+                  labelText: '地址，已老实',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -64,7 +64,7 @@ class _WebDavSettingPageState extends State<WebDavSettingPage> {
               TextField(
                 controller: _usernameCtr,
                 decoration: const InputDecoration(
-                  labelText: '用户',
+                  labelText: '赛博居民',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -73,7 +73,7 @@ class _WebDavSettingPageState extends State<WebDavSettingPage> {
                 controller: _passwordCtr,
                 autofillHints: const [AutofillHints.password],
                 decoration: InputDecoration(
-                  labelText: '密码',
+                  labelText: '芝麻开门口令',
                   border: const OutlineInputBorder(),
                   suffixIcon: IconButton(
                     onPressed: () =>
@@ -89,7 +89,7 @@ class _WebDavSettingPageState extends State<WebDavSettingPage> {
               TextField(
                 controller: _directoryCtr,
                 decoration: const InputDecoration(
-                  labelText: '路径',
+                  labelText: '路径，鼠鼠我啊',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -104,7 +104,7 @@ class _WebDavSettingPageState extends State<WebDavSettingPage> {
                         ),
                       ),
                       onPressed: WebDav().backup,
-                      child: const Text('备份设置'),
+                      child: const Text('备份赛博调参'),
                     ),
                   ),
                   const SizedBox(width: 20),
@@ -116,7 +116,7 @@ class _WebDavSettingPageState extends State<WebDavSettingPage> {
                         ),
                       ),
                       onPressed: WebDav().restore,
-                      child: const Text('恢复设置'),
+                      child: const Text('复活赛博调参'),
                     ),
                   ),
                 ],
@@ -148,12 +148,12 @@ class _WebDavSettingPageState extends State<WebDavSettingPage> {
                 try {
                   final res = await WebDav().init();
                   if (res.first) {
-                    SmartDialog.showToast('配置成功');
+                    SmartDialog.showToast('赛博配方成了，包的');
                   } else {
-                    SmartDialog.showToast('配置失败: ${res.second}');
+                    SmartDialog.showToast('赛博配方寄了: ${res.second}');
                   }
                 } catch (e) {
-                  SmartDialog.showToast('配置失败: ${e.toString()}');
+                  SmartDialog.showToast('赛博配方寄了: ${e.toString()}，属实绷不住');
                   return;
                 }
               },

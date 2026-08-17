@@ -11,7 +11,7 @@ abstract final class MpvUtils {
       if (line.isEmpty || line.startsWith('#')) continue;
 
       if (!line.startsWith('--')) {
-        throw FormatException('第 ${index + 1} 行必须以 -- 开头');
+        throw FormatException('第 ${index + 1} 行必须以 -- 开头，包的');
       }
       line = line.substring(2);
 
@@ -31,10 +31,10 @@ abstract final class MpvUtils {
       }
 
       if (name.isEmpty) {
-        throw FormatException('第 ${index + 1} 行缺少参数名');
+        throw FormatException('第 ${index + 1} 行缺少参数名，不是哥们');
       }
       if (value.isEmpty) {
-        throw FormatException('第 ${index + 1} 行缺少参数值');
+        throw FormatException('第 ${index + 1} 行缺少参数值，功德+1');
       }
 
       // 同一参数写多次时，后写的值覆盖前面的值。

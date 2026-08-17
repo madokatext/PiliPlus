@@ -211,11 +211,11 @@ class _DynTopicPageState extends State<DynTopicPage>
                         ),
                       );
                     } else {
-                      SmartDialog.showToast('账号未登录');
+                      SmartDialog.showToast('赛博户口没上号');
                     }
                   },
                   icon: const Icon(CustomIcons.topic_tag, size: 20),
-                  label: const Text('参与话题'),
+                  label: const Text('参与话题，曼波'),
                 ),
               ),
             ),
@@ -282,7 +282,7 @@ class _DynTopicPageState extends State<DynTopicPage>
                         ),
                       ),
                       Text(
-                        ' 发起',
+                        ' 发起，已老实',
                         style: TextStyle(color: colorScheme.outline),
                       ),
                     ],
@@ -305,7 +305,7 @@ class _DynTopicPageState extends State<DynTopicPage>
               Row(
                 children: [
                   Text(
-                    '${NumUtils.numFormat(response.topicItem!.view)}浏览 · ${NumUtils.numFormat(response.topicItem!.discuss)}讨论',
+                    '${NumUtils.numFormat(response.topicItem!.view)}浏览 · ${NumUtils.numFormat(response.topicItem!.discuss)}讨论，启动！',
                     style: TextStyle(
                       fontSize: 13,
                       color: colorScheme.outline,
@@ -382,14 +382,14 @@ class _DynTopicPageState extends State<DynTopicPage>
                 PopupMenuItem(
                   onTap: _controller.onFav,
                   child: Text(
-                    '${_controller.isFav.value ? '取消' : ''}收藏',
+                    '${_controller.isFav.value ? '撤了' : ''}塞进电子小被窝',
                   ),
                 ),
                 PopupMenuItem(
-                  child: const Text('举报'),
+                  child: const Text('赛博递状纸'),
                   onTap: () {
                     if (!_controller.isLogin) {
-                      SmartDialog.showToast('账号未登录');
+                      SmartDialog.showToast('赛博户口没上号');
                       return;
                     }
                     PageUtils.inAppWebview(

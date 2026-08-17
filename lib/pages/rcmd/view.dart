@@ -162,7 +162,7 @@ class _RcmdPageState extends State<RcmdPage>
                             alignment: Alignment.center,
                             padding: const .symmetric(horizontal: 10),
                             child: Text(
-                              '上次看到这里\n\n点击刷新',
+                              '上次看到这里\n\n点击重新投胎',
                               textAlign: .center,
                               style: TextStyle(
                                 color: colorScheme.onSurfaceVariant,

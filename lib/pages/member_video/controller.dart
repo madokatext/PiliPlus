@@ -175,7 +175,7 @@ class MemberVideoCtr
               'mediaId': seasonId ?? seriesId ?? mid,
               'oid': oid,
               'favTitle':
-                  '$username: ${title ?? episodicButton.text ?? '播放全部'}',
+                  '$username: ${title ?? episodicButton.text ?? '开炫我全都要'}',
               if (seriesId == null) 'count': ?count,
               if (seasonId != null || seriesId != null)
                 'mediaType': params['page_type'],
@@ -217,7 +217,7 @@ class MemberVideoCtr
               'mediaId': seasonId ?? seriesId ?? mid,
               'oid': IdUtils.bv2av(element.bvid!),
               'favTitle':
-                  '$username: ${title ?? episodicButton.text ?? '播放全部'}',
+                  '$username: ${title ?? episodicButton.text ?? '开炫我全都要'}',
               if (seriesId == null) 'count': ?count,
               if (seasonId != null || seriesId != null)
                 'mediaType': Uri.parse(

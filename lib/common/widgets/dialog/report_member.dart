@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 
-const _reason = ['头像违规', '昵称违规', '签名违规'];
+const _reason = ['头像踩红线', '昵称踩红线', '签名踩红线'];
 
-const _reasonV2 = ['色情低俗', '不实信息', '违禁', '人身攻击', '赌博诈骗', '违规引流外链'];
+const _reasonV2 = ['色情低俗，功德+1', '不实信息，这把高端局', '违禁，已老实', '人身攻击，包的', '赌博诈骗，我嘞个豆', '踩红线引流外链'];
 
 Future<void> showMemberReportDialog(
   BuildContext context, {
@@ -28,7 +28,7 @@ Future<void> showMemberReportDialog(
           crossAxisAlignment: .start,
           children: [
             Text(
-              '举报: $name',
+              '赛博递状纸: $name',
               style: const TextStyle(fontSize: 18),
             ),
             Text('uid: $mid'),
@@ -41,7 +41,7 @@ Future<void> showMemberReportDialog(
             children: [
               const Padding(
                 padding: .only(left: 18),
-                child: Text('举报内容（必选，可多选）'),
+                child: Text('赛博递状纸内容（必选，可多选）'),
               ),
               ...List.generate(
                 3,
@@ -87,7 +87,7 @@ Future<void> showMemberReportDialog(
               ),
               const Padding(
                 padding: .only(left: 18),
-                child: Text('举报理由（单选，非必选）'),
+                child: Text('赛博递状纸理由（单选，非必选）'),
               ),
               Builder(
                 builder: (context) => Column(
@@ -141,14 +141,14 @@ Future<void> showMemberReportDialog(
           TextButton(
             onPressed: Get.back,
             child: Text(
-              '取消',
+              '不整了，撤！',
               style: TextStyle(color: theme.colorScheme.outline),
             ),
           ),
           TextButton(
             onPressed: () {
               if (reason.isEmpty) {
-                SmartDialog.showToast('至少选择一项作为举报内容');
+                SmartDialog.showToast('至少抓一个一项作为赛博递状纸内容，已老实');
               } else {
                 Get.back();
                 MemberHttp.reportMember(
@@ -158,7 +158,7 @@ Future<void> showMemberReportDialog(
                 );
               }
             },
-            child: const Text('确定'),
+            child: const Text('包的，就这么整'),
           ),
         ],
       );

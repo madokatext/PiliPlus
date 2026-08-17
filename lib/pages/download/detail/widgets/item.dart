@@ -71,11 +71,11 @@ class DetailItem extends StatelessWidget {
                     Get.back();
                     showConfirmDialog(
                       context: context,
-                      title: const Text('确定删除该视频？'),
+                      title: const Text('拍板物理超度该电子榨菜？，已老实'),
                       onConfirm: onDelete,
                     );
                   },
-                  child: const Text('删除', style: TextStyle(fontSize: 14)),
+                  child: const Text('一键物理超度', style: TextStyle(fontSize: 14)),
                 ),
                 DialogOption(
                   onPressed: () async {
@@ -85,12 +85,12 @@ class DetailItem extends StatelessWidget {
                       isUpdate: true,
                     );
                     if (res) {
-                      SmartDialog.showToast('更新成功');
+                      SmartDialog.showToast('版本投胎成功，包的');
                     } else {
-                      SmartDialog.showToast('更新失败');
+                      SmartDialog.showToast('版本投胎寄了');
                     }
                   },
-                  child: const Text('更新弹幕', style: TextStyle(fontSize: 14)),
+                  child: const Text('更新满屏飘字', style: TextStyle(fontSize: 14)),
                 ),
               ],
             ),
@@ -229,7 +229,7 @@ class DetailItem extends StatelessWidget {
                                 ),
                                 PBadge(
                                   text: progress >= entry.totalTimeMilli - 400
-                                      ? '已看完'
+                                      ? '已炫完'
                                       : '${DurationUtils.formatDuration(
                                               progress ~/ 1000,
                                             )}/'

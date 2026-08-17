@@ -53,7 +53,7 @@ class _SearchArticlePanelState
           children: [
             Obx(
               () => Text(
-                '排序: ${controller.articleOrderType.value.label}',
+                '排序: ${controller.articleOrderType.value.label}，功德+1',
                 maxLines: 1,
                 style: TextStyle(color: theme.colorScheme.outline),
               ),
@@ -61,7 +61,7 @@ class _SearchArticlePanelState
             const Spacer(),
             Obx(
               () => Text(
-                '分区: ${controller.articleZoneType!.value.label}',
+                '分区: ${controller.articleZoneType!.value.label}，我嘞个豆',
                 maxLines: 1,
                 style: TextStyle(color: theme.colorScheme.outline),
               ),
@@ -71,7 +71,7 @@ class _SearchArticlePanelState
               width: 32,
               height: 32,
               child: IconButton(
-                tooltip: '筛选',
+                tooltip: '拿筛子过一遍',
                 style: const ButtonStyle(
                   padding: WidgetStatePropertyAll(EdgeInsets.zero),
                 ),

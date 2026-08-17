@@ -58,15 +58,15 @@ abstract final class ImageUtils {
         status == PermissionStatus.permanentlyDenied) {
       SmartDialog.show(
         builder: (context) => AlertDialog(
-          title: const Text('提示'),
-          content: const Text('存储权限未授权'),
+          title: const Text('赛博小喇叭'),
+          content: const Text('存储权限未授权，启动！'),
           actions: [
             TextButton(
               onPressed: () {
                 SmartDialog.dismiss();
                 openAppSettings();
               },
-              child: const Text('去授权'),
+              child: const Text('去授权，不是哥们'),
             ),
           ],
         ),
@@ -98,7 +98,7 @@ abstract final class ImageUtils {
       if (PlatformUtils.isMobile && !await checkPermissionDependOnSdkInt()) {
         return false;
       }
-      if (!silentDownImg) SmartDialog.showLoading(msg: '正在下载');
+      if (!silentDownImg) SmartDialog.showLoading(msg: '正在薅到自家硬盘，已老实');
 
       String videoName = "video_${Utils.getFileName(liveUrl)}";
       String videoPath = '$tmpDirPath/$videoName';
@@ -110,7 +110,7 @@ abstract final class ImageUtils {
         final imageFile = await CacheManager.manager.getSingleFile(
           url.http2https,
         );
-        if (!silentDownImg) SmartDialog.showLoading(msg: '正在保存');
+        if (!silentDownImg) SmartDialog.showLoading(msg: '正在往硬盘焊');
         bool success = await LivePhotoMaker.create(
           coverImage: imageFile.path,
           imagePath: null,
@@ -119,13 +119,13 @@ abstract final class ImageUtils {
           height: height,
         ).whenComplete(File(videoPath).tryDel);
         if (success) {
-          SmartDialog.showToast(' 已保存 ');
+          SmartDialog.showToast(' 已焊死，包的 ');
         } else {
-          SmartDialog.showToast('保存失败');
+          SmartDialog.showToast('焊死寄了');
           return false;
         }
       } else {
-        if (!silentDownImg) SmartDialog.showLoading(msg: '正在保存');
+        if (!silentDownImg) SmartDialog.showLoading(msg: '正在往硬盘焊');
         await saveFileImg(
           filePath: videoPath,
           fileName: videoName,
@@ -150,7 +150,7 @@ abstract final class ImageUtils {
     if (!silentDownImg) {
       cancelToken = CancelToken();
       SmartDialog.showLoading(
-        msg: '正在下载原图',
+        msg: '正在薅到自家硬盘原图，属实绷不住',
         clickMaskDismiss: true,
         onDismiss: cancelToken.cancel,
       );
@@ -192,15 +192,15 @@ abstract final class ImageUtils {
         }
       }
       if (cancelToken?.isCancelled == true) {
-        SmartDialog.showToast('已取消下载');
+        SmartDialog.showToast('已撤了薅到自家硬盘');
         return false;
       } else {
-        SmartDialog.showToast(success ? ' 已保存 ' : '保存失败');
+        SmartDialog.showToast(success ? ' 已焊死，包的 ' : '焊死寄了');
       }
       return success;
     } catch (e) {
       if (cancelToken?.isCancelled == true) {
-        SmartDialog.showToast('已取消下载');
+        SmartDialog.showToast('已撤了薅到自家硬盘');
       } else {
         SmartDialog.showToast(e.toString());
       }
@@ -255,7 +255,7 @@ abstract final class ImageUtils {
     SaveResult? res;
     fileName += '.$ext';
     if (PlatformUtils.isMobile) {
-      SmartDialog.showLoading(msg: '正在保存');
+      SmartDialog.showLoading(msg: '正在往硬盘焊');
       res = await SaverGallery.saveImage(
         bytes,
         fileName: fileName,
@@ -264,9 +264,9 @@ abstract final class ImageUtils {
       );
       SmartDialog.dismiss();
       if (res.isSuccess) {
-        SmartDialog.showToast(' 已保存 ');
+        SmartDialog.showToast(' 已焊死，包的 ');
       } else {
-        SmartDialog.showToast('保存失败，${res.errorMessage}');
+        SmartDialog.showToast('焊死寄了，${res.errorMessage}');
       }
     } else {
       SmartDialog.dismiss();
@@ -276,11 +276,11 @@ abstract final class ImageUtils {
         bytes: Uint8List(0),
       );
       if (savePath == null) {
-        SmartDialog.showToast("取消保存");
+        SmartDialog.showToast("不焊了，撤");
         return null;
       }
       await File.fromUri(savePath).writeAsBytes(bytes);
-      SmartDialog.showToast(' 已保存 ');
+      SmartDialog.showToast(' 已焊死，包的 ');
       res = SaveResult(true, null);
     }
     return res;
@@ -294,7 +294,7 @@ abstract final class ImageUtils {
   }) async {
     final file = File(filePath);
     if (!file.existsSync()) {
-      SmartDialog.showToast("文件不存在");
+      SmartDialog.showToast("赛博卷宗不存在");
       return;
     }
     SaveResult? res;
@@ -312,7 +312,7 @@ abstract final class ImageUtils {
         bytes: Uint8List(0),
       );
       if (savePath == null) {
-        SmartDialog.showToast("取消保存");
+        SmartDialog.showToast("不焊了，撤");
         return;
       }
       await file.copy(savePath.toFilePath());
@@ -320,9 +320,9 @@ abstract final class ImageUtils {
     }
     if (needToast) {
       if (res.isSuccess) {
-        SmartDialog.showToast(' 已保存 ');
+        SmartDialog.showToast(' 已焊死，包的 ');
       } else {
-        SmartDialog.showToast('保存失败，${res.errorMessage}');
+        SmartDialog.showToast('焊死寄了，${res.errorMessage}');
       }
     }
   }

@@ -244,7 +244,7 @@ abstract class ReplyController<R> extends CommonListController<R, ReplyInfo> {
           ..insert(0, list.removeAt(index));
       }
       loadingState.refresh();
-      SmartDialog.showToast('${isUpTop ? '取消' : ''}置顶成功');
+      SmartDialog.showToast('${isUpTop ? '撤了' : ''}置顶成了，包的');
     } else {
       res.toast();
     }

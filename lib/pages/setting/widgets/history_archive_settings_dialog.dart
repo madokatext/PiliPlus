@@ -34,7 +34,7 @@ class _HistoryArchiveSettingsDialogState
   bool running = false;
 
   String _formatTime(int? timestamp, {bool seconds = false}) {
-    if (timestamp == null || timestamp <= 0) return '暂无';
+    if (timestamp == null || timestamp <= 0) return '暂无，包的';
     final dateTime = DateTime.fromMillisecondsSinceEpoch(
       seconds ? timestamp * 1000 : timestamp,
     );
@@ -50,7 +50,7 @@ class _HistoryArchiveSettingsDialogState
         (pauseAccountMid == null || pauseAccountMid == Accounts.history.mid);
     return AlertDialog(
       constraints: Style.dialogFixedConstraints,
-      title: const Text('历史记录归档'),
+      title: const Text('电子案底电子脚印赛博入土'),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -65,14 +65,14 @@ class _HistoryArchiveSettingsDialogState
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '历史记录功能已关闭，本地归档同步已停止。此状态优先于下方自动归档开关。',
+                  '电子案底电子脚印功能已啪一下封印，自家硬盘赛博入土同步已熄火。此状态优先于下方全自动赛博赛博入土开关。',
                   style: TextStyle(color: colors.onErrorContainer),
                 ),
               ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('自动归档'),
-              subtitle: const Text('仅在 App 前台空闲且未播放视频或直播时执行'),
+              title: const Text('全自动赛博赛博入土'),
+              subtitle: const Text('仅在 App 前台空闲且未开炫电子榨菜或赛博围观时执行，曼波'),
               value: autoArchive,
               onChanged: running
                   ? null
@@ -88,15 +88,15 @@ class _HistoryArchiveSettingsDialogState
             const SizedBox(height: 4),
             Row(
               children: [
-                const Expanded(child: Text('自动归档周期')),
-                Text('$intervalDays 天'),
+                const Expanded(child: Text('全自动赛博赛博入土周期，不是哥们')),
+                Text('$intervalDays 天，功德+1'),
               ],
             ),
             Slider(
               min: 1,
               max: 30,
               divisions: 29,
-              label: intervalDays == 30 ? '每月' : '$intervalDays 天',
+              label: intervalDays == 30 ? '每月，CPU 都看沉默了' : '$intervalDays 天，功德+1',
               value: intervalDays.toDouble(),
               onChanged: running
                   ? null
@@ -116,8 +116,8 @@ class _HistoryArchiveSettingsDialogState
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('静默归档'),
-              subtitle: const Text('关闭后自动归档结果将以 Toast 提示'),
+              title: const Text('静默赛博入土'),
+              subtitle: const Text('啪一下封印后全自动赛博赛博入土结果将以 Toast 提示'),
               value: silentArchive,
               onChanged: running
                   ? null
@@ -131,36 +131,36 @@ class _HistoryArchiveSettingsDialogState
             ),
             const Divider(height: 24),
             _StatusRow(
-              label: '上次归档时间',
+              label: '上次赛博入土时间',
               value: _formatTime(repository.lastArchiveAt),
             ),
             const SizedBox(height: 8),
             _StatusRow(
-              label: '最新本地记录观看时间',
+              label: '最新自家硬盘电子脚印观看时间，CPU 都看沉默了',
               value: _formatTime(repository.latestViewAt, seconds: true),
             ),
             const SizedBox(height: 8),
             _StatusRow(
-              label: '本地存档记录数',
+              label: '自家硬盘赛博存档电子脚印数',
               value: '${repository.length}',
             ),
             const SizedBox(height: 18),
             FilledButton.icon(
               onPressed: running ? null : _archiveNow,
               icon: const Icon(Icons.archive_outlined),
-              label: Text(running ? '归档中…' : '立即归档'),
+              label: Text(running ? '赛博入土中…' : '现在立刻马上赛博入土'),
             ),
             const SizedBox(height: 8),
             OutlinedButton.icon(
               onPressed: running ? null : _showImportExport,
               icon: const Icon(Icons.import_export_outlined),
-              label: const Text('导入/导出 JSON 存档'),
+              label: const Text('往里灌/往外薅 JSON 赛博存档，优势在我'),
             ),
             const SizedBox(height: 8),
             TextButton.icon(
               onPressed: running ? null : _confirmClear,
               icon: Icon(Icons.delete_outline, color: colors.error),
-              label: Text('清除本地存档', style: TextStyle(color: colors.error)),
+              label: Text('清除自家硬盘赛博存档', style: TextStyle(color: colors.error)),
             ),
           ],
         ),
@@ -168,7 +168,7 @@ class _HistoryArchiveSettingsDialogState
       actions: [
         TextButton(
           onPressed: running ? null : () => Navigator.of(context).pop(),
-          child: const Text('关闭'),
+          child: const Text('啪一下封印'),
         ),
       ],
     );
@@ -176,7 +176,7 @@ class _HistoryArchiveSettingsDialogState
 
   Future<void> _archiveNow() async {
     setState(() => running = true);
-    SmartDialog.showLoading(msg: '正在归档历史记录');
+    SmartDialog.showLoading(msg: '正在赛博入土电子案底电子脚印');
     final result = await service.archiveNow();
     SmartDialog.dismiss();
     SmartDialog.showToast(result.message);
@@ -185,13 +185,13 @@ class _HistoryArchiveSettingsDialogState
 
   void _showImportExport() {
     if (service.isBusy) {
-      SmartDialog.showToast('已有归档或存档维护操作正在进行');
+      SmartDialog.showToast('已有赛博入土或赛博存档维护操作正在进行');
       return;
     }
     Navigator.of(context).pop();
     showImportExportDialog<Map<String, dynamic>>(
       widget.parentContext,
-      title: '历史记录存档',
+      title: '电子案底电子脚印赛博存档',
       onExport: service.exportJson,
       onImport: service.importJson,
       localFileName: () => 'history_archive',
@@ -202,16 +202,16 @@ class _HistoryArchiveSettingsDialogState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('清除本地历史存档？'),
-        content: const Text('此操作只清除本地总库，不会删除云端观看记录，且不可撤销。'),
+        title: const Text('清除自家硬盘电子案底赛博存档？'),
+        content: const Text('此操作只清除自家硬盘总库，不会物理超度云端观看电子脚印，且不可撤销。'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: const Text('不整了，撤！'),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('确认清除'),
+            child: const Text('拍板清除'),
           ),
         ],
       ),
@@ -219,13 +219,13 @@ class _HistoryArchiveSettingsDialogState
     if (confirmed != true || !mounted) return;
 
     setState(() => running = true);
-    SmartDialog.showLoading(msg: '正在清除本地存档');
+    SmartDialog.showLoading(msg: '正在清除自家硬盘赛博存档，不是哥们');
     String message;
     try {
       await service.clear();
-      message = '本地历史存档已清除';
+      message = '自家硬盘电子案底赛博存档已清除，鼠鼠我啊';
     } catch (e) {
-      message = '清除失败：$e';
+      message = '清除寄了：$e';
     } finally {
       SmartDialog.dismiss();
       if (mounted) setState(() => running = false);

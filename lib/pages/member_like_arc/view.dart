@@ -46,7 +46,7 @@ class _MemberLikeArcPageState extends State<MemberLikeArcPage> {
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: Text(
-          '${widget.mid == mid ? '我' : '${widget.name}'}的推荐',
+          '${widget.mid == mid ? '我' : '${widget.name}'}的算法喂饭，不是哥们',
         ),
       ),
       body: refreshIndicator(

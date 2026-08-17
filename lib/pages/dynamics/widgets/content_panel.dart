@@ -111,7 +111,7 @@ Widget _contextMenuBuilder(EditableTextState state, String text) {
   return AdaptiveTextSelectionToolbar.buttonItems(
     buttonItems: state.contextMenuButtonItems
       ..add(
-        ContextMenuButtonItem(label: '文本', onPressed: () => _onCopyText(text)),
+        ContextMenuButtonItem(label: '文本，鼠鼠我啊', onPressed: () => _onCopyText(text)),
       ),
     anchors: state.contextMenuAnchors,
   );

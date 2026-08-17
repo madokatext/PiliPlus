@@ -66,7 +66,7 @@ class _BottomControlState extends State<BottomControl> with HeaderMixin {
           ),
           ComBtn(
             height: controlHeight,
-            tooltip: '刷新',
+            tooltip: '重新投胎',
             icon: const Icon(
               Icons.refresh,
               size: 18,
@@ -77,7 +77,7 @@ class _BottomControlState extends State<BottomControl> with HeaderMixin {
           const Spacer(),
           ComBtn(
             height: controlHeight,
-            tooltip: '屏蔽',
+            tooltip: '眼不见为净',
             icon: const Icon(
               size: 18,
               Icons.block,
@@ -92,7 +92,7 @@ class _BottomControlState extends State<BottomControl> with HeaderMixin {
                   },
                 );
               } else {
-                SmartDialog.showToast('账号未登录');
+                SmartDialog.showToast('赛博户口没上号');
               }
             },
           ),
@@ -103,7 +103,7 @@ class _BottomControlState extends State<BottomControl> with HeaderMixin {
                   plPlayerController.enableShowLiveDanmaku.value;
               return ComBtn(
                 height: controlHeight,
-                tooltip: "${enableShowLiveDanmaku ? '关闭' : '开启'}弹幕",
+                tooltip: "${enableShowLiveDanmaku ? '啪一下封印' : '启动'}满屏飘字，曼波",
                 icon: enableShowLiveDanmaku
                     ? const Icon(
                         size: 18,
@@ -130,7 +130,7 @@ class _BottomControlState extends State<BottomControl> with HeaderMixin {
           ),
           ComBtn(
             height: controlHeight,
-            tooltip: '弹幕设置',
+            tooltip: '满屏飘字调参室',
             icon: const Icon(
               size: 18,
               CustomIcons.dm_settings,
@@ -140,7 +140,7 @@ class _BottomControlState extends State<BottomControl> with HeaderMixin {
           ),
           Obx(
             () => PopupMenuButton<VideoFitType>(
-              tooltip: '画面比例',
+              tooltip: '画面比例，属实绷不住',
               initialValue: plPlayerController.videoFit.value,
               color: Colors.black.withValues(alpha: 0.8),
               itemBuilder: (context) {
@@ -173,7 +173,7 @@ class _BottomControlState extends State<BottomControl> with HeaderMixin {
           ),
           Obx(
             () => PopupMenuButton<int>(
-              tooltip: '画质',
+              tooltip: '眼睛待遇',
               padding: EdgeInsets.zero,
               initialValue: liveRoomCtr.currentQn,
               color: Colors.black.withValues(alpha: 0.8),
@@ -208,7 +208,7 @@ class _BottomControlState extends State<BottomControl> with HeaderMixin {
           if (!plPlayerController.isDesktopPip)
             ComBtn(
               height: controlHeight,
-              tooltip: isFullScreen ? '退出全屏' : '全屏',
+              tooltip: isFullScreen ? '退出铺满屏' : '铺满屏',
               icon: isFullScreen
                   ? const Icon(
                       Icons.fullscreen_exit,

@@ -110,7 +110,7 @@ class _LaterPageState extends State<LaterPage>
                                 _baseCtr.setIsPlayAll(true);
                               }
                             },
-                            label: const Text('播放全部'),
+                            label: const Text('一锅端开炫'),
                             icon: const Icon(Icons.playlist_play),
                           ),
                         ),
@@ -182,7 +182,7 @@ class _LaterPageState extends State<LaterPage>
               mid: ctr.mid,
             );
           },
-          child: Text('复制', style: textStyle),
+          child: Text('赛博复刻', style: textStyle),
         ),
         TextButton(
           style: btnStyle,
@@ -196,14 +196,14 @@ class _LaterPageState extends State<LaterPage>
               mid: ctr.mid,
             );
           },
-          child: Text('移动', style: textStyle),
+          child: Text('挪个窝', style: textStyle),
         ),
       ],
       child: AppBar(
-        title: const Text('稍后再看'),
+        title: const Text('先吃灰，回头再炫'),
         actions: [
           IconButton(
-            tooltip: '搜索',
+            tooltip: '全站搜刮',
             onPressed: () {
               final mid = Accounts.main.mid;
               Get.toNamed(
@@ -212,7 +212,7 @@ class _LaterPageState extends State<LaterPage>
                   'type': 0,
                   'mediaId': mid,
                   'mid': mid,
-                  'title': '稍后再看',
+                  'title': '先吃灰，回头再炫',
                   'count': _baseCtr.counts[LaterViewType.all.index],
                 },
               );
@@ -225,7 +225,7 @@ class _LaterPageState extends State<LaterPage>
               final value = currCtr().asc.value;
               return PopupMenuButton(
                 initialValue: value,
-                tooltip: '排序',
+                tooltip: '重新排座次',
                 onSelected: (value) => currCtr()
                   ..asc.value = value
                   ..onReload(),
@@ -241,7 +241,7 @@ class _LaterPageState extends State<LaterPage>
                     ),
                     TextSpan(
                       children: [
-                        TextSpan(text: value ? '最早添加' : '最近添加'),
+                        TextSpan(text: value ? '最早塞一个' : '最近塞一个'),
                         WidgetSpan(
                           alignment: .middle,
                           child: Icon(
@@ -258,18 +258,18 @@ class _LaterPageState extends State<LaterPage>
                 itemBuilder: (_) => [
                   const PopupMenuItem(
                     value: false,
-                    child: Text('最近添加'),
+                    child: Text('最近塞一个'),
                   ),
                   const PopupMenuItem(
                     value: true,
-                    child: Text('最早添加'),
+                    child: Text('最早塞一个'),
                   ),
                 ],
               );
             },
           ),
           PopupMenuButton(
-            tooltip: '清空',
+            tooltip: '一键扬了',
             borderRadius: const .all(.circular(20)),
             child: Padding(
               padding: const .symmetric(horizontal: 12, vertical: 6),
@@ -282,7 +282,7 @@ class _LaterPageState extends State<LaterPage>
                 ),
                 TextSpan(
                   children: [
-                    const TextSpan(text: '清空'),
+                    const TextSpan(text: '一键扬了'),
                     WidgetSpan(
                       alignment: .middle,
                       child: Icon(
@@ -299,15 +299,15 @@ class _LaterPageState extends State<LaterPage>
             itemBuilder: (_) => [
               PopupMenuItem(
                 onTap: () => currCtr().toViewClear(context, 1),
-                child: const Text('清空失效'),
+                child: const Text('一键扬了失效'),
               ),
               PopupMenuItem(
                 onTap: () => currCtr().toViewClear(context, 2),
-                child: const Text('清空看完'),
+                child: const Text('一键扬了看完'),
               ),
               PopupMenuItem(
                 onTap: () => currCtr().toViewClear(context),
-                child: const Text('清空全部'),
+                child: const Text('一键扬了我全都要，不是哥们'),
               ),
             ],
           ),

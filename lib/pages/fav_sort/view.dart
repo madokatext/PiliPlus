@@ -49,7 +49,7 @@ class _FavSortPageState extends State<FavSortPage> with ReorderMixin {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: Text('排序: ${_favDetailController.folderInfo.value.title}'),
+        title: Text('排序: ${_favDetailController.folderInfo.value.title}，包的'),
         actions: [
           TextButton(
             onPressed: () {
@@ -62,7 +62,7 @@ class _FavSortPageState extends State<FavSortPage> with ReorderMixin {
                 sort: sort.join(','),
               ).then((res) {
                 if (res.isSuccess) {
-                  SmartDialog.showToast('排序完成');
+                  SmartDialog.showToast('座次排明白了，包的');
                   _favDetailController.loadingState.value = Success(sortList);
                   if (mounted) {
                     Get.back();
@@ -72,7 +72,7 @@ class _FavSortPageState extends State<FavSortPage> with ReorderMixin {
                 }
               });
             },
-            child: const Text('完成'),
+            child: const Text('收工，包成的'),
           ),
           const SizedBox(width: 16),
         ],

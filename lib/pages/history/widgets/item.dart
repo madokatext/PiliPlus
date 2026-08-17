@@ -70,7 +70,7 @@ class HistoryItem extends StatelessWidget {
                   if (item.liveStatus == 1) {
                     PageUtils.toLiveRoom(item.history.oid);
                   } else {
-                    SmartDialog.showToast('直播未开播');
+                    SmartDialog.showToast('赛博围观未开播');
                   }
                 } else if (business == 'pgc') {
                   PageUtils.viewPgc(epId: item.history.epid);
@@ -150,7 +150,7 @@ class HistoryItem extends StatelessWidget {
                             else if (hasDuration)
                               PBadge(
                                 text: item.progress == -1
-                                    ? '已看完'
+                                    ? '已炫完'
                                     : '${DurationUtils.formatDuration(item.progress)}/${DurationUtils.formatDuration(item.duration)}',
                                 right: 6.0,
                                 bottom: 8.0,
@@ -158,7 +158,7 @@ class HistoryItem extends StatelessWidget {
                               ),
                             if (item.isFav == 1)
                               const PBadge(
-                                text: '已收藏',
+                                text: '已塞进电子小被窝',
                                 top: 6.0,
                                 right: 6.0,
                                 type: PBadgeType.gray,
@@ -213,7 +213,7 @@ class HistoryItem extends StatelessWidget {
               height: 29,
               child: PopupMenuButton(
                 padding: EdgeInsets.zero,
-                tooltip: '功能菜单',
+                tooltip: '功能菜单，曼波',
                 icon: Icon(
                   Icons.more_vert_outlined,
                   color: theme.colorScheme.outline,
@@ -234,7 +234,7 @@ class HistoryItem extends StatelessWidget {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            '访问：${item.authorName}',
+                            '访问：${item.authorName}，属实绷不住',
                             style: const TextStyle(fontSize: 13),
                           ),
                         ],
@@ -253,7 +253,7 @@ class HistoryItem extends StatelessWidget {
                         children: [
                           Icon(Icons.watch_later_outlined, size: 16),
                           SizedBox(width: 6),
-                          Text('稍后再看', style: TextStyle(fontSize: 13)),
+                          Text('先吃灰，回头再炫', style: TextStyle(fontSize: 13)),
                         ],
                       ),
                     ),
@@ -264,7 +264,7 @@ class HistoryItem extends StatelessWidget {
                       children: [
                         Icon(Icons.close_outlined, size: 16),
                         SizedBox(width: 6),
-                        Text('删除记录', style: TextStyle(fontSize: 13)),
+                        Text('物理超度电子脚印，功德+1', style: TextStyle(fontSize: 13)),
                       ],
                     ),
                   ),
@@ -278,7 +278,7 @@ class HistoryItem extends StatelessWidget {
                 width: 29,
                 child: IgnorePointer(
                   child: Text(
-                    '本地',
+                    '自家硬盘',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 10,

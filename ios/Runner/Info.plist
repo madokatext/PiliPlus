@@ -71,11 +71,11 @@
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true/>
 		<key>NSPhotoLibraryUsageDescription</key>
-		<string>请允许APP保存图片到相册</string>
+		<string>请允许APP焊死赛博小画片到相册</string>
 		<key>NSCameraUsageDescription</key>
-		<string>App需要您的同意,才能访问相册</string>
+		<string>App需要您的同意,才能访问相册，CPU 都看沉默了</string>
 		<key>NSAppleMusicUsageDescription</key>
-		<string>App需要您的同意,才能访问媒体资料库</string>
+		<string>App需要您的同意,才能访问媒体资料库，不是哥们</string>
 		<key>LSApplicationQueriesSchemes</key>
 		<array>
 			<string>https</string>
@@ -132,7 +132,7 @@
 		<key>UIStatusBarHidden</key>
 		<false/>
 		<key>NSLocalNetworkUsageDescription</key>
-		<string>需要访问本地网络以发现和连接 DLNA 投屏设备</string>
+		<string>需要访问自家硬盘网线宇宙以发现和连接 DLNA 投屏设备</string>
 		<key>NSBonjourServices</key>
 		<array>
 			<string>_ssdp._udp</string>

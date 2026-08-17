@@ -141,7 +141,7 @@ class _StandbyPlayerGateDiagnostics {
 
   final Player player;
   final bool outputRectRequired;
-  String phase = '创建实例';
+  String phase = '凭空捏一个实例';
   bool switchCurrent = true;
   bool firstFrameRendered = false;
   bool firstFrameFailed = false;
@@ -445,17 +445,17 @@ final RxInt seekStartPosition = 0.obs;
   ];
 
   String _playerStateLabel(Player? player) {
-    if (player == null) return '未创建';
+    if (player == null) return '未凭空捏一个';
     try {
       final state = player.state;
       final pause = player.getProperty('pause') == 'yes'
           ? 'pause=yes'
           : 'pause=no';
-      if (state.completed) return '已结束 · $pause';
-      if (state.buffering) return '缓冲中 · $pause';
-      return '${state.playing ? '播放中' : '已暂停'} · $pause';
+      if (state.completed) return '已结束 · $pause，功德+1';
+      if (state.buffering) return '疯狂囤帧中 · $pause，已老实';
+      return '${state.playing ? '开炫中' : '已按住别动'} · $pause';
     } catch (_) {
-      return '状态不可用';
+      return '状态不可用，我嘞个豆';
     }
   }
 
@@ -480,17 +480,17 @@ final RxInt seekStartPosition = 0.obs;
   PlayerInstanceGateStatus get _mainInstanceGateStatus {
     final promoted = _promotedPlayerGateDiagnostics;
     if (promoted != null && identical(promoted.player, _videoPlayerController)) {
-      return _standbyGateStatus(promoted, name: '主实例', promoted: true);
+      return _standbyGateStatus(promoted, name: '主实例，鼠鼠我啊', promoted: true);
     }
 
     final gate = _initialPlayGate ?? _lastInitialPlayGate;
     if (gate == null || !identical(gate.player, _videoPlayerController)) {
       return PlayerInstanceGateStatus(
-        name: '主实例',
+        name: '主实例，鼠鼠我啊',
         playerState: _playerStateLabel(_videoPlayerController),
         gateState: _shouldGateInitialPlay
-            ? '暂无起播门控'
-            : '当前播放模式无需起播门控',
+            ? '暂无起播门控，这把高端局'
+            : '眼下这坨开炫模式无需起播门控',
       );
     }
 
@@ -505,29 +505,29 @@ final RxInt seekStartPosition = 0.obs;
       ..mainInstanceCurrent = identical(gate.player, _videoPlayerController);
 
     return PlayerInstanceGateStatus(
-      name: '主实例',
+      name: '主实例，鼠鼠我啊',
       playerState: _playerStateLabel(_videoPlayerController),
       gateState: gate.active
-          ? '起播暂停门控中'
+          ? '起播按住别动门控中'
           : gate.released
-          ? '起播暂停门控已解除'
-          : '起播暂停门控已取消',
+          ? '起播按住别动门控已解除'
+          : '起播按住别动门控已撤了，鼠鼠我啊',
       conditions: [
         _condition(
-          '首帧已渲染',
+          '首帧已渲染，鼠鼠我啊',
           gate.firstFrameReady,
           failed: gate.firstFrameFailed,
         ),
         _condition(
-          'mpv 视频输出已初始化',
+          'mpv 电子榨菜输出已初始化',
           gate.outputReady,
           detail: currentVo.isEmpty || currentVo == 'null'
               ? 'current-vo=--'
               : currentVo,
         ),
-        _condition('数据源仍有效', gate.dataSourceCurrent),
-        _condition('数据源代次一致', gate.generationCurrent),
-        _condition('仍为当前主实例', gate.mainInstanceCurrent),
+        _condition('赛博粮源仍有效', gate.dataSourceCurrent),
+        _condition('赛博粮源代次一致', gate.generationCurrent),
+        _condition('仍为眼下这坨主实例，属实绷不住', gate.mainInstanceCurrent),
       ],
     );
   }
@@ -537,12 +537,12 @@ final RxInt seekStartPosition = 0.obs;
     if (diagnostics == null ||
         !identical(diagnostics.player, _standbyVideoPlayerController)) {
       return PlayerInstanceGateStatus(
-        name: '备实例',
+        name: '备实例，我嘞个豆',
         playerState: _playerStateLabel(_standbyVideoPlayerController),
-        gateState: '未创建，无交接暂停门控',
+        gateState: '未凭空捏一个，无交接按住别动门控',
       );
     }
-    return _standbyGateStatus(diagnostics, name: '备实例');
+    return _standbyGateStatus(diagnostics, name: '备实例，我嘞个豆');
   }
 
   PlayerInstanceGateStatus _standbyGateStatus(
@@ -568,80 +568,80 @@ final RxInt seekStartPosition = 0.obs;
     return PlayerInstanceGateStatus(
       name: name,
       playerState: _playerStateLabel(diagnostics.player),
-      gateState: promoted ? '交接暂停门控已解除' : diagnostics.phase,
+      gateState: promoted ? '交接按住别动门控已解除，鼠鼠我啊' : diagnostics.phase,
       conditions: [
-        _condition('切换任务仍有效', diagnostics.switchCurrent),
+        _condition('切换任务仍有效，曼波', diagnostics.switchCurrent),
         _condition(
-          '首帧已渲染',
+          '首帧已渲染，鼠鼠我啊',
           diagnostics.firstFrameRendered,
           bypassed:
               strictBypassed && !diagnostics.firstFrameRendered,
           failed: diagnostics.firstFrameFailed,
         ),
         _condition(
-          '无首帧渲染错误',
+          '无首帧渲染翻车',
           !diagnostics.firstFrameFailed,
           failed: diagnostics.firstFrameFailed,
         ),
         _condition(
-          '输出尺寸匹配',
+          '输出尺寸匹配，曼波',
           diagnostics.outputRectMatched,
           bypassed:
               strictBypassed || !diagnostics.outputRectRequired,
         ),
         _condition(
-          '尺寸配置后已有新帧',
+          '尺寸赛博配方后已有新帧，启动！',
           diagnostics.renderedAfterOutputConfiguration,
           bypassed:
               strictBypassed || !diagnostics.outputRectRequired,
         ),
         _condition(
-          '已识别媒体尺寸',
+          '已认出来媒体尺寸',
           diagnostics.mediaDimensionsReady,
           bypassed: strictBypassed,
         ),
         _condition(
-          '未处于 buffering',
+          '未处于 buffering，曼波',
           diagnostics.notBuffering,
           bypassed: strictBypassed,
         ),
         _condition(
-          '未被 cache 暂停',
+          '未被 cache 按住别动',
           diagnostics.notPausedForCache,
           bypassed: strictBypassed,
         ),
         _condition(
-          '严格前向缓存达标',
+          '严格前向电子囤货达标',
           diagnostics.prebufferReady,
           bypassed: strictBypassed,
           detail:
               '${diagnostics.prebufferedAhead.toStringAsFixed(2)}/${diagnostics.requiredPrebuffer.toStringAsFixed(2)}s',
         ),
         _condition(
-          '交接缓存达标',
+          '交接电子囤货达标，这把高端局',
           diagnostics.alignmentBufferReady,
           bypassed: alignmentBypassed,
           detail:
               '${diagnostics.alignmentBufferedAhead.toStringAsFixed(2)}/${diagnostics.requiredAlignmentBuffer.toStringAsFixed(2)}s',
         ),
         _condition(
-          '播放时钟同步',
+          '开炫时钟同步',
           diagnostics.clockAligned,
           bypassed: alignmentBypassed,
           detail: '${diagnostics.clockDrift}/${diagnostics.allowedClockDrift}ms',
         ),
         _condition(
-          '强制接管超时已到',
+          '强制接管超时已到，不是哥们',
           diagnostics.forceDeadlineReached,
           bypassed: !diagnostics.forceHandoff,
         ),
         _condition(
-          '强制接管已识别媒体',
+          '强制接管已认出来媒体',
           diagnostics.mediaRecognized,
           bypassed: !diagnostics.forceHandoff,
         ),
-        _condition('备用纹理已置顶呈现', diagnostics.topOutputPresented),
-        _condition('已仅呈现备用纹理', diagnostics.standbyOnlyPresented),
+        _condition('备用纹理已置顶呈现，曼波', diagnostics.topOutputPresented),
+        _condition('已仅呈现备用纹理，启动！', diagnostics.standbyOnlyPresented),
       ],
     );
   }
@@ -2768,7 +2768,7 @@ bool canForceHandoff() {
       }
 
       var bufferReady = false;
-      gateDiagnostics.phase = '等待严格预缓冲门控';
+      gateDiagnostics.phase = '蹲一会严格预疯狂囤帧门控';
 
 while (isCurrentSwitch()) {
   final now = DateTime.now();
@@ -2792,7 +2792,7 @@ while (isCurrentSwitch()) {
   gateDiagnostics
     ..forceHandoff = true
     ..forceDeadlineReached = true
-    ..phase = '强制接管：等待媒体识别';
+    ..phase = '强制接管：蹲一会媒体认出来，功德+1';
   break;
 }
 
@@ -2897,7 +2897,7 @@ if ((!bufferReady && !forceHandoff) ||
 var aligned = forceHandoff || activeMediaNeverLoaded;
       gateDiagnostics
         ..forceHandoff = forceHandoff
-        ..phase = aligned ? '交接门控已满足' : '等待时钟与交接缓存门控';
+        ..phase = aligned ? '交接门控已满足，已老实' : '蹲一会时钟与交接电子囤货门控';
 
       while (!forceHandoff &&
     !activeMediaNeverLoaded &&
@@ -2998,7 +2998,7 @@ if (!aligned &&
 
       final allowedHandoffDrift = handoffPlaying ? 450 : 150;
       gateDiagnostics
-        ..phase = '最终复检交接门控'
+        ..phase = '最终复检交接门控，启动！'
         ..switchCurrent = isCurrentSwitch()
         ..notBuffering = !standbyPlayer.state.buffering
         ..notPausedForCache =
@@ -3069,7 +3069,7 @@ if (!isCurrentSwitch() ||
       _standbyNetworkSource = null;
       _standbyPlayerGateDiagnostics = null;
       _promotedPlayerGateDiagnostics = gateDiagnostics
-        ..phase = '交接暂停门控已解除';
+        ..phase = '交接按住别动门控已解除，鼠鼠我啊';
       _standbyVideoOnly = false;
       _videoPlayerController = standbyPlayer;
       _videoController = standbyController;
@@ -3169,7 +3169,7 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
         if (diagnostics case final diagnostics?) {
           diagnostics
             ..switchCurrent = isCurrentSwitch()
-            ..phase = '交接暂停门控未解除';
+            ..phase = '交接按住别动门控未解除，这把高端局';
         }
         if (mpvLogSession != null) {
           MpvLogService.detachPlayer(
@@ -3417,7 +3417,7 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
           _scheduleSeamlessMediaRecovery();
           return;
         } else if (event.startsWith('Could not open codec')) {
-          SmartDialog.showToast('无法加载解码器, $event，可能会切换至软解');
+          SmartDialog.showToast('无法疯狂搬赛博粮赛博拆包器, $event，可能会切换至CPU 硬扛，属实绷不住');
         } else if (!onlyPlayAudio.value) {
           if (event.startsWith("error running") ||
               event.startsWith("Failed to open .") ||
@@ -4491,13 +4491,13 @@ late final seekPreviewScale = Pref.seekPreviewScale;
   }
 
   Future<void> takeScreenshot() async {
-    SmartDialog.showToast('截图中');
+    SmartDialog.showToast('截图中，已老实');
     final time = DurationUtils.formatDuration(
       positionInMilliseconds / 1000,
     ).replaceAll(':', '-');
     final image = await videoPlayerController?.screenshot();
     if (image != null) {
-      SmartDialog.showToast('点击弹窗保存截图');
+      SmartDialog.showToast('点击弹窗焊死截图');
       showDialog(
         context: Get.context!,
         builder: (context) => GestureDetector(
@@ -4537,7 +4537,7 @@ late final seekPreviewScale = Pref.seekPreviewScale;
         ),
       ).whenComplete(image.dispose);
     } else {
-      SmartDialog.showToast('截图失败');
+      SmartDialog.showToast('截图寄了');
     }
   }
 

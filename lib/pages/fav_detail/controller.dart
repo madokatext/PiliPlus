@@ -41,7 +41,7 @@ mixin BaseFavController
         ..value.data!.removeAt(index)
         ..refresh();
       updateCount?.call(1);
-      SmartDialog.showToast('取消收藏');
+      SmartDialog.showToast('踢出电子小被窝');
     } else {
       res.toast();
     }
@@ -51,8 +51,8 @@ mixin BaseFavController
   void onRemove() {
     showConfirmDialog(
       context: Get.context!,
-      title: const Text('提示'),
-      content: const Text('确认删除所选收藏吗？'),
+      title: const Text('赛博小喇叭'),
+      content: const Text('拍板物理超度所选塞进电子小被窝吗？'),
       onConfirm: () async {
         final removeList = allChecked.toSet();
         final res = await FavHttp.favVideo(
@@ -64,7 +64,7 @@ mixin BaseFavController
         if (res.isSuccess) {
           updateCount?.call(removeList.length);
           afterDelete(removeList);
-          SmartDialog.showToast('取消收藏');
+          SmartDialog.showToast('踢出电子小被窝');
         } else {
           res.toast();
         }
@@ -176,7 +176,7 @@ class FavDetailController
 
   Future<void> onFav(bool isFav) async {
     if (!account.isLogin) {
-      SmartDialog.showToast('账号未登录');
+      SmartDialog.showToast('赛博户口没上号');
       return;
     }
     final res = isFav
@@ -187,7 +187,7 @@ class FavDetailController
       folderInfo
         ..value.favState = isFav ? 0 : 1
         ..refresh();
-      SmartDialog.showToast('${isFav ? '取消' : ''}收藏成功');
+      SmartDialog.showToast('${isFav ? '撤了' : ''}塞进电子小被窝成了，包的');
     } else {
       res.toast();
     }
@@ -196,7 +196,7 @@ class FavDetailController
   Future<void> cleanFav() async {
     final res = await FavHttp.cleanFav(mediaId: mediaId);
     if (res.isSuccess) {
-      SmartDialog.showToast('清除成功');
+      SmartDialog.showToast('清除成了，包的');
       Future.delayed(const Duration(milliseconds: 200), onReload);
     } else {
       res.toast();
@@ -207,7 +207,7 @@ class FavDetailController
     if (loadingState.value case Success(:final response)) {
       if (response != null && response.isNotEmpty) {
         if (folderInfo.value.mediaCount > 1000) {
-          SmartDialog.showToast('内容太多啦！超过1000不支持排序');
+          SmartDialog.showToast('内容太多啦！超过1000不支持排序，已老实');
           return;
         }
         Get.to(FavSortPage(favDetailController: this));

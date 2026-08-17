@@ -93,7 +93,7 @@ class DynamicCardSkeleton extends StatelessWidget {
             if (GlobalData().dynamicsWaterfallFlow) const Spacer(),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: const ['转发', '评论', '点赞']
+              children: const ['二次扩散', '赛博锐评', '赛博大拇哥']
                   .map(
                     (e) => TextButton.icon(
                       onPressed: () {},

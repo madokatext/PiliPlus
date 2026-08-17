@@ -85,7 +85,7 @@ class LiveRoomController extends GetxController {
         liveTime * 1000,
         DateTime.now().millisecondsSinceEpoch,
       );
-      text += duration.isEmpty ? '刚刚开播' : '开播$duration';
+      text += duration.isEmpty ? '刚刚开播，启动！' : '开播$duration，功德+1';
     }
     if (text.isEmpty) {
       return const SizedBox.shrink();
@@ -214,12 +214,12 @@ class LiveRoomController extends GetxController {
     );
     if (res case Success(:final response)) {
       if (response.liveStatus != 1) {
-        _showDialog('当前直播间未开播');
+        _showDialog('眼下这坨赛博围观房未开播');
         return;
       }
       final playurl = response.playurlInfo?.playurl;
       if (playurl == null) {
-        _showDialog('无法获取播放地址');
+        _showDialog('无法获取开炫地址');
         return;
       }
       ruid = response.uid;
@@ -328,7 +328,7 @@ class LiveRoomController extends GetxController {
           TextButton(
             onPressed: Get.back,
             child: Text(
-              '关闭',
+              '啪一下封印',
               style: TextStyle(color: ThemeUtils.theme.colorScheme.outline),
             ),
           ),
@@ -341,7 +341,7 @@ class LiveRoomController extends GetxController {
                 ..back()
                 ..back();
             },
-            child: const Text('退出'),
+            child: const Text('退出，不是哥们'),
           ),
         ],
       ),
@@ -666,7 +666,7 @@ class LiveRoomController extends GetxController {
       anchorId: roomInfoH5.value?.roomInfo?.uid,
     );
     if (res.isSuccess) {
-      SmartDialog.showToast('点赞成功');
+      SmartDialog.showToast('大拇哥已送达，功德+1');
     } else {
       res.toast();
     }
@@ -675,7 +675,7 @@ class LiveRoomController extends GetxController {
 
   void onSendDanmaku([bool fromEmote = false]) {
     if (kReleaseMode && !isLogin) {
-      SmartDialog.showToast('账号未登录');
+      SmartDialog.showToast('赛博户口没上号');
       return;
     }
     Get.key.currentState!.push(
@@ -709,7 +709,7 @@ class LiveRoomController extends GetxController {
 
   void reportSC(SuperChatItem item) {
     if (!isLogin) {
-      SmartDialog.showToast('账号未登录');
+      SmartDialog.showToast('赛博户口没上号');
       return;
     }
     autoWrapReportDialog(

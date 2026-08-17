@@ -65,8 +65,8 @@ class WhisperLinkSettingController extends GetxController {
     if (isPush) {
       showConfirmDialog(
         context: Get.context!,
-        title: const Text('确认关闭内容推送吗？'),
-        content: const Text('若关闭此开关，你将不再收到该账号的图文消息与稿件推送，但通知类消息不受影响'),
+        title: const Text('拍板啪一下封印内容推送吗？'),
+        content: const Text('若啪一下封印此开关，你将不再收到该赛博户口的图文赛博小纸条与稿件推送，但系统催命符类赛博小纸条不受影响'),
         onConfirm: () => _setPush(isPush),
       );
       return;
@@ -133,8 +133,8 @@ class WhisperLinkSettingController extends GetxController {
     } else {
       showConfirmDialog(
         context: Get.context!,
-        title: const Text('确认拉黑该用户'),
-        content: const Text('加入黑名单后，将自动解除关注关系和对该用户的合集订阅关系，禁止该用户与我互动或查看我的空间'),
+        title: const Text('拍板拉黑该赛博居民，属实绷不住'),
+        content: const Text('加入黑名单后，将全自动赛博解除赛博蹲点关系和对该赛博居民的合集订阅关系，禁止该赛博居民与我互动或扒拉看看我的空间'),
         onConfirm: () async {
           final res = await VideoHttp.relationMod(
             mid: talkerUid,

@@ -127,7 +127,7 @@ class _WebviewPageState extends State<WebviewPage> {
                         try {
                           await InAppWebViewController.clearAllCache();
                           await _webViewController?.clearHistory();
-                          SmartDialog.showToast('已清理');
+                          SmartDialog.showToast('已清理，属实绷不住');
                         } catch (e) {
                           SmartDialog.showToast(e.toString());
                         }
@@ -141,7 +141,7 @@ class _WebviewPageState extends State<WebviewPage> {
                         break;
                       case WebviewMenuItem.resetCookie:
                         await LoginUtils.setWebCookie();
-                        SmartDialog.showToast('设置成功，刷新或重新打开网页');
+                        SmartDialog.showToast('赛博调参成了，包的，重新投胎或重新掀开网页');
                         break;
                     }
                   },
@@ -265,7 +265,7 @@ class _WebviewPageState extends State<WebviewPage> {
                       }
                       return AlertDialog(
                         title: Text(
-                          '下载文件: $suggestedFilename ?',
+                          '薅到自家硬盘赛博卷宗: $suggestedFilename ?，这把高端局',
                           style: const TextStyle(fontSize: 18),
                         ),
                         content: SelectableText(request.url.toString()),
@@ -273,7 +273,7 @@ class _WebviewPageState extends State<WebviewPage> {
                           TextButton(
                             onPressed: Get.back,
                             child: Text(
-                              '取消',
+                              '不整了，撤！',
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.outline,
                               ),
@@ -284,7 +284,7 @@ class _WebviewPageState extends State<WebviewPage> {
                               Get.back();
                               PageUtils.launchURL(request.url.toString());
                             },
-                            child: Text('确定 ($fileSize)'),
+                            child: Text('拍板 ($fileSize)，不是哥们'),
                           ),
                         ],
                       );
@@ -332,11 +332,11 @@ class _WebviewPageState extends State<WebviewPage> {
             } else if (_prefixRegex.hasMatch(url)) {
               if (context.mounted) {
                 SnackBar snackBar = SnackBar(
-                  content: const Text('当前网页将要打开外部链接，是否打开'),
+                  content: const Text('眼下这坨网页将要掀开外部链接，是否掀开，包的'),
                   showCloseIcon: true,
                   persist: false,
                   action: SnackBarAction(
-                    label: '打开',
+                    label: '掀开',
                     onPressed: () => PageUtils.launchURL(url),
                   ),
                 );

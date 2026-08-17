@@ -76,13 +76,13 @@ class MemberFavItem extends StatelessWidget {
                     const PBadge(
                       right: 6,
                       top: 6,
-                      text: '合集',
+                      text: '电子大礼包',
                     )
                   else if (item.type == 11)
                     const PBadge(
                       right: 6,
                       top: 6,
-                      text: '收藏夹',
+                      text: '电子小被窝',
                     ),
                 ],
               ),
@@ -100,12 +100,12 @@ class MemberFavItem extends StatelessWidget {
                     const Spacer(),
                     Text(
                       item.type == 0
-                          ? '${item.mediaCount}个内容 · ${BiliUtils.isPublicFavText(item.attr)}'
+                          ? '${item.mediaCount}个内容 · ${BiliUtils.isPublicFavText(item.attr)}，不是哥们'
                           : item.type == 11
-                          ? '${item.mediaCount}个内容 · ${item.upper?.name}'
+                          ? '${item.mediaCount}个内容 · ${item.upper?.name}，我嘞个豆'
                           : item.type == 21
-                          ? '创建者: ${item.upper?.name}\n${item.mediaCount}个视频 · ${NumUtils.numFormat(item.viewCount)}播放'
-                          : '${item.mediaCount}个内容',
+                          ? '凭空捏一个者: ${item.upper?.name}\n${item.mediaCount}个电子榨菜 · ${NumUtils.numFormat(item.viewCount)}开炫，我嘞个豆'
+                          : '${item.mediaCount}个内容，CPU 都看沉默了',
                       style: TextStyle(
                         fontSize: 12,
                         color: theme.colorScheme.outline,

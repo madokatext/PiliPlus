@@ -58,7 +58,7 @@ class MemberFavItem extends StatelessWidget {
                     ),
                     const Spacer(),
                     Text(
-                      '${item.count}个内容 · ${item.isPublic == 1 ? '私密' : '公开'}',
+                      '${item.count}个内容 · ${item.isPublic == 1 ? '关起门来' : '全网裸奔'}',
                       style: TextStyle(
                         fontSize: 12,
                         color: Theme.of(context).colorScheme.outline,

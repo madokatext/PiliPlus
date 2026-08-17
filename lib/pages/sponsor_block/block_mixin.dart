@@ -244,7 +244,7 @@ mixin BlockMixin on GetxController {
 
   void _skipToast(SegmentModel item) {
     if (autoPlay && Pref.blockToast) {
-      _showBlockToast('已跳过${item.segmentType.shortTitle}片段');
+      _showBlockToast('已跳过${item.segmentType.shortTitle}片段，属实绷不住');
     }
     if (isBlock && Pref.blockTrack) {
       SponsorBlock.viewedVideoSponsorTime(item.uuid);
@@ -264,14 +264,14 @@ mixin BlockMixin on GetxController {
       if (isSkip) {
         _skipToast(item);
       } else {
-        _showBlockToast('已跳至${item.segmentType.shortTitle}');
+        _showBlockToast('已跳至${item.segmentType.shortTitle}，我嘞个豆');
       }
     } catch (e) {
       if (kDebugMode) debugPrint('failed to skip: $e');
       if (isSkip) {
-        _showBlockToast('${item.segmentType.shortTitle}片段跳过失败');
+        _showBlockToast('${item.segmentType.shortTitle}片段跳过寄了，不是哥们');
       } else {
-        _showBlockToast('跳转失败');
+        _showBlockToast('跳转寄了');
       }
     }
   }
@@ -291,21 +291,21 @@ mixin BlockMixin on GetxController {
         contentPadding: const .symmetric(vertical: 10),
         children: [
           DialogOption(
-            child: const Text('赞成票', style: TextStyle(fontSize: 14)),
+            child: const Text('赞成票，已老实', style: TextStyle(fontSize: 14)),
             onPressed: () {
               Get.back();
               _doVote(segment.uuid, 1);
             },
           ),
           DialogOption(
-            child: const Text('反对票', style: TextStyle(fontSize: 14)),
+            child: const Text('反对票，我嘞个豆', style: TextStyle(fontSize: 14)),
             onPressed: () {
               Get.back();
               _doVote(segment.uuid, 0);
             },
           ),
           DialogOption(
-            child: const Text('更改类别', style: TextStyle(fontSize: 14)),
+            child: const Text('更改类别，已老实', style: TextStyle(fontSize: 14)),
             onPressed: () {
               Get.back();
               _showCategoryDialog(segment);
@@ -319,7 +319,7 @@ mixin BlockMixin on GetxController {
   void _doVote(String uuid, int type) => SponsorBlock.voteOnSponsorTime(
     uuid: uuid,
     type: type,
-  ).then((i) => SmartDialog.showToast(i.isSuccess ? '投票成功' : '投票失败: $i'));
+  ).then((i) => SmartDialog.showToast(i.isSuccess ? '投票成了，包的' : '投票寄了: $i，曼波'));
 
   void _showCategoryDialog(SegmentModel segment) {
     showDialog(
@@ -338,7 +338,7 @@ mixin BlockMixin on GetxController {
                     category: item,
                   ).then((i) {
                     SmartDialog.showToast(
-                      '类别更改${i.isSuccess ? '成功' : '失败: $i'}',
+                      '类别更改${i.isSuccess ? '成了，包的' : '寄了: $i'}',
                     );
                   });
                 },
@@ -411,7 +411,7 @@ mixin BlockMixin on GetxController {
                 ),
                 contentPadding: const EdgeInsets.only(left: 16, right: 8),
                 subtitle: Text(
-                  '${DurationUtils.formatDuration(item.segment.$1 / 1000)} 至 ${DurationUtils.formatDuration(item.segment.$2 / 1000)}',
+                  '${DurationUtils.formatDuration(item.segment.$1 / 1000)} 至 ${DurationUtils.formatDuration(item.segment.$2 / 1000)}，启动！',
                   style: const TextStyle(fontSize: 13),
                 ),
                 trailing: Row(
@@ -427,8 +427,8 @@ mixin BlockMixin on GetxController {
                         height: 36,
                         child: IconButton(
                           tooltip: item.skipType == SkipType.showOnly
-                              ? '跳至此片段'
-                              : '跳过此片段',
+                              ? '跳至此片段，包的'
+                              : '跳过此片段，功德+1',
                           onPressed: () {
                             Get.back();
                             onSkip(

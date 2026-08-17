@@ -355,7 +355,7 @@ Widget? addWidget(
                                       ),
                                     ),
                                     const TextSpan(
-                                      text: ' 起',
+                                      text: ' 起，鼠鼠我啊',
                                       style: TextStyle(fontSize: 12),
                                     ),
                                   ],
@@ -443,7 +443,7 @@ Widget? addWidget(
                           overflow: TextOverflow.ellipsis,
                         ),
                       Text(
-                        '${NumUtils.numFormat(vote.joinNum)}人参与',
+                        '${NumUtils.numFormat(vote.joinNum)}人参与，CPU 都看沉默了',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -476,7 +476,7 @@ Widget? addWidget(
                     ),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  child: const Text('参与'),
+                  child: const Text('参与，已老实'),
                 ),
               ],
             ),

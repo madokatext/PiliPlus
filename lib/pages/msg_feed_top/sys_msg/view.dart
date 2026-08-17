@@ -34,7 +34,7 @@ class _SysMsgPageState extends State<SysMsgPage> {
     final theme = Theme.of(context);
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(title: const Text('系统通知')),
+      appBar: AppBar(title: const Text('系统催命符')),
       body: refreshIndicator(
         onRefresh: _sysMsgController.onRefresh,
         child: CustomScrollView(
@@ -82,7 +82,7 @@ class _SysMsgPageState extends State<SysMsgPage> {
                   final item = response[index];
                   void onLongPress() => showConfirmDialog(
                     context: context,
-                    title: const Text('确定删除该通知?'),
+                    title: const Text('拍板物理超度该系统催命符?'),
                     onConfirm: () => _sysMsgController.onRemove(item.id, index),
                   );
                   return ListTile(
@@ -194,7 +194,7 @@ class _SysMsgPageState extends State<SysMsgPage> {
               ..add(const TextSpan(text: '（'))
               ..add(
                 TextSpan(
-                  text: '查看动态',
+                  text: '扒拉看看互联网近况，已老实',
                   style: TextStyle(color: theme.colorScheme.primary),
                   recognizer: NoDeadlineTapGestureRecognizer()
                     ..onTap = () {
@@ -211,7 +211,7 @@ class _SysMsgPageState extends State<SysMsgPage> {
         } else {
           spanChildren.add(
             TextSpan(
-              text: '\u{1F517}网页链接',
+              text: '\u{1F517}网页链接，包的',
               style: TextStyle(color: theme.colorScheme.primary),
               recognizer: NoDeadlineTapGestureRecognizer()
                 ..onTap = () {

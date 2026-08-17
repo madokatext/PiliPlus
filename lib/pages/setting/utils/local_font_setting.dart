@@ -22,7 +22,7 @@ Future<void> showLocalFontSetting(
                   LocalFontManager.familyFor(slot);
 
         final pendingLabel = pendingReset
-            ? '系统默认'
+            ? '系统大爹祖传默认，曼波'
             : pendingCandidate?.sourceName;
 
         Future<void> selectFont() async {
@@ -43,7 +43,7 @@ Future<void> showLocalFontSetting(
           } catch (e) {
             if (dialogContext.mounted) {
               setDialogState(() {
-                errorText = '字体加载失败：$e';
+                errorText = '赛博字骨疯狂搬赛博粮寄了：$e';
               });
             }
           } finally {
@@ -94,7 +94,7 @@ Future<void> showLocalFontSetting(
           } catch (e) {
             if (dialogContext.mounted) {
               setDialogState(() {
-                errorText = '字体应用失败：$e';
+                errorText = '赛博字骨这坨 App寄了：$e';
                 isBusy = false;
               });
             }
@@ -110,11 +110,11 @@ Future<void> showLocalFontSetting(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  '当前：${LocalFontManager.selectionLabel(slot)}',
+                  '眼下这坨：${LocalFontManager.selectionLabel(slot)}',
                 ),
                 if (pendingLabel != null) ...[
                   const SizedBox(height: 4),
-                  Text('待确认：$pendingLabel'),
+                  Text('待拍板：$pendingLabel'),
                 ],
                 const SizedBox(height: 16),
                 DecoratedBox(
@@ -139,8 +139,8 @@ Future<void> showLocalFontSetting(
                 const SizedBox(height: 8),
                 Text(
                   slot.usesLatinSubset
-                      ? '支持 TTF、OTF、TTC；选择后仅在此处预览拉丁字符子集，点击“确认”后应用。'
-                      : '支持 TTF、OTF、TTC；选择后仅在此处预览，点击“确认”后应用。',
+                      ? '支持 TTF、OTF、TTC；抓一个后仅在此处预览拉丁字符子集，点击“拍板”后这坨 App。，曼波'
+                      : '支持 TTF、OTF、TTC；抓一个后仅在此处预览，点击“拍板”后这坨 App。',
                 ),
                 if (errorText != null) ...[
                   const SizedBox(height: 8),
@@ -158,21 +158,21 @@ Future<void> showLocalFontSetting(
                   pendingCandidate != null)
                 TextButton(
                   onPressed: isBusy ? null : stageReset,
-                  child: const Text('恢复系统默认'),
+                  child: const Text('复活系统大爹祖传默认，启动！'),
                 ),
               TextButton(
                 onPressed: isBusy ? null : selectFont,
-                child: const Text('选择字体文件'),
+                child: const Text('抓一个赛博字骨赛博卷宗，优势在我'),
               ),
               TextButton(
                 onPressed: isBusy
                     ? null
                     : () => Navigator.of(dialogContext).pop(),
-                child: const Text('取消'),
+                child: const Text('不整了，撤！'),
               ),
               TextButton(
                 onPressed: isBusy ? null : confirm,
-                child: const Text('确认'),
+                child: const Text('拍板，启动！'),
               ),
             ],
           ),

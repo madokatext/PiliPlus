@@ -54,7 +54,7 @@ abstract class CommonSearchPageState<S extends StatefulWidget, R, T>
     final AppBar bar = AppBar(
       actions: [
         IconButton(
-          tooltip: '搜索',
+          tooltip: '全站搜刮',
           onPressed: controller.onRefresh,
           icon: const Icon(Icons.search_outlined, size: 22),
         ),
@@ -68,11 +68,11 @@ abstract class CommonSearchPageState<S extends StatefulWidget, R, T>
         textInputAction: TextInputAction.search,
         textAlignVertical: TextAlignVertical.center,
         decoration: InputDecoration(
-          hintText: '搜索',
+          hintText: '全站搜刮',
           visualDensity: .standard,
           border: InputBorder.none,
           suffixIcon: IconButton(
-            tooltip: '清空',
+            tooltip: '一键扬了',
             icon: const Icon(Icons.clear, size: 22),
             onPressed: () => controller
               ..loadingState.value = LoadingState.loading()

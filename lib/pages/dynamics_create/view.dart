@@ -194,7 +194,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
                                 TextSpan(
                                   text: hasTopic
                                       ? _topic.value!.second
-                                      : '选择话题',
+                                      : '抓一个话题',
                                   style: TextStyle(
                                     color: hasTopic
                                         ? null
@@ -226,7 +226,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
                   controller: _titleEditCtr,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                   decoration: InputDecoration(
-                    hintText: '标题，选填20字',
+                    hintText: '标题，选填20字，已老实',
                     isDense: true,
                     visualDensity: .standard,
                     contentPadding: EdgeInsets.zero,
@@ -335,7 +335,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
             width: 34,
             height: 34,
             child: IconButton(
-              tooltip: '返回',
+              tooltip: '润回去',
               style: ButtonStyle(
                 padding: const WidgetStatePropertyAll(EdgeInsets.zero),
                 backgroundColor: WidgetStatePropertyAll(
@@ -353,7 +353,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
         ),
         Center(
           child: Text(
-            _isEdit ? '编辑动态' : '发布动态',
+            _isEdit ? '重新盘互联网近况，功德+1' : '发射到互联网互联网近况',
             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
           ),
         ),
@@ -370,7 +370,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
                 ),
                 visualDensity: VisualDensity.compact,
               ),
-              child: Text(_publishTime.value == null ? '发布' : '定时发布'),
+              child: Text(_publishTime.value == null ? '发射到互联网' : '定点爆破发射到互联网'),
             ),
           ),
         ),
@@ -399,7 +399,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
                 index == 0 ? Icons.visibility : Icons.visibility_off,
               ),
               const SizedBox(width: 4),
-              Text(index == 0 ? '所有人可见' : '仅自己可见'),
+              Text(index == 0 ? '所有人可见，已老实' : '仅本鼠可见'),
             ],
           ),
         ),
@@ -416,7 +416,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
             ),
             const SizedBox(width: 4),
             Text(
-              _isPrivate.value ? '仅自己可见' : '所有人可见',
+              _isPrivate.value ? '仅本鼠可见' : '所有人可见，已老实',
               style: TextStyle(
                 height: 1,
                 color: color,
@@ -527,12 +527,12 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
                     if (selectedTime != null) {
                       if (selectedDate.day == nowDate.day) {
                         if (selectedTime.hour < nowTime.hour) {
-                          SmartDialog.showToast('时间设置错误，至少选择6分钟之后');
+                          SmartDialog.showToast('时间赛博调参翻车，至少抓一个6分钟之后');
                           return;
                         } else if (selectedTime.hour == nowTime.hour) {
                           if (selectedTime.minute < nowTime.minute + 6) {
                             if (selectedDate.day == nowDate.day) {
-                              SmartDialog.showToast('时间设置错误，至少选择6分钟之后');
+                              SmartDialog.showToast('时间赛博调参翻车，至少抓一个6分钟之后');
                             }
                             return;
                           }
@@ -548,7 +548,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
                     }
                   }
                 },
-          child: const Text('定时发布'),
+          child: const Text('定点爆破发射到互联网'),
         )
       : OutlinedButton.icon(
           style: OutlinedButton.styleFrom(
@@ -642,7 +642,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
           item(
             onTap: _onReserve,
             icon: Icon(CustomIcons.live_reserve, size: 28, color: color),
-            title: '直播预约',
+            title: '赛博围观预约',
           ),
         ],
       ),
@@ -684,7 +684,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
             ..value = newValue;
         } else {
           onInsertText(
-            '我发起了一个投票',
+            '我发起了一个投票，功德+1',
             RichTextType.text,
           );
           onInsertText(
@@ -697,7 +697,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
       }
     },
     icon: const Icon(Icons.bar_chart_rounded, size: 24),
-    tooltip: '投票',
+    tooltip: '投票，属实绷不住',
     selected: false,
   );
 
@@ -718,7 +718,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
         onChanged: onChanged,
         onSubmitted: onSubmitted,
         decoration: InputDecoration(
-          hintText: '说点什么吧',
+          hintText: '说点什么吧，功德+1',
           visualDensity: .standard,
           hintStyle: TextStyle(color: theme.colorScheme.outline),
           border: const OutlineInputBorder(
@@ -737,7 +737,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
 
   @override
   Future<void> onCustomPublish({List? pictures}) async {
-    SmartDialog.showLoading(msg: '正在发布');
+    SmartDialog.showLoading(msg: '正在发射到互联网');
     List<Map<String, dynamic>>? extraContent = getRichContent();
     final hasRichText = extraContent != null;
 
@@ -758,7 +758,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
       if (res.isSuccess) {
         hasPub = true;
         Get.back();
-        SmartDialog.showToast('发布成功');
+        SmartDialog.showToast('发射到互联网成了，包的');
         widget.onSuccess?.call();
       } else {
         res.toast();
@@ -794,7 +794,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
     if (res case Success(:final response)) {
       hasPub = true;
       Get.back();
-      SmartDialog.showToast('发布成功');
+      SmartDialog.showToast('发射到互联网成了，包的');
       final id = response?['dyn_id'];
       RequestUtils.insertCreatedDyn(id);
       if (!_isPrivate.value && _publishTime.value == null) {
@@ -847,11 +847,11 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
                   spacing: 3,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text('直播预约: ${reserveCard.title}'),
+                    Text('赛博围观预约: ${reserveCard.title}，这把高端局'),
                     Text(
                       '${DateFormatUtils.longFormatD.format(
                         DateTime.fromMillisecondsSinceEpoch(reserveCard.livePlanStartTime! * 1000),
-                      )} 直播',
+                      )} 赛博围观',
                     ),
                   ],
                 ),

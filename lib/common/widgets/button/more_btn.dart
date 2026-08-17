@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 Widget moreTextButton({
-  String text = '查看更多',
+  String text = '再扒拉亿点',
   required VoidCallback onTap,
   EdgeInsets? padding,
   Color? color,

@@ -52,9 +52,9 @@ Future<void> exportToLocalFile({
     await directory.create(recursive: true);
     final filePath = path.join(directory.path, fileName);
     await File(filePath).writeAsBytes(res, flush: true);
-    SmartDialog.showToast('已导出至 $filePath');
+    SmartDialog.showToast('已往外薅至 $filePath');
   } catch (e) {
-    SmartDialog.showToast('导出失败：$e');
+    SmartDialog.showToast('往外薅寄了：$e，属实绷不住');
   }
 }
 
@@ -74,7 +74,7 @@ Future<void> importFromClipBoard<T>(
       json = jsonDecode(text);
       formatText = Utils.jsonEncoder.convert(json);
     } catch (e) {
-      SmartDialog.showToast('解析json失败：$e');
+      SmartDialog.showToast('解析json寄了：$e');
       return;
     }
     bool? executeImport;
@@ -100,18 +100,18 @@ Future<void> importFromClipBoard<T>(
             result.render(renderer);
           }
           return AlertDialog(
-            title: Text('是否导入如下$title？'),
+            title: Text('是否往里灌如下$title？，我嘞个豆'),
             content: SingleChildScrollView(
               child: Text.rich(renderer.span!),
             ),
             actions: [
               TextButton(
                 onPressed: Get.back,
-                child: Text('取消', style: TextStyle(color: colorScheme.outline)),
+                child: Text('不整了，撤！', style: TextStyle(color: colorScheme.outline)),
               ),
               TextButton(
                 onPressed: () => Get.back(result: true),
-                child: const Text('确定'),
+                child: const Text('包的，就这么整'),
               ),
             ],
           );
@@ -123,13 +123,13 @@ Future<void> importFromClipBoard<T>(
     if (executeImport ?? false) {
       try {
         await onImport(json);
-        SmartDialog.showToast('导入成功');
+        SmartDialog.showToast('往里灌成功，包的');
       } catch (e) {
-        SmartDialog.showToast('导入失败：$e');
+        SmartDialog.showToast('往里灌寄了：$e');
       }
     }
   } else {
-    SmartDialog.showToast('剪贴板无数据');
+    SmartDialog.showToast('剪贴板无赛博粮');
     return;
   }
 }
@@ -147,14 +147,14 @@ Future<void> importFromLocalFile<T>({
     try {
       json = jsonDecode(data);
     } catch (e) {
-      SmartDialog.showToast('解析json失败：$e');
+      SmartDialog.showToast('解析json寄了：$e');
       return;
     }
     try {
       await onImport(json);
-      SmartDialog.showToast('导入成功');
+      SmartDialog.showToast('往里灌成功，包的');
     } catch (e) {
-      SmartDialog.showToast('导入失败：$e');
+      SmartDialog.showToast('往里灌寄了：$e');
     }
   }
 }
@@ -171,7 +171,7 @@ void importFromInput<T>(
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: Text('输入$title'),
+      title: Text('往里塞$title'),
       constraints: Style.dialogFixedConstraints,
       content: TextFormField(
         key: key,
@@ -188,7 +188,7 @@ void importFromInput<T>(
             json = jsonDecode(value!) as T;
             return null;
           } catch (e) {
-            return '解析json失败：$e';
+            return '解析json寄了：$e';
           }
         },
       ),
@@ -196,7 +196,7 @@ void importFromInput<T>(
         TextButton(
           onPressed: Get.back,
           child: Text(
-            '取消',
+            '不整了，撤！',
             style: TextStyle(
               color: ColorScheme.of(context).outline,
             ),
@@ -208,16 +208,16 @@ void importFromInput<T>(
               try {
                 await onImport(json);
                 Get.back();
-                SmartDialog.showToast('导入成功');
+                SmartDialog.showToast('往里灌成功，包的');
                 return;
               } catch (e) {
-                forceErrorText = '导入失败：$e';
+                forceErrorText = '往里灌寄了：$e';
               }
               key.currentState?.validate();
               forceErrorText = null;
             }
           },
-          child: const Text('确定'),
+          child: const Text('包的，就这么整'),
         ),
       ],
     ),
@@ -237,17 +237,17 @@ Future<void> showImportExportDialog<T>(
     const style = TextStyle(fontSize: 15);
     return SimpleDialog(
       clipBehavior: .hardEdge,
-      title: Text('导入/导出$title'),
+      title: Text('往里灌/往外薅$title，不是哥们'),
       children: [
         DialogOption(
-          child: const Text('导出至剪贴板', style: style),
+          child: const Text('薅到剪贴板', style: style),
           onPressed: () {
             Get.back();
             exportToClipBoard(onExport: onExport);
           },
         ),
         DialogOption(
-          child: const Text('导出文件至本地', style: style),
+          child: const Text('薅成赛博卷宗落地', style: style),
           onPressed: () {
             Get.back();
             exportToLocalFile(
@@ -262,14 +262,14 @@ Future<void> showImportExportDialog<T>(
           color: ColorScheme.of(context).outline.withValues(alpha: 0.1),
         ),
         DialogOption(
-          child: const Text('输入', style: style),
+          child: const Text('往里塞字', style: style),
           onPressed: () {
             Get.back();
             importFromInput<T>(context, title: title, onImport: onImport);
           },
         ),
         DialogOption(
-          child: const Text('从剪贴板导入', style: style),
+          child: const Text('从剪贴板往里灌', style: style),
           onPressed: () {
             Get.back();
             importFromClipBoard<T>(
@@ -281,7 +281,7 @@ Future<void> showImportExportDialog<T>(
           },
         ),
         DialogOption(
-          child: const Text('从本地文件导入', style: style),
+          child: const Text('从自家硬盘赛博卷宗往里灌', style: style),
           onPressed: () {
             Get.back();
             importFromLocalFile<T>(onImport: onImport);

@@ -19,30 +19,30 @@ class HistoryBaseController extends GetxController {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('提示'),
-        content: const Text('啊叻？你要清空历史记录功能吗？'),
+        title: const Text('赛博小喇叭'),
+        content: const Text('啊叻？你要一键扬了电子案底电子脚印功能吗？'),
         actions: [
           TextButton(
             onPressed: Get.back,
             child: Text(
-              '取消',
+              '不整了，撤！',
               style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
           ),
           TextButton(
             onPressed: () async {
               Get.back();
-              SmartDialog.showLoading(msg: '请求中');
+              SmartDialog.showLoading(msg: '正在敲机房大爹家门');
               final res = await UserHttp.clearHistory(account: account);
               SmartDialog.dismiss();
               if (res.isSuccess) {
-                SmartDialog.showToast('清空观看历史');
+                SmartDialog.showToast('一键扬了观看电子案底');
                 onSuccess();
               } else {
                 res.toast();
               }
             },
-            child: const Text('确认清空'),
+            child: const Text('拍板一键扬了'),
           ),
         ],
       ),
@@ -55,26 +55,26 @@ class HistoryBaseController extends GetxController {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('提示'),
-        content: Text(pauseStatus ? '啊叻？你要暂停历史记录功能吗？' : '啊叻？要恢复历史记录功能吗？'),
+        title: const Text('赛博小喇叭'),
+        content: Text(pauseStatus ? '啊叻？你要按住别动电子案底电子脚印功能吗？' : '啊叻？要复活电子案底电子脚印功能吗？，包的'),
         actions: [
           TextButton(
             onPressed: Get.back,
             child: Text(
-              '取消',
+              '不整了，撤！',
               style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
           ),
           TextButton(
             onPressed: () async {
-              SmartDialog.showLoading(msg: '请求中');
+              SmartDialog.showLoading(msg: '正在敲机房大爹家门');
               final res = await UserHttp.pauseHistory(
                 pauseStatus,
                 account: account,
               );
               SmartDialog.dismiss();
               if (res.isSuccess) {
-                SmartDialog.showToast(pauseStatus ? '暂停观看历史' : '恢复观看历史');
+                SmartDialog.showToast(pauseStatus ? '按住别动观看电子案底，包的' : '复活观看电子案底，我嘞个豆');
                 this.pauseStatus.value = pauseStatus;
                 await GStorage.localCache.putAll({
                   LocalCacheKey.historyPause: pauseStatus,
@@ -85,7 +85,7 @@ class HistoryBaseController extends GetxController {
               }
               Get.back();
             },
-            child: Text(pauseStatus ? '确认暂停' : '确认恢复'),
+            child: Text(pauseStatus ? '拍板按住别动' : '拍板复活'),
           ),
         ],
       ),

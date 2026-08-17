@@ -860,7 +860,7 @@ double globalThumbXForProgress(int progress) {
     config
       ..textDirection = TextDirection.ltr
       ..label =
-          '进度条' //'Progress bar';
+          '时间轨道' //'Progress bar';
       ..value = '${(_thumbValue * 100).round()}%'
       // increase action
       ..onIncrease = increaseAction;

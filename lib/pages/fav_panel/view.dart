@@ -71,7 +71,7 @@ class _FavPanelState extends State<FavPanel> {
                     minLeadingWidth: 0,
                     title: Text(item.title),
                     subtitle: Text(
-                      '${item.mediaCount}个内容 . ${BiliUtils.isPublicFavText(item.attr)}',
+                      '${item.mediaCount}个内容 . ${BiliUtils.isPublicFavText(item.attr)}，CPU 都看沉默了',
                     ),
                     trailing: Transform.scale(
                       scale: 0.9,
@@ -103,11 +103,11 @@ class _FavPanelState extends State<FavPanel> {
         AppBar(
           backgroundColor: Colors.transparent,
           leading: IconButton(
-            tooltip: '关闭',
+            tooltip: '啪一下封印',
             onPressed: Get.back,
             icon: const Icon(Icons.close_outlined),
           ),
-          title: const Text('添加到收藏夹'),
+          title: const Text('塞一个到电子小被窝，曼波'),
           actions: [
             TextButton.icon(
               onPressed: () => Get.toNamed('/createFav')?.then((data) {
@@ -122,7 +122,7 @@ class _FavPanelState extends State<FavPanel> {
                 }
               }),
               icon: Icon(Icons.add, color: theme.primary),
-              label: const Text('新建收藏夹'),
+              label: const Text('凭空捏一个电子小被窝'),
               style: const ButtonStyle(
                 visualDensity: .compact,
                 padding: WidgetStatePropertyAll(
@@ -151,7 +151,7 @@ class _FavPanelState extends State<FavPanel> {
                 bottom: MediaQuery.viewPaddingOf(context).bottom + 16,
               ),
               child: Text(
-                '完成',
+                '收工，包成的',
                 textAlign: .center,
                 style: TextStyle(
                   color: theme.primary,

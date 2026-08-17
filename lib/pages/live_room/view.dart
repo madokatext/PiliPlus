@@ -513,7 +513,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     child: Obx(() {
       if (_liveRoomController.onlineCount.value case final onlineCount?) {
         return Text(
-          '高能观众($onlineCount)',
+          '高能观众($onlineCount)，属实绷不住',
           style: const TextStyle(
             fontSize: 12,
             color: Colors.white,
@@ -632,7 +632,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
                   mainAxisSize: .min,
                   children: [
                     Icon(Icons.copy, size: 19),
-                    Text('复制链接'),
+                    Text('薅走这串门牌号'),
                   ],
                 ),
               ),
@@ -644,7 +644,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
                     mainAxisSize: .min,
                     children: [
                       Icon(Icons.share, size: 19),
-                      Text('分享直播间'),
+                      Text('到处扩散赛博围观房，优势在我'),
                     ],
                   ),
                 ),
@@ -655,7 +655,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
                   mainAxisSize: .min,
                   children: [
                     Icon(Icons.open_in_browser, size: 19),
-                    Text('浏览器打开'),
+                    Text('扔浏览器里开'),
                   ],
                 ),
               ),
@@ -687,7 +687,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
                     mainAxisSize: .min,
                     children: [
                       Icon(Icons.forward_to_inbox, size: 19),
-                      Text('分享至消息'),
+                      Text('塞进赛博小纸条'),
                     ],
                   ),
                 ),
@@ -841,7 +841,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
                 ),
                 const Expanded(
                   child: Text(
-                    '发送弹幕',
+                    '发送满屏飘字',
                     style: TextStyle(color: baseWhite),
                   ),
                 ),

@@ -436,10 +436,10 @@ class _EpisodePanelState extends State<EpisodePanel>
               if (episode.badge == "会员" &&
                   Accounts.mainEqVideo &&
                   vipStatus != 1) {
-                SmartDialog.showToast('需要大会员');
+                SmartDialog.showToast('需要大会员，CPU 都看沉默了');
                 // return;
               }
-              SmartDialog.showToast('切换到：$title');
+              SmartDialog.showToast('切换到：$title，已老实');
               widget.onClose?.call();
 
               widget.onChangeEpisode(episode).then((res) {
@@ -488,7 +488,7 @@ class _EpisodePanelState extends State<EpisodePanel>
                           ),
                         if (isCharging == true)
                           const PBadge(
-                            text: '充电专属',
+                            text: '氪金充电特供',
                             top: 6,
                             right: 6,
                             type: PBadgeType.error,
@@ -512,7 +512,7 @@ class _EpisodePanelState extends State<EpisodePanel>
                       color: primary,
                       height: 12,
                       cacheHeight: 12.cacheSize(context),
-                      semanticLabel: "正在播放：",
+                      semanticLabel: "正在开炫：",
                     ),
                   Expanded(
                     child: Column(
@@ -580,7 +580,7 @@ class _EpisodePanelState extends State<EpisodePanel>
     return switch (loadingState) {
       Success(:final response) => iconButton(
         iconSize: 22,
-        tooltip: response ? '取消订阅' : '订阅',
+        tooltip: response ? '撤销赛博追更' : '赛博追更',
         icon: response
             ? const Icon(Icons.notifications_off_outlined)
             : const Icon(Icons.notifications_active_outlined),
@@ -590,7 +590,7 @@ class _EpisodePanelState extends State<EpisodePanel>
             seasonId: widget.seasonId,
           );
           if (res.isSuccess) {
-            SmartDialog.showToast('${response ? '取消' : ''}订阅成功');
+            SmartDialog.showToast('${response ? '撤了' : ''}订阅成了，包的，启动！');
             _favState!.value = Success(!response);
             widget.ugcIntroController?.seasonFavState[widget.seasonId] =
                 !response;
@@ -605,7 +605,7 @@ class _EpisodePanelState extends State<EpisodePanel>
 
   Widget get _buildReverseBtn => iconButton(
     iconSize: 22,
-    tooltip: widget.isReversed == true ? '正序播放' : '倒序播放',
+    tooltip: widget.isReversed == true ? '正序开炫' : '倒序开炫',
     icon: widget.isReversed == true
         ? const Icon(MdiIcons.sortDescending)
         : const Icon(MdiIcons.sortAscending),
@@ -642,19 +642,19 @@ class _EpisodePanelState extends State<EpisodePanel>
         if (_favState != null) Obx(() => _buildFavBtn(_favState!.value)),
         iconButton(
           iconSize: 22,
-          tooltip: '跳至顶部',
+          tooltip: '跳至顶部，CPU 都看沉默了',
           icon: const Icon(Icons.vertical_align_top),
           onPressed: _animToTopOrBottom,
         ),
         iconButton(
           iconSize: 22,
-          tooltip: '跳至底部',
+          tooltip: '跳至底部，这把高端局',
           icon: const Icon(Icons.vertical_align_bottom),
           onPressed: () => _animToTopOrBottom(top: false),
         ),
         iconButton(
           iconSize: 22,
-          tooltip: '跳至当前',
+          tooltip: '跳至眼下这坨',
           icon: const Icon(Icons.my_location),
           onPressed: () async {
             final currentTabIndex = _currentTabIndex.value;
@@ -682,7 +682,7 @@ class _EpisodePanelState extends State<EpisodePanel>
             final currentTabIndex = _currentTabIndex.value;
             return iconButton(
               iconSize: 22,
-              tooltip: _isReversed[currentTabIndex] ? '顺序' : '倒序',
+              tooltip: _isReversed[currentTabIndex] ? '顺序，鼠鼠我啊' : '反着排',
               icon: !_isReversed[currentTabIndex]
                   ? const Icon(MdiIcons.sortNumericAscending)
                   : const Icon(MdiIcons.sortNumericDescending),
@@ -695,7 +695,7 @@ class _EpisodePanelState extends State<EpisodePanel>
         if (widget.onClose != null)
           iconButton(
             iconSize: 22,
-            tooltip: '关闭',
+            tooltip: '啪一下封印',
             icon: const Icon(Icons.close),
             onPressed: widget.onClose,
           ),

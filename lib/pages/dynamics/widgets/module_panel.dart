@@ -26,7 +26,7 @@ Widget noneWidget(ThemeData theme, String? tips) => Row(
       color: theme.colorScheme.outline,
     ),
     Text(
-      tips ?? '已失效',
+      tips ?? '已失效，鼠鼠我啊',
       style: TextStyle(color: theme.colorScheme.outline),
     ),
   ],
@@ -315,7 +315,7 @@ Widget module(
         padding: floor == 1
             ? const EdgeInsets.symmetric(horizontal: 12)
             : EdgeInsets.zero,
-        child: Text('暂未支持的类型: \n${item.idStr}\n${item.type}'),
+        child: Text('暂未支持的类型: \n${item.idStr}\n${item.type}，不是哥们'),
       );
   }
 }

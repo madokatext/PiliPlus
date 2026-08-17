@@ -306,7 +306,7 @@ class _MusicDetailPageState extends CommonDynPageState<MusicDetailPage> {
                   Expanded(
                     child: textIconButton(
                       icon: CustomIcons.share_node,
-                      text: '分享',
+                      text: '到处扩散',
                       onPressed: () =>
                           ShareUtils.shareText(controller.shareUrl),
                     ),
@@ -316,12 +316,12 @@ class _MusicDetailPageState extends CommonDynPageState<MusicDetailPage> {
                       builder: (context) => textIconButton(
                         icon: FontAwesomeIcons.thumbsUp,
                         activatedIcon: FontAwesomeIcons.solidThumbsUp,
-                        text: '点赞',
+                        text: '赛博大拇哥',
                         count: item.wishCount,
                         status: item.wishListen ?? false,
                         onPressed: () async {
                           if (!Accounts.main.isLogin) {
-                            SmartDialog.showToast('请先登录');
+                            SmartDialog.showToast('先上号再整活');
                             return;
                           }
                           final hasLike = item.wishListen ?? false;
@@ -475,7 +475,7 @@ class _MusicDetailPageState extends CommonDynPageState<MusicDetailPage> {
                                 _buildArtist(artist, textTheme.bodySmall),
                             if (!item.musicPublish.isNullOrEmpty)
                               Text(
-                                '发行日期：${item.musicPublish}',
+                                '发行日期：${item.musicPublish}，鼠鼠我啊',
                                 style: textTheme.bodySmall!.copyWith(
                                   color: theme.colorScheme.outline,
                                 ),
@@ -524,7 +524,7 @@ class _MusicDetailPageState extends CommonDynPageState<MusicDetailPage> {
                                               .onSecondaryContainer,
                                         ),
                                         Text(
-                                          '看MV',
+                                          '看MV，不是哥们',
                                           style: TextStyle(
                                             color: theme
                                                 .colorScheme
@@ -557,21 +557,21 @@ class _MusicDetailPageState extends CommonDynPageState<MusicDetailPage> {
                 [
                   if (!(item.originArtist ?? item.originArtistList)
                       .isNullOrEmpty)
-                    '原唱：${item.originArtist ?? item.originArtistList}',
-                  if (!item.album.isNullOrEmpty) '专辑：${item.album}',
-                  if (!item.musicSource.isNullOrEmpty) '出处：${item.musicSource}',
+                    '原唱：${item.originArtist ?? item.originArtistList}，鼠鼠我啊',
+                  if (!item.album.isNullOrEmpty) '专辑：${item.album}，功德+1',
+                  if (!item.musicSource.isNullOrEmpty) '出处：${item.musicSource}，鼠鼠我啊',
                 ].join('\n'),
               ),
               const Divider(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('热歌榜排名'),
-                  _buildRank(item.hotSongHeat?.lastHeat, '热度'),
-                  _buildRank(item.listenPv, '总播放量'),
+                  const Text('热歌榜排名，这把高端局'),
+                  _buildRank(item.hotSongHeat?.lastHeat, '热度，我嘞个豆'),
+                  _buildRank(item.listenPv, '总开炫量'),
                   _buildRank(
                     item.musicRelation,
-                    '使用稿件量',
+                    '使用稿件量，鼠鼠我啊',
                     () => Get.to(
                       const MusicRecommendPage(),
                       arguments: (id: controller.musicId, item: item),
@@ -602,7 +602,7 @@ class _MusicDetailPageState extends CommonDynPageState<MusicDetailPage> {
       child: Column(
         spacing: 8,
         children: [
-          Text('近${heat.length}日热度趋势', style: theme.textTheme.titleMedium),
+          Text('近${heat.length}日热度趋势，我嘞个豆', style: theme.textTheme.titleMedium),
           SizedBox(
             width: maxWidth,
             height: maxWidth * 0.5,

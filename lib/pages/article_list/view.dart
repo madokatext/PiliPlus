@@ -161,12 +161,12 @@ class _ArticleListPageState extends State<ArticleListPage> with GridMixin {
                     TextSpan(
                       children: [
                         TextSpan(
-                          text: '${NumUtils.numFormat(item.articlesCount)}篇专栏',
+                          text: '${NumUtils.numFormat(item.articlesCount)}篇赛博小作文',
                         ),
                         divider,
-                        TextSpan(text: '${NumUtils.numFormat(item.words)}个字'),
+                        TextSpan(text: '${NumUtils.numFormat(item.words)}个字，已老实'),
                         divider,
-                        TextSpan(text: '${NumUtils.numFormat(item.read)}次阅读'),
+                        TextSpan(text: '${NumUtils.numFormat(item.read)}次阅读，我嘞个豆'),
                       ],
                       style: style,
                     ),
@@ -176,10 +176,10 @@ class _ArticleListPageState extends State<ArticleListPage> with GridMixin {
                       children: [
                         TextSpan(
                           text:
-                              '${DateFormatUtils.dateFormat(item.updateTime)}更新',
+                              '${DateFormatUtils.dateFormat(item.updateTime)}更新，CPU 都看沉默了',
                         ),
                         divider,
-                        TextSpan(text: '文集号: ${item.id}'),
+                        TextSpan(text: '文集号: ${item.id}，不是哥们'),
                       ],
                       style: style,
                     ),
@@ -192,7 +192,7 @@ class _ArticleListPageState extends State<ArticleListPage> with GridMixin {
       ),
       actions: [
         IconButton(
-          tooltip: '浏览器打开',
+          tooltip: '扔浏览器里开',
           onPressed: () => PageUtils.inAppWebview(
             '${HttpString.baseUrl}/read/mobile-readlist/rl${_controller.id}',
           ),

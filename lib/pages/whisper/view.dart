@@ -29,10 +29,10 @@ class _WhisperPageState extends State<WhisperPage> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: const Text('消息'),
+        title: const Text('赛博小纸条'),
         actions: [
           IconButton(
-            tooltip: '新增粉丝',
+            tooltip: '新增粉丝，已老实',
             onPressed: () => Get.toNamed(
               '/webview',
               parameters: {
@@ -195,7 +195,7 @@ class _WhisperPageState extends State<WhisperPage> {
               ),
               onTap: () {
                 if (!item.enabled) {
-                  SmartDialog.showToast('已禁用');
+                  SmartDialog.showToast('已封印');
                   return;
                 }
                 _controller.unreadCounts[index] = 0;

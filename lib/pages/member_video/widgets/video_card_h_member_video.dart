@@ -114,7 +114,7 @@ class VideoCardHMemberVideo extends StatelessWidget {
                                   ),
                                   child: const Center(
                                     child: Text(
-                                      '上次观看',
+                                      '上次观看，这把高端局',
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 15,
@@ -173,7 +173,7 @@ class VideoCardHMemberVideo extends StatelessWidget {
                                       text:
                                           videoItem.history!.progress ==
                                               videoItem.history!.duration
-                                          ? '已看完'
+                                          ? '已炫完'
                                           : '${DurationUtils.formatDuration(videoItem.history!.progress)}/${DurationUtils.formatDuration(videoItem.history!.duration)}',
                                       right: 6.0,
                                       bottom: 6.0,

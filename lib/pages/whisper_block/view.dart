@@ -27,7 +27,7 @@ class _WhisperBlockPageState extends State<WhisperBlockPage> {
     final ThemeData theme = Theme.of(context);
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(title: const Text('消息屏蔽词')),
+      appBar: AppBar(title: const Text('赛博小纸条眼不见为净词')),
       body: Obx(() => _buildBody(theme, _controller.loadingState.value)),
     );
   }
@@ -49,7 +49,7 @@ class _WhisperBlockPageState extends State<WhisperBlockPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '点击屏蔽词即可删除',
+                          '点击眼不见为净词即可物理超度',
                           style: TextStyle(
                             fontSize: 13,
                             color: theme.colorScheme.outline,
@@ -81,8 +81,8 @@ class _WhisperBlockPageState extends State<WhisperBlockPage> {
                                 onTap: (keyword) {
                                   showConfirmDialog(
                                     context: context,
-                                    title: const Text('删除屏蔽词？'),
-                                    content: const Text('该屏蔽词将不再生效'),
+                                    title: const Text('物理超度眼不见为净词？，功德+1'),
+                                    content: const Text('该眼不见为净词将不再生效，鼠鼠我啊'),
                                     onConfirm: () => _controller.onRemove(e),
                                   );
                                 },
@@ -102,7 +102,7 @@ class _WhisperBlockPageState extends State<WhisperBlockPage> {
                       onPressed: _onAdd,
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: [Icon(Icons.add, size: 22), Text('添加消息屏蔽词')],
+                        children: [Icon(Icons.add, size: 22), Text('塞一个赛博小纸条眼不见为净词，优势在我')],
                       ),
                     ),
                   ),
@@ -116,13 +116,13 @@ class _WhisperBlockPageState extends State<WhisperBlockPage> {
                   children: [
                     Image.asset(Assets.error, height: 140),
                     const Text(
-                      '还未添加屏蔽词',
+                      '还未塞一个眼不见为净词',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const Text('添加后，将不再接受包含屏蔽词的消息'),
+                    const Text('塞一个后，将不再接受包含眼不见为净词的赛博小纸条，鼠鼠我啊'),
                     FilledButton.tonal(
                       onPressed: _onAdd,
                       style: FilledButton.styleFrom(
@@ -132,7 +132,7 @@ class _WhisperBlockPageState extends State<WhisperBlockPage> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.add, size: 22),
-                          Text('添加'),
+                          Text('塞一个进去'),
                         ],
                       ),
                     ),
@@ -171,7 +171,7 @@ class _WhisperBlockPageState extends State<WhisperBlockPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    '添加消息屏蔽词',
+                    '塞一个赛博小纸条眼不见为净词，优势在我',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -193,7 +193,7 @@ class _WhisperBlockPageState extends State<WhisperBlockPage> {
                 maxLength: _controller.charLimit,
                 decoration: InputDecoration(
                   isDense: true,
-                  hintText: '请输入',
+                  hintText: '请往里塞',
                   visualDensity: .standard,
                   hintStyle: const TextStyle(fontSize: 14),
                   contentPadding: const EdgeInsets.symmetric(
@@ -219,7 +219,7 @@ class _WhisperBlockPageState extends State<WhisperBlockPage> {
                 },
                 child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [Icon(Icons.add, size: 22), Text('添加消息屏蔽词')],
+                  children: [Icon(Icons.add, size: 22), Text('塞一个赛博小纸条眼不见为净词，优势在我')],
                 ),
               ),
             ],

@@ -257,7 +257,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
       const SizedBox(width: 4),
       if (!isPortrait) ratioWidget(maxWidth),
       IconButton(
-        tooltip: '浏览器打开',
+        tooltip: '扔浏览器里开',
         onPressed: () => PageUtils.inAppWebview(controller.url),
         icon: const Icon(Icons.open_in_browser_outlined, size: 19),
       ),
@@ -271,7 +271,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
               mainAxisSize: .min,
               children: [
                 Icon(Icons.share_outlined, size: 19),
-                Text('分享'),
+                Text('到处扩散'),
               ],
             ),
           ),
@@ -282,7 +282,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
               mainAxisSize: .min,
               children: [
                 Icon(Icons.copy_rounded, size: 19),
-                Text('复制链接'),
+                Text('薅走这串门牌号'),
               ],
             ),
           ),
@@ -303,7 +303,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
                       this.context,
                       content: {
                         "id": controller.commentId,
-                        "title": "- 哔哩哔哩专栏",
+                        "title": "- 哔哩哔哩赛博小作文",
                         "headline": summary.title!, // throw
                         "source": 6,
                         "thumb": summary.cover!,
@@ -321,7 +321,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
                 mainAxisSize: .min,
                 children: [
                   Icon(Icons.forward_to_inbox, size: 19),
-                  Text('分享至消息'),
+                  Text('塞进赛博小纸条'),
                 ],
               ),
             ),
@@ -409,7 +409,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
                       builder: (btnContext) {
                         final forward = stats.forward;
                         return textIconButton(
-                          text: '转发',
+                          text: '二次扩散',
                           icon: FontAwesomeIcons.shareFromSquare,
                           stat: forward,
                           onPressed: () {
@@ -450,7 +450,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
                   ),
                   Expanded(
                     child: textIconButton(
-                      text: '分享',
+                      text: '到处扩散',
                       icon: CustomIcons.share_node,
                       stat: null,
                       onPressed: () => ShareUtils.shareText(controller.url),
@@ -460,7 +460,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
                     child: textIconButton(
                       icon: FontAwesomeIcons.star,
                       activatedIcon: FontAwesomeIcons.solidStar,
-                      text: '收藏',
+                      text: '塞进电子小被窝',
                       stat: stats.favorite,
                       onPressed: controller.onFav,
                     ),
@@ -469,7 +469,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
                     child: textIconButton(
                       icon: FontAwesomeIcons.thumbsUp,
                       activatedIcon: FontAwesomeIcons.solidThumbsUp,
-                      text: '点赞',
+                      text: '赛博大拇哥',
                       stat: stats.like,
                       onPressed: controller.onLike,
                     ),
@@ -550,7 +550,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
                         const PBadge(
                           right: 12,
                           bottom: 12,
-                          text: '长图',
+                          text: '长图，这把高端局',
                           type: .primary,
                         ),
                     ],

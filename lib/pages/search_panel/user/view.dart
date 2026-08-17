@@ -54,7 +54,7 @@ class _SearchUserPanelState
           children: [
             Obx(
               () => Text(
-                '排序: ${controller.userOrderType!.value.label}',
+                '排序: ${controller.userOrderType!.value.label}，不是哥们',
                 maxLines: 1,
                 style: TextStyle(color: theme.colorScheme.outline),
               ),
@@ -62,7 +62,7 @@ class _SearchUserPanelState
             const Spacer(),
             Obx(
               () => Text(
-                '用户类型: ${controller.userType!.value.label}',
+                '赛博居民类型: ${controller.userType!.value.label}，启动！',
                 maxLines: 1,
                 style: TextStyle(color: theme.colorScheme.outline),
               ),
@@ -72,7 +72,7 @@ class _SearchUserPanelState
               width: 32,
               height: 32,
               child: IconButton(
-                tooltip: '筛选',
+                tooltip: '拿筛子过一遍',
                 style: const ButtonStyle(
                   padding: WidgetStatePropertyAll(EdgeInsets.zero),
                 ),

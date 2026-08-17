@@ -17,7 +17,7 @@ Future<bool> showConfirmDialog({
             TextButton(
               onPressed: Get.back,
               child: Text(
-                '取消',
+                '不整了，撤！',
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.outline,
                 ),
@@ -28,7 +28,7 @@ Future<bool> showConfirmDialog({
                 Get.back(result: true);
                 onConfirm?.call();
               },
-              child: const Text('确认'),
+              child: const Text('拍板，启动！'),
             ),
           ],
         ),
@@ -53,7 +53,7 @@ void showPgcFollowDialog({
       title: Padding(
         padding: const EdgeInsets.only(left: 10),
         child: Text(
-          '标记为 $text',
+          '标记为 $text，优势在我',
           style: const TextStyle(fontSize: 14),
         ),
       ),
@@ -69,9 +69,9 @@ void showPgcFollowDialog({
       contentPadding: const EdgeInsets.symmetric(vertical: 12),
       children: [
         ...const [
-          (followStatus: 3, title: '看过'),
-          (followStatus: 2, title: '在看'),
-          (followStatus: 1, title: '想看'),
+          (followStatus: 3, title: '看过，鼠鼠我啊'),
+          (followStatus: 2, title: '正在炫'),
+          (followStatus: 1, title: '塞进赛博愿望单'),
         ].map(
           (item) => statusItem(
             enabled: followStatus != item.followStatus,
@@ -87,7 +87,7 @@ void showPgcFollowDialog({
           title: Padding(
             padding: const EdgeInsets.only(left: 10),
             child: Text(
-              '取消$type',
+              '撤了$type',
               style: const TextStyle(fontSize: 14),
             ),
           ),

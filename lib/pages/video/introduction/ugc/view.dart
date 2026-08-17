@@ -174,7 +174,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
                                   videoDetailCtr.queryVideoUrl();
                                 }
                               },
-                              label: const Text("点此重新加载"),
+                              label: const Text("点此重新疯狂搬赛博粮"),
                             ),
                           ),
                   ),
@@ -415,14 +415,14 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
             ],
             if (videoDetail.isUpowerExclusive == true) ...[
               _labelWidget(
-                '充电专属',
+                '氪金充电特供',
                 isDark ? colorScheme.error : colorScheme.errorContainer,
                 isDark ? colorScheme.onError : colorScheme.onErrorContainer,
               ),
               const TextSpan(text: ' '),
             ] else if (videoDetail.hasInteractiveVideoLabel) ...[
               _labelWidget(
-                '互动视频',
+                '互动电子榨菜',
                 colorScheme.secondaryContainer,
                 colorScheme.onSecondaryContainer,
               ),
@@ -461,12 +461,12 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
           ),
           child: Text(
             switch (attr) {
-              1 => '悄悄关注',
-              2 => '已关注',
-              4 || 6 => '已互关',
-              128 => '已拉黑',
-              -10 => '特别关注',
-              _ => ' 关注 ',
+              1 => '悄悄赛博蹲点',
+              2 => '已赛博蹲点',
+              4 || 6 => '已互关，不是哥们',
+              128 => '已拉黑，启动！',
+              -10 => '特别赛博蹲点',
+              _ => ' 赛博蹲点 ',
             },
             style: const TextStyle(fontSize: 13),
           ),
@@ -492,7 +492,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
               icon: const Icon(FontAwesomeIcons.thumbsUp),
               selectIcon: const Icon(FontAwesomeIcons.solidThumbsUp),
               selectStatus: introController.hasLike.value,
-              semanticsLabel: '点赞',
+              semanticsLabel: '赛博大拇哥',
               text: !isLoading ? NumUtils.numFormat(stat!.like) : null,
               onStartTriple: introController.onStartTriple,
               onCancelTriple: introController.onCancelTriple,
@@ -506,8 +506,8 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
                 introController.actionDislikeVideo,
               ),
               selectStatus: introController.hasDislike.value,
-              semanticsLabel: '点踩',
-              text: "点踩",
+              semanticsLabel: '赛博倒拇指',
+              text: "赛博倒拇指",
             ),
           ),
           Obx(
@@ -517,7 +517,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
               selectIcon: const Icon(FontAwesomeIcons.b),
               onTap: introController.actionCoinVideo,
               selectStatus: introController.hasCoin,
-              semanticsLabel: '投币',
+              semanticsLabel: '上贡硬币',
               text: !isLoading ? NumUtils.numFormat(stat!.coin) : null,
             ),
           ),
@@ -532,7 +532,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
                 isLongPress: true,
               ),
               selectStatus: introController.hasFav.value,
-              semanticsLabel: '收藏',
+              semanticsLabel: '塞进电子小被窝',
               text: !isLoading ? NumUtils.numFormat(stat!.favorite) : null,
             ),
           ),
@@ -543,15 +543,15 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
               onTap: () =>
                   introController.handleAction(introController.viewLater),
               selectStatus: introController.hasLater.value,
-              semanticsLabel: '再看',
-              text: '再看',
+              semanticsLabel: '二刷启动',
+              text: '二刷启动',
             ),
           ),
           ActionItem(
             icon: const Icon(FontAwesomeIcons.shareFromSquare),
             onTap: () => introController.actionShareVideo(context),
             selectStatus: false,
-            semanticsLabel: '分享',
+            semanticsLabel: '到处扩散',
             text: !isLoading ? NumUtils.numFormat(stat!.share!) : null,
           ),
         ],
@@ -616,9 +616,9 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
                               if (!mounted) return;
                               final confirmed = await showConfirmDialog(
                                 context: context,
-                                title: const Text('空降助手：搬运视频同步'),
+                                title: const Text('空降助手：搬运电子榨菜同步'),
                                 content: Text(
-                                  '${hasPortVideo ? "" : "是否将"}该视频${hasPortVideo ? "已" : ""}绑定到此YouTube视频($ytbId)',
+                                  '${hasPortVideo ? "" : "是否将"}该电子榨菜${hasPortVideo ? "已" : ""}绑定到此YouTube电子榨菜($ytbId)',
                                 ),
                               );
                               if (!hasPortVideo && confirmed) {
@@ -629,7 +629,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
                                   videoDuration: (duration / 1000).round(),
                                 );
                                 SmartDialog.showToast(
-                                  '提交搬运视频${res.isSuccess ? "成功" : "失败: $res"}',
+                                  '提交搬运电子榨菜${res.isSuccess ? "成了，包的" : "寄了: $res"}',
                                 );
                                 return;
                               }
@@ -940,7 +940,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
                   ),
                 ),
                 Text(
-                  '${NumUtils.numFormat(userStat.follower)}粉丝    ${'${NumUtils.numFormat(userStat.archiveCount)}视频'}',
+                  '${NumUtils.numFormat(userStat.follower)}粉丝    ${'${NumUtils.numFormat(userStat.archiveCount)}电子榨菜'}',
                   style: TextStyle(fontSize: 12, color: colorScheme.outline),
                 ),
               ],
@@ -977,12 +977,12 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
             MdiIcons.incognito,
             size: 15,
             color: colorScheme.outline,
-            semanticLabel: '无痕',
+            semanticLabel: '无痕，CPU 都看沉默了',
           ),
         if (introController.isShowOnlineTotal)
           Obx(
             () => Text(
-              '${introController.total.value}人在看',
+              '${introController.total.value}人在看，已老实',
               style: TextStyle(fontSize: 12, color: colorScheme.outline),
             ),
           ),
@@ -1003,7 +1003,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
             if (result.hasSubtitle) {
               widget.showAiBottomSheet();
             } else {
-              SmartDialog.showToast('当前视频没有可显示的字幕');
+              SmartDialog.showToast('眼下这坨电子榨菜没有可亮出来的字幕，CPU 都看沉默了');
             }
           }
         },
@@ -1012,7 +1012,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
           child: Align(
             alignment: .center,
             child: Image.asset(
-              semanticLabel: 'AI总结',
+              semanticLabel: 'AI总结，启动！',
               Assets.ai,
               height: 18,
               width: 18,

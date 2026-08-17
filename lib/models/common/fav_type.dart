@@ -7,13 +7,13 @@ import 'package:PiliPlus/pages/fav/video/view.dart';
 import 'package:flutter/material.dart';
 
 enum FavTabType {
-  video('视频', FavVideoPage()),
-  bangumi('追番', FavPgcPage(type: 1)),
-  cinema('追剧', FavPgcPage(type: 2)),
-  article('专栏', FavArticlePage()),
-  note('笔记', FavNotePage()),
-  topic('话题', FavTopicPage()),
-  cheese('课堂', FavCheesePage()),
+  video('电子榨菜', FavVideoPage()),
+  bangumi('电子追番', FavPgcPage(type: 1)),
+  cinema('追剧，属实绷不住', FavPgcPage(type: 2)),
+  article('赛博小作文', FavArticlePage()),
+  note('笔记，属实绷不住', FavNotePage()),
+  topic('话题，曼波', FavTopicPage()),
+  cheese('知识灌脑区', FavCheesePage()),
   ;
 
   final String title;

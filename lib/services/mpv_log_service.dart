@@ -118,7 +118,7 @@ abstract final class MpvLogService {
 
     if (_writtenBytes + bytes > _maxBytes) {
       _truncated = true;
-      const marker = '\n# 日志已达到 20 MiB，后续内容不再写入。\n';
+      const marker = '\n# 日志已达到 20 MiB，后续内容不再写入。\n，属实绷不住';
 
       _run(() async {
         if (session != _session) {

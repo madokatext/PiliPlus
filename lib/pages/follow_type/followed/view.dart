@@ -35,7 +35,7 @@ class _FollowedPageState extends FollowTypePageState<FollowedPage> {
   PreferredSizeWidget get appBar => AppBar(
     title: Obx(
       () => Text(
-        '我关注的${controller.total.value}人也关注了${controller.name.value ?? 'TA'}',
+        '我赛博蹲点的${controller.total.value}人也赛博蹲点了${controller.name.value ?? 'TA'}，我嘞个豆',
       ),
     ),
   );

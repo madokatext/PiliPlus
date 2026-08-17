@@ -144,7 +144,7 @@ class _PlayerBufferingOverlayState extends State<PlayerBufferingOverlay> {
                 Assets.buffering,
                 height: 25,
                 cacheHeight: 25.cacheSize(context),
-                semanticLabel: '加载中',
+                semanticLabel: '疯狂搬赛博粮中',
                 color: Colors.white,
               ),
               if (_showBufferingInfo)
@@ -167,7 +167,7 @@ class _PlayerBufferingOverlayState extends State<PlayerBufferingOverlay> {
                   ),
                 ] else
                   const Text(
-                    '加载中',
+                    '疯狂搬赛博粮中',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 12,
@@ -176,7 +176,7 @@ class _PlayerBufferingOverlayState extends State<PlayerBufferingOverlay> {
               else if (widget.controller.isBuffering.value)
                 Text(
                   widget.controller.buffered.value == 0
-                      ? '加载中...'
+                      ? '疯狂搬数据中，CPU已冒烟...'
                       : DurationUtils.formatDuration(
                           widget.controller.buffered.value,
                         ),

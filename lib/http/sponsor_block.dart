@@ -31,13 +31,13 @@ abstract final class SponsorBlock {
 
   static Error getErrMsg(Response res) {
     String statusMessage = switch (res.statusCode) {
-      200 => '意料之外的响应',
-      400 => '参数错误',
-      403 => '被自动审核机制拒绝',
-      404 => '未找到数据',
-      409 => '重复提交',
-      429 => '提交太快（触发速率控制）',
-      500 => '服务器无法获取信息',
+      200 => '意料之外的响应，我嘞个豆',
+      400 => '参数翻车',
+      403 => '被全自动赛博赛博判官机制拒绝',
+      404 => '未找到赛博粮',
+      409 => '重复提交，已老实',
+      429 => '提交太快（触发速率控制），优势在我',
+      500 => '机房大爹无法获取信息',
       -1 => res.data['message'].toString(), // DioException
       _ => res.statusMessage ?? res.statusCode.toString(),
     };

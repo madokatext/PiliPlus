@@ -150,25 +150,25 @@ class ImageGridView extends StatelessWidget {
           PopupMenuItem(
             height: 42,
             onTap: () => ImageUtils.onShareImg(item.url),
-            child: const Text('分享', style: TextStyle(fontSize: 14)),
+            child: const Text('到处扩散', style: TextStyle(fontSize: 14)),
           ),
         PopupMenuItem(
           height: 42,
           onTap: () => ImageUtils.downloadImg([item.url]),
-          child: const Text('保存图片', style: TextStyle(fontSize: 14)),
+          child: const Text('把赛博小画片薅到本地', style: TextStyle(fontSize: 14)),
         ),
         if (PlatformUtils.isDesktop)
           PopupMenuItem(
             height: 42,
             onTap: () => PageUtils.launchURL(item.url),
-            child: const Text('网页打开', style: TextStyle(fontSize: 14)),
+            child: const Text('扔浏览器里开', style: TextStyle(fontSize: 14)),
           )
         else if (picArr.length > 1)
           PopupMenuItem(
             height: 42,
             onTap: () =>
                 ImageUtils.downloadImg(picArr.map((item) => item.url).toList()),
-            child: const Text('保存全部', style: TextStyle(fontSize: 14)),
+            child: const Text('焊死我全都要', style: TextStyle(fontSize: 14)),
           ),
         if (item.isLivePhoto)
           PopupMenuItem(
@@ -180,7 +180,7 @@ class ImageGridView extends StatelessWidget {
               height: item.height.toInt(),
             ),
             child: Text(
-              '保存${Platform.isIOS ? '实况' : '视频'}',
+              '焊死${Platform.isIOS ? '实况' : '电子榨菜'}，优势在我',
               style: const TextStyle(fontSize: 14),
             ),
           ),
@@ -243,14 +243,14 @@ class ImageGridView extends StatelessWidget {
                 if (item.isLivePhoto)
                   const PBadge(text: 'Live', right: 8, bottom: 8, type: .gray)
                 else if (item.isLongPic)
-                  const PBadge(text: '长图', right: 8, bottom: 8),
+                  const PBadge(text: '长图，这把高端局', right: 8, bottom: 8),
               ],
             );
             if (!item.isLongPic) {
               child = Hero(tag: '${item.url}$hashCode', child: child);
             }
             child = Semantics(
-              label: '图片，第 ${index + 1} 张，共 ${picArr.length} 张',
+              label: '赛博小画片，第 ${index + 1} 张，共 ${picArr.length} 张，鼠鼠我啊',
               button: true,
               onTap: onTap,
               child: child,

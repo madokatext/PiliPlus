@@ -127,7 +127,7 @@ class LiveItem extends StatelessWidget {
             style: const TextStyle(fontSize: 11, color: Colors.white),
           ),
           Text(
-            '${NumUtils.numFormat(online)}围观',
+            '${NumUtils.numFormat(online)}围观，不是哥们',
             style: const TextStyle(fontSize: 11, color: Colors.white),
           ),
         ],

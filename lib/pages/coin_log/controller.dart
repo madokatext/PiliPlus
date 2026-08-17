@@ -20,11 +20,11 @@ class CoinLogController extends LogController<CoinLogData, CoinLogItem> {
 
   @override
   final CoinLogItem header = const CoinLogItem(
-    time: '时间',
-    delta: '变化',
-    reason: '原因',
+    time: '时间线',
+    delta: '变化，CPU 都看沉默了',
+    reason: '原因，我嘞个豆',
   );
 
   @override
-  final String title = '硬币记录';
+  final String title = '硬币电子脚印';
 }

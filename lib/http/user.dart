@@ -182,7 +182,7 @@ abstract final class UserHttp {
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
     if (res.data['code'] == 0) {
-      SmartDialog.showToast('yeah！稍后再看');
+      SmartDialog.showToast('yeah！先吃灰回头再炫，已老实');
       return const Success(null);
     } else {
       SmartDialog.showToast(res.data['message'].toString());
@@ -202,7 +202,7 @@ abstract final class UserHttp {
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
     if (res.data['code'] == 0) {
-      SmartDialog.showToast('yeah！成功移除');
+      SmartDialog.showToast('yeah！成了，包的踢出群聊，我嘞个豆');
       return const Success(null);
     } else {
       SmartDialog.showToast(res.data['message'].toString());

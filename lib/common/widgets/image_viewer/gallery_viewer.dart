@@ -573,21 +573,21 @@ class _GalleryViewerState extends State<GalleryViewer>
                 Get.back();
                 ImageUtils.onShareImg(item.url);
               },
-              child: const Text('分享', style: TextStyle(fontSize: 14)),
+              child: const Text('到处扩散', style: TextStyle(fontSize: 14)),
             ),
           DialogOption(
             onPressed: () {
               Get.back();
               Utils.copyText(item.url);
             },
-            child: const Text('复制链接', style: TextStyle(fontSize: 14)),
+            child: const Text('薅走这串门牌号', style: TextStyle(fontSize: 14)),
           ),
           DialogOption(
             onPressed: () {
               Get.back();
               ImageUtils.downloadImg([item.url]);
             },
-            child: const Text('保存图片', style: TextStyle(fontSize: 14)),
+            child: const Text('把赛博小画片薅到本地', style: TextStyle(fontSize: 14)),
           ),
           if (PlatformUtils.isDesktop)
             DialogOption(
@@ -595,7 +595,7 @@ class _GalleryViewerState extends State<GalleryViewer>
                 Get.back();
                 PageUtils.launchURL(item.url);
               },
-              child: const Text('网页打开', style: TextStyle(fontSize: 14)),
+              child: const Text('扔浏览器里开', style: TextStyle(fontSize: 14)),
             )
           else if (widget.sources.length > 1)
             DialogOption(
@@ -605,7 +605,7 @@ class _GalleryViewerState extends State<GalleryViewer>
                   widget.sources.map((item) => item.url).toList(),
                 );
               },
-              child: const Text('保存全部图片', style: TextStyle(fontSize: 14)),
+              child: const Text('焊死我全都要赛博小画片', style: TextStyle(fontSize: 14)),
             ),
           if (item.sourceType == SourceType.livePhoto)
             DialogOption(
@@ -619,7 +619,7 @@ class _GalleryViewerState extends State<GalleryViewer>
                 );
               },
               child: Text(
-                '保存${Platform.isIOS ? ' Live Photo' : '视频'}',
+                '焊死${Platform.isIOS ? ' Live Photo' : '电子榨菜'}',
                 style: const TextStyle(fontSize: 14),
               ),
             ),
@@ -638,17 +638,17 @@ class _GalleryViewerState extends State<GalleryViewer>
         PopupMenuItem(
           height: 42,
           onTap: () => Utils.copyText(item.url),
-          child: const Text('复制链接', style: TextStyle(fontSize: 14)),
+          child: const Text('薅走这串门牌号', style: TextStyle(fontSize: 14)),
         ),
         PopupMenuItem(
           height: 42,
           onTap: () => ImageUtils.downloadImg([item.url]),
-          child: const Text('保存图片', style: TextStyle(fontSize: 14)),
+          child: const Text('把赛博小画片薅到本地', style: TextStyle(fontSize: 14)),
         ),
         PopupMenuItem(
           height: 42,
           onTap: () => PageUtils.launchURL(item.url),
-          child: const Text('网页打开', style: TextStyle(fontSize: 14)),
+          child: const Text('扔浏览器里开', style: TextStyle(fontSize: 14)),
         ),
         if (item.sourceType == SourceType.livePhoto)
           PopupMenuItem(
@@ -659,7 +659,7 @@ class _GalleryViewerState extends State<GalleryViewer>
               width: item.width!,
               height: item.height!,
             ),
-            child: const Text('保存视频', style: TextStyle(fontSize: 14)),
+            child: const Text('焊死电子榨菜', style: TextStyle(fontSize: 14)),
           ),
       ],
     );

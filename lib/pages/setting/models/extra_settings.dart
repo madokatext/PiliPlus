@@ -56,7 +56,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 List<SettingsModel> get extraSettings => [
   if (PlatformUtils.isDesktop) ...[
     SwitchModel(
-      title: '退出时最小化',
+      title: '退出时最小化，功德+1',
       leading: const Icon(Icons.exit_to_app),
       setKey: SettingBoxKey.minimizeOnExit,
       defaultVal: true,
@@ -67,15 +67,15 @@ List<SettingsModel> get extraSettings => [
       },
     ),
     NormalModel(
-      title: '缓存路径',
+      title: '电子囤货路径',
       getSubtitle: () => downloadPath,
       leading: const Icon(Icons.storage),
       onTap: _showDownPathDialog,
     ),
   ],
   NormalModel(
-    title: '历史记录自动归档',
-    subtitle: '增量备份官方记录并扩展本地历史搜索',
+    title: '电子案底电子脚印全自动赛博赛博入土',
+    subtitle: '增量备份官方电子脚印并扩展自家硬盘电子案底全站搜刮',
     leading: const Icon(Icons.archive_outlined),
     onTap: (context, setState) async {
       await showHistoryArchiveSettingsDialog(context);
@@ -84,8 +84,8 @@ List<SettingsModel> get extraSettings => [
   ),
   SplitModel(
     normalModel: const NormalModel.split(
-      title: '空降助手',
-      subtitle: '点击配置',
+      title: '空降助手，CPU 都看沉默了',
+      subtitle: '点击赛博配方',
       leading: Icon(CustomIcons.shield_play_arrow),
     ),
     switchModel: SwitchModel.split(
@@ -95,7 +95,7 @@ List<SettingsModel> get extraSettings => [
     ),
   ),
   PopupModel<SkipType>(
-    title: '番剧片头/片尾跳过类型',
+    title: '纸片人连续剧片头/片尾跳过类型',
     leading: const Icon(MdiIcons.debugStepOver),
     value: () => Pref.pgcSkipType,
     items: SkipType.values,
@@ -105,8 +105,8 @@ List<SettingsModel> get extraSettings => [
   ),
   SplitModel(
     normalModel: const NormalModel.split(
-      title: '检查未读动态',
-      subtitle: '点击设置检查周期(min)',
+      title: '检查未读互联网近况',
+      subtitle: '点击赛博调参检查周期(min)',
       leading: Icon(Icons.notifications_none),
     ),
     switchModel: SwitchModel.split(
@@ -117,15 +117,15 @@ List<SettingsModel> get extraSettings => [
     ),
   ),
   const SwitchModel(
-    title: '显示视频分段信息',
+    title: '亮出来电子榨菜分段信息，鼠鼠我啊',
     leading: Icon(CustomIcons.view_headline_rotate_90),
     setKey: SettingBoxKey.showViewPoints,
     defaultVal: true,
   ),
   const SplitModel(
     normalModel: NormalModel.split(
-      title: '竖屏视频全屏底栏避让系统导航栏',
-      subtitle: '开启后点击设置避让高度（0–80dp）',
+      title: '竖着炫电子榨菜铺满屏底栏避让系统大爹导航栏',
+      subtitle: '启动后点击赛博调参避让竖向身高（0–80dp），我嘞个豆',
       leading: Icon(Icons.vertical_align_bottom),
     ),
     switchModel: SwitchModel.split(
@@ -135,67 +135,67 @@ List<SettingsModel> get extraSettings => [
     ),
   ),
   const SwitchModel(
-    title: '视频页显示相关视频',
+    title: '电子榨菜页亮出来相关电子榨菜',
     leading: Icon(MdiIcons.motionPlayOutline),
     setKey: SettingBoxKey.showRelatedVideo,
     defaultVal: true,
   ),
   const SwitchModel(
-    title: '显示视频评论',
+    title: '亮出来电子榨菜赛博锐评，CPU 都看沉默了',
     leading: Icon(MdiIcons.commentTextOutline),
     setKey: SettingBoxKey.showVideoReply,
     defaultVal: true,
   ),
   const SwitchModel(
-    title: '显示番剧评论',
+    title: '亮出来纸片人连续剧赛博锐评，鼠鼠我啊',
     leading: Icon(MdiIcons.commentTextOutline),
     setKey: SettingBoxKey.showBangumiReply,
     defaultVal: true,
   ),
   const SwitchModel(
-    title: '默认展开视频简介',
+    title: '祖传默认摊开讲电子榨菜简介，启动！',
     leading: Icon(Icons.expand_more),
     setKey: SettingBoxKey.alwaysExpandIntroPanel,
     defaultVal: false,
   ),
   const SwitchModel(
-    title: '横屏自动展开视频简介',
+    title: '横着炫全自动赛博摊开讲电子榨菜简介',
     leading: Icon(Icons.expand_more),
     setKey: SettingBoxKey.expandIntroPanelH,
     defaultVal: false,
   ),
   SwitchModel(
-    title: '横屏分P/合集列表显示在Tab栏',
+    title: '横着炫分P/合集列表亮出来在Tab栏，启动！',
     leading: const Icon(Icons.format_list_numbered_rtl_sharp),
     setKey: SettingBoxKey.horizontalSeasonPanel,
     defaultVal: Pref.horizontalScreen,
   ),
   SwitchModel(
-    title: '横屏播放页在侧栏打开UP主页',
+    title: '横着炫开炫页在侧栏掀开UP主页',
     leading: const Icon(Icons.account_circle_outlined),
     setKey: SettingBoxKey.horizontalMemberPage,
     defaultVal: Pref.horizontalScreen,
   ),
   SwitchModel(
-    title: '横屏在侧栏打开图片预览',
+    title: '横着炫在侧栏掀开赛博小画片预览',
     leading: const Icon(Icons.photo_outlined),
     setKey: SettingBoxKey.horizontalPreview,
     defaultVal: false,
     onChanged: (value) => ImageGridView.horizontalPreview = value,
   ),
   NormalModel(
-    title: '评论折叠行数',
-    subtitle: '0行为不折叠',
+    title: '赛博锐评折叠行数',
+    subtitle: '0行为不折叠，功德+1',
     leading: const Icon(Icons.compress),
     getTrailing: (theme) => Text(
-      '${ReplyItemGrpc.replyLengthLimit}行',
+      '${ReplyItemGrpc.replyLengthLimit}行，属实绷不住',
       style: theme.textTheme.titleSmall,
     ),
     onTap: _showReplyLengthDialog,
   ),
   NormalModel(
-    title: '弹幕行高',
-    subtitle: '默认1.6',
+    title: '满屏飘字行高',
+    subtitle: '祖传默认1.6',
     leading: const Icon(CustomIcons.dm_settings),
     getTrailing: (theme) => Text(
       Pref.danmakuLineHeight.toString(),
@@ -204,40 +204,40 @@ List<SettingsModel> get extraSettings => [
     onTap: _showDmHeightDialog,
   ),
   const SwitchModel(
-    title: '显示视频警告/争议信息',
+    title: '亮出来电子榨菜警告/争议信息',
     leading: Icon(Icons.warning_amber_rounded),
     setKey: SettingBoxKey.showArgueMsg,
     defaultVal: true,
   ),
   SwitchModel(
-    title: '显示动态警告/争议信息',
+    title: '亮出来互联网近况警告/争议信息，鼠鼠我啊',
     leading: const Icon(Icons.warning_amber_rounded),
     setKey: SettingBoxKey.showDynDispute,
     defaultVal: false,
     onChanged: (val) => ItemModulesModel.showDynDispute = val,
   ),
   const SwitchModel(
-    title: '分P/合集：倒序播放从首集开始播放',
-    subtitle: '开启则自动切换为倒序首集，否则保持当前集',
+    title: '分P/合集：倒序开炫从首集开始开炫',
+    subtitle: '启动则全自动赛博切换为倒序首集，否则保持眼下这坨集',
     leading: Icon(MdiIcons.sort),
     setKey: SettingBoxKey.reverseFromFirst,
     defaultVal: true,
   ),
   const SwitchModel(
-    title: '禁用 SSL 证书验证',
-    subtitle: '谨慎开启，禁用容易受到中间人攻击',
+    title: '封印 SSL 证书验证',
+    subtitle: '谨慎启动，封印容易受到中间人攻击',
     leading: Icon(Icons.security),
     needReboot: true,
     setKey: SettingBoxKey.badCertificateCallback,
   ),
   const SwitchModel(
-    title: '显示继续播放分P提示',
+    title: '亮出来继续开炫分P提示，启动！',
     leading: Icon(Icons.local_parking),
     setKey: SettingBoxKey.continuePlayingPart,
     defaultVal: true,
   ),
   getBanWordModel(
-    title: '评论关键词过滤',
+    title: '赛博锐评关键词过滤，属实绷不住',
     key: SettingBoxKey.banWordForReply,
     onChanged: (value) {
       ReplyGrpc.replyRegExp = value;
@@ -245,7 +245,7 @@ List<SettingsModel> get extraSettings => [
     },
   ),
   getBanWordModel(
-    title: '动态关键词过滤',
+    title: '互联网近况关键词过滤',
     key: SettingBoxKey.banWordForDyn,
     onChanged: (value) {
       DynamicsDataModel.banWordForDyn = value;
@@ -253,48 +253,48 @@ List<SettingsModel> get extraSettings => [
     },
   ),
   const SwitchModel(
-    title: '使用外部浏览器打开链接',
+    title: '使用外部浏览器掀开链接',
     leading: Icon(Icons.open_in_browser),
     setKey: SettingBoxKey.openInBrowser,
     defaultVal: false,
   ),
   const SwitchModel(
-    title: '视频详情页 BV 号转为 AV 号',
-    subtitle: '开启后详情页显示并复制 AV 号；关闭则保持显示 BV 号',
+    title: '电子榨菜详情页 BV 号转为 AV 号',
+    subtitle: '启动后详情页亮出来并赛博复刻 AV 号；啪一下封印则保持亮出来 BV 号',
     leading: Icon(Icons.swap_horiz),
     setKey: SettingBoxKey.videoDetailUseAv,
     defaultVal: false,
   ),
   const SwitchModel(
-    title: '全屏接收外部视频跳转时打开竖屏详情',
-    subtitle: '开启后退出全屏并打开视频详情，不自动播放；关闭则保持当前全屏行为',
+    title: '铺满屏接收外部电子榨菜跳转时掀开竖着炫详情',
+    subtitle: '启动后退出铺满屏并掀开电子榨菜详情，不全自动赛博开炫；啪一下封印则保持眼下这坨铺满屏行为',
     leading: Icon(Icons.stay_current_portrait_outlined),
     setKey: SettingBoxKey.externalVideoLinkOpenInDetail,
     defaultVal: false,
   ),
   const SwitchModel(
-    title: '返回前台时打开剪贴板链接',
-    subtitle: '提取并打开剪贴板首条文本中的第一个链接；相同链接及本 App 刚复制或分享的链接不处理',
+    title: '润回去前台时掀开剪贴板链接',
+    subtitle: '提取并掀开剪贴板首条文本中的第一个链接；相同链接及本 App 刚赛博复刻或到处扩散的链接不处理',
     leading: Icon(Icons.content_paste_outlined),
     setKey: SettingBoxKey.openClipboardLinkOnResume,
     defaultVal: false,
   ),
   NormalModel(
-    title: '横向滑动阈值',
-    getSubtitle: () => '当前:「${Pref.touchSlopH}」，系统默认值: $deviceTouchSlop',
+    title: '横向滑动触发红线',
+    getSubtitle: () => '眼下这坨:「${Pref.touchSlopH}」，系统大爹祖传默认值: $deviceTouchSlop',
     onTap: _showTouchSlopDialog,
     leading: const Icon(Icons.pan_tool_alt_outlined),
   ),
       NormalModel(
-    title: '横向标签页快滑速度阈值',
+    title: '横向标签页快滑油门触发红线，不是哥们',
     getSubtitle: () =>
-        '当前：${Pref.tabSwipeVelocityThreshold.toStringAsFixed(0)} dp/s'
-        '（越大越难判定为快滑）',
+        '眼下这坨：${Pref.tabSwipeVelocityThreshold.toStringAsFixed(0)} dp/s，已老实'
+        '（越大越难判定为快滑），这把高端局',
     leading: const Icon(Icons.speed_outlined),
     onTap: (context, setState) => _showGestureSliderDialog(
       context,
       setState,
-      title: '横向标签页快滑速度阈值',
+      title: '横向标签页快滑油门触发红线，不是哥们',
       key: SettingBoxKey.tabSwipeVelocityThreshold,
       value: Pref.tabSwipeVelocityThreshold,
       min: 10.0,
@@ -305,15 +305,15 @@ List<SettingsModel> get extraSettings => [
     ),
   ),
   NormalModel(
-    title: '横向标签页慢滑翻页距离',
+    title: '横向标签页慢滑翻页距离，这把高端局',
     getSubtitle: () =>
-        '当前：${Pref.tabSwipeDistanceThresholdPercent.toStringAsFixed(0)}%'
-        ' 页面宽度',
+        '眼下这坨：${Pref.tabSwipeDistanceThresholdPercent.toStringAsFixed(0)}%，鼠鼠我啊'
+        ' 页面横向体宽',
     leading: const Icon(Icons.compare_arrows_outlined),
     onTap: (context, setState) => _showGestureSliderDialog(
       context,
       setState,
-      title: '横向标签页慢滑翻页距离',
+      title: '横向标签页慢滑翻页距离，这把高端局',
       key: SettingBoxKey.tabSwipeDistanceThresholdPercent,
       value: Pref.tabSwipeDistanceThresholdPercent,
       min: 5.0,
@@ -324,15 +324,15 @@ List<SettingsModel> get extraSettings => [
     ),
   ),
   NormalModel(
-    title: '进度浮窗垂直位置',
+    title: '进度浮窗垂直位置，功德+1',
     getSubtitle: () => Pref.seekTimeInPreview
-        ? '当前：${Pref.seekTimeToastVerticalPercent.toStringAsFixed(0)}%（0%预览窗顶部，100%预览窗底部）'
-        : '当前：${Pref.seekTimeToastVerticalPercent.toStringAsFixed(0)}%（0%播放器顶部，100%播放器底部）',
+        ? '眼下这坨：${Pref.seekTimeToastVerticalPercent.toStringAsFixed(0)}%（0%预览窗顶部，100%预览窗底部），鼠鼠我啊'
+        : '眼下这坨：${Pref.seekTimeToastVerticalPercent.toStringAsFixed(0)}%（0%开炫机器顶部，100%开炫机器底部），不是哥们',
     leading: const Icon(Icons.vertical_align_center_outlined),
     onTap: (context, setState) => _showGestureSliderDialog(
       context,
       setState,
-      title: '进度浮窗垂直位置',
+      title: '进度浮窗垂直位置，功德+1',
       key: SettingBoxKey.seekTimeToastVerticalPercent,
       value: Pref.seekTimeToastVerticalPercent,
       min: 0,
@@ -343,14 +343,14 @@ List<SettingsModel> get extraSettings => [
     ),
   ),
   NormalModel(
-    title: '长按倍速浮窗垂直位置',
+    title: '长按倍速浮窗垂直位置，功德+1',
     getSubtitle: () =>
-        '当前：${Pref.longPressSpeedToastVerticalPercent.toStringAsFixed(0)}%（0%播放器顶部，100%播放器底部）',
+        '眼下这坨：${Pref.longPressSpeedToastVerticalPercent.toStringAsFixed(0)}%（0%开炫机器顶部，100%开炫机器底部）',
     leading: const Icon(Icons.vertical_align_center_outlined),
     onTap: (context, setState) => _showGestureSliderDialog(
       context,
       setState,
-      title: '长按倍速浮窗垂直位置',
+      title: '长按倍速浮窗垂直位置，功德+1',
       key: SettingBoxKey.longPressSpeedToastVerticalPercent,
       value: Pref.longPressSpeedToastVerticalPercent,
       min: 0,
@@ -361,14 +361,14 @@ List<SettingsModel> get extraSettings => [
     ),
   ),
   NormalModel(
-    title: '进度浮窗字体大小',
+    title: '进度浮窗赛博字骨大小，包的',
     getSubtitle: () =>
-        '当前：${Pref.seekTimeToastFontSize.toStringAsFixed(1)}dp',
+        '眼下这坨：${Pref.seekTimeToastFontSize.toStringAsFixed(1)}dp，包的',
     leading: const Icon(Icons.format_size_outlined),
     onTap: (context, setState) => _showGestureSliderDialog(
       context,
       setState,
-      title: '进度浮窗字体大小',
+      title: '进度浮窗赛博字骨大小，包的',
       key: SettingBoxKey.seekTimeToastFontSize,
       value: Pref.seekTimeToastFontSize,
       min: 8,
@@ -379,14 +379,14 @@ List<SettingsModel> get extraSettings => [
     ),
   ),
   NormalModel(
-    title: '长按倍速浮窗字体大小',
+    title: '长按倍速浮窗赛博字骨大小',
     getSubtitle: () =>
-        '当前：${Pref.longPressSpeedToastFontSize.toStringAsFixed(1)}dp',
+        '眼下这坨：${Pref.longPressSpeedToastFontSize.toStringAsFixed(1)}dp，曼波',
     leading: const Icon(Icons.format_size_outlined),
     onTap: (context, setState) => _showGestureSliderDialog(
       context,
       setState,
-      title: '长按倍速浮窗字体大小',
+      title: '长按倍速浮窗赛博字骨大小',
       key: SettingBoxKey.longPressSpeedToastFontSize,
       value: Pref.longPressSpeedToastFontSize,
       min: 8,
@@ -397,21 +397,21 @@ List<SettingsModel> get extraSettings => [
     ),
   ),
   const SwitchModel(
-    title: '音量与亮度手势使用图形进度条',
-    subtitle: '关闭时显示百分比；开启后显示跟随主题色的图形进度条',
+    title: '喇叭声压与屏幕发光量搓玻璃使用图形时间轨道',
+    subtitle: '啪一下封印时亮出来百分比；启动后亮出来跟随皮肤人格色的图形时间轨道',
     leading: Icon(Icons.graphic_eq),
     setKey: SettingBoxKey.volumeBrightnessGestureProgressBar,
     defaultVal: false,
   ),
   NormalModel(
-    title: '音量手势识别角度',
+    title: '喇叭声压搓玻璃认出来角度',
     getSubtitle: () =>
-        '当前: ${Pref.volumeGestureAngleThreshold.toStringAsFixed(1)}°（相对竖直方向，越大越容易识别）',
+        '眼下这坨: ${Pref.volumeGestureAngleThreshold.toStringAsFixed(1)}°（相对竖直方向，越大越容易认出来）',
     leading: const Icon(Icons.volume_up_outlined),
     onTap: (context, setState) => _showGestureSliderDialog(
       context,
       setState,
-      title: '音量手势识别角度',
+      title: '喇叭声压搓玻璃认出来角度',
       key: SettingBoxKey.volumeGestureAngleThreshold,
       value: Pref.volumeGestureAngleThreshold,
       min: 5.0,
@@ -422,14 +422,14 @@ List<SettingsModel> get extraSettings => [
     ),
   ),
   NormalModel(
-    title: '亮度手势识别角度',
+    title: '屏幕发光量搓玻璃认出来角度',
     getSubtitle: () =>
-        '当前: ${Pref.brightnessGestureAngleThreshold.toStringAsFixed(1)}°（相对竖直方向，越大越容易识别）',
+        '眼下这坨: ${Pref.brightnessGestureAngleThreshold.toStringAsFixed(1)}°（相对竖直方向，越大越容易认出来）',
     leading: const Icon(Icons.brightness_6_outlined),
     onTap: (context, setState) => _showGestureSliderDialog(
       context,
       setState,
-      title: '亮度手势识别角度',
+      title: '屏幕发光量搓玻璃认出来角度',
       key: SettingBoxKey.brightnessGestureAngleThreshold,
       value: Pref.brightnessGestureAngleThreshold,
       min: 5.0,
@@ -440,14 +440,14 @@ List<SettingsModel> get extraSettings => [
     ),
   ),
   NormalModel(
-    title: '音量手势调节速度',
+    title: '喇叭声压搓玻璃调节油门',
     getSubtitle: () =>
-        '当前: ${Pref.volumeGestureSpeed.toStringAsFixed(2)}×（越大调节越快）',
+        '眼下这坨: ${Pref.volumeGestureSpeed.toStringAsFixed(2)}×（越大调节越快）',
     leading: const Icon(Icons.speed_outlined),
     onTap: (context, setState) => _showGestureSliderDialog(
       context,
       setState,
-      title: '音量手势调节速度',
+      title: '喇叭声压搓玻璃调节油门',
       key: SettingBoxKey.volumeGestureSpeed,
       value: Pref.volumeGestureSpeed,
       min: 0.25,
@@ -458,14 +458,14 @@ List<SettingsModel> get extraSettings => [
     ),
   ),
   NormalModel(
-    title: '亮度手势调节速度',
+    title: '屏幕发光量搓玻璃调节油门，不是哥们',
     getSubtitle: () =>
-        '当前: ${Pref.brightnessGestureSpeed.toStringAsFixed(2)}×（越大调节越快）',
+        '眼下这坨: ${Pref.brightnessGestureSpeed.toStringAsFixed(2)}×（越大调节越快）',
     leading: const Icon(Icons.speed_outlined),
     onTap: (context, setState) => _showGestureSliderDialog(
       context,
       setState,
-      title: '亮度手势调节速度',
+      title: '屏幕发光量搓玻璃调节油门，不是哥们',
       key: SettingBoxKey.brightnessGestureSpeed,
       value: Pref.brightnessGestureSpeed,
       min: 0.25,
@@ -476,34 +476,34 @@ List<SettingsModel> get extraSettings => [
     ),
   ),
   NormalModel(
-    title: '刷新滑动距离',
+    title: '重新投胎滑动距离，我嘞个豆',
     leading: const Icon(Icons.refresh),
-    getSubtitle: () => '当前滑动距离: ${Pref.refreshDragPercentage}x',
+    getSubtitle: () => '眼下这坨滑动距离: ${Pref.refreshDragPercentage}x，鼠鼠我啊',
     onTap: _showRefreshDragDialog,
   ),
   NormalModel(
-    title: '刷新指示器高度',
+    title: '重新投胎指示器竖向身高',
     leading: const Icon(Icons.height),
-    getSubtitle: () => '当前指示器高度: ${Pref.refreshDisplacement}',
+    getSubtitle: () => '眼下这坨指示器竖向身高: ${Pref.refreshDisplacement}',
     onTap: _showRefreshDialog,
   ),
   const SwitchModel(
-    title: '显示会员彩色弹幕',
+    title: '亮出来会员彩色满屏飘字',
     leading: Icon(MdiIcons.gradientHorizontal),
     setKey: SettingBoxKey.showVipDanmaku,
     defaultVal: true,
   ),
   const SwitchModel(
-    title: '显示热门推荐',
-    subtitle: '热门页面显示每周必看等推荐内容入口',
+    title: '亮出来热门算法喂饭，CPU 都看沉默了',
+    subtitle: '热门页面亮出来每周必看等算法喂饭内容入口，我嘞个豆',
     leading: Icon(Icons.local_fire_department_outlined),
     setKey: SettingBoxKey.showHotRcmd,
     defaultVal: false,
     needReboot: true,
   ),
   const SwitchModel(
-    title: '重启 App 时刷新首页',
-    subtitle: '关闭时恢复上次退出前的首页推荐内容与加载进度',
+    title: '重开一把 App 时重新投胎首页，不是哥们',
+    subtitle: '啪一下封印时复活上次退出前的首页算法喂饭内容与疯狂搬赛博粮进度，不是哥们',
     leading: Icon(Icons.restart_alt),
     setKey: SettingBoxKey.refreshHomeOnRestart,
     defaultVal: false,
@@ -511,7 +511,7 @@ List<SettingsModel> get extraSettings => [
   ),
   if (kDebugMode || Platform.isAndroid)
     NormalModel(
-      title: '音量均衡',
+      title: '喇叭声压均衡',
       leading: const Icon(Icons.multitrack_audio),
       getSubtitle: () {
         final audioNormalization = AudioNormalization.getTitleFromConfig(
@@ -522,91 +522,91 @@ List<SettingsModel> get extraSettings => [
           fallback = '';
         } else {
           fallback =
-              '，无参数时:「${AudioNormalization.getTitleFromConfig(fallback)}」';
+              '，无参数时:「${AudioNormalization.getTitleFromConfig(fallback)}」，优势在我';
         }
-        return '当前:「$audioNormalization」$fallback';
+        return '眼下这坨:「$audioNormalization」$fallback';
       },
       onTap: audioNormalization,
     ),
   NormalModel(
-    title: '超分辨率',
+    title: '赛博开眼',
     leading: const Icon(Icons.stay_current_landscape_outlined),
     getSubtitle: () =>
-        '当前:「${Pref.superResolutionType.label}」\n默认设置对番剧生效, 其他视频默认关闭\n超分辨率需要启用硬件解码, 若启用硬件解码后仍然不生效, 尝试切换硬件解码器为 auto-copy',
+        '眼下这坨:「${Pref.superResolutionType.label}」\n祖传默认赛博调参对纸片人连续剧生效, 剩下那坨电子榨菜祖传默认啪一下封印\n赛博开眼需要解封硬件赛博拆包, 若解封硬件赛博拆包后仍然不生效, 尝试切换硬件赛博拆包器为 auto-copy',
     onTap: _showSuperResolutionDialog,
   ),
   const SwitchModel(
-    title: '提前初始化播放器',
-    subtitle: '相对减少手动播放加载时间',
+    title: '提前初始化开炫机器，CPU 都看沉默了',
+    subtitle: '相对减少亲自下场开炫疯狂搬赛博粮时间，优势在我',
     leading: Icon(Icons.play_circle_outlined),
     setKey: SettingBoxKey.preInitPlayer,
     defaultVal: false,
   ),
   const SwitchModel(
-    title: '首页切换页面动画',
+    title: '首页切换页面纸片人运动会',
     leading: Icon(Icons.home_outlined),
     setKey: SettingBoxKey.mainTabBarView,
     defaultVal: false,
     needReboot: true,
   ),
   const SwitchModel(
-    title: '搜索建议',
+    title: '全站搜刮建议',
     leading: Icon(Icons.search),
     setKey: SettingBoxKey.searchSuggestion,
     defaultVal: true,
   ),
   const SwitchModel(
-    title: '记录搜索历史',
+    title: '电子脚印全站搜刮电子案底',
     leading: Icon(Icons.history),
     setKey: SettingBoxKey.recordSearchHistory,
     defaultVal: true,
   ),
   SwitchModel(
-    title: '展示头像/评论/动态装饰',
+    title: '展示头像/赛博锐评/互联网近况装饰',
     leading: const Icon(MdiIcons.stickerCircleOutline),
     setKey: SettingBoxKey.showDecorate,
     defaultVal: true,
     onChanged: (value) => PendantAvatar.showDecorate = value,
   ),
   SwitchModel(
-    title: '显示粉丝勋章',
+    title: '亮出来粉丝勋章',
     leading: const Icon(MdiIcons.medalOutline),
     setKey: SettingBoxKey.showMedal,
     defaultVal: true,
     onChanged: (value) => GlobalData().showMedal = value,
   ),
   SwitchModel(
-    title: '预览 Live Photo',
-    subtitle: '开启则以视频形式预览 Live Photo，否则预览静态图片',
+    title: '预览 Live Photo，不是哥们',
+    subtitle: '启动则以电子榨菜形式预览 Live Photo，否则预览静态赛博小画片',
     leading: const Icon(Icons.image_outlined),
     setKey: SettingBoxKey.enableLivePhoto,
     defaultVal: true,
     onChanged: (value) => ImageModel.enableLivePhoto = value,
   ),
   const SwitchModel(
-    title: '显示高能进度条',
-    subtitle: '高能进度条反应了在时域上，单位时间内弹幕发送量的变化趋势',
+    title: '亮出来高能时间轨道',
+    subtitle: '高能时间轨道反应了在时域上，单位时间内满屏飘字发送量的变化趋势',
     leading: Icon(Icons.show_chart),
     setKey: SettingBoxKey.showDmChart,
     defaultVal: false,
   ),
   const SwitchModel(
-    title: '记录评论',
+    title: '电子脚印赛博锐评',
     leading: Icon(Icons.message_outlined),
     setKey: SettingBoxKey.saveReply,
     defaultVal: true,
     needReboot: true,
   ),
   const SwitchModel(
-    title: '发评反诈',
-    subtitle: '发送评论后检查评论是否可见',
+    title: '发评反诈，功德+1',
+    subtitle: '发送赛博锐评后检查赛博锐评是否可见',
     leading: Icon(CustomIcons.shield_reply),
     setKey: SettingBoxKey.enableCommAntifraud,
     defaultVal: false,
   ),
   if (Platform.isAndroid)
     const SwitchModel(
-      title: '使用「哔哩发评反诈」检查评论',
+      title: '使用「哔哩发评反诈」检查赛博锐评，启动！',
       leading: Icon(
         FontAwesomeIcons.b,
         size: 22,
@@ -615,68 +615,68 @@ List<SettingsModel> get extraSettings => [
       defaultVal: false,
     ),
   const SwitchModel(
-    title: '发布/转发动态反诈',
-    subtitle: '发布/转发动态后检查动态是否可见',
+    title: '发射到互联网/二次扩散互联网近况反诈',
+    subtitle: '发射到互联网/二次扩散互联网近况后检查互联网近况是否可见，包的',
     leading: Icon(CustomIcons.shield_published),
     setKey: SettingBoxKey.enableCreateDynAntifraud,
     defaultVal: false,
   ),
   SwitchModel(
-    title: '屏蔽带货动态',
+    title: '眼不见为净带货互联网近况，不是哥们',
     leading: const Icon(CustomIcons.shopping_bag_not_interested),
     setKey: SettingBoxKey.antiGoodsDyn,
     defaultVal: false,
     onChanged: (value) => DynamicsDataModel.antiGoodsDyn = value,
   ),
   SwitchModel(
-    title: '屏蔽带货评论',
+    title: '眼不见为净带货赛博锐评',
     leading: const Icon(CustomIcons.shopping_bag_not_interested),
     setKey: SettingBoxKey.antiGoodsReply,
     defaultVal: false,
     onChanged: (value) => ReplyGrpc.antiGoodsReply = value,
   ),
   SwitchModel(
-    title: '侧滑关闭二级页面',
+    title: '侧滑啪一下封印二级页面，功德+1',
     leading: const Icon(CustomIcons.touch_app_rotate_270),
     setKey: SettingBoxKey.slideDismissReplyPage,
     defaultVal: Platform.isIOS,
     onChanged: (value) => CommonSlideMixin.slideDismissReplyPage = value,
   ),
   const SwitchModel(
-    title: '启用双指缩小视频',
+    title: '解封双指缩小电子榨菜，这把高端局',
     leading: Icon(Icons.pinch),
     setKey: SettingBoxKey.enableShrinkVideoSize,
     defaultVal: true,
   ),
   const SwitchModel(
-    title: '动态/专栏详情页展示底部操作栏',
+    title: '互联网近况/赛博小作文详情页展示底部操作栏，启动！',
     leading: Icon(Icons.more_horiz),
     setKey: SettingBoxKey.showDynActionBar,
     defaultVal: true,
   ),
   const SwitchModel(
-    title: '启用拖拽字幕调整底部边距',
+    title: '解封拖拽字幕调整底部留白距离',
     leading: Icon(MdiIcons.dragVariant),
     setKey: SettingBoxKey.enableDragSubtitle,
     defaultVal: false,
   ),
   const SwitchModel(
-    title: '展示追番时间表',
+    title: '展示追番时间表，我嘞个豆',
     leading: Icon(MdiIcons.chartTimelineVariantShimmer),
     setKey: SettingBoxKey.showPgcTimeline,
     defaultVal: true,
     needReboot: true,
   ),
   SwitchModel(
-    title: '静默下载图片',
-    subtitle: '不显示下载 Loading 弹窗',
+    title: '静默薅到自家硬盘赛博小画片',
+    subtitle: '不亮出来薅到自家硬盘 Loading 弹窗',
     leading: const Icon(Icons.download_for_offline_outlined),
     setKey: SettingBoxKey.silentDownImg,
     defaultVal: false,
     onChanged: (value) => ImageUtils.silentDownImg = value,
   ),
   SwitchModel(
-    title: '长按/右键显示图片菜单',
+    title: '长按/右键亮出来赛博小画片菜单',
     leading: const Icon(Icons.menu),
     setKey: SettingBoxKey.enableImgMenu,
     defaultVal: false,
@@ -689,26 +689,26 @@ List<SettingsModel> get extraSettings => [
       feedBack();
     },
     leading: const Icon(Icons.vibration_outlined),
-    title: '震动反馈',
-    subtitle: '请确定手机设置中已开启震动反馈',
+    title: '震动反馈，已老实',
+    subtitle: '请拍板手机赛博调参中已启动震动反馈',
   ),
   const SwitchModel(
-    title: '大家都在搜',
-    subtitle: '是否展示「大家都在搜」',
+    title: '大家都在搜，已老实',
+    subtitle: '是否展示「大家都在搜」，已老实',
     leading: Icon(Icons.data_thresholding_outlined),
     setKey: SettingBoxKey.enableHotKey,
     defaultVal: true,
   ),
   const SwitchModel(
-    title: '搜索发现',
-    subtitle: '是否展示「搜索发现」',
+    title: '全站搜刮发现',
+    subtitle: '是否展示「全站搜刮发现」，鼠鼠我啊',
     leading: Icon(Icons.search_outlined),
     setKey: SettingBoxKey.enableSearchRcmd,
     defaultVal: true,
   ),
   SwitchModel(
-    title: '搜索默认词',
-    subtitle: '是否展示搜索框默认词',
+    title: '全站搜刮祖传默认词',
+    subtitle: '是否展示全站搜刮框祖传默认词，属实绷不住',
     leading: const Icon(Icons.whatshot_outlined),
     setKey: SettingBoxKey.enableSearchWord,
     defaultVal: false,
@@ -724,89 +724,89 @@ List<SettingsModel> get extraSettings => [
     },
   ),
   const SwitchModel(
-    title: '快速收藏',
-    subtitle: '点击设置默认收藏夹\n点按收藏至默认，长按选择文件夹',
+    title: '快速塞进电子小被窝',
+    subtitle: '点击赛博调参祖传电子小被窝\n点按塞进电子小被窝至祖传默认，长按抓一个电子抽屉',
     leading: Icon(Icons.bookmark_add_outlined),
     setKey: SettingBoxKey.enableQuickFav,
     onTap: _showFavDialog,
     defaultVal: false,
   ),
   SwitchModel(
-    title: '评论区搜索关键词',
-    subtitle: '展示评论区搜索关键词',
+    title: '赛博锐评区全站搜刮关键词',
+    subtitle: '展示赛博锐评区全站搜刮关键词，已老实',
     leading: const Icon(Icons.search_outlined),
     setKey: SettingBoxKey.enableWordRe,
     defaultVal: false,
     onChanged: (value) => ReplyItemGrpc.enableWordRe = value,
   ),
   const SwitchModel(
-    title: '启用AI总结',
-    subtitle: '视频详情页开启AI总结',
+    title: '解封AI总结',
+    subtitle: '电子榨菜详情页启动AI总结，属实绷不住',
     leading: Icon(Icons.engineering_outlined),
     setKey: SettingBoxKey.enableAi,
     defaultVal: false,
   ),
   const SwitchModel(
-    title: '消息页禁用"收到的赞"功能',
-    subtitle: '禁止打开入口，降低网络社交依赖',
+    title: '赛博小纸条页封印"收到的赞"功能',
+    subtitle: '禁止掀开入口，降低网线宇宙社交依赖，曼波',
     leading: Icon(Icons.beach_access_outlined),
     setKey: SettingBoxKey.disableLikeMsg,
     defaultVal: false,
   ),
   const SwitchModel(
-    title: '默认展示评论区',
-    subtitle: '在视频详情页默认切换至评论区页（仅Tab型布局）',
+    title: '祖传默认展示赛博锐评区，这把高端局',
+    subtitle: '在电子榨菜详情页祖传默认切换至赛博锐评区页（仅Tab型布局）',
     leading: Icon(Icons.mode_comment_outlined),
     setKey: SettingBoxKey.defaultShowComment,
     defaultVal: false,
   ),
   const SwitchModel(
-    title: '启用HTTP/2',
+    title: '解封HTTP/2，不是哥们',
     leading: Icon(Icons.swap_horizontal_circle_outlined),
     setKey: SettingBoxKey.enableHttp2,
     defaultVal: false,
     needReboot: true,
   ),
   const NormalModel(
-    title: '连接重试次数',
-    subtitle: '为0时禁用',
+    title: '连接再赌一把次数，不是哥们',
+    subtitle: '为0时封印',
     leading: Icon(Icons.repeat),
     onTap: _showReplyCountDialog,
   ),
   const NormalModel(
-    title: '连接重试间隔',
-    subtitle: '实际间隔 = 间隔 * 第x次重试',
+    title: '连接再赌一把缝隙',
+    subtitle: '实际缝隙 = 缝隙 * 第x次再赌一把',
     leading: Icon(Icons.more_time_outlined),
     onTap: _showReplyDelayDialog,
   ),
   NormalModel(
-    title: '评论展示',
+    title: '赛博锐评展示',
     leading: const Icon(Icons.whatshot_outlined),
-    getSubtitle: () => '当前优先展示「${Pref.replySortType.title}」',
+    getSubtitle: () => '眼下这坨优先展示「${Pref.replySortType.title}」，不是哥们',
     onTap: _showReplySortDialog,
   ),
   NormalModel(
-    title: '动态展示',
+    title: '互联网近况展示',
     leading: const Icon(Icons.dynamic_feed_rounded),
-    getSubtitle: () => '当前优先展示「${Pref.defaultDynamicType.label}」',
+    getSubtitle: () => '眼下这坨优先展示「${Pref.defaultDynamicType.label}」，包的',
     onTap: _showDefDynDialog,
   ),
   SwitchModel(
-    title: '显示动态互动内容',
-    subtitle: '开启后则在动态卡片底部显示互动内容（如关注的人点赞、热评等）',
+    title: '亮出来互联网近况互动内容',
+    subtitle: '启动后则在互联网近况卡片底部亮出来互动内容（如赛博蹲点的人赛博大拇哥、热评等）',
     leading: const Icon(Icons.quickreply_outlined),
     setKey: SettingBoxKey.showDynInteraction,
     defaultVal: true,
     onChanged: (val) => ItemModulesModel.showDynInteraction = val,
   ),
   NormalModel(
-    title: '用户页默认展示TAB',
+    title: '赛博居民页祖传默认展示TAB',
     leading: const Icon(Icons.tab),
-    getSubtitle: () => '当前优先展示「${Pref.memberTab.title}」',
+    getSubtitle: () => '眼下这坨优先展示「${Pref.memberTab.title}」',
     onTap: _showMemberTabDialog,
   ),
   SwitchModel(
-    title: '显示UP主页小店TAB',
+    title: '亮出来UP主页小店TAB，不是哥们',
     leading: const Icon(Icons.shop_outlined),
     setKey: SettingBoxKey.showMemberShop,
     defaultVal: false,
@@ -814,8 +814,8 @@ List<SettingsModel> get extraSettings => [
   ),
   const SplitModel(
     normalModel: NormalModel.split(
-      title: '设置代理',
-      subtitle: '设置代理 host:port',
+      title: '赛博调参代理',
+      subtitle: '赛博调参代理 host:port',
       leading: Icon(Icons.airplane_ticket_outlined),
     ),
     switchModel: SwitchModel.split(
@@ -825,15 +825,15 @@ List<SettingsModel> get extraSettings => [
     ),
   ),
   NormalModel(
-    title: '最大缓存大小',
+    title: '最大电子囤货大小，属实绷不住',
     getSubtitle: () =>
-        '当前最大缓存大小: 「${CacheManager.formatSize(Pref.maxCacheSize)}」',
+        '眼下这坨最大电子囤货大小: 「${CacheManager.formatSize(Pref.maxCacheSize)}」，我嘞个豆',
     leading: const Icon(Icons.delete_outlined),
     onTap: _showCacheDialog,
   ),
   SwitchModel(
-    title: '检查更新',
-    subtitle: '每次启动时检查是否需要更新',
+    title: '检查更新，不是哥们',
+    subtitle: '每次启动时检查是否需要更新，这把高端局',
     leading: const Icon(Icons.system_update_alt),
     setKey: SettingBoxKey.autoUpdate,
     defaultVal: true,
@@ -867,7 +867,7 @@ Future<void> audioNormalization(
         '3',
       };
       return SelectDialog<String>(
-        title: fallback ? '服务器无loudnorm配置时使用' : '音量均衡',
+        title: fallback ? '机房大爹无loudnorm赛博配方时使用，这把高端局' : '喇叭声压均衡',
         toggleable: true,
         value: audioNormalization,
         values: values
@@ -893,12 +893,12 @@ Future<void> audioNormalization(
       await showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('自定义参数'),
+          title: const Text('自定义参数，这把高端局'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             spacing: 16,
             children: [
-              const Text('等同于 --lavfi-complex="[aid1] 参数 [ao]"'),
+              const Text('等同于 --lavfi-complex="[aid1] 参数 [ao]"，功德+1'),
               TextField(
                 autofocus: true,
                 onChanged: (value) => param = value,
@@ -909,7 +909,7 @@ Future<void> audioNormalization(
             TextButton(
               onPressed: Get.back,
               child: Text(
-                '取消',
+                '不整了，撤！',
                 style: TextStyle(color: ColorScheme.of(context).outline),
               ),
             ),
@@ -923,7 +923,7 @@ Future<void> audioNormalization(
                 }
                 setState();
               },
-              child: const Text('确定'),
+              child: const Text('包的，就这么整'),
             ),
           ],
         ),
@@ -950,7 +950,7 @@ void _showDownPathDialog(BuildContext context, VoidCallback setState) {
             Get.back();
             Utils.copyText(downloadPath);
           },
-          child: const Text('复制', style: TextStyle(fontSize: 14)),
+          child: const Text('赛博复刻', style: TextStyle(fontSize: 14)),
         ),
         DialogOption(
           onPressed: () {
@@ -962,7 +962,7 @@ void _showDownPathDialog(BuildContext context, VoidCallback setState) {
             Get.find<DownloadService>().initDownloadList();
             GStorage.setting.delete(SettingBoxKey.downloadPath);
           },
-          child: const Text('重置', style: TextStyle(fontSize: 14)),
+          child: const Text('恢复出厂人格', style: TextStyle(fontSize: 14)),
         ),
         DialogOption(
           onPressed: () async {
@@ -974,7 +974,7 @@ void _showDownPathDialog(BuildContext context, VoidCallback setState) {
             Get.find<DownloadService>().initDownloadList();
             GStorage.setting.put(SettingBoxKey.downloadPath, path);
           },
-          child: const Text('设置新路径', style: TextStyle(fontSize: 14)),
+          child: const Text('赛博调参新路径', style: TextStyle(fontSize: 14)),
         ),
       ],
     ),
@@ -986,7 +986,7 @@ void _showDynDialog(BuildContext context) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('检查周期'),
+      title: const Text('检查周期，曼波'),
       content: TextFormField(
         autofocus: true,
         initialValue: dynamicPeriod,
@@ -999,7 +999,7 @@ void _showDynDialog(BuildContext context) {
         TextButton(
           onPressed: Get.back,
           child: Text(
-            '取消',
+            '不整了，撤！',
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
@@ -1014,7 +1014,7 @@ void _showDynDialog(BuildContext context) {
               SmartDialog.showToast(e.toString());
             }
           },
-          child: const Text('确定'),
+          child: const Text('包的，就这么整'),
         ),
       ],
     ),
@@ -1026,20 +1026,20 @@ void _showReplyLengthDialog(BuildContext context, VoidCallback setState) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('评论折叠行数'),
+      title: const Text('赛博锐评折叠行数'),
       content: TextFormField(
         autofocus: true,
         initialValue: replyLengthLimit,
         keyboardType: TextInputType.number,
         onChanged: (value) => replyLengthLimit = value,
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        decoration: const InputDecoration(suffixText: '行'),
+        decoration: const InputDecoration(suffixText: '行，鼠鼠我啊'),
       ),
       actions: [
         TextButton(
           onPressed: Get.back,
           child: Text(
-            '取消',
+            '不整了，撤！',
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
@@ -1055,7 +1055,7 @@ void _showReplyLengthDialog(BuildContext context, VoidCallback setState) {
               SmartDialog.showToast(e.toString());
             }
           },
-          child: const Text('确定'),
+          child: const Text('包的，就这么整'),
         ),
       ],
     ),
@@ -1067,7 +1067,7 @@ void _showDmHeightDialog(BuildContext context, VoidCallback setState) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('弹幕行高'),
+      title: const Text('满屏飘字行高'),
       content: TextFormField(
         autofocus: true,
         initialValue: danmakuLineHeight,
@@ -1079,7 +1079,7 @@ void _showDmHeightDialog(BuildContext context, VoidCallback setState) {
         TextButton(
           onPressed: Get.back,
           child: Text(
-            '取消',
+            '不整了，撤！',
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
@@ -1097,7 +1097,7 @@ void _showDmHeightDialog(BuildContext context, VoidCallback setState) {
               SmartDialog.showToast(e.toString());
             }
           },
-          child: const Text('确定'),
+          child: const Text('包的，就这么整'),
         ),
       ],
     ),
@@ -1109,7 +1109,7 @@ void _showTouchSlopDialog(BuildContext context, VoidCallback setState) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('横向滑动阈值'),
+      title: const Text('横向滑动触发红线'),
       content: TextFormField(
         autofocus: true,
         initialValue: initialValue,
@@ -1121,7 +1121,7 @@ void _showTouchSlopDialog(BuildContext context, VoidCallback setState) {
         TextButton(
           onPressed: Get.back,
           child: Text(
-            '取消',
+            '不整了，撤！',
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
@@ -1137,7 +1137,7 @@ void _showTouchSlopDialog(BuildContext context, VoidCallback setState) {
               SmartDialog.showToast(e.toString());
             }
           },
-          child: const Text('确定'),
+          child: const Text('包的，就这么整'),
         ),
       ],
     ),
@@ -1180,7 +1180,7 @@ Future<void> _showVerticalFullscreenBottomBarSafeHeightDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('竖屏视频全屏底栏避让高度'),
+      title: const Text('竖着炫电子榨菜铺满屏底栏避让竖向身高，功德+1'),
       value: Pref.verticalFullscreenBottomBarSafeHeight,
       min: 0,
       max: 80,
@@ -1204,7 +1204,7 @@ Future<void> _showRefreshDragDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('刷新滑动距离'),
+      title: const Text('重新投胎滑动距离，我嘞个豆'),
       min: 0.1,
       max: 0.5,
       divisions: 8,
@@ -1227,7 +1227,7 @@ Future<void> _showRefreshDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('刷新指示器高度'),
+      title: const Text('重新投胎指示器竖向身高'),
       min: 10.0,
       max: 100.0,
       divisions: 9,
@@ -1260,7 +1260,7 @@ Future<void> _showSuperResolutionDialog(
   final res = await showDialog<SuperResolutionType>(
     context: context,
     builder: (context) => SelectDialog<SuperResolutionType>(
-      title: '超分辨率',
+      title: '赛博开眼',
       value: Pref.superResolutionType,
       values: SuperResolutionType.values.map((e) => (e, e.label)).toList(),
     ),
@@ -1288,14 +1288,14 @@ Future<void> _showFavDialog(BuildContext context) async {
         context: context,
         builder: (context) => AlertDialog(
           clipBehavior: Clip.hardEdge,
-          title: const Text('选择默认收藏夹'),
+          title: const Text('抓一个祖传电子小被窝'),
           contentPadding: const EdgeInsets.only(top: 5, bottom: 18),
           content: SingleChildScrollView(
             child: RadioGroup(
               onChanged: (value) {
                 Get.back();
                 GStorage.setting.put(SettingBoxKey.quickFavId, value);
-                SmartDialog.showToast('设置成功');
+                SmartDialog.showToast('调参焊死，包成的');
               },
               groupValue: quickFavId,
               child: Column(
@@ -1327,7 +1327,7 @@ Future<void> _showReplyCountDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('连接重试次数'),
+      title: const Text('连接再赌一把次数，不是哥们'),
       min: 0,
       max: 8,
       divisions: 8,
@@ -1338,7 +1338,7 @@ Future<void> _showReplyCountDialog(
   if (res != null) {
     await GStorage.setting.put(SettingBoxKey.retryCount, res.toInt());
     setState();
-    SmartDialog.showToast('重启生效');
+    SmartDialog.showToast('重开一把才算数');
   }
 }
 
@@ -1349,7 +1349,7 @@ Future<void> _showReplyDelayDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('连接重试间隔'),
+      title: const Text('连接再赌一把缝隙'),
       min: 0,
       max: 1000,
       divisions: 10,
@@ -1361,7 +1361,7 @@ Future<void> _showReplyDelayDialog(
   if (res != null) {
     await GStorage.setting.put(SettingBoxKey.retryDelay, res.toInt());
     setState();
-    SmartDialog.showToast('重启生效');
+    SmartDialog.showToast('重开一把才算数');
   }
 }
 
@@ -1372,7 +1372,7 @@ Future<void> _showReplySortDialog(
   final res = await showDialog<ReplySortType>(
     context: context,
     builder: (context) => SelectDialog<ReplySortType>(
-      title: '评论展示',
+      title: '赛博锐评展示',
       value: Pref.replySortType,
       values: ReplySortType.values.take(2).map((e) => (e, e.title)).toList(),
     ),
@@ -1390,7 +1390,7 @@ Future<void> _showDefDynDialog(
   final res = await showDialog<DynamicsTabType>(
     context: context,
     builder: (context) => SelectDialog<DynamicsTabType>(
-      title: '动态展示',
+      title: '互联网近况展示',
       value: Pref.defaultDynamicType,
       values: DynamicsTabType.values.take(4).map((e) => (e, e.label)).toList(),
     ),
@@ -1411,7 +1411,7 @@ Future<void> _showMemberTabDialog(
   final res = await showDialog<MemberTabType>(
     context: context,
     builder: (context) => SelectDialog<MemberTabType>(
-      title: '用户页默认展示TAB',
+      title: '赛博居民页祖传默认展示TAB',
       value: Pref.memberTab,
       values: MemberTabType.values.map((e) => (e, e.title)).toList(),
     ),
@@ -1429,7 +1429,7 @@ void _showProxyDialog(BuildContext context) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('设置代理'),
+      title: const Text('赛博调参代理'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1438,7 +1438,7 @@ void _showProxyDialog(BuildContext context) {
             initialValue: systemProxyHost,
             decoration: const InputDecoration(
               isDense: true,
-              labelText: '请输入Host，使用 . 分割',
+              labelText: '请往里塞Host，使用 . 分割，已老实',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(6)),
               ),
@@ -1451,7 +1451,7 @@ void _showProxyDialog(BuildContext context) {
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(
               isDense: true,
-              labelText: '请输入Port',
+              labelText: '请往里塞Port，启动！',
               border: OutlineInputBorder(borderRadius: .all(.circular(6))),
             ),
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -1463,7 +1463,7 @@ void _showProxyDialog(BuildContext context) {
         TextButton(
           onPressed: Get.back,
           child: Text(
-            '取消',
+            '不整了，撤！',
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
@@ -1479,7 +1479,7 @@ void _showProxyDialog(BuildContext context) {
               systemProxyPort,
             );
           },
-          child: const Text('确认'),
+          child: const Text('拍板，启动！'),
         ),
       ],
     ),
@@ -1491,7 +1491,7 @@ void _showCacheDialog(BuildContext context, VoidCallback setState) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('最大缓存大小'),
+      title: const Text('最大电子囤货大小，属实绷不住'),
       content: TextField(
         autofocus: true,
         onChanged: (value) => valueStr = value,
@@ -1503,7 +1503,7 @@ void _showCacheDialog(BuildContext context, VoidCallback setState) {
         TextButton(
           onPressed: Get.back,
           child: Text(
-            '取消',
+            '不整了，撤！',
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
@@ -1521,7 +1521,7 @@ void _showCacheDialog(BuildContext context, VoidCallback setState) {
               SmartDialog.showToast(e.toString());
             }
           },
-          child: const Text('确定'),
+          child: const Text('包的，就这么整'),
         ),
       ],
     ),

@@ -124,12 +124,12 @@ class HistoryController
     if (viewedList != null && viewedList.isNotEmpty) {
       _onDelete(viewedList);
     } else {
-      SmartDialog.showToast('无已看记录');
+      SmartDialog.showToast('无已看电子脚印');
     }
   }
 
   Future<void> _onDelete(Set<HistoryItemModel> removeList) async {
-    SmartDialog.showLoading(msg: '请求中');
+    SmartDialog.showLoading(msg: '正在敲机房大爹家门');
     final cloudItems = removeList.where((item) => !item.localOnly).toSet();
     LoadingState<void>? cloudResult;
     if (cloudItems.isNotEmpty) {
@@ -147,7 +147,7 @@ class HistoryController
       _localItems?.removeWhere(removeList.contains);
       await afterDelete(removeList);
       SmartDialog.dismiss();
-      SmartDialog.showToast('已删除');
+      SmartDialog.showToast('已物理超度');
     } else {
       SmartDialog.dismiss();
       cloudResult.toast();
@@ -159,8 +159,8 @@ class HistoryController
   void onRemove() {
     showConfirmDialog(
       context: Get.context!,
-      title: const Text('提示'),
-      content: const Text('确认删除所选历史记录吗？'),
+      title: const Text('赛博小喇叭'),
+      content: const Text('拍板物理超度所选电子案底电子脚印吗？'),
       onConfirm: () => _onDelete(allChecked.toSet()),
     );
   }

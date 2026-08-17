@@ -112,7 +112,7 @@ class _SelectTopicPanelState
               isDense: true,
               filled: true,
               fillColor: theme.colorScheme.onInverseSurface,
-              hintText: '搜索话题',
+              hintText: '全站搜刮话题',
               hintStyle: const TextStyle(fontSize: 14),
               prefixIcon: const Padding(
                 padding: EdgeInsets.only(left: 12, right: 4),

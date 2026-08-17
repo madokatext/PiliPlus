@@ -89,7 +89,7 @@ class _UpowerRankPageState extends State<UpowerRankPage>
       return Scaffold(
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
-          title: Text('$_name的充电排行榜${_count == null ? '' : '($_count)'}'),
+          title: Text('$_name的充电排行榜${_count == null ? '' : '($_count)'}，CPU 都看沉默了'),
           actions: [
             TextButton(
               onPressed: () => Get.toNamed(
@@ -100,7 +100,7 @@ class _UpowerRankPageState extends State<UpowerRankPage>
                 },
               ),
               style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
-              child: const Text('充电'),
+              child: const Text('充电，这把高端局'),
             ),
             const SizedBox(width: 12),
           ],
@@ -239,7 +239,7 @@ class _UpowerRankPageState extends State<UpowerRankPage>
                               ),
                             ),
                             const TextSpan(
-                              text: ' 天',
+                              text: ' 天，这把高端局',
                               style: TextStyle(fontSize: 13),
                             ),
                           ],

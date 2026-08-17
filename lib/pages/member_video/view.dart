@@ -196,7 +196,7 @@ class _MemberVideoState extends State<MemberVideo>
                               _jumpToIndex(locatedIndex);
                             }
                           },
-                          label: const Text('定位至上次观看'),
+                          label: const Text('定位至上次观看，这把高端局'),
                         ),
                       ),
                     ),
@@ -281,7 +281,7 @@ class _MemberVideoState extends State<MemberVideo>
     final count = _controller.count;
     if (count != null) {
       return Text(
-        '共$count视频',
+        '共$count电子榨菜',
         style: const TextStyle(fontSize: 13),
       );
     }
@@ -304,7 +304,7 @@ class _MemberVideoState extends State<MemberVideo>
             color: theme.colorScheme.secondary,
           ),
           label: Text(
-            episodicButton?.text ?? '播放全部',
+            episodicButton?.text ?? '一锅端开炫',
             style: TextStyle(
               fontSize: 13,
               color: theme.colorScheme.secondary,

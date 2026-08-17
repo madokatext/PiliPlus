@@ -199,7 +199,7 @@ class VideoCardV extends StatelessWidget {
                 ],
                 if (videoItem.goto == 'picture') ...[
                   const PBadge(
-                    text: '动态',
+                    text: '互联网近况',
                     isStack: false,
                     size: .small,
                     type: .line_primary,
@@ -209,7 +209,7 @@ class VideoCardV extends StatelessWidget {
                 ],
                 if (videoItem.isFollowed) ...[
                   const PBadge(
-                    text: '已关注',
+                    text: '已赛博蹲点',
                     isStack: false,
                     size: .small,
                     type: .secondary,

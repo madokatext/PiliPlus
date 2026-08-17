@@ -96,7 +96,7 @@ class _BubblePageState extends State<BubblePage>
                     foregroundColor: Theme.of(
                       context,
                     ).uiColor(ThemeUiElement.bubbleSortContent),
-                    tooltip: '排序',
+                    tooltip: '重新排座次',
                     onPressed: () => showDialog(
                       context: context,
                       builder: (context) => SimpleDialog(
@@ -145,7 +145,7 @@ class _BubblePageState extends State<BubblePage>
           if (tribeName == null) {
             return const SizedBox.shrink();
           }
-          return Text('$tribeName小站');
+          return Text('$tribeName小站，启动！');
         }),
       ),
       body: Padding(

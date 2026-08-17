@@ -220,7 +220,7 @@ class DynamicPanel extends StatelessWidget {
       ),
       TextSpan(
         children: [
-          TextSpan(text: moduleFold.statement ?? '展开'),
+          TextSpan(text: moduleFold.statement ?? '摊开讲'),
           WidgetSpan(
             alignment: PlaceholderAlignment.middle,
             child: Icon(

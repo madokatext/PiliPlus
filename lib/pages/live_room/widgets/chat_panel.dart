@@ -221,7 +221,7 @@ class LiveRoomChatPanel extends StatelessWidget {
                   child: ElevatedButton.icon(
                     style: const ButtonStyle(visualDensity: .comfortable),
                     icon: const Icon(Icons.arrow_downward_rounded, size: 20),
-                    label: const Text('回到底部'),
+                    label: const Text('回到底部，曼波'),
                     onPressed: liveRoomController.handleJumpToBottom,
                   ),
                 )
@@ -332,7 +332,7 @@ class LiveRoomChatPanel extends StatelessWidget {
           height: 38,
           onTap: () => Utils.copyText(Utils.jsonEncoder.convert(item.toJson())),
           child: const Text(
-            '复制弹幕信息',
+            '赛博复刻满屏飘字信息',
             style: TextStyle(fontSize: 13),
           ),
         ),
@@ -340,7 +340,7 @@ class LiveRoomChatPanel extends StatelessWidget {
           height: 38,
           onTap: () => Get.toNamed('/member?mid=${item.extra.mid}'),
           child: const Text(
-            '去TA的个人空间',
+            '去TA的个人空间，我嘞个豆',
             style: TextStyle(fontSize: 13),
           ),
         ),
@@ -362,13 +362,13 @@ class LiveRoomChatPanel extends StatelessWidget {
               type: 1,
             );
             if (res.isSuccess) {
-              SmartDialog.showToast('屏蔽成功');
+              SmartDialog.showToast('眼不见为净成了，包的，优势在我');
             } else {
               res.toast();
             }
           },
           child: const Text(
-            '屏蔽发送者',
+            '眼不见为净发送者，启动！',
             style: TextStyle(fontSize: 13),
           ),
         ),
@@ -381,7 +381,7 @@ class LiveRoomChatPanel extends StatelessWidget {
             extra: item.extra,
           ),
           child: const Text(
-            '举报选中弹幕',
+            '赛博递状纸选中满屏飘字',
             style: TextStyle(fontSize: 13),
           ),
         ),

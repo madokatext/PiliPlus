@@ -72,7 +72,7 @@ class BiliDownloadEntryInfo with MultiSelectData {
       itemBuilder: (_) => [
         PopupMenuItem(
           height: 38,
-          child: const Text('查看详情页', style: TextStyle(fontSize: 13)),
+          child: const Text('扒拉看看详情页', style: TextStyle(fontSize: 13)),
           onTap: () {
             if (ep case final ep?) {
               if (ep.from == VideoType.pugv.name) {
@@ -102,7 +102,7 @@ class BiliDownloadEntryInfo with MultiSelectData {
         if (PlatformUtils.isDesktop)
           PopupMenuItem(
             height: 38,
-            child: const Text('打开本地文件夹', style: TextStyle(fontSize: 13)),
+            child: const Text('掀开自家硬盘电子抽屉', style: TextStyle(fontSize: 13)),
             onTap: () async {
               try {
                 final String executable;
@@ -125,7 +125,7 @@ class BiliDownloadEntryInfo with MultiSelectData {
           PopupMenuItem(
             height: 38,
             child: Text(
-              '访问${ownerName != null ? '：$ownerName' : '用户主页'}',
+              '访问${ownerName != null ? '：$ownerName' : '赛博居民主页'}',
               style: const TextStyle(fontSize: 13),
             ),
             onTap: () => Get.toNamed('/member?mid=$mid'),
@@ -408,18 +408,18 @@ class EpInfo {
 }
 
 enum DownloadStatus {
-  downloading('正在下载'),
-  audioDownloading('正在下载音频'),
-  getDanmaku('获取弹幕'),
-  getPlayUrl('获取播放地址'),
+  downloading('正在薅到自家硬盘，不是哥们'),
+  audioDownloading('正在薅到自家硬盘电子响'),
+  getDanmaku('获取满屏飘字'),
+  getPlayUrl('获取开炫地址'),
   //
-  completed('下载完成'),
-  failDownload('下载失败'),
-  failDownloadAudio('音频下载失败'),
-  failDanmaku('获取弹幕失败'),
-  failPlayUrl('获取播放地址失败'),
-  pause('暂停中'),
-  wait('等待中'),
+  completed('薅到自家硬盘收工，功德+1'),
+  failDownload('薅到自家硬盘寄了'),
+  failDownloadAudio('电子响薅到自家硬盘寄了，我嘞个豆'),
+  failDanmaku('获取满屏飘字寄了'),
+  failPlayUrl('获取开炫地址寄了'),
+  pause('按住别动中'),
+  wait('蹲一会中'),
   ;
 
   final String message;

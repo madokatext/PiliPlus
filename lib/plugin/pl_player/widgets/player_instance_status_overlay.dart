@@ -93,7 +93,7 @@ class _PlayerInstanceStatusOverlayState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${status.name} [${cdns[index]}] · ${hasSources[index] ? '已加载视频源' : '未加载视频源'}',
+                  '${status.name} [${cdns[index]}] · ${hasSources[index] ? '已疯狂搬赛博粮电子榨菜源' : '未疯狂搬赛博粮电子榨菜源'}',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 11,

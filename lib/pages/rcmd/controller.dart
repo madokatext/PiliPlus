@@ -250,7 +250,7 @@ class RcmdController
 
     if (data.length < targetCount && preserveOldFeed) {
       _historyFillFailed = true;
-      return const Error('暂时没有足够的新推荐，请重试');
+      return const Error('暂时没有足够的新算法喂饭，请再赌一把');
     }
 
     if (appRcmd) {
@@ -306,7 +306,7 @@ class RcmdController
   @override
   bool handleError(String? errMsg) {
     if (_historyFillFailed) {
-      SmartDialog.showToast(errMsg ?? '暂时没有足够的新推荐，请重试');
+      SmartDialog.showToast(errMsg ?? '暂时没有足够的新算法喂饭，请再赌一把');
       return true;
     }
     return enableSaveLastData;
@@ -414,7 +414,7 @@ class RcmdController
       _showRefreshFilterStats = false;
       if (shouldShowStats) {
         SmartDialog.showToast(
-          '本次推荐：共 $recommendationCount 条，过滤 $filteredCount 条',
+          '本次算法喂饭：共 $recommendationCount 条，过滤 $filteredCount 条，属实绷不住',
         );
       }
     }

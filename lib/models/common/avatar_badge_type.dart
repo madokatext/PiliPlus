@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 
 enum BadgeType {
   none(),
-  vip('大会员'),
-  person('认证个人', BiliColors.yellow),
-  institution('认证机构', Colors.lightBlueAccent),
+  vip('尊贵氪佬通行证'),
+  person('认证个人，CPU 都看沉默了', BiliColors.yellow),
+  institution('认证机构，我嘞个豆', Colors.lightBlueAccent),
   ;
 
   final String? desc;

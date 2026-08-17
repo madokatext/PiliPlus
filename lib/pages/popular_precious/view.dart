@@ -26,7 +26,7 @@ class _PopularPreciousPageState extends State<PopularPreciousPage>
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(title: const Text('入站必刷')),
+      appBar: AppBar(title: const Text('镇站电子榨菜')),
       body: refreshIndicator(
         onRefresh: _controller.onRefresh,
         child: CustomScrollView(
@@ -60,7 +60,7 @@ class _PopularPreciousPageState extends State<PopularPreciousPage>
                   dimension: item.dimension,
                   extraArguments: {
                     'sourceType': SourceType.playlist,
-                    'favTitle': '入站必刷',
+                    'favTitle': '镇站电子榨菜',
                     'mediaId': _controller.mediaId,
                     'desc': true,
                     'oid': item.aid,

@@ -55,9 +55,9 @@ abstract final class MemberHttp {
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
     if (res.data['status'] == true) {
-      SmartDialog.showToast('举报成功');
+      SmartDialog.showToast('赛博递状纸成了，包的');
     } else {
-      SmartDialog.showToast('举报失败');
+      SmartDialog.showToast('赛博递状纸寄了');
     }
   }
 

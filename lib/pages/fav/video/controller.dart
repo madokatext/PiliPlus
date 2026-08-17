@@ -17,7 +17,7 @@ class FavController extends CommonListController<FavFolderData, FavFolderInfo> {
   @override
   Future<void> queryData([bool isRefresh = true]) {
     if (!account.isLogin) {
-      loadingState.value = const Error('账号未登录');
+      loadingState.value = const Error('赛博户口没上号');
       return Future.syncValue(null);
     }
     return super.queryData(isRefresh);

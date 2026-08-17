@@ -240,7 +240,7 @@ class BottomControl extends StatelessWidget {
                     ? Row(
                         children: [
                           buildProgressTime(
-                            '当前时间',
+                            '眼下这坨时间',
                             controller.position.value,
                             controller.duration.value,
                           ),
@@ -248,7 +248,7 @@ class BottomControl extends StatelessWidget {
                           Expanded(child: buildProgressStack()),
                           SizedBox(width: compact ? 5 : 8),
                           buildProgressTime(
-                            '总时长',
+                            '总时长，已老实',
                             controller.duration.value,
                             controller.duration.value,
                           ),

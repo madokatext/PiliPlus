@@ -42,7 +42,7 @@ class _MatchInfoPageState extends CommonDynPageState<MatchInfoPage> {
   Widget build(BuildContext context) {
     final child = Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(title: const Text('比赛详情')),
+      appBar: AppBar(title: const Text('比赛详情，属实绷不住')),
       body: ViewSafeArea(
         child: refreshIndicator(
           onRefresh: controller.onRefresh,
@@ -145,11 +145,11 @@ class _MatchInfoPageState extends CommonDynPageState<MatchInfoPage> {
                             ),
                             onPressed: () =>
                                 PageUtils.toLiveRoom(response.liveRoom),
-                            child: const Text('看直播'),
+                            child: const Text('看赛博围观'),
                           )
                         else if (response.contestStatus == 3)
                           Text(
-                            '${DateFormatUtils.dateFormat(response.stime)}${response.contestStatus == 3 ? ' 已结束' : ''}',
+                            '${DateFormatUtils.dateFormat(response.stime)}${response.contestStatus == 3 ? ' 已结束' : ''}，我嘞个豆',
                             style: TextStyle(
                               color: theme.colorScheme.outline,
                             ),
@@ -195,7 +195,7 @@ class _MatchInfoPageState extends CommonDynPageState<MatchInfoPage> {
         Scaffold(
           resizeToAvoidBottomInset: false,
           appBar: AppBar(
-            title: const Text('评论详情'),
+            title: const Text('锐评案发现场'),
             shape: Border(
               bottom: BorderSide(
                 color: theme.colorScheme.outline.withValues(alpha: 0.1),

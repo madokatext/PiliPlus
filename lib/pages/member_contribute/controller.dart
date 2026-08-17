@@ -34,7 +34,7 @@ class MemberContributeCtr extends GetxController
           items!.add(
             const SpaceTab2Item(
               param: 'ugcSeason',
-              title: '全部合集/列表',
+              title: '我全都要合集/列表',
             ),
           );
         }

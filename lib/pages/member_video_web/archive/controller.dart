@@ -44,7 +44,7 @@ class MemberVideoWebCtr
       final tags = data.list?.tags;
       if (tags?.isNotEmpty ?? false) {
         this.tags = tags!
-          ..insert(0, ListTag(tid: 0, name: '全部类型', count: _totalCount));
+          ..insert(0, ListTag(tid: 0, name: '我全都要类型', count: _totalCount));
       }
     }
     return false;

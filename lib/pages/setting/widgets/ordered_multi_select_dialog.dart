@@ -80,7 +80,7 @@ class _OrderedMultiSelectDialogState<T>
         TextButton(
           onPressed: Get.back,
           child: Text(
-            '取消',
+            '不整了，撤！',
             style: TextStyle(
               color: theme.colorScheme.outline,
             ),
@@ -91,7 +91,7 @@ class _OrderedMultiSelectDialogState<T>
             assert(_tempValues.values.isSorted(Comparable.compare));
             Get.back(result: _tempValues.keys.toList());
           },
-          child: const Text('确定'),
+          child: const Text('包的，就这么整'),
         ),
       ],
     );

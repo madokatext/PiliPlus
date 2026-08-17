@@ -20,11 +20,11 @@ class LoginLogController extends LogController<LoginLogData, LoginLogItem> {
 
   @override
   final LoginLogItem header = const LoginLogItem(
-    timeAt: '时间',
-    ip: '变化',
-    geo: '地理位置',
+    timeAt: '时间线',
+    ip: '变化，CPU 都看沉默了',
+    geo: '地理位置，不是哥们',
   );
 
   @override
-  final String title = '登录记录';
+  final String title = '上号电子脚印';
 }

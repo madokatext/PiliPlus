@@ -86,7 +86,7 @@ final class HistoryArchiveRepository {
     bool Function()? shouldContinue,
   }) async {
     if (!account.isLogin) {
-      throw StateError('当前没有可归档的登录账号');
+      throw StateError('眼下这坨没有可赛博入土的上号赛博户口');
     }
 
     final cutoffs = _accountCutoffs;
@@ -100,7 +100,7 @@ final class HistoryArchiveRepository {
 
     while (true) {
       if (shouldContinue?.call() == false) {
-        throw StateError('归档条件已变化，将在下次空闲时重试');
+        throw StateError('赛博入土条件已变化，将在下次空闲时再赌一把');
       }
       final response = await UserHttp.historyList(
         type: 'all',
@@ -114,9 +114,9 @@ final class HistoryArchiveRepository {
         case Success(:final response):
           pageData = response;
         case Error(:final errMsg):
-          throw StateError(errMsg ?? '获取云端历史记录失败');
+          throw StateError(errMsg ?? '获取云端电子案底电子脚印寄了，不是哥们');
         default:
-          throw StateError('获取云端历史记录失败');
+          throw StateError('获取云端电子案底电子脚印寄了，不是哥们');
       }
       final pageItems = pageData.list ?? const <HistoryItemModel>[];
 
@@ -146,18 +146,18 @@ final class HistoryArchiveRepository {
           ? pageData.cursorViewAt
           : last.viewAt;
       if (nextMax == null || nextViewAt == null) {
-        throw StateError('云端历史记录分页游标无效');
+        throw StateError('云端电子案底电子脚印分页游标无效，已老实');
       }
       final cursor = '$nextMax:$nextViewAt';
       if (!seenCursors.add(cursor)) {
-        throw StateError('云端历史记录分页游标未推进');
+        throw StateError('云端电子案底电子脚印分页游标未推进，曼波');
       }
       max = nextMax;
       viewAt = nextViewAt;
     }
 
     if (shouldContinue?.call() == false) {
-      throw StateError('归档条件已变化，将在下次空闲时重试');
+      throw StateError('赛博入土条件已变化，将在下次空闲时再赌一把');
     }
     final changed = await _upsertRawItems(
       pending,
@@ -252,25 +252,25 @@ final class HistoryArchiveRepository {
   Future<void> importJson(Map<String, dynamic> json) async {
     final schema = json['schema'];
     if (schema != null && schema != _schema) {
-      throw const FormatException('不是 PiliPlus 历史记录存档');
+      throw const FormatException('不是 PiliPlus 电子案底电子脚印赛博存档，不是哥们');
     }
     final version = json['version'];
     if (version is num && version.toInt() > _version) {
-      throw FormatException('不支持的存档版本：$version');
+      throw FormatException('不支持的赛博存档版本：$version');
     }
     final records = json['records'];
     if (records is! List) {
-      throw const FormatException('存档缺少 records 列表');
+      throw const FormatException('赛博存档缺少 records 列表');
     }
 
     for (final value in records) {
       if (value is! Map) {
-        throw const FormatException('存档包含无效记录');
+        throw const FormatException('赛博存档包含无效电子脚印');
       }
       final wrapper = Map<String, dynamic>.from(value);
       final raw = wrapper['data'];
       if (raw is! Map || raw['history'] is! Map) {
-        throw const FormatException('存档记录缺少完整历史信息');
+        throw const FormatException('赛博存档电子脚印缺少完整电子案底信息');
       }
       try {
         final item = HistoryItemModel.fromJson(
@@ -282,10 +282,10 @@ final class HistoryArchiveRepository {
             item.viewAt == null ||
             item.videos == null ||
             item.kid == null) {
-          throw const FormatException('缺少卡片必需字段');
+          throw const FormatException('缺少卡片必需字段，鼠鼠我啊');
         }
       } catch (e) {
-        throw FormatException('存档包含无效记录：$e');
+        throw FormatException('赛博存档包含无效电子脚印：$e');
       }
     }
 

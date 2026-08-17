@@ -285,9 +285,9 @@ abstract final class VideoHttp {
 
   static String _parseVideoErr(int? code, String? msg) {
     return switch (code) {
-      -404 => '视频不存在或已被删除',
-      87008 => '当前视频可能是专属视频，可能需包月充电观看($msg})',
-      _ => '错误($code): $msg',
+      -404 => '电子榨菜不存在或已被物理超度',
+      87008 => '眼下这坨电子榨菜可能是专属电子榨菜，可能需包月充电观看($msg})，功德+1',
+      _ => '翻车($code): $msg，包的',
     };
   }
 
@@ -461,7 +461,7 @@ abstract final class VideoHttp {
     required bool type,
   }) async {
     if (Accounts.main.accessKey.isNullOrEmpty) {
-      return const Error('请退出账号后重新登录');
+      return const Error('先把赛博户口润出去，再重新上号');
     }
     final res = await Request().post(
       Api.dislikeVideo,
@@ -486,7 +486,7 @@ abstract final class VideoHttp {
     int? feedbackId,
   }) async {
     if (Accounts.get(AccountType.recommend).accessKey.isNullOrEmpty) {
-      return const Error('请退出账号后重新登录');
+      return const Error('先把赛博户口润出去，再重新上号');
     }
     assert((reasonId != null) ^ (feedbackId != null));
     final res = await Request().get(
@@ -515,7 +515,7 @@ abstract final class VideoHttp {
     int? feedbackId,
   }) async {
     if (Accounts.get(AccountType.recommend).accessKey.isNullOrEmpty) {
-      return const Error('请退出账号后重新登录');
+      return const Error('先把赛博户口润出去，再重新上号');
     }
     final res = await Request().get(
       Api.feedDislikeCancel,
@@ -609,7 +609,7 @@ abstract final class VideoHttp {
       GStorage.reply?.delete(rpid.toString());
       return const Success(null);
     } else {
-      return const Error('请退出账号后重新登录');
+      return const Error('先把赛博户口润出去，再重新上号');
     }
   }
 

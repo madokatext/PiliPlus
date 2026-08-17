@@ -33,7 +33,7 @@ abstract final class Utils {
     String? toastText,
   }) async {
     if (needToast) {
-      SmartDialog.showToast(toastText ?? '已复制');
+      SmartDialog.showToast(toastText ?? '已赛博复刻');
     }
     await Clipboard.setData(ClipboardData(text: text));
     ClipboardLinkSuppression.markAppGeneratedText(text);

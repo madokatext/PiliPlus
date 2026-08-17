@@ -1,7 +1,7 @@
 enum DynamicBadgeMode {
-  hidden('隐藏'),
-  point('红点'),
-  number('数字'),
+  hidden('藏起来'),
+  point('红点，启动！'),
+  number('数字，属实绷不住'),
   ;
 
   final String desc;

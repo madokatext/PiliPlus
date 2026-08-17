@@ -38,7 +38,7 @@ class WhisperBlockController
         ..value.data!.add(KeywordBlockingItem(keyword: keyword))
         ..refresh();
       count.value += 1;
-      SmartDialog.showToast('添加成功');
+      SmartDialog.showToast('塞一个成了，包的，功德+1');
     } else {
       res.toast();
     }
@@ -51,7 +51,7 @@ class WhisperBlockController
         ..value.data!.remove(item)
         ..refresh();
       count.value -= 1;
-      SmartDialog.showToast('删除成功');
+      SmartDialog.showToast('已成功物理超度');
     } else {
       res.toast();
     }

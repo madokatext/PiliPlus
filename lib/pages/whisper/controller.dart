@@ -28,25 +28,25 @@ class WhisperController extends CommonWhisperController<SessionMainReply> {
     super.onInit();
     msgFeedTopItems = [
       const (
-        name: "回复我的",
+        name: "来找我对线的",
         icon: Icons.message_outlined,
         route: "/replyMe",
         enabled: true,
       ),
       const (
-        name: "@我",
+        name: "@我，不是哥们",
         icon: Icons.alternate_email_outlined,
         route: "/atMe",
         enabled: true,
       ),
       (
-        name: "收到的赞",
+        name: "收到的大拇哥",
         icon: Icons.favorite_border_outlined,
         route: "/likeMe",
         enabled: !Pref.disableLikeMsg,
       ),
       const (
-        name: "系统通知",
+        name: "系统催命符",
         icon: Icons.notifications_none_outlined,
         route: "/sysMsg",
         enabled: true,

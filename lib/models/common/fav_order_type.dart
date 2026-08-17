@@ -1,8 +1,8 @@
 enum FavOrderType {
-  mtime('最近收藏'),
-  mtimeAsc('最早收藏'),
-  view('最多播放'),
-  pubtime('最近投稿'),
+  mtime('最近塞进电子小被窝'),
+  mtimeAsc('最早塞进电子小被窝，CPU 都看沉默了'),
+  view('炫得最多'),
+  pubtime('最近投稿，我嘞个豆'),
   ;
 
   final String label;

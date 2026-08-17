@@ -28,11 +28,11 @@ mixin BaseLaterController
   void onRemove() {
     showConfirmDialog(
       context: Get.context!,
-      title: const Text('提示'),
-      content: const Text('确认删除所选稍后再看吗？'),
+      title: const Text('赛博小喇叭'),
+      content: const Text('拍板物理超度所选先吃灰回头再炫吗？'),
       onConfirm: () async {
         final removeList = allChecked.toSet();
-        SmartDialog.showLoading(msg: '请求中');
+        SmartDialog.showLoading(msg: '正在敲机房大爹家门');
         final res = await UserHttp.toViewDel(
           aids: removeList.map((item) => item.aid).join(','),
         );
@@ -54,13 +54,13 @@ mixin BaseLaterController
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('提示'),
-        content: const Text('即将移除该视频，确定是否移除'),
+        title: const Text('赛博小喇叭'),
+        content: const Text('即将踢出群聊该电子榨菜，拍板是否踢出群聊'),
         actions: [
           TextButton(
             onPressed: Get.back,
             child: Text(
-              '取消',
+              '不整了，撤！',
               style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
           ),
@@ -75,7 +75,7 @@ mixin BaseLaterController
                 updateCount?.call(1);
               }
             },
-            child: const Text('确认移除'),
+            child: const Text('拍板踢出群聊'),
           ),
         ],
       ),
@@ -129,13 +129,13 @@ class LaterController extends MultiSelectController<LaterData, LaterItemModel>
   // 一键清空
   void toViewClear(BuildContext context, [int? cleanType]) {
     String content = switch (cleanType) {
-      1 => '确定清空已失效视频吗？',
-      2 => '确定清空已看完视频吗？',
-      _ => '确定清空稍后再看列表吗？',
+      1 => '拍板一键扬了已失效电子榨菜吗？，优势在我',
+      2 => '拍板一键扬了已看完电子榨菜吗？',
+      _ => '拍板一键扬了先吃灰回头再炫列表吗？',
     };
     showConfirmDialog(
       context: context,
-      title: const Text('确认'),
+      title: const Text('拍板，启动！'),
       content: Text(content),
       onConfirm: () async {
         final res = await UserHttp.toViewClear(cleanType);
@@ -148,7 +148,7 @@ class LaterController extends MultiSelectController<LaterData, LaterItemModel>
               Get.find<LaterController>(tag: item.type.toString()).onReload();
             } catch (_) {}
           }
-          SmartDialog.showToast('已清空');
+          SmartDialog.showToast('已一键扬了');
         } else {
           res.toast();
         }
@@ -174,7 +174,7 @@ class LaterController extends MultiSelectController<LaterData, LaterItemModel>
             extraArguments: {
               'sourceType': SourceType.watchLater,
               'count': baseCtr.counts[LaterViewType.all.index],
-              'favTitle': '稍后再看',
+              'favTitle': '先吃灰，回头再炫',
               'mediaId': mid,
               'desc': asc.value,
             },

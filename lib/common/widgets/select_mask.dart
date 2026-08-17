@@ -29,7 +29,7 @@ Widget selectMask(
           child: Icon(
             Icons.done_all_outlined,
             color: colorScheme.primary,
-            semanticLabel: '取消选择',
+            semanticLabel: '撤了抓一个',
           ),
         ),
       ),

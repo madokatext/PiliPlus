@@ -231,7 +231,7 @@ class UserInfoCard extends StatelessWidget {
                 color: colorScheme.vipColor,
               ),
               child: Text(
-                card.vip?.label?.text ?? '大会员',
+                card.vip?.label?.text ?? '尊贵氪佬通行证',
                 strutStyle: const StrutStyle(
                   height: 1,
                   leading: 0,
@@ -380,7 +380,7 @@ class UserInfoCard extends StatelessWidget {
               ),
             ),
             TextSpan(
-              text: ' 该账号封禁中',
+              text: ' 该赛博户口封禁中',
               style: TextStyle(
                 color: isLight
                     ? colorScheme.onErrorContainer
@@ -479,15 +479,15 @@ class UserInfoCard extends StatelessWidget {
                     ],
                     TextSpan(
                       text: isOwner
-                          ? '编辑资料'
+                          ? '重新盘资料'
                           : switch (relation) {
-                              0 => '关注',
-                              1 => '悄悄关注',
-                              2 => '已关注',
+                              0 => '赛博蹲点',
+                              1 => '悄悄赛博蹲点',
+                              2 => '已赛博蹲点',
                               // 3 => '回关',
-                              4 || 6 => '已互关',
-                              128 => '移除黑名单',
-                              -10 => '特别关注', // 该状态码并不是官方状态码
+                              4 || 6 => '已互关，不是哥们',
+                              128 => '踢出群聊黑名单',
+                              -10 => '特别赛博蹲点', // 该状态码并不是官方状态码
                               _ => relation.toString(),
                             },
                     ),
@@ -860,7 +860,7 @@ class UserInfoCard extends StatelessWidget {
           colorScheme,
           charges,
           chargeCount,
-          '人为TA充电',
+          '人为TA充电，包的',
           () => UpowerRankPage.toUpowerRank(
             mid: card.mid!,
             name: card.name!,
@@ -872,7 +872,7 @@ class UserInfoCard extends StatelessWidget {
           colorScheme,
           guards,
           guardCount,
-          '人加入大航海',
+          '人加入大航海，已老实',
           () => MemberGuard.toMemberGuard(
             mid: card.mid!,
             name: card.name!,
@@ -927,7 +927,7 @@ class UserInfoCard extends StatelessWidget {
             ),
           ),
           Text(
-            '${flag ? '等${item.items!.length}人' : ''}也关注了TA',
+            '${flag ? '等${item.items!.length}人' : ''}也赛博蹲点了TA，鼠鼠我啊',
             style: TextStyle(fontSize: 13, color: colorScheme.outline),
           ),
           Icon(

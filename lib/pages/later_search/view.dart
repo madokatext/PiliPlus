@@ -43,7 +43,7 @@ class _LaterSearchPageState
           mediaId: null,
           mid: controller.mid,
         ),
-        child: Text('复制', style: textStyle),
+        child: Text('赛博复刻', style: textStyle),
       ),
       TextButton(
         style: btnStyle,
@@ -54,7 +54,7 @@ class _LaterSearchPageState
           mediaId: null,
           mid: controller.mid,
         ),
-        child: Text('移动', style: textStyle),
+        child: Text('挪个窝', style: textStyle),
       ),
     ];
   }
@@ -83,7 +83,7 @@ class _LaterSearchPageState
                 'oid': item.aid,
                 'sourceType': SourceType.watchLater,
                 'count': controller.count,
-                'favTitle': '稍后再看',
+                'favTitle': '先吃灰，回头再炫',
                 'mediaId': controller.mid,
                 'desc': false,
                 'isContinuePlaying': index != 0,

@@ -24,10 +24,10 @@ class UserInfo {
       Duration(minutes: minutesSaved.round()),
     );
     if (minutes.isEmpty) {
-      minutes = '0分钟';
+      minutes = '0分钟，这把高端局';
     }
-    return ('您提交了 ${NumUtils.formatPositiveDecimal(segmentCount)} 片段\n'
-        '您为大家节省了 ${NumUtils.formatPositiveDecimal(viewCount)} 片段\n'
-        '($minutes 的生命)');
+    return ('您提交了 ${NumUtils.formatPositiveDecimal(segmentCount)} 片段\n，包的'
+        '您为大家节省了 ${NumUtils.formatPositiveDecimal(viewCount)} 片段\n，包的'
+        '($minutes 的生命)，启动！');
   }
 }

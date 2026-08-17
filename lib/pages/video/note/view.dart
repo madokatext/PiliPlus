@@ -70,7 +70,7 @@ class _NoteListPageState extends State<NoteListPage>
               backgroundColor: Colors.transparent,
               title: Obx(() {
                 final count = _controller.count.value;
-                return Text('笔记${count == -1 ? '' : '($count)'}');
+                return Text('笔记${count == -1 ? '' : '($count)'}，鼠鼠我啊');
               }),
               shape: Border(
                 bottom: BorderSide(
@@ -79,7 +79,7 @@ class _NoteListPageState extends State<NoteListPage>
               ),
               actions: [
                 IconButton(
-                  tooltip: '关闭',
+                  tooltip: '啪一下封印',
                   icon: const Icon(Icons.close, size: 20),
                   onPressed: Get.back,
                 ),
@@ -158,7 +158,7 @@ class _NoteListPageState extends State<NoteListPage>
               ),
               onPressed: () {
                 if (!Accounts.main.isLogin) {
-                  SmartDialog.showToast('账号未登录');
+                  SmartDialog.showToast('赛博户口没上号');
                   return;
                 }
                 Scaffold.of(context).showBottomSheet(
@@ -171,7 +171,7 @@ class _NoteListPageState extends State<NoteListPage>
                   ),
                 );
               },
-              child: const Text('开始记笔记'),
+              child: const Text('开始记笔记，不是哥们'),
             ),
           ),
         ),
@@ -289,7 +289,7 @@ class _NoteListPageState extends State<NoteListPage>
                         ),
                       ),
                       Text(
-                        '查看全部',
+                        '一锅端看完',
                         style: TextStyle(
                           color: theme.colorScheme.primary,
                           height: 1.75,

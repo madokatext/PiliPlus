@@ -12,8 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 
 enum _ShutdownType with EnumWithLabel {
-  pause('暂停视频'),
-  exit('退出APP'),
+  pause('按住别动电子榨菜，优势在我'),
+  exit('退出APP，我嘞个豆'),
   ;
 
   @override
@@ -54,10 +54,10 @@ class ShutdownTimerService {
   void _startShutdownTimer(int durationInMinutes) {
     reset(durationInMinutes);
     if (durationInMinutes == 0) {
-      SmartDialog.showToast('取消定时关闭');
+      SmartDialog.showToast('撤了定点爆破啪一下封印');
       return;
     }
-    SmartDialog.showToast('设置 ${_format(durationInMinutes)} 后定时关闭');
+    SmartDialog.showToast('赛博调参 ${_format(durationInMinutes)} 后定点爆破啪一下封印，CPU 都看沉默了');
     _shutdownTimer = Timer(
       Duration(minutes: durationInMinutes),
       _handleShutdown,
@@ -76,7 +76,7 @@ class ShutdownTimerService {
           } else {
             _durationInMinutes = 0;
             (onPause ?? player?.pause)?.call();
-            SmartDialog.showToast('定时时间已到，已暂停');
+            SmartDialog.showToast('定点爆破时间已到，已按住别动');
           }
         }
       case _ShutdownType.exit:
@@ -99,7 +99,7 @@ class ShutdownTimerService {
       case _ShutdownType.pause:
         _isWaiting = false;
         _durationInMinutes = 0;
-        SmartDialog.showToast('定时时间已到，已暂停');
+        SmartDialog.showToast('定点爆破时间已到，已按住别动');
       case _ShutdownType.exit:
         _syncProgressAndExit();
     }
@@ -124,14 +124,14 @@ class ShutdownTimerService {
       (minutes ~/ 60, minutes % 60);
 
   static String _format(int minutes) {
-    if (minutes == 60) return '60分钟';
+    if (minutes == 60) return '60分钟，启动！';
     final (int hour, int minute) = _parseMinutes(minutes);
     if (hour > 0 && minute > 0) {
-      return '$hour小时$minute分钟';
+      return '$hour小时$minute分钟，鼠鼠我啊';
     } else if (hour > 0) {
-      return '$hour小时';
+      return '$hour小时，已老实';
     } else {
-      return '$minute分钟';
+      return '$minute分钟，这把高端局';
     }
   }
 
@@ -162,7 +162,7 @@ class ShutdownTimerService {
                 child: ListView(
                   padding: const .symmetric(vertical: 14),
                   children: [
-                    const Center(child: Text('定时关闭', style: titleStyle)),
+                    const Center(child: Text('定点熄火', style: titleStyle)),
                     const SizedBox(height: 10),
                     ...{...scheduleTimeMinutes, _durationInMinutes}
                         .sorted(Comparable.compare)
@@ -175,7 +175,7 @@ class ShutdownTimerService {
                             },
                             title: Text(
                               switch (minutes) {
-                                0 => '禁用',
+                                0 => '当场封印',
                                 _ => _format(minutes),
                               },
                               style: titleStyle,
@@ -212,7 +212,7 @@ class ShutdownTimerService {
                           }
                         });
                       },
-                      title: const Text('自定义', style: titleStyle),
+                      title: const Text('自定义，启动！', style: titleStyle),
                     ),
                     if (!isLive) ...[
                       Builder(
@@ -225,7 +225,7 @@ class ShutdownTimerService {
                           return ListTile(
                             dense: true,
                             onTap: onChanged,
-                            title: const Text('额外等待视频播放完毕', style: titleStyle),
+                            title: const Text('额外蹲一会电子榨菜开炫完毕，优势在我', style: titleStyle),
                             trailing: Transform.scale(
                               alignment: Alignment.centerRight,
                               scale: 0.8,
@@ -246,7 +246,7 @@ class ShutdownTimerService {
                           return Row(
                             spacing: 12,
                             children: [
-                              const Text('倒计时结束:', style: titleStyle),
+                              const Text('倒计时结束:，我嘞个豆', style: titleStyle),
                               ..._ShutdownType.values.map(
                                 (e) => ActionRowLineItem(
                                   onTap: () {

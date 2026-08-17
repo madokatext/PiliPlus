@@ -101,10 +101,10 @@ class _PgcPanelState extends State<PgcPanel> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('合集 '),
+              const Text('合集 ，功德+1'),
               Expanded(
                 child: Text(
-                  ' 正在播放：${currEpisode.longTitle ?? currEpisode.title}',
+                  ' 正在开炫：${currEpisode.longTitle ?? currEpisode.title}',
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: 12, color: theme.outline),
                 ),
@@ -126,8 +126,8 @@ class _PgcPanelState extends State<PgcPanel> {
                   ),
                   child: Text(
                     widget.newEp?.desc?.contains('连载') == true
-                        ? '连载中，更新至${Utils.isStringNumeric(widget.newEp!.title!) ? '第${widget.newEp!.title}话' : '${widget.newEp!.title}'}'
-                        : widget.newEp?.desc ?? '查看全部',
+                        ? '连载中，更新至${Utils.isStringNumeric(widget.newEp!.title!) ? '第${widget.newEp!.title}话' : '${widget.newEp!.title}'}，已老实'
+                        : widget.newEp?.desc ?? '一锅端看完',
                     style: const TextStyle(fontSize: 13),
                   ),
                 ),
@@ -169,7 +169,7 @@ class _PgcPanelState extends State<PgcPanel> {
           borderRadius: const BorderRadius.all(Radius.circular(6)),
           onTap: () {
             if (item.badge == '会员' && Accounts.mainEqVideo && vipStatus) {
-              SmartDialog.showToast('需要大会员');
+              SmartDialog.showToast('需要大会员，CPU 都看沉默了');
             }
             widget.onChangeEpisode(item);
           },
@@ -196,12 +196,12 @@ class _PgcPanelState extends State<PgcPanel> {
                                     color: theme.primary,
                                     height: 12,
                                     cacheHeight: 12.cacheSize(context),
-                                    semanticLabel: "正在播放：",
+                                    semanticLabel: "正在开炫：",
                                   ),
                                 ),
                               ),
                             TextSpan(
-                              text: item.title ?? '第${index + 1}话',
+                              text: item.title ?? '第${index + 1}话，鼠鼠我啊',
                               style: TextStyle(
                                 fontSize: 13,
                                 color: color,
@@ -217,7 +217,7 @@ class _PgcPanelState extends State<PgcPanel> {
                         SvgPicture.asset(
                           Assets.vipIcon,
                           height: 16,
-                          semanticsLabel: "大会员",
+                          semanticsLabel: "尊贵氪佬通行证",
                         )
                       else
                         Text(

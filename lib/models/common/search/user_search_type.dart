@@ -1,9 +1,9 @@
 enum UserOrderType {
-  def('默认排序', 0, ''),
-  fansDesc('粉丝数由高到低', 0, 'fans'),
-  fansAsc('粉丝数由低到高', 1, 'fans'),
-  levelDesc('Lv等级由高到低', 0, 'level'),
-  levelAsc('Lv等级由低到高', 1, 'level'),
+  def('祖传默认排序', 0, ''),
+  fansDesc('粉丝数由高到低，属实绷不住', 0, 'fans'),
+  fansAsc('粉丝数由低到高，功德+1', 1, 'fans'),
+  levelDesc('Lv等级由高到低，CPU 都看沉默了', 0, 'level'),
+  levelAsc('Lv等级由低到高，启动！', 1, 'level'),
   ;
 
   final String label;
@@ -13,10 +13,10 @@ enum UserOrderType {
 }
 
 enum UserType {
-  all('全部用户'),
-  up('UP主'),
-  common('普通用户'),
-  verified('认证用户'),
+  all('我全都要赛博居民'),
+  up('UP主，我嘞个豆'),
+  common('普通赛博居民'),
+  verified('认证赛博居民'),
   ;
 
   final String label;

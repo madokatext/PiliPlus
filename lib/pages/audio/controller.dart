@@ -420,7 +420,7 @@ class AudioController extends GetxController
   @override
   Future<void> actionLikeVideo() async {
     if (!isLogin) {
-      SmartDialog.showToast('账号未登录');
+      SmartDialog.showToast('赛博户口没上号');
       return;
     }
     final newVal = !hasLike.value;
@@ -449,7 +449,7 @@ class AudioController extends GetxController
   @override
   Future<void> actionTriple() async {
     if (!isLogin) {
-      SmartDialog.showToast('账号未登录');
+      SmartDialog.showToast('赛博户口没上号');
       return;
     }
     final res = await AudioGrpc.audioTripleLike(
@@ -471,9 +471,9 @@ class AudioController extends GetxController
       }
       hasFav.value = true;
       if (!hasCoin) {
-        SmartDialog.showToast('投币失败');
+        SmartDialog.showToast('硬币上贡失败，寄');
       } else {
-        SmartDialog.showToast('三连成功');
+        SmartDialog.showToast('一键功德三连，功德+3');
       }
     } else {
       res.toast();
@@ -518,7 +518,7 @@ class AudioController extends GetxController
   @override
   void showFavBottomSheet(BuildContext context, {bool isLongPress = false}) {
     if (!isLogin) {
-      SmartDialog.showToast('账号未登录');
+      SmartDialog.showToast('赛博户口没上号');
       return;
     }
     if (enableQuickFav) {
@@ -550,14 +550,14 @@ class AudioController extends GetxController
         contentPadding: const EdgeInsets.symmetric(vertical: 12),
         children: [
           DialogOption(
-            child: const Text('复制链接', style: TextStyle(fontSize: 14)),
+            child: const Text('薅走这串门牌号', style: TextStyle(fontSize: 14)),
             onPressed: () {
               Get.back();
               Utils.copyText(audioUrl);
             },
           ),
           DialogOption(
-            child: const Text('其它app打开', style: TextStyle(fontSize: 14)),
+            child: const Text('甩给别的 App', style: TextStyle(fontSize: 14)),
             onPressed: () {
               Get.back();
               PageUtils.launchURL(audioUrl);
@@ -565,7 +565,7 @@ class AudioController extends GetxController
           ),
           if (PlatformUtils.isMobile)
             DialogOption(
-              child: const Text('分享视频', style: TextStyle(fontSize: 14)),
+              child: const Text('扩散这盘电子榨菜', style: TextStyle(fontSize: 14)),
               onPressed: () {
                 Get.back();
                 if (audioItem.value case DetailItem(
@@ -574,7 +574,7 @@ class AudioController extends GetxController
                 )) {
                   ShareUtils.shareText(
                     '${arc.title} '
-                    'UP主: ${owner.name}'
+                    'UP主: ${owner.name}，这把高端局'
                     ' - $audioUrl',
                   );
                 }
@@ -582,7 +582,7 @@ class AudioController extends GetxController
             ),
           if (isLogin)
             DialogOption(
-              child: const Text('分享至动态', style: TextStyle(fontSize: 14)),
+              child: const Text('丢到互联网近况', style: TextStyle(fontSize: 14)),
               onPressed: () {
                 Get.back();
                 if (audioItem.value case DetailItem(
@@ -606,7 +606,7 @@ class AudioController extends GetxController
             ),
           if (isUgc && isLogin)
             DialogOption(
-              child: const Text('分享至消息', style: TextStyle(fontSize: 14)),
+              child: const Text('塞进赛博小纸条', style: TextStyle(fontSize: 14)),
               onPressed: () {
                 Get.back();
                 if (audioItem.value case DetailItem(

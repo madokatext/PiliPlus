@@ -47,7 +47,7 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
 
   Widget resetBtn(ThemeData theme, Object def, VoidCallback onPressed) {
     return iconButton(
-      tooltip: '默认值: $def',
+      tooltip: '祖传默认值: $def',
       icon: const Icon(Icons.refresh),
       onPressed: onPressed,
       iconColor: theme.colorScheme.outline,
@@ -60,11 +60,11 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
   void showSetDanmaku({bool isLive = false}) {
     // 屏蔽类型
     const blockTypesList = [
-      (value: 2, label: '滚动'),
-      (value: 5, label: '顶部'),
-      (value: 4, label: '底部'),
-      (value: 6, label: '彩色'),
-      (value: 7, label: '高级'),
+      (value: 2, label: '滚动，属实绷不住'),
+      (value: 5, label: '天灵盖'),
+      (value: 4, label: '脚底板'),
+      (value: 6, label: '彩色，属实绷不住'),
+      (value: 7, label: '高级，鼠鼠我啊'),
     ];
 
     final danmakuController = plPlayerController.danmakuController;
@@ -203,7 +203,7 @@ void updateHighLikeThreshold(String value) {
                   const SizedBox(
                     height: 45,
                     child: Center(
-                      child: Text('弹幕设置', style: TextStyle(fontSize: 14)),
+                      child: Text('满屏飘字调参室', style: TextStyle(fontSize: 14)),
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -211,7 +211,7 @@ void updateHighLikeThreshold(String value) {
                     Row(
                       mainAxisAlignment: .spaceBetween,
                       children: [
-                        Text('智能云屏蔽 ${DanmakuOptions.danmakuWeight} 级'),
+                        Text('智能云眼不见为净 ${DanmakuOptions.danmakuWeight} 级'),
                         TextButton(
                           style: TextButton.styleFrom(
                             padding: EdgeInsets.zero,
@@ -225,7 +225,7 @@ void updateHighLikeThreshold(String value) {
                               arguments: plPlayerController,
                             ),
                           child: Text(
-                            "屏蔽管理(${plPlayerController.filters.count})",
+                            "眼不见为净管理(${plPlayerController.filters.count})，不是哥们",
                           ),
                         ),
                       ],
@@ -253,7 +253,7 @@ void updateHighLikeThreshold(String value) {
 Row(
   children: [
     const Expanded(
-      child: Text('高赞弹幕标识阈值'),
+      child: Text('高赞满屏飘字标识触发红线'),
     ),
     SizedBox(
       width: 120,
@@ -268,8 +268,8 @@ Row(
         textAlign: TextAlign.center,
         decoration: const InputDecoration(
           isDense: true,
-          suffixText: '赞',
-          helperText: '0 为关闭',
+          suffixText: '赞，我嘞个豆',
+          helperText: '0 为啪一下封印',
           contentPadding: EdgeInsets.symmetric(
             horizontal: 10,
             vertical: 10,
@@ -285,9 +285,9 @@ ListTile(
   contentPadding: EdgeInsets.zero,
   dense: true,
   leading: const Icon(Icons.compress_outlined),
-  title: const Text('重复弹幕合并'),
+  title: const Text('重复满屏飘字合并，包的'),
   subtitle: Text(
-    '当前：${DanmakuOptions.mergeMode.label}',
+    '眼下这坨：${DanmakuOptions.mergeMode.label}，已老实',
   ),
   trailing: const Icon(Icons.chevron_right),
   onTap: () async {
@@ -336,7 +336,7 @@ ListTile(
 ),
 const SizedBox(height: 8),
 ],
-const Text('按类型屏蔽'),
+const Text('按类型眼不见为净，已老实'),
                   SingleChildScrollView(
                     scrollDirection: .horizontal,
                     padding: const .symmetric(vertical: 10),
@@ -356,7 +356,7 @@ const Text('按类型屏蔽'),
                       ).toList(),
                     ),
                   ),
-                  const Text('其他'),
+                  const Text('剩下那坨'),
                   SingleChildScrollView(
                     scrollDirection: .horizontal,
                     padding: const .symmetric(vertical: 10),
@@ -378,7 +378,7 @@ const Text('按类型屏蔽'),
                             setState(() {});
                             setOptions();
                           },
-                          text: '海量弹幕',
+                          text: '海量满屏飘字',
                         ),
                         ActionRowLineItem(
                           selectStatus: DanmakuOptions.danmakuStatic2Scroll,
@@ -388,7 +388,7 @@ const Text('按类型屏蔽'),
                             setState(() {});
                             setOptions();
                           },
-                          text: '固定转滚动',
+                          text: '固定转滚动，曼波',
                         ),
                         ActionRowLineItem(
                           selectStatus: DanmakuOptions.danmakuFixedV,
@@ -398,7 +398,7 @@ const Text('按类型屏蔽'),
                             setState(() {});
                             setOptions();
                           },
-                          text: '滚动弹幕固定速度',
+                          text: '滚动满屏飘字固定油门',
                         ),
                       ],
                     ),
@@ -406,7 +406,7 @@ const Text('按类型屏蔽'),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('显示区域 ${DanmakuOptions.danmakuShowArea * 100}%'),
+                      Text('亮出来区域 ${DanmakuOptions.danmakuShowArea * 100}%'),
                       resetBtn(theme, '50.0%', () => updateShowArea(0.5)),
                     ],
                   ),
@@ -432,7 +432,7 @@ const Text('按类型屏蔽'),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('不透明度 ${plPlayerController.danmakuOpacity * 100}%'),
+                      Text('不透明度 ${plPlayerController.danmakuOpacity * 100}%，曼波'),
                       resetBtn(theme, '100.0%', () => updateOpacity(1.0)),
                     ],
                   ),
@@ -459,7 +459,7 @@ const Text('按类型屏蔽'),
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '字体粗细 ${DanmakuOptions.danmakuFontWeight + 1}（可能无法精确调节）',
+                        '赛博字骨粗细 ${DanmakuOptions.danmakuFontWeight + 1}（可能无法精确调节）',
                       ),
                       resetBtn(theme, 6, () => updateFontWeight(5)),
                     ],
@@ -486,7 +486,7 @@ const Text('按类型屏蔽'),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('描边粗细 ${DanmakuOptions.danmakuStrokeWidth}'),
+                      Text('描边粗细 ${DanmakuOptions.danmakuStrokeWidth}，启动！'),
                       resetBtn(theme, 1.5, () => updateStrokeWidth(1.5)),
                     ],
                   ),
@@ -514,7 +514,7 @@ const Text('按类型屏蔽'),
   mainAxisAlignment: MainAxisAlignment.spaceBetween,
   children: [
     Text(
-      '阴影大小 '
+      '阴影大小 ，我嘞个豆'
       '${DanmakuOptions.danmakuShadowRadius.toStringAsFixed(1)}',
     ),
     resetBtn(
@@ -548,7 +548,7 @@ Padding(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '字体大小 ${(DanmakuOptions.danmakuFontScale * 100).toStringAsFixed(1)}%',
+                        '赛博字骨大小 ${(DanmakuOptions.danmakuFontScale * 100).toStringAsFixed(1)}%',
                       ),
                       resetBtn(theme, '100.0%', () => updateFontSize(1.0)),
                     ],
@@ -577,7 +577,7 @@ Padding(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '全屏字体大小 ${(DanmakuOptions.danmakuFontScaleFS * 100).toStringAsFixed(1)}%',
+                        '铺满屏赛博字骨大小 ${(DanmakuOptions.danmakuFontScaleFS * 100).toStringAsFixed(1)}%',
                       ),
                       resetBtn(theme, '120.0%', () => updateFontSizeFS(1.2)),
                     ],
@@ -605,7 +605,7 @@ Padding(
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('滚动弹幕时长 ${DanmakuOptions.danmakuDuration} 秒'),
+                      Text('滚动满屏飘字时长 ${DanmakuOptions.danmakuDuration} 秒'),
                       resetBtn(theme, 7.0, () => updateDuration(7.0)),
                     ],
                   ),
@@ -631,7 +631,7 @@ Padding(
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('静态弹幕时长 ${DanmakuOptions.danmakuStaticDuration} 秒'),
+                      Text('静态满屏飘字时长 ${DanmakuOptions.danmakuStaticDuration} 秒'),
                       resetBtn(theme, 4.0, () => updateStaticDuration(4.0)),
                     ],
                   ),
@@ -657,7 +657,7 @@ Padding(
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('弹幕行高 ${DanmakuOptions.danmakuLineHeight}'),
+                      Text('满屏飘字行高 ${DanmakuOptions.danmakuLineHeight}，鼠鼠我啊'),
                       resetBtn(theme, 1.6, () => updateLineHeight(1.6)),
                     ],
                   ),

@@ -196,7 +196,7 @@ class ArticleController extends CommonDynController {
         favorite?.count++;
       }
       stats.refresh();
-      SmartDialog.showToast('${isFav ? '取消' : ''}收藏成功');
+      SmartDialog.showToast('${isFav ? '撤了' : ''}塞进电子小被窝成了，包的');
     } else {
       res.toast();
     }
@@ -217,7 +217,7 @@ class ArticleController extends CommonDynController {
         like?.count++;
       }
       stats.refresh();
-      SmartDialog.showToast(!isLike ? '点赞成功' : '取消赞');
+      SmartDialog.showToast(!isLike ? '大拇哥已送达，功德+1' : '大拇哥收回');
     } else {
       res.toast();
     }

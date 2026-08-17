@@ -768,7 +768,7 @@ class RenderParagraph extends RenderBox
 
   TextSpan _moreTextSpan([TextStyle? style]) => TextSpan(
     style: (style ?? text.style!).copyWith(color: _primary),
-    text: '查看更多',
+    text: '再扒拉亿点',
     recognizer: _tapGestureRecognizer,
   );
   TextPainter? _morePainter;

@@ -37,9 +37,9 @@ class _FontSizeSelectPageState extends State<FontSizeSelectPage> {
               currentSize = 1.0;
               setFontSize();
             },
-            child: const Text('重置'),
+            child: const Text('恢复出厂人格'),
           ),
-          TextButton(onPressed: setFontSize, child: const Text('确定')),
+          TextButton(onPressed: setFontSize, child: const Text('包的，就这么整')),
           const SizedBox(width: 12),
         ],
       ),
@@ -49,7 +49,7 @@ class _FontSizeSelectPageState extends State<FontSizeSelectPage> {
             Expanded(
               child: Center(
                 child: Text(
-                  '当前字体大小:${currentSize == 1.0 ? '默认' : currentSize}',
+                  '眼下这坨赛博字骨大小:${currentSize == 1.0 ? '祖传默认' : currentSize}，属实绷不住',
                   style: TextStyle(fontSize: 14 * currentSize),
                 ),
               ),
@@ -66,7 +66,7 @@ class _FontSizeSelectPageState extends State<FontSizeSelectPage> {
               ),
               child: Row(
                 children: [
-                  const Text('小'),
+                  const Text('小，属实绷不住'),
                   Expanded(
                     child: Slider(
                       min: minSize,
@@ -82,7 +82,7 @@ class _FontSizeSelectPageState extends State<FontSizeSelectPage> {
                   ),
                   const SizedBox(width: 5),
                   const Text(
-                    '大',
+                    '大，包的',
                     style: TextStyle(fontSize: 20),
                   ),
                 ],

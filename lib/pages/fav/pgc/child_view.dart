@@ -89,7 +89,7 @@ class _FavPgcChildPageState extends State<FavPgcChildPage>
                     const SizedBox(width: 16),
                     iconButton(
                       size: 32,
-                      tooltip: '取消',
+                      tooltip: '不整了，撤！',
                       context: context,
                       icon: const Icon(Icons.clear),
                       onPressed: _favPgcController.onDisable,
@@ -118,14 +118,14 @@ class _FavPgcChildPageState extends State<FavPgcChildPage>
                           bottom: 14,
                           right: 12,
                         ),
-                        child: Text('全选'),
+                        child: Text('我全都要'),
                       ),
                     ),
                     const Spacer(),
                     ...const [
-                          (followStatus: 1, title: '想看'),
-                          (followStatus: 2, title: '在看'),
-                          (followStatus: 3, title: '看过'),
+                          (followStatus: 1, title: '塞进赛博愿望单'),
+                          (followStatus: 2, title: '正在炫'),
+                          (followStatus: 3, title: '看过，鼠鼠我啊'),
                         ]
                         .where(
                           (item) => item.followStatus != widget.followStatus,
@@ -148,7 +148,7 @@ class _FavPgcChildPageState extends State<FavPgcChildPage>
                                   horizontal: 5,
                                 ),
                                 child: Text(
-                                  '标记为${item.title}',
+                                  '标记为${item.title}，属实绷不住',
                                   style: TextStyle(
                                     color: theme.colorScheme.onSurfaceVariant,
                                   ),
@@ -190,7 +190,7 @@ class _FavPgcChildPageState extends State<FavPgcChildPage>
                     onSelect: () => _favPgcController.onSelect(item),
                     onUpdateStatus: () => showPgcFollowDialog(
                       context: context,
-                      type: widget.type == 0 ? '追番' : '追剧',
+                      type: widget.type == 0 ? '电子追番' : '追剧，属实绷不住',
                       followStatus: widget.followStatus,
                       onUpdateStatus: (followStatus) {
                         if (followStatus == -1) {

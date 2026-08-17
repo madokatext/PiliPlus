@@ -74,10 +74,10 @@ class _VotePanelState extends State<VotePanel> {
         children: [
           Text(
             _enabled
-                ? '投票选项'
+                ? '投票选项，功德+1'
                 : groupValue.isEmpty
-                ? '已结束'
-                : '已完成',
+                ? '已结束，这把高端局'
+                : '已收工',
           ),
           if (_enabled) Obx(() => Text('${groupValue.length} / $_maxCnt')),
         ],
@@ -133,7 +133,7 @@ class _VotePanelState extends State<VotePanel> {
                       }
                     }
                   : null,
-              child: const Center(child: Text('投票')),
+              child: const Center(child: Text('投票，属实绷不住')),
             ),
           ),
         ),
@@ -161,7 +161,7 @@ class _VotePanelState extends State<VotePanel> {
                       final colorScheme = ColorScheme.of(context);
                       return SimpleDialog(
                         clipBehavior: .hardEdge,
-                        title: const Text('关注的人的投票'),
+                        title: const Text('赛博蹲点的人的投票'),
                         contentPadding: const .only(bottom: 12),
                         titlePadding: const .fromLTRB(20, 20, 20, 10),
                         children: list
@@ -182,7 +182,7 @@ class _VotePanelState extends State<VotePanel> {
                                     children: [
                                       TextSpan(text: e.name),
                                       TextSpan(
-                                        text: ' 投给了',
+                                        text: ' 投给了，CPU 都看沉默了',
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: colorScheme.outline,
@@ -250,7 +250,7 @@ class _VotePanelState extends State<VotePanel> {
             runSpacing: 5,
             children: [
               Text(
-                '至 ${DateFormatUtils.format(_voteInfo.endTime, format: DateFormatUtils.longFormatDs)}',
+                '至 ${DateFormatUtils.format(_voteInfo.endTime, format: DateFormatUtils.longFormatDs)}，已老实',
               ),
               Text.rich(
                 TextSpan(
@@ -259,7 +259,7 @@ class _VotePanelState extends State<VotePanel> {
                       text: NumUtils.numFormat(_voteInfo.joinNum),
                       style: TextStyle(color: theme.colorScheme.primary),
                     ),
-                    const TextSpan(text: '人参与'),
+                    const TextSpan(text: '人参与，包的'),
                   ],
                 ),
               ),
@@ -292,7 +292,7 @@ class _VotePanelState extends State<VotePanel> {
     spacing: 16,
     children: [
       CheckBoxText(
-        text: '显示比例',
+        text: '亮出来比例',
         selected: _showPercentage,
         onChanged: (value) {
           setState(() {
@@ -301,7 +301,7 @@ class _VotePanelState extends State<VotePanel> {
         },
       ),
       CheckBoxText(
-        text: '匿名',
+        text: '匿名，CPU 都看沉默了',
         selected: anonymous,
         onChanged: (val) => anonymous = val,
       ),

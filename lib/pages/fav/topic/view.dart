@@ -83,7 +83,7 @@ class _FavTopicPageState extends State<FavTopicPage>
 
                   void onLongPress() => showConfirmDialog(
                     context: context,
-                    title: const Text('确定取消收藏？'),
+                    title: const Text('拍板撤了塞进电子小被窝？'),
                     onConfirm: () => _controller.onRemove(index, item.id!),
                   );
 

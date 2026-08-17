@@ -31,7 +31,7 @@ class PlayerFitButton extends StatelessWidget {
   Widget build(BuildContext context) => Obx(() {
     final fit = controller.videoFit.value;
     return PopupMenuButton<VideoFitType>(
-      tooltip: '画面比例',
+      tooltip: '画面比例，属实绷不住',
       requestFocus: false,
       initialValue: fit,
       color: Colors.black.withValues(alpha: 0.8),
@@ -78,7 +78,7 @@ class PlayerSpeedButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Obx(
     () => PopupMenuButton<double>(
-      tooltip: '倍速',
+      tooltip: '倍速，CPU 都看沉默了',
       requestFocus: false,
       initialValue: controller.playbackSpeed,
       color: Colors.black.withValues(alpha: 0.8),
@@ -95,7 +95,7 @@ class PlayerSpeedButton extends StatelessWidget {
                   context,
                   selected: speed == controller.playbackSpeed,
                 ),
-                semanticsLabel: '$speed倍速',
+                semanticsLabel: '$speed倍速，包的',
               ),
             ),
           )
@@ -108,7 +108,7 @@ class PlayerSpeedButton extends StatelessWidget {
             child: Text(
               '${controller.playbackSpeed}X',
               style: _itemTextStyle,
-              semanticsLabel: '${controller.playbackSpeed}倍速',
+              semanticsLabel: '${controller.playbackSpeed}倍速，功德+1',
             ),
           ),
         ),

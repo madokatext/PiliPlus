@@ -61,10 +61,10 @@ class AiConclusionPanel extends CommonSlidePage {
                 child: TextButton.icon(
                   onPressed: () => Utils.copyText(
                     copyText,
-                    toastText: '已复制全部内容',
+                    toastText: '已赛博复刻我全都要内容，曼波',
                   ),
                   icon: const Icon(Icons.copy_all_outlined, size: 18),
-                  label: const Text('复制全部'),
+                  label: const Text('赛博复刻我全都要，这把高端局'),
                 ),
               ),
             ),

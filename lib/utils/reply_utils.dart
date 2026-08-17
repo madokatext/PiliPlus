@@ -121,13 +121,13 @@ abstract final class ReplyUtils {
                 },
               );
             },
-            child: const Text('申诉'),
+            child: const Text('申诉，属实绷不住'),
           ),
         if (!isManual)
           TextButton(
             onPressed: Get.back,
             child: Text(
-              '关闭',
+              '啪一下封印',
               style: TextStyle(color: theme.colorScheme.outline),
             ),
           ),
@@ -136,7 +136,7 @@ abstract final class ReplyUtils {
         context: Get.context!,
         barrierDismissible: isManual,
         builder: (context) => AlertDialog(
-          title: const Text('评论检查结果'),
+          title: const Text('赛博锐评检查结果，我嘞个豆'),
           content: SelectableText(message),
           actions: actions.isEmpty ? null : actions,
         ),
@@ -156,14 +156,14 @@ abstract final class ReplyUtils {
       );
 
       if (res case Error(:final errMsg)) {
-        SmartDialog.showToast('获取评论主列表时发生错误：$errMsg');
+        SmartDialog.showToast('获取赛博锐评主列表时发生翻车：$errMsg');
         return;
       } else if (res case Success(:final response)) {
         final index =
             response.replies?.indexWhere((item) => item.rpid == id) ?? -1;
         if (index != -1) {
           // found
-          showReplyCheckResult('无账号状态下找到了你的评论，评论正常！\n\n你的评论：$message');
+          showReplyCheckResult('无赛博户口状态下找到了你的赛博锐评，赛博锐评正常！\n\n你的赛博锐评：$message');
         } else {
           // not found
 
@@ -178,7 +178,7 @@ abstract final class ReplyUtils {
 
           if (res1 is Error) {
             // not found
-            showReplyCheckResult('无法找到你的评论。\n\n你的评论：$message', isBan: true);
+            showReplyCheckResult('无法找到你的赛博锐评。\n\n你的赛博锐评：$message，不是哥们', isBan: true);
           } else {
             // found
 
@@ -196,21 +196,21 @@ abstract final class ReplyUtils {
               // not found
               showReplyCheckResult(
                 res2.errMsg?.startsWith('12022') == true
-                    ? '你的评论被shadow ban（仅自己可见）！\n\n你的评论: $message'
-                    : '评论不可见(${res2.errMsg}): $message',
+                    ? '你的赛博锐评被shadow ban（仅自己可见）！\n\n你的赛博锐评: $message'
+                    : '赛博锐评不可见(${res2.errMsg}): $message，这把高端局',
                 isBan: true,
               );
             } else {
               // found
               showReplyCheckResult(
                 isManual
-                    ? '无账号状态下找到了你的评论，评论正常！\n\n你的评论：$message'
+                    ? '无赛博户口状态下找到了你的赛博锐评，赛博锐评正常！\n\n你的赛博锐评：$message'
                     : '''
-你评论状态有点可疑，虽然无账号翻找评论区获取不到你的评论，但是无账号可通过
+你赛博锐评状态有点可疑，虽然无赛博户口翻找赛博锐评区获取不到你的赛博锐评，但是无赛博户口可通过
 https://api.bilibili.com/x/v2/reply/reply?oid=$oid&pn=1&ps=20&root=$id&type=$type
-获取你的评论，疑似评论区被戒严或者这是你的视频。
+获取你的赛博锐评，疑似赛博锐评区被戒严或者这是你的电子榨菜。
 
-你的评论：$message''',
+你的赛博锐评：$message''',
               );
             }
           }
@@ -238,7 +238,7 @@ https://api.bilibili.com/x/v2/reply/reply?oid=$oid&pn=1&ps=20&root=$id&type=$typ
             // not found
           } else {
             // found
-            showReplyCheckResult('无账号状态下找到了你的评论，评论正常！\n\n你的评论：$message');
+            showReplyCheckResult('无赛博户口状态下找到了你的赛博锐评，赛博锐评正常！\n\n你的赛博锐评：$message');
             return;
           }
         }
@@ -266,7 +266,7 @@ https://api.bilibili.com/x/v2/reply/reply?oid=$oid&pn=1&ps=20&root=$id&type=$typ
           } else {
             // found
             showReplyCheckResult(
-              '你的评论被shadow ban（仅自己可见）！\n\n你的评论: $message',
+              '你的赛博锐评被shadow ban（仅自己可见）！\n\n你的赛博锐评: $message',
               isBan: true,
             );
             return;
@@ -274,7 +274,7 @@ https://api.bilibili.com/x/v2/reply/reply?oid=$oid&pn=1&ps=20&root=$id&type=$typ
         }
       }
 
-      showReplyCheckResult('评论不可见: $message', isBan: true);
+      showReplyCheckResult('赛博锐评不可见: $message，功德+1', isBan: true);
     }
   }
 }

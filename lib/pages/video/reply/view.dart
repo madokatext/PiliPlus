@@ -188,7 +188,7 @@ bool _handleFabScroll(ScrollNotification notification) {
                             _videoReplyController.videoType.replyType,
                       );
                     },
-                    tooltip: '发表评论',
+                    tooltip: '发表赛博锐评',
                     child: const Icon(Icons.reply),
                   ),
                 ),
@@ -238,7 +238,7 @@ bool _handleFabScroll(ScrollNotification notification) {
                   alignment: .center,
                   margin: .only(bottom: bottom),
                   child: Text(
-                    _videoReplyController.isEnd ? '没有更多了' : '加载中...',
+                    _videoReplyController.isEnd ? '真没了，别扒拉了' : '疯狂搬数据中，CPU已冒烟...',
                     textAlign: .center,
                     style: TextStyle(fontSize: 12, color: colorScheme.outline),
                   ),
@@ -269,7 +269,7 @@ bool _handleFabScroll(ScrollNotification notification) {
         }
 
         final child = HttpError(
-          errMsg: '还没有评论',
+          errMsg: '还没有赛博锐评',
           onReload: _videoReplyController.onReload,
         );
         if (_videoReplyController.voteCard case final voteCard?) {

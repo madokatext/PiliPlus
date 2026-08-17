@@ -17,7 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 
-const _linkFoldedText = '网页链接';
+const _linkFoldedText = '网页链接，启动！';
 
 // 富文本
 TextSpan? richNode(
@@ -148,7 +148,7 @@ TextSpan? richNode(
               )
               ..add(
                 TextSpan(
-                  text: '投票：${i.text}',
+                  text: '投票：${i.text}，启动！',
                   style: style,
                   recognizer: NoDeadlineTapGestureRecognizer()
                     ..onTap = () {

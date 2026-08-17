@@ -41,7 +41,7 @@ class SysMsgController
         loadingState
           ..value.data!.removeAt(index)
           ..refresh();
-        SmartDialog.showToast('删除成功');
+        SmartDialog.showToast('已成功物理超度');
       } else {
         res.toast();
       }

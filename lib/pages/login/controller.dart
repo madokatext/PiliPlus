@@ -79,7 +79,7 @@ class LoginPageController extends GetxController
         final left = 180 - t.tick;
         if (left <= 0) {
           t.cancel();
-          statusQRCode.value = '二维码已过期，请刷新';
+          statusQRCode.value = '二维码已过期，请重新投胎，鼠鼠我啊';
           qrCodeLeftTime.value = 0;
           return;
         }
@@ -91,7 +91,7 @@ class LoginPageController extends GetxController
           _isReq = false;
           if (value['status']) {
             t.cancel();
-            statusQRCode.value = '扫码成功';
+            statusQRCode.value = '扫码成了，包的';
             await setAccount(
               value['data'],
               value['data']['cookie_info']['cookies'],
@@ -131,7 +131,7 @@ class LoginPageController extends GetxController
             challenge: res['geetest_challenge'],
             gt: geeGt,
           );
-        SmartDialog.showToast('验证成功');
+        SmartDialog.showToast('验证成了，包的');
         onSuccess();
       }
     });
@@ -154,7 +154,7 @@ class LoginPageController extends GetxController
   // cookie登录
   Future<void> loginByCookie() async {
     if (cookieTextController.text.isEmpty) {
-      SmartDialog.showToast('cookie不能为空');
+      SmartDialog.showToast('cookie不能为空，不是哥们');
       return;
     }
     try {
@@ -182,16 +182,16 @@ class LoginPageController extends GetxController
             null,
           ).onChange();
           if (!Accounts.main.isLogin) await switchAccountDialog(Get.context!);
-          SmartDialog.showToast('登录成功');
+          SmartDialog.showToast('上号成功，启动！');
           Get.back();
         } catch (e) {
-          SmartDialog.showToast("登录失败: $e");
+          SmartDialog.showToast("上号寄了: $e");
         }
       } else {
-        SmartDialog.showToast("哔哩哔哩登录已失效，请重新登录");
+        SmartDialog.showToast("哔哩哔哩上号已失效，请重新上号");
       }
     } catch (e) {
-      SmartDialog.showToast("获取哔哩哔哩用户信息失败，可前往账号管理重试");
+      SmartDialog.showToast("获取哔哩哔哩赛博居民信息寄了，可前往赛博户口管理再赌一把，已老实");
     }
   }
 
@@ -200,7 +200,7 @@ class LoginPageController extends GetxController
     String username = usernameTextController.text;
     String password = passwordTextController.text;
     if (username.isEmpty || password.isEmpty) {
-      SmartDialog.showToast('用户名或密码不能为空');
+      SmartDialog.showToast('赛博居民名或芝麻开门口令不能为空，CPU 都看沉默了');
       return;
     }
     // if ((passwordFormKey.currentState as FormState).validate()) {
@@ -224,7 +224,7 @@ class LoginPageController extends GetxController
     if (res['status']) {
       final data = res['data'];
       if (data == null) {
-        SmartDialog.showToast('登录异常，接口未返回数据：${res["msg"]}');
+        SmartDialog.showToast('上号抽风，接口未润回去赛博粮：${res["msg"]}，已老实');
         return;
       }
       if (data['status'] == 2) {
@@ -239,7 +239,7 @@ class LoginPageController extends GetxController
         //{"code":0,"message":"0","ttl":1,"data":{"account_info":{"hide_tel":"111*****111","hide_mail":"aaa*****aaaa.aaa","bind_mail":true,"bind_tel":true,"tel_verify":true,"mail_verify":true,"unneeded_check":false,"bind_safe_question":false,"mid":1111111},"member_info":{"nickname":"xxxxxxx","face":"https://i0.hdslb.com/bfs/face/xxxxxxx.jpg","realname_status":false},"sns_info":{"bind_google":false,"bind_fb":false,"bind_apple":false,"bind_qq":true,"bind_weibo":true,"bind_wechat":false},"account_safe":{"score":80}}}
         if (!safeCenterRes['status']) {
           SmartDialog.showToast(
-            "获取安全验证信息失败，请尝试其它登录方式\n"
+            "获取安全验证信息寄了，请尝试剩下那坨上号方式\n"
             "(${safeCenterRes['code']}) ${safeCenterRes['msg']}",
           );
           return;
@@ -249,7 +249,7 @@ class LoginPageController extends GetxController
           "hindMail": safeCenterRes['data']['account_info']!["hide_mail"],
         };
         if (!safeCenterRes['data']['account_info']!['tel_verify']) {
-          SmartDialog.showToast("当前账号未支持手机号验证，请尝试其它登录方式");
+          SmartDialog.showToast("眼下这坨赛博户口未支持手机号验证，请尝试剩下那坨上号方式");
           return;
         }
 
@@ -270,14 +270,14 @@ class LoginPageController extends GetxController
               vertical: 12,
             ),
             title: const Text(
-              "本次登录需要验证您的手机号",
+              "本次上号需要验证您的手机号",
               textAlign: TextAlign.center,
             ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  accountInfo['hindTel'] ?? '未能获取手机号',
+                  accountInfo['hindTel'] ?? '未能获取手机号，CPU 都看沉默了',
                   style: const TextStyle(fontSize: 18),
                 ),
                 // 带有清空按钮的输入框
@@ -286,7 +286,7 @@ class LoginPageController extends GetxController
                   controller: textFieldController,
                   textAlign: TextAlign.center,
                   decoration: InputDecoration(
-                    hintText: "请输入短信验证码",
+                    hintText: "请往里塞短信人类认证咒语，不是哥们",
                     hintStyle: const TextStyle(fontSize: 15),
                     suffixIcon: iconButton(
                       icon: const Icon(Icons.clear),
@@ -303,13 +303,13 @@ class LoginPageController extends GetxController
             ),
             actions: <Widget>[
               TextButton(
-                child: const Text("发送验证码"),
+                child: const Text("发送人类认证咒语"),
                 onPressed: () async {
                   final preCaptureRes = await LoginHttp.preCapture();
                   if (!preCaptureRes['status'] ||
                       preCaptureRes['data'] == null) {
                     SmartDialog.showToast(
-                      "获取验证码失败，请尝试其它登录方式\n"
+                      "获取人类认证咒语寄了，请尝试剩下那坨上号方式\n，包的"
                       "(${preCaptureRes['code']}) ${preCaptureRes['msg']} ${preCaptureRes['data']}",
                     );
                   }
@@ -318,7 +318,7 @@ class LoginPageController extends GetxController
                   captchaData.token = preCaptureRes['data']['recaptcha_token'];
                   if (!isGeeArgumentValid(geeGt, geeChallenge)) {
                     SmartDialog.showToast(
-                      "获取极验参数为空，请尝试其它登录方式\n"
+                      "获取极验参数为空，请尝试剩下那坨上号方式\n"
                       "(${preCaptureRes['code']}) ${preCaptureRes['msg']} ${preCaptureRes['data']}",
                     );
                     return;
@@ -339,12 +339,12 @@ class LoginPageController extends GetxController
                           );
                       if (!safeCenterSendSmsCodeRes['status']) {
                         SmartDialog.showToast(
-                          "发送短信验证码失败，请尝试其它登录方式\n"
+                          "发送短信人类认证咒语寄了，请尝试剩下那坨上号方式\n"
                           "(${safeCenterSendSmsCodeRes['code']}) ${safeCenterSendSmsCodeRes['msg']}",
                         );
                         return;
                       }
-                      SmartDialog.showToast("短信验证码已发送，请查收");
+                      SmartDialog.showToast("短信人类认证咒语已发送，请查收");
                       captchaKey =
                           safeCenterSendSmsCodeRes['data']['captcha_key'];
                     },
@@ -354,7 +354,7 @@ class LoginPageController extends GetxController
               TextButton(
                 onPressed: Get.back,
                 child: Text(
-                  "取消",
+                  "不整了，撤！",
                   style: TextStyle(color: ThemeUtils.theme.colorScheme.outline),
                 ),
               ),
@@ -362,7 +362,7 @@ class LoginPageController extends GetxController
                 onPressed: () async {
                   String? code = textFieldController.text;
                   if (code.isEmpty) {
-                    SmartDialog.showToast("请输入短信验证码");
+                    SmartDialog.showToast("请往里塞短信人类认证咒语，不是哥们");
                     return;
                   }
                   final safeCenterSmsVerifyRes =
@@ -376,19 +376,19 @@ class LoginPageController extends GetxController
                       );
                   if (!safeCenterSmsVerifyRes['status']) {
                     SmartDialog.showToast(
-                      "验证短信验证码失败，请尝试其它登录方式\n"
+                      "验证短信人类认证咒语寄了，请尝试剩下那坨上号方式\n"
                       "(${safeCenterSmsVerifyRes['code']}) ${safeCenterSmsVerifyRes['msg']}",
                     );
                     return;
                   }
-                  SmartDialog.showToast("验证成功，正在登录");
+                  SmartDialog.showToast("验证成了，包的，正在上号");
                   final oauth2AccessTokenRes =
                       await LoginHttp.oauth2AccessToken(
                         code: safeCenterSmsVerifyRes['data']['code'],
                       );
                   if (!oauth2AccessTokenRes['status']) {
                     SmartDialog.showToast(
-                      "登录失败，请尝试其它登录方式\n"
+                      "上号寄了，请尝试剩下那坨上号方式\n"
                       "(${oauth2AccessTokenRes['code']}) ${oauth2AccessTokenRes['msg']}",
                     );
                     return;
@@ -397,11 +397,11 @@ class LoginPageController extends GetxController
                   if (data['token_info'] == null ||
                       data['cookie_info'] == null) {
                     SmartDialog.showToast(
-                      '登录异常，接口未返回身份信息，可能是因为账号风控，请尝试其它登录方式。\n${oauth2AccessTokenRes["msg"]}，\n $data',
+                      '上号抽风，接口未润回去身份信息，可能是因为赛博户口风控，请尝试剩下那坨上号方式。\n${oauth2AccessTokenRes["msg"]}，\n $data，功德+1',
                     );
                     return;
                   }
-                  SmartDialog.showToast('正在保存身份信息');
+                  SmartDialog.showToast('正在焊死身份信息，优势在我');
                   await setAccount(
                     data['token_info'],
                     data['cookie_info']['cookies'],
@@ -410,7 +410,7 @@ class LoginPageController extends GetxController
                     ..back()
                     ..back();
                 },
-                child: const Text("确认"),
+                child: const Text("拍板，启动！"),
               ),
             ],
           ),
@@ -420,11 +420,11 @@ class LoginPageController extends GetxController
       }
       if (data['token_info'] == null || data['cookie_info'] == null) {
         SmartDialog.showToast(
-          '登录异常，接口未返回身份信息，可能是因为账号风控，请尝试其它登录方式。\n${res["msg"]}，\n $data',
+          '上号抽风，接口未润回去身份信息，可能是因为赛博户口风控，请尝试剩下那坨上号方式。\n${res["msg"]}，\n $data',
         );
         return;
       }
-      SmartDialog.showToast('正在保存身份信息');
+      SmartDialog.showToast('正在焊死身份信息，优势在我');
       await setAccount(data['token_info'], data['cookie_info']['cookies']);
       Get.back();
     } else {
@@ -454,20 +454,20 @@ class LoginPageController extends GetxController
   // 短信验证码登录
   Future<void> loginBySmsCode() async {
     if (telTextController.text.isEmpty) {
-      SmartDialog.showToast('手机号不能为空');
+      SmartDialog.showToast('手机号不能为空，优势在我');
       return;
     }
     if (captchaKey.isEmpty) {
-      SmartDialog.showToast('请先点击获取验证码');
+      SmartDialog.showToast('请先点击获取人类认证咒语');
       return;
     }
     if (smsCodeTextController.text.isEmpty) {
-      SmartDialog.showToast('验证码不能为空');
+      SmartDialog.showToast('人类认证咒语不能为空');
       return;
     }
     if (DateTime.now().millisecondsSinceEpoch - smsSendTimestamp >
         1000 * 60 * 5) {
-      SmartDialog.showToast('验证码已过期，请重新获取');
+      SmartDialog.showToast('人类认证咒语已过期，请重新获取');
       return;
     }
     final webKeyRes = await LoginHttp.getWebKey();
@@ -484,7 +484,7 @@ class LoginPageController extends GetxController
       key: key,
     );
     if (res['status']) {
-      SmartDialog.showToast('登录成功');
+      SmartDialog.showToast('上号成功，启动！');
       final data = res['data'];
       await setAccount(data['token_info'], data['cookie_info']['cookies']);
       Get.back();
@@ -496,7 +496,7 @@ class LoginPageController extends GetxController
   // app端验证码
   Future<void> sendSmsCode() async {
     if (telTextController.text.isEmpty) {
-      SmartDialog.showToast('手机号不能为空');
+      SmartDialog.showToast('手机号不能为空，优势在我');
       return;
     }
     // String? guestId;
@@ -551,7 +551,7 @@ class LoginPageController extends GetxController
       recaptchaToken: captchaData.token,
     );
     if (res['status']) {
-      SmartDialog.showToast('发送成功');
+      SmartDialog.showToast('已成功发射');
       smsSendTimestamp = DateTime.now().millisecondsSinceEpoch;
       smsSendCooldown.value = 60;
       captchaKey = res['data']['captcha_key'];
@@ -582,13 +582,13 @@ class LoginPageController extends GetxController
           if (!isGeeArgumentValid(geeGt, geeChallenge)) {
             if (kDebugMode) {
               debugPrint(
-                '验证信息错误：${res["msg"]}\n返回内容：${res["data"]}，尝试另一个验证码接口',
+                '验证信息翻车：${res["msg"]}\n润回去内容：${res["data"]}，尝试另一个人类认证咒语接口，这把高端局',
               );
             }
             final preCaptureRes = await LoginHttp.preCapture();
             if (!preCaptureRes['status'] || preCaptureRes['data'] == null) {
               SmartDialog.showToast(
-                "获取验证码失败，请尝试其它登录方式\n"
+                "获取人类认证咒语寄了，请尝试剩下那坨上号方式\n，包的"
                 "(${preCaptureRes['code']}) ${preCaptureRes['msg']} ${preCaptureRes['data']}",
               );
               return;
@@ -599,7 +599,7 @@ class LoginPageController extends GetxController
           }
 
           if (!isGeeArgumentValid(geeGt, geeChallenge)) {
-            SmartDialog.showToast("获取验证码失败，请尝试其它登录方式\n");
+            SmartDialog.showToast("获取人类认证咒语寄了，请尝试剩下那坨上号方式\n，包的");
             return;
           }
 
@@ -631,16 +631,16 @@ class LoginPageController extends GetxController
       }
     }
     if (Accounts.main.isLogin) {
-      SmartDialog.showToast('登录成功');
+      SmartDialog.showToast('上号成功，启动！');
     } else {
-      SmartDialog.showToast('登录成功, 请先设置账号模式');
+      SmartDialog.showToast('上号成了，包的, 请先赛博调参赛博户口模式，已老实');
       await switchAccountDialog(Get.context!);
     }
   }
 
   static Future<void>? switchAccountDialog(BuildContext context) {
     if (Accounts.account.isEmpty) {
-      SmartDialog.showToast('请先登录');
+      SmartDialog.showToast('先上号再整活');
       return Get.toNamed('/loginPage');
     }
     final colorScheme = ColorScheme.of(context);
@@ -663,9 +663,9 @@ class LoginPageController extends GetxController
               style: const TextStyle(height: 1.5),
               TextSpan(
                 children: [
-                  const TextSpan(text: '账号切换'),
+                  const TextSpan(text: '赛博户口切换'),
                   TextSpan(
-                    text: '\nmid为0时使用匿名',
+                    text: '\nmid为0时使用匿名，启动！',
                     style: TextStyle(fontSize: 14, color: colorScheme.outline),
                   ),
                 ],
@@ -680,7 +680,7 @@ class LoginPageController extends GetxController
                 quickSelect = !quickSelect;
                 (context as Element).markNeedsBuild();
               },
-              child: Text(quickSelect ? '详细' : '快速'),
+              child: Text(quickSelect ? '详细，属实绷不住' : '快速，这把高端局'),
             ),
           ],
         ),
@@ -742,7 +742,7 @@ class LoginPageController extends GetxController
         actions: [
           TextButton(
             onPressed: Get.back,
-            child: Text('取消', style: TextStyle(color: colorScheme.outline)),
+            child: Text('不整了，撤！', style: TextStyle(color: colorScheme.outline)),
           ),
           TextButton(
             onPressed: () {
@@ -757,7 +757,7 @@ class LoginPageController extends GetxController
                 }
               }
             },
-            child: const Text('确定'),
+            child: const Text('包的，就这么整'),
           ),
         ],
       ),

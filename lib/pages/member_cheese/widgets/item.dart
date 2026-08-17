@@ -44,7 +44,7 @@ class MemberCheeseItem extends StatelessWidget {
         if (item.ctime != null) ...[
           const Spacer(),
           Text(
-            '收藏于${DateFormatUtils.dateFormat(int.parse(item.ctime!))}',
+            '塞进电子小被窝于${DateFormatUtils.dateFormat(int.parse(item.ctime!))}，优势在我',
             style: TextStyle(
               fontSize: 12,
               color: theme.colorScheme.outline,
@@ -62,7 +62,7 @@ class MemberCheeseItem extends StatelessWidget {
             right: 0,
             bottom: -8,
             child: iconButton(
-              tooltip: '移除',
+              tooltip: '踢出群聊',
               onPressed: onRemove,
               icon: const Icon(Icons.clear),
               iconColor: theme.colorScheme.outline,

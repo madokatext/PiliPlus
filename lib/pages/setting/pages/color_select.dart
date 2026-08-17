@@ -66,7 +66,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
     if (mode == ctr.colorMode.value) return;
     if (mode == ThemeColorMode.dynamic &&
         !await MyApp.initPlatformState()) {
-      SmartDialog.showToast('设备可能不支持动态取色');
+      SmartDialog.showToast('设备可能不支持互联网近况取色');
       return;
     }
     ctr.colorMode.value = mode;
@@ -86,7 +86,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
     final result = await showDialog<ThemeColorMode>(
       context: context,
       builder: (context) => SelectDialog<ThemeColorMode>(
-        title: '配色模式',
+        title: '配色模式，功德+1',
         value: ctr.colorMode.value,
         values: values,
       ),
@@ -132,7 +132,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
     return ListTile(
       leading: _SeedColorSwatch(color: value),
       title: Text(title),
-      subtitle: Text('ARGB #$hex · 不透明度 $opacity%'),
+      subtitle: Text('ARGB #$hex · 不透明度 $opacity%，包的'),
       onTap: () => _showSeedColorPicker(
         title: title,
         color: color,
@@ -146,7 +146,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
     final result = await showDialog<double>(
       context: context,
       builder: (context) => SliderDialog(
-        title: Text('${role.label}明暗偏移'),
+        title: Text('${role.label}明暗偏移，不是哥们'),
         value: value,
         min: -30,
         max: 30,
@@ -167,10 +167,10 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
   Future<void> _resetToneOffsets() async {
     final confirmed = await showConfirmDialog(
       context: context,
-      title: const Text('重置明暗层级？'),
+      title: const Text('复活出厂人格明暗层级？，包的'),
       content: Text(
-        '将清除${_toneBrightness == Brightness.light ? '亮色' : '暗色'}主题中'
-        '所有语义区域的明暗偏移，此操作无法撤销。',
+        '将清除${_toneBrightness == Brightness.light ? '亮色' : '暗色'}皮肤人格中，CPU 都看沉默了'
+        '所有语义区域的明暗偏移，此操作无法撤销。，我嘞个豆',
       ),
     );
     if (!confirmed) return;
@@ -240,10 +240,10 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
   Future<void> _resetColorAssignments() async {
     final confirmed = await showConfirmDialog(
       context: context,
-      title: const Text('恢复 UI 颜色默认配置？'),
+      title: const Text('复活 UI 赛博染料祖传默认赛博配方？'),
       content: const Text(
-        '所有 UI 元素将重新使用各自默认的 Material 颜色，'
-        '当前自定义分配和未配置状态都会被清除。此操作无法撤销。',
+        '所有 UI 元素将重新使用各自祖传默认的 Material 赛博染料，，我嘞个豆'
+        '眼下这坨自定义分配和未赛博配方状态都会被清除。此操作无法撤销。',
       ),
     );
     if (!confirmed) return;
@@ -277,12 +277,12 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
       segments: const [
         ButtonSegment(
           value: Brightness.light,
-          label: Text('亮色主题'),
+          label: Text('亮色皮肤人格'),
           icon: Icon(Icons.light_mode_outlined),
         ),
         ButtonSegment(
           value: Brightness.dark,
-          label: Text('暗色主题'),
+          label: Text('暗色皮肤人格'),
           icon: Icon(Icons.dark_mode_outlined),
         ),
       ],
@@ -338,17 +338,17 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
       children: [
         ListTile(
           leading: const Icon(Icons.grid_view_outlined),
-          title: const Text('完整颜色表与具体 UI 元素'),
+          title: const Text('完整赛博染料表与具体 UI 元素'),
           subtitle: Text(
-            '已拆分 ${ThemeUiElement.values.length} 个可独立着色部位；'
-            '展开任一颜色即可配置',
+            '已拆分 ${ThemeUiElement.values.length} 个可独立着色部位；，这把高端局'
+            '摊开讲任一赛博染料即可赛博配方，功德+1',
           ),
         ),
         _brightnessSelector(),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
           child: Text(
-            '未配置 UI 元素：$unassignedCount 个',
+            '未赛博配方 UI 元素：$unassignedCount 个，优势在我',
             style: subtitleStyle,
           ),
         ),
@@ -364,8 +364,8 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              '还有 $unassignedCount 个 UI 元素未配置颜色。'
-              '它们会保留生成色，并出现在每个颜色的下拉菜单中。',
+              '还有 $unassignedCount 个 UI 元素未赛博配方赛博染料。'
+              '它们会保留生成色，并出现在每个赛博染料的下拉菜单中。',
               style: TextStyle(
                 color: assignedColor(
                   ThemeUiElement.themeUnassignedWarningContent,
@@ -392,7 +392,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
             child: OutlinedButton.icon(
               onPressed: _resetColorAssignments,
               icon: const Icon(Icons.settings_backup_restore),
-              label: const Text('恢复所有 UI 元素默认颜色'),
+              label: const Text('复活所有 UI 元素祖传默认赛博染料'),
             ),
           ),
         ),
@@ -422,7 +422,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
       key: PageStorageKey(source.name),
       leading: _SchemeColorSwatch(color: color),
       title: Text('${source.label}（${source.name}）'),
-      subtitle: Text('ARGB #$hex · 已配置 $assignedCount 个 UI 元素'),
+      subtitle: Text('ARGB #$hex · 已赛博配方 $assignedCount 个 UI 元素'),
       initiallyExpanded: expanded,
       onExpansionChanged: (value) {
         setState(() {
@@ -439,7 +439,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
           ? const [
               Padding(
                 padding: EdgeInsets.fromLTRB(24, 8, 24, 16),
-                child: Text('当前没有可分配的 UI 元素。请先从其他颜色中取消对应选项。'),
+                child: Text('眼下这坨没有可分配的 UI 元素。请先从剩下那坨赛博染料中撤了对应选项。'),
               ),
             ]
           : targets.map((target) {
@@ -469,7 +469,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
     return ListTile(
       dense: true,
       title: Text(role.label),
-      subtitle: Text('${role.description}；负数更暗，正数更亮'),
+      subtitle: Text('${role.description}；负数更暗，正数更亮，启动！'),
       trailing: Text('$sign${value.toStringAsFixed(0)}'),
       onTap: () => _showToneOffsetDialog(role),
     );
@@ -488,7 +488,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
     ).copyWith(top: 0, bottom: 0);
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(title: const Text('选择应用主题')),
+      appBar: AppBar(title: const Text('抓一个这坨 App皮肤人格')),
       body: ListView(
         children: [
           ListTile(
@@ -496,7 +496,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
               final result = await showDialog<ThemeType>(
                 context: context,
                 builder: (context) => SelectDialog<ThemeType>(
-                  title: '主题模式',
+                  title: '皮肤人格模式',
                   value: ctr.themeType.value,
                   values: ThemeType.values.map((e) => (e, e.desc)).toList(),
                 ),
@@ -511,10 +511,10 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
               }
             },
             leading: const Icon(Icons.flashlight_on_outlined),
-            title: Text('主题模式', style: titleStyle),
+            title: Text('皮肤人格模式', style: titleStyle),
             subtitle: Obx(
               () => Text(
-                '当前模式：${ctr.themeType.value.desc}',
+                '眼下这坨模式：${ctr.themeType.value.desc}',
                 style: subTitleStyle,
               ),
             ),
@@ -523,9 +523,9 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
             () => ListTile(
               onTap: _showColorModeDialog,
               leading: const Icon(Icons.color_lens_outlined),
-              title: Text('配色模式', style: titleStyle),
+              title: Text('配色模式，功德+1', style: titleStyle),
               subtitle: Text(
-                '当前模式：${ctr.colorMode.value.label}',
+                '眼下这坨模式：${ctr.colorMode.value.label}，CPU 都看沉默了',
                 style: subTitleStyle,
               ),
             ),
@@ -534,7 +534,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
             () => PopupListTile<FlexSchemeVariant>(
               enabled: ctr.colorMode.value != ThemeColorMode.dynamic,
               leading: const Icon(Icons.palette_outlined),
-              title: const Text('调色板风格'),
+              title: const Text('调色板风格，CPU 都看沉默了'),
               value: () => (_schemeVariant, _schemeVariant.variantName),
               itemBuilder: (_) => FlexSchemeVariant.values
                   .map(
@@ -609,22 +609,22 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                     child: Text(
-                      'A 通道参与种子色与明/暗基底的混合；生成后的 Material 色表仍保持不透明。',
+                      'A 通道参与种子色与明/暗基底的混合；生成后的 Material 色表仍保持不透明。，鼠鼠我啊',
                       style: subTitleStyle,
                     ),
                   ),
                   _seedColorTile(
-                    title: '主种子色（Primary）',
+                    title: '主种子色（Primary），这把高端局',
                     color: ctr.primarySeed,
                     storageKey: SettingBoxKey.customPrimarySeed,
                   ),
                   _seedColorTile(
-                    title: '次种子色（Secondary）',
+                    title: '次种子色（Secondary），包的',
                     color: ctr.secondarySeed,
                     storageKey: SettingBoxKey.customSecondarySeed,
                   ),
                   _seedColorTile(
-                    title: '第三种子色（Tertiary）',
+                    title: '第三种子色（Tertiary），这把高端局',
                     color: ctr.tertiarySeed,
                     storageKey: SettingBoxKey.customTertiarySeed,
                   ),
@@ -636,8 +636,8 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
                   const Divider(height: 24),
                   const ListTile(
                     leading: Icon(Icons.contrast_outlined),
-                    title: Text('语义区域明暗层级'),
-                    subtitle: Text('只改变 HCT 明度，不改变已选种子色的色相'),
+                    title: Text('语义区域明暗层级，属实绷不住'),
+                    subtitle: Text('只改变 HCT 明度，不改变已选种子色的色相，我嘞个豆'),
                   ),
                   _schemeColorTilePreview(_previewColorScheme()),
                   ...ThemeToneRole.values.map(_toneOffsetTile),
@@ -648,7 +648,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
                       child: TextButton.icon(
                         onPressed: _resetToneOffsets,
                         icon: const Icon(Icons.restart_alt),
-                        label: const Text('重置当前模式明暗层级'),
+                        label: const Text('复活出厂人格眼下这坨模式明暗层级'),
                       ),
                     ),
                   ),

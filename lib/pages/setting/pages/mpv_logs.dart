@@ -18,7 +18,7 @@ class _MpvLogsPageState extends State<MpvLogsPage> {
   Future<void> _copy() async {
     final content = await MpvLogService.readLastLog();
     if (content.isEmpty) {
-      SmartDialog.showToast('暂无日志');
+      SmartDialog.showToast('暂无日志，功德+1');
       return;
     }
     Utils.copyText(content);
@@ -31,7 +31,7 @@ class _MpvLogsPageState extends State<MpvLogsPage> {
     try {
       final content = await MpvLogService.readLastLog();
       if (content.isEmpty) {
-        SmartDialog.showToast('暂无日志');
+        SmartDialog.showToast('暂无日志，功德+1');
         return;
       }
       await exportToLocalFile(
@@ -41,7 +41,7 @@ class _MpvLogsPageState extends State<MpvLogsPage> {
         allowedExtensions: const ['log', 'txt'],
       );
     } catch (e) {
-      SmartDialog.showToast('保存失败：$e');
+      SmartDialog.showToast('焊死寄了：$e');
     } finally {
       if (mounted) {
         setState(() => _saving = false);
@@ -54,15 +54,15 @@ class _MpvLogsPageState extends State<MpvLogsPage> {
     final padding = MediaQuery.viewPaddingOf(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('上次 mpv 播放日志'),
+        title: const Text('上次 mpv 开炫日志'),
         actions: [
           IconButton(
-            tooltip: '保存至本地',
+            tooltip: '焊死至自家硬盘',
             onPressed: _saving ? null : _save,
             icon: const Icon(Icons.save_alt),
           ),
           IconButton(
-            tooltip: '复制',
+            tooltip: '赛博复刻',
             onPressed: _copy,
             icon: const Icon(Icons.copy_outlined),
           ),
@@ -75,7 +75,7 @@ class _MpvLogsPageState extends State<MpvLogsPage> {
           const Padding(
             padding: EdgeInsets.fromLTRB(12, 8, 12, 4),
             child: Text(
-              '详细日志可能包含临时播放地址或请求信息，分享前请检查。',
+              '详细日志可能包含先凑合开炫地址或敲机房大爹家门信息，到处扩散前请检查。',
             ),
           ),
           Expanded(
@@ -90,7 +90,7 @@ class _MpvLogsPageState extends State<MpvLogsPage> {
                 }
                 final content = snapshot.data ?? '';
                 if (content.isEmpty) {
-                  return const Center(child: Text('暂无 mpv 播放日志'));
+                  return const Center(child: Text('暂无 mpv 开炫日志'));
                 }
                 return SingleChildScrollView(
                   padding: EdgeInsets.fromLTRB(

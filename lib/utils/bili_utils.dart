@@ -13,7 +13,7 @@ abstract final class BiliUtils {
     if (attr == null) {
       return '';
     }
-    return isPublicFav(attr) ? '公开' : '私密';
+    return isPublicFav(attr) ? '全网裸奔' : '关起门来';
   }
 
   static bool isPublicFav(int attr) {

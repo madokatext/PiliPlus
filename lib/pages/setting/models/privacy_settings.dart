@@ -10,13 +10,13 @@ List<SettingsModel> get privacySettings => [
   NormalModel(
     onTap: (context, setState) {
       if (!Accounts.main.isLogin) {
-        SmartDialog.showToast('登录后查看');
+        SmartDialog.showToast('上号后扒拉看看');
         return;
       }
       Get.toNamed('/blackListPage');
     },
-    title: '黑名单管理',
-    subtitle: '已拉黑用户',
+    title: '黑名单管理，启动！',
+    subtitle: '已拉黑赛博居民',
     leading: const Icon(Icons.block),
   ),
   NormalModel(
@@ -24,20 +24,20 @@ List<SettingsModel> get privacySettings => [
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('账号模式详情'),
+          title: const Text('赛博户口模式详情'),
           content: SingleChildScrollView(child: _getAccountDetail(context)),
           actions: [
             TextButton(
               onPressed: Get.back,
-              child: const Text('确认'),
+              child: const Text('拍板，启动！'),
             ),
           ],
         ),
       );
     },
     leading: const Icon(Icons.flag_outlined),
-    title: '了解账号模式',
-    subtitle: '查看各个账号模式作用的API列表',
+    title: '了解赛博户口模式，启动！',
+    subtitle: '扒拉看看各个赛博户口模式作用的API列表',
   ),
 ];
 

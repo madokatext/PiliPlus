@@ -154,7 +154,7 @@ class PlayerFocus extends StatelessWidget {
           if (speed != plPlayerController.playbackSpeed) {
             plPlayerController.setPlaybackSpeed(speed);
           }
-          SmartDialog.showToast('${speed}x播放');
+          SmartDialog.showToast('${speed}x开炫，我嘞个豆');
         }
         return true;
       }
@@ -202,7 +202,7 @@ class PlayerFocus extends StatelessWidget {
               isMuted ? 0 : plPlayerController.volume.value * 100,
             );
             plPlayerController.isMuted = isMuted;
-            SmartDialog.showToast('${isMuted ? '' : '取消'}静音');
+            SmartDialog.showToast('${isMuted ? '' : '撤了'}静音');
           }
           return true;
 
@@ -262,7 +262,7 @@ class PlayerFocus extends StatelessWidget {
           case LogicalKeyboardKey.bracketLeft:
             if (introController case final introController?) {
               if (!introController.prevPlay()) {
-                SmartDialog.showToast('已经是第一集了');
+                SmartDialog.showToast('已经是第一集了，属实绷不住');
               }
             }
             return true;
@@ -270,7 +270,7 @@ class PlayerFocus extends StatelessWidget {
           case LogicalKeyboardKey.bracketRight:
             if (introController case final introController?) {
               if (!introController.nextPlay()) {
-                SmartDialog.showToast('已经是最后一集了');
+                SmartDialog.showToast('已经是最后一集了，不是哥们');
               }
             }
             return true;

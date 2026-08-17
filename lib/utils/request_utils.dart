@@ -112,7 +112,7 @@ abstract final class RequestUtils {
     String tagName = '';
     final onCreate = await showConfirmDialog(
       context: context,
-      title: const Text('新建分组'),
+      title: const Text('再开个小圈子'),
       content: TextFormField(
         autofocus: true,
         initialValue: tagName,
@@ -127,7 +127,7 @@ abstract final class RequestUtils {
       final res = await MemberHttp.createFollowTag(tagName);
       if (res case Success(:final response)) {
         onSuccess((tagid: response, tagName: tagName));
-        SmartDialog.showToast('创建成功');
+        SmartDialog.showToast('凭空捏一个成了，包的，曼波');
       } else {
         res.toast();
       }
@@ -152,7 +152,7 @@ abstract final class RequestUtils {
         reSrc: 11,
       );
       if (res.isSuccess) {
-        SmartDialog.showToast('关注成功');
+        SmartDialog.showToast('赛博蹲点成了，包的');
         afterMod?.call(2);
       } else {
         res.toast();
@@ -170,7 +170,7 @@ abstract final class RequestUtils {
 
       if (context.mounted) {
         bool isSpecialFollowed = followStatus!.special == 1;
-        String text = isSpecialFollowed ? '移除特别关注' : '加入特别关注';
+        String text = isSpecialFollowed ? '踢出群聊特别赛博蹲点' : '加入特别赛博蹲点';
         showDialog(
           context: context,
           builder: (context) => SimpleDialog(
@@ -185,7 +185,7 @@ abstract final class RequestUtils {
                     isAdd: !isSpecialFollowed,
                   );
                   if (res.isSuccess) {
-                    SmartDialog.showToast('$text成功');
+                    SmartDialog.showToast('$text成了，包的，曼波');
                     afterMod?.call(isSpecialFollowed ? 2 : -10);
                   } else {
                     res.toast();
@@ -231,7 +231,7 @@ abstract final class RequestUtils {
                     afterMod?.call(result.contains(-10) ? -10 : 2);
                   }
                 },
-                child: const Text('设置分组', style: TextStyle(fontSize: 14)),
+                child: const Text('赛博调参分组', style: TextStyle(fontSize: 14)),
               ),
               DialogOption(
                 onPressed: () async {
@@ -242,13 +242,13 @@ abstract final class RequestUtils {
                     reSrc: 11,
                   );
                   if (res.isSuccess) {
-                    SmartDialog.showToast('取消关注成功');
+                    SmartDialog.showToast('撤了赛博蹲点成了，包的');
                     afterMod?.call(0);
                   } else {
                     res.toast();
                   }
                 },
-                child: const Text('取消关注', style: TextStyle(fontSize: 14)),
+                child: const Text('撤了赛博蹲点', style: TextStyle(fontSize: 14)),
               ),
             ],
           ),
@@ -348,13 +348,13 @@ abstract final class RequestUtils {
                     },
                   );
                 },
-                child: const Text('申诉'),
+                child: const Text('申诉，属实绷不住'),
               ),
             if (!isManual)
               TextButton(
                 onPressed: Get.back,
                 child: Text(
-                  '关闭',
+                  '啪一下封印',
                   style: TextStyle(color: theme.colorScheme.outline),
                 ),
               ),
@@ -363,9 +363,9 @@ abstract final class RequestUtils {
             context: Get.context!,
             barrierDismissible: isManual,
             builder: (context) => AlertDialog(
-              title: const Text('动态检查结果'),
+              title: const Text('互联网近况检查结果'),
               content: SelectableText(
-                '${isSuccess ? '无账号状态下找到了你的动态，动态正常！' : '你的动态被shadow ban（仅自己可见）！'}${dynText != null ? ' \n\n动态内容: $dynText' : ''}',
+                '${isSuccess ? '无赛博户口状态下找到了你的互联网近况，互联网近况正常！' : '你的互联网近况被shadow ban（仅自己可见）！'}${dynText != null ? ' \n\n互联网近况内容: $dynText' : ''}，功德+1',
               ),
               actions: actions.isEmpty ? null : actions,
             ),
@@ -389,7 +389,7 @@ abstract final class RequestUtils {
     final status = like?.status ?? false;
 
     if (status ^ uiStatus) {
-      SmartDialog.showToast(status ? '点赞成功' : '取消赞');
+      SmartDialog.showToast(status ? '大拇哥已送达，功德+1' : '大拇哥收回');
       onSuccess();
       return;
     }
@@ -399,7 +399,7 @@ abstract final class RequestUtils {
       up: status ? 2 : 1, // 1 已点赞 2 不喜欢 0 未操作
     );
     if (res.isSuccess) {
-      SmartDialog.showToast(status ? '取消赞' : '点赞成功');
+      SmartDialog.showToast(status ? '大拇哥收回' : '大拇哥已送达，功德+1');
       like
         ?..count = (like.count ?? 0) + (status ? -1 : 1)
         ..status = !status;
@@ -426,7 +426,7 @@ abstract final class RequestUtils {
           context: context,
           builder: (context) {
             return AlertDialog(
-              title: Text('${isCopy ? '复制' : '移动'}到'),
+              title: Text('${isCopy ? '赛博复刻' : '移动'}到'),
               contentPadding: const EdgeInsets.only(top: 5),
               content: SingleChildScrollView(
                 child: RadioGroup(
@@ -450,7 +450,7 @@ abstract final class RequestUtils {
                 TextButton(
                   onPressed: Get.back,
                   child: Text(
-                    '取消',
+                    '不整了，撤！',
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.outline,
                     ),
@@ -485,7 +485,7 @@ abstract final class RequestUtils {
                               ..refresh();
                           }
                           SmartDialog.dismiss();
-                          SmartDialog.showToast('${isCopy ? '复制' : '移动'}成功');
+                          SmartDialog.showToast('${isCopy ? '赛博复刻' : '移动'}成了，包的');
                           Get.back();
                         } else {
                           SmartDialog.dismiss();
@@ -494,7 +494,7 @@ abstract final class RequestUtils {
                       });
                     }
                   },
-                  child: const Text('确认'),
+                  child: const Text('拍板，启动！'),
                 ),
               ],
             );
@@ -536,7 +536,7 @@ abstract final class RequestUtils {
     }
 
     if (!isGeeArgumentValid()) {
-      SmartDialog.showToast("参数为空");
+      SmartDialog.showToast("参数为空，曼波");
       return;
     }
 
@@ -588,7 +588,7 @@ abstract final class RequestUtils {
           actions: [
             TextButton(
               onPressed: Get.back,
-              child: const Text('关闭'),
+              child: const Text('啪一下封印'),
             ),
           ],
         ),

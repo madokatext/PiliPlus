@@ -1,6 +1,6 @@
 enum FollowOrderType {
-  def('', '最近关注'),
-  attention('attention', '最常访问'),
+  def('', '最近赛博蹲点'),
+  attention('attention', '最常访问，已老实'),
   ;
 
   final String type;

@@ -38,7 +38,7 @@ Widget buildVoteCard(
                   children: [
                     Text(voteCard.title, maxLines: 1, overflow: .ellipsis),
                     Text(
-                      '${NumUtils.numFormat(voteCard.count.toInt())}人参与',
+                      '${NumUtils.numFormat(voteCard.count.toInt())}人参与，包的',
                       maxLines: 1,
                       overflow: .ellipsis,
                       style: TextStyle(

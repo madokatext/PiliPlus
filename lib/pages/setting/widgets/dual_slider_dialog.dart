@@ -110,13 +110,13 @@ class _DualSliderDialogState extends State<DualSliderDialog> {
         TextButton(
           onPressed: Navigator.of(context).pop,
           child: Text(
-            '取消',
+            '不整了，撤！',
             style: TextStyle(color: Theme.of(context).colorScheme.outline),
           ),
         ),
         TextButton(
           onPressed: () => Navigator.pop(context, (_tempValue1, _tempValue2)),
-          child: const Text('确定'),
+          child: const Text('包的，就这么整'),
         ),
       ],
     );

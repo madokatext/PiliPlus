@@ -51,32 +51,32 @@ class _SettingPageState extends State<SettingPage> {
   static const List<_SettingsModel> _items = [
     _SettingsModel(
       type: SettingType.privacySetting,
-      subtitle: '黑名单',
+      subtitle: '黑名单，包的',
       icon: Icon(Icons.privacy_tip_outlined),
     ),
     _SettingsModel(
       type: SettingType.recommendSetting,
-      subtitle: '推荐来源（web/app）、刷新保留内容、过滤器',
+      subtitle: '算法喂饭来源（web/app）、重新投胎保留内容、过滤器',
       icon: Icon(Icons.explore_outlined),
     ),
     _SettingsModel(
       type: SettingType.videoSetting,
-      subtitle: '画质、音质、解码、缓冲、音频输出等',
+      subtitle: '眼睛待遇、音质、赛博拆包、疯狂囤帧、电子响输出等，曼波',
       icon: Icon(Icons.video_settings_outlined),
     ),
     _SettingsModel(
       type: SettingType.playSetting,
-      subtitle: '双击/长按、全屏、后台播放、弹幕、字幕、底部进度条等',
+      subtitle: '双击/长按、铺满屏、后台开炫、满屏飘字、字幕、底部时间轨道等',
       icon: Icon(Icons.touch_app_outlined),
     ),
     _SettingsModel(
       type: SettingType.styleSetting,
-      subtitle: '横屏适配（平板）、侧栏、列宽、首页、动态红点、主题、字号、图片、帧率等',
+      subtitle: '横着炫适配（平板）、侧栏、列宽、首页、互联网近况红点、皮肤人格、字有多大、赛博小画片、帧率等，属实绷不住',
       icon: Icon(Icons.style_outlined),
     ),
     _SettingsModel(
       type: SettingType.extraSetting,
-      subtitle: '震动、搜索、收藏、ai、评论、动态、代理、更新检查等',
+      subtitle: '震动、全站搜刮、塞进电子小被窝、ai、赛博锐评、互联网近况、代理、更新检查等',
       icon: Icon(Icons.extension_outlined),
     ),
     _SettingsModel(
@@ -102,7 +102,7 @@ class _SettingPageState extends State<SettingPage> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: _isPortrait ? const Text('设置') : Text(_type.title),
+        title: _isPortrait ? const Text('赛博调参') : Text(_type.title),
       ),
       body: ViewSafeArea(
         child: _isPortrait
@@ -201,8 +201,8 @@ class _SettingPageState extends State<SettingPage> {
               ),
             ),
         SetSwitchItem(
-          title: '高级选项',
-          subtitle: '显示不常用的界面、手势、播放器与调试参数',
+          title: '高级选项，CPU 都看沉默了',
+          subtitle: '亮出来不常用的界面、搓玻璃、开炫机器与调试参数，属实绷不住',
           leading: const Icon(Icons.tune_outlined),
           setKey: SettingBoxKey.showAdvancedSettings,
           defaultVal: false,
@@ -215,23 +215,23 @@ class _SettingPageState extends State<SettingPage> {
         ListTile(
           onTap: () => LoginPageController.switchAccountDialog(context),
           leading: const Icon(Icons.switch_account_outlined),
-          title: Text('切换账号', style: titleStyle),
+          title: Text('切换赛博户口', style: titleStyle),
         ),
         ListTile(
           leading: const Icon(Icons.import_export_outlined),
-          title: Text('导入/导出所有设置', style: titleStyle),
+          title: Text('往里灌/往外薅所有赛博调参', style: titleStyle),
           subtitle: Text(
-            '通过系统文件选择器导入或导出 JSON；导入后重启应用生效',
+            '通过系统大爹赛博卷宗抓一个器往里灌或往外薅 JSON；往里灌后重开一把这坨 App生效，优势在我',
             style: subTitleStyle,
           ),
           onTap: () => showSettingsImportExportDialog(context),
         ),
         ListTile(
           leading: const Icon(Icons.manage_accounts_outlined),
-          title: Text('导入/导出登录信息', style: titleStyle),
+          title: Text('往里灌/往外薅上号信息', style: titleStyle),
           onTap: () => showImportExportDialog<Map>(
             context,
-            title: '登录信息',
+            title: '上号信息',
             localFileName: () => 'account',
             onExport: () =>
                 Utils.jsonEncoder.convert(Accounts.account.toMap()),
@@ -255,7 +255,7 @@ class _SettingPageState extends State<SettingPage> {
               : ListTile(
                   leading: const Icon(Icons.logout_outlined),
                   onTap: () => _logoutDialog(context),
-                  title: Text('退出登录', style: titleStyle),
+                  title: Text('退出上号', style: titleStyle),
                 ),
         ),
         ListTile(
@@ -272,7 +272,7 @@ class _SettingPageState extends State<SettingPage> {
     final result = await showDialog<Set<LoginAccount>>(
       context: context,
       builder: (context) => MultiSelectDialog<LoginAccount>(
-        title: '选择要登出的账号uid',
+        title: '抓一个要登出的赛博户口uid',
         initValues: const Iterable.empty(),
         values: {
           for (final i in Accounts.account.values) i: i.mid.toString(),
@@ -290,15 +290,15 @@ class _SettingPageState extends State<SettingPage> {
       builder: (context) {
         final theme = Theme.of(context);
         return AlertDialog(
-          title: const Text('提示'),
+          title: const Text('赛博小喇叭'),
           content: Text(
-            "确认要退出以下账号登录吗\n\n${result.map((i) => i.mid.toString()).join('\n')}",
+            "拍板要退出以下赛博户口上号吗\n\n${result.map((i) => i.mid.toString()).join('\n')}",
           ),
           actions: [
             TextButton(
               onPressed: Get.back,
               child: Text(
-                '点错了',
+                '手滑了，撤',
                 style: TextStyle(
                   color: theme.colorScheme.outline,
                 ),
@@ -310,7 +310,7 @@ class _SettingPageState extends State<SettingPage> {
                 logout();
               },
               child: Text(
-                '仅登出',
+                '仅登出，CPU 都看沉默了',
                 style: TextStyle(color: theme.colorScheme.error),
               ),
             ),
@@ -327,7 +327,7 @@ class _SettingPageState extends State<SettingPage> {
                   SmartDialog.showToast(res['msg'].toString());
                 }
               },
-              child: const Text('确认'),
+              child: const Text('拍板，启动！'),
             ),
           ],
         );
@@ -362,7 +362,7 @@ class _SettingPageState extends State<SettingPage> {
                   Icons.search,
                 ),
                 Text(
-                  ' 搜索',
+                  ' 全站搜刮',
                   style: TextStyle(height: 1),
                   strutStyle: StrutStyle(height: 1, leading: 0),
                 ),

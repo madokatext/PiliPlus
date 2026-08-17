@@ -39,7 +39,7 @@ class _FollowTagSortPageState extends State<FollowTagSortPage>
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: const Text('关注分组排序'),
+        title: const Text('赛博蹲点分组排序'),
         actions: _customTags.isNotEmpty
             ? [
                 TextButton(
@@ -48,7 +48,7 @@ class _FollowTagSortPageState extends State<FollowTagSortPage>
                       tagids: _customTags.map((e) => e.tagid).join(','),
                     );
                     if (res.isSuccess) {
-                      SmartDialog.showToast('排序完成');
+                      SmartDialog.showToast('座次排明白了，包的');
                       final tabs = _defTags + _customTags;
                       widget.controller
                         ..tabs.value = tabs
@@ -61,7 +61,7 @@ class _FollowTagSortPageState extends State<FollowTagSortPage>
                       res.toast();
                     }
                   },
-                  child: const Text('完成'),
+                  child: const Text('收工，包成的'),
                 ),
                 const SizedBox(width: 16),
               ]

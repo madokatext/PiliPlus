@@ -137,7 +137,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
             alignWithTitle(
               ComBtn(
                 height: controlHeight,
-                tooltip: '返回',
+                tooltip: '润回去',
                 icon: const Icon(FontAwesomeIcons.arrowLeft, size: 15),
                 onTap: () {
                   if (plPlayerController.isDesktopPip) {
@@ -157,7 +157,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
                 final isAlwaysOnTop = plPlayerController.isAlwaysOnTop.value;
                 return ComBtn(
                   height: controlHeight,
-                  tooltip: '${isAlwaysOnTop ? '取消' : ''}置顶',
+                  tooltip: '${isAlwaysOnTop ? '撤了' : ''}置顶',
                   icon: isAlwaysOnTop
                       ? const Icon(
                           size: 18,
@@ -178,7 +178,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
             alignWithTitle(
               ComBtn(
                 height: controlHeight,
-                tooltip: '发弹幕',
+                tooltip: '往屏幕上扔字',
                 icon: const Icon(
                   size: 18,
                   Icons.comment_outlined,
@@ -191,7 +191,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
             alignWithTitle(
               ComBtn(
                 height: controlHeight,
-                tooltip: '画中画',
+                tooltip: '画中画，我嘞个豆',
                 onTap: () {
                   if (PlatformUtils.isDesktop) {
                     plPlayerController.toggleDesktopPip();
@@ -214,7 +214,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
                 final onlyPlayAudio = plPlayerController.onlyPlayAudio.value;
                 return ComBtn(
                   height: controlHeight,
-                  tooltip: '仅播放音频',
+                  tooltip: '仅开炫电子响',
                   onTap: () {
                     plPlayerController.onlyPlayAudio.value = !onlyPlayAudio;
                     widget.onPlayAudio();
@@ -241,7 +241,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
                     plPlayerController.continuePlayInBackground.value;
                 return ComBtn(
                   height: controlHeight,
-                  tooltip: '${continuePlayInBackground ? '关闭' : ''}后台播放',
+                  tooltip: '${continuePlayInBackground ? '啪一下封印' : ''}后台开炫，属实绷不住',
                   onTap: plPlayerController.setContinuePlayInBackground,
                   icon: continuePlayInBackground
                       ? const Icon(
@@ -260,7 +260,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
           alignWithTitle(
             ComBtn(
               height: controlHeight,
-              tooltip: '定时关闭',
+              tooltip: '定点熄火',
               onTap: () => shutdownTimerService.showScheduleExitDialog(
                 context,
                 isFullScreen: isFullScreen,
@@ -289,7 +289,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
                         spacing: 8,
                         children: [
                           Icon(Icons.alt_route, size: 17),
-                          Text('切换路线', style: TextStyle(fontSize: 14)),
+                          Text('切换路线，鼠鼠我啊', style: TextStyle(fontSize: 14)),
                         ],
                       ),
                     ),
@@ -299,7 +299,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
                         spacing: 8,
                         children: [
                           Icon(Icons.info_outline, size: 17),
-                          Text('播放信息', style: TextStyle(fontSize: 14)),
+                          Text('开炫参数', style: TextStyle(fontSize: 14)),
                         ],
                       ),
                       onTap: () => HeaderControlState.showPlayerInfo(
@@ -315,7 +315,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
                           children: [
                             const Icon(Icons.volume_up, size: 17),
                             Text(
-                              '播放器音量: ${player.getProperty('volume').subLength(3)}%',
+                              '开炫机器喇叭声压: ${player.getProperty('volume').subLength(3)}%，属实绷不住',
                               style: const TextStyle(fontSize: 14),
                             ),
                           ],

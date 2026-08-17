@@ -41,8 +41,8 @@ class _LiveDmBlockPageState extends State<LiveDmBlockPage> {
     Widget tabBar = TabBar(
       controller: _controller.tabController,
       tabs: const [
-        Tab(text: '关键词'),
-        Tab(text: '用户'),
+        Tab(text: '关键词，CPU 都看沉默了'),
+        Tab(text: '赛博居民'),
       ],
     );
 
@@ -65,7 +65,7 @@ class _LiveDmBlockPageState extends State<LiveDmBlockPage> {
         bottom: 12,
       ),
       child: const Text(
-        '关键词屏蔽',
+        '关键词眼不见为净',
         style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
       ),
     );
@@ -76,7 +76,7 @@ class _LiveDmBlockPageState extends State<LiveDmBlockPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            '全局屏蔽',
+            '全局眼不见为净',
             style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
           ),
           ..._buildHeader(theme),
@@ -87,7 +87,7 @@ class _LiveDmBlockPageState extends State<LiveDmBlockPage> {
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(title: const Text('弹幕屏蔽')),
+      appBar: AppBar(title: const Text('满屏飘字眼不见为净，鼠鼠我啊')),
       body: Padding(
         padding: EdgeInsets.only(left: padding.left, right: padding.right),
         child: Stack(
@@ -153,7 +153,7 @@ class _LiveDmBlockPageState extends State<LiveDmBlockPage> {
                 foregroundColor: Theme.of(
                   context,
                 ).uiColor(ThemeUiElement.liveDmBlockAddContent),
-                tooltip: '添加',
+                tooltip: '塞一个进去',
                 onPressed: _addShieldKeyword,
                 child: const Icon(Icons.add),
               ),
@@ -184,7 +184,7 @@ class _LiveDmBlockPageState extends State<LiveDmBlockPage> {
               text: e is ShieldUserList ? e.uname! : e as String,
               onTap: (value) => showConfirmDialog(
                 context: context,
-                title: const Text('确定删除该规则？'),
+                title: const Text('拍板物理超度该规则？，已老实'),
                 onConfirm: () => _controller.onRemove(i, e),
               ),
             );
@@ -203,7 +203,7 @@ class _LiveDmBlockPageState extends State<LiveDmBlockPage> {
           return Row(
             spacing: 10,
             children: [
-              Text('屏蔽${isEnable ? '已' : '未'}开启'),
+              Text('眼不见为净${isEnable ? '已' : '未'}启动'),
               Transform.scale(
                 scale: .8,
                 child: Switch(
@@ -221,7 +221,7 @@ class _LiveDmBlockPageState extends State<LiveDmBlockPage> {
           final level = _controller.level.value;
           return Row(
             children: [
-              const Text('用户等级'),
+              const Text('赛博居民等级'),
               Slider(
                 min: 0,
                 max: 60,
@@ -244,7 +244,7 @@ class _LiveDmBlockPageState extends State<LiveDmBlockPage> {
                   }
                 },
               ),
-              Text('$level 以下'),
+              Text('$level 以下，包的'),
             ],
           );
         },
@@ -259,7 +259,7 @@ class _LiveDmBlockPageState extends State<LiveDmBlockPage> {
               theme,
               isEnable,
               Icons.live_tv,
-              '非正式会员',
+              '非正式会员，优势在我',
               () => _controller.setSilent(
                 LiveDmSilentType.rank,
                 isEnable ? 0 : 1,
@@ -272,7 +272,7 @@ class _LiveDmBlockPageState extends State<LiveDmBlockPage> {
               theme,
               isEnable,
               Icons.smartphone,
-              '未绑定手机用户',
+              '未绑定手机赛博居民',
               () => _controller.setSilent(
                 LiveDmSilentType.verify,
                 isEnable ? 0 : 1,
@@ -356,7 +356,7 @@ class _LiveDmBlockPageState extends State<LiveDmBlockPage> {
     String value = '';
     showConfirmDialog(
       context: context,
-      title: Text('${isKeyword ? '关键词' : '用户'}屏蔽'),
+      title: Text('${isKeyword ? '关键词' : '赛博居民'}眼不见为净，优势在我'),
       content: TextFormField(
         autofocus: true,
         initialValue: value,

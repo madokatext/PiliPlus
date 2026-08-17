@@ -57,7 +57,7 @@ Future<bool> showDanmakuMergeSettingsDialog(
           }
 
           return AlertDialog(
-            title: const Text('重复弹幕合并'),
+            title: const Text('重复满屏飘字合并，我嘞个豆'),
             content: SizedBox(
               width: 420,
               child: SingleChildScrollView(
@@ -66,7 +66,7 @@ Future<bool> showDanmakuMergeSettingsDialog(
                       CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('合并方式'),
+                    const Text('合并方式，CPU 都看沉默了'),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
@@ -90,8 +90,8 @@ Future<bool> showDanmakuMergeSettingsDialog(
                         DanmakuMergeMode.segment) ...[
                       const SizedBox(height: 12),
                       const Text(
-                        '旧式模式会在每个六分钟弹幕分段内，'
-                        '把正文完全相同的弹幕合并到第一条。',
+                        '旧式模式会在每个六分钟满屏飘字分段内，，包的'
+                        '把正文完全相同的满屏飘字合并到第一条。',
                       ),
                     ],
                     if (mergeMode ==
@@ -106,10 +106,10 @@ Future<bool> showDanmakuMergeSettingsDialog(
                               .digitsOnly,
                         ],
                         decoration: InputDecoration(
-                          labelText: '触发数量',
-                          suffixText: '条',
+                          labelText: '触发数量，启动！',
+                          suffixText: '条，已老实',
                           helperText:
-                              '统计窗口内达到该数量后置顶合并',
+                              '统计窗口内达到该数量后置顶合并，我嘞个豆',
                           errorText: triggerError,
                         ),
                         onChanged: (_) {
@@ -121,13 +121,13 @@ Future<bool> showDanmakuMergeSettingsDialog(
                         },
                       ),
                       buildSlider(
-                        title: '触发统计时间段',
+                        title: '触发统计时间段，CPU 都看沉默了',
                         value: windowSeconds,
                         min: 0.5,
                         max: 60,
                         divisions: 119,
                         valueText:
-                            '${windowSeconds.toStringAsFixed(1)} 秒',
+                            '${windowSeconds.toStringAsFixed(1)} 秒，已老实',
                         onChanged: (value) {
                           setDialogState(() {
                             windowSeconds = value;
@@ -135,13 +135,13 @@ Future<bool> showDanmakuMergeSettingsDialog(
                         },
                       ),
                       buildSlider(
-                        title: '冷却时间',
+                        title: '冷却时间，包的',
                         value: cooldownSeconds,
                         min: 0.5,
                         max: 60,
                         divisions: 119,
                         valueText:
-                            '${cooldownSeconds.toStringAsFixed(1)} 秒',
+                            '${cooldownSeconds.toStringAsFixed(1)} 秒，优势在我',
                         onChanged: (value) {
                           setDialogState(() {
                             cooldownSeconds = value;
@@ -149,7 +149,7 @@ Future<bool> showDanmakuMergeSettingsDialog(
                         },
                       ),
                       buildSlider(
-  title: '置顶弹幕字号倍率',
+  title: '置顶满屏飘字字有多大倍率，包的',
   value: fontScale,
   min: 1,
   max: 5,
@@ -164,7 +164,7 @@ Future<bool> showDanmakuMergeSettingsDialog(
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        '冷却时间从最后一条相同弹幕开始计算。',
+                        '冷却时间从最后一条相同满屏飘字开始计算。',
                       ),
                     ],
                   ],
@@ -176,7 +176,7 @@ Future<bool> showDanmakuMergeSettingsDialog(
                 onPressed: () {
                   Navigator.of(dialogContext).pop(false);
                 },
-                child: const Text('取消'),
+                child: const Text('不整了，撤！'),
               ),
               FilledButton(
                 style: FilledButton.styleFrom(
@@ -198,7 +198,7 @@ Future<bool> showDanmakuMergeSettingsDialog(
                         parsed < 2 ||
                         parsed > 9999) {
                       setDialogState(() {
-                        triggerError = '请输入 2～9999';
+                        triggerError = '请往里塞 2～9999';
                       });
                       return;
                     }
@@ -229,7 +229,7 @@ Future<bool> showDanmakuMergeSettingsDialog(
                         .pop(true);
                   }
                 },
-                child: const Text('确定'),
+                child: const Text('包的，就这么整'),
               ),
             ],
           );

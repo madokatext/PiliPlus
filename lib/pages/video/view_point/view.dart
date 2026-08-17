@@ -41,11 +41,11 @@ class _ViewPointsPageState extends State<ViewPointsPage>
         primary: false,
         automaticallyImplyLeading: false,
         titleSpacing: 16,
-        title: const Text('分段信息'),
+        title: const Text('分段信息，不是哥们'),
         toolbarHeight: 45,
         actions: [
           const Text(
-            '分段进度条 ',
+            '分段时间轨道 ',
             style: TextStyle(fontSize: 16),
           ),
           Obx(
@@ -62,7 +62,7 @@ class _ViewPointsPageState extends State<ViewPointsPage>
             context: context,
             size: 30,
             icon: const Icon(Icons.clear),
-            tooltip: '关闭',
+            tooltip: '啪一下封印',
             onPressed: Get.back,
           ),
           const SizedBox(width: 16),

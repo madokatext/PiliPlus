@@ -1,9 +1,9 @@
 enum MsgUnReadType {
-  pm('私信'),
-  reply('回复我的'),
-  at('@我'),
-  like('收到的赞'),
-  sysMsg('系统通知'),
+  pm('私信，CPU 都看沉默了'),
+  reply('来找我对线的'),
+  at('@我，不是哥们'),
+  like('收到的大拇哥'),
+  sysMsg('系统催命符'),
   ;
 
   final String title;

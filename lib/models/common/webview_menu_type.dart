@@ -1,10 +1,10 @@
 enum WebviewMenuItem {
-  refresh('刷新'),
-  copy('复制链接'),
-  openInBrowser('浏览器中打开'),
-  clearCache('清除缓存'),
-  resetCookie('重新设置Cookie'),
-  goBack('返回'),
+  refresh('重新投胎'),
+  copy('薅走这串门牌号'),
+  openInBrowser('浏览器中掀开'),
+  clearCache('清除电子囤货'),
+  resetCookie('重新赛博调参Cookie'),
+  goBack('润回去'),
   ;
 
   final String title;

@@ -126,7 +126,7 @@ class PendantAvatar extends StatelessWidget {
                 color: colorScheme.onSecondaryContainer,
               ),
               Text(
-                '直播中',
+                '赛博围观中',
                 style: TextStyle(
                   height: 1,
                   fontSize: fontSize,

@@ -38,8 +38,8 @@ class PgcIntroController extends CommonIntroController {
   int? epId;
 
   late final String pgcType = pgcItem.type == 1 || pgcItem.type == 4
-      ? '追番'
-      : '追剧';
+      ? '电子追番'
+      : '追剧，属实绷不住';
 
   late final bool isPgc;
   late final PgcInfoModel pgcItem;
@@ -100,13 +100,13 @@ class PgcIntroController extends CommonIntroController {
   @override
   Future<void> actionLikeVideo() async {
     if (!isLogin) {
-      SmartDialog.showToast('账号未登录');
+      SmartDialog.showToast('赛博户口没上号');
       return;
     }
     final newVal = !hasLike.value;
     final result = await VideoHttp.likeVideo(bvid: bvid, type: newVal);
     if (result case Success(:final response)) {
-      SmartDialog.showToast(newVal ? response : '取消赞');
+      SmartDialog.showToast(newVal ? response : '大拇哥收回');
       pgcItem.stat?.like += newVal ? 1 : -1;
       hasLike.value = newVal;
     } else {
@@ -129,14 +129,14 @@ class PgcIntroController extends CommonIntroController {
         contentPadding: const EdgeInsets.symmetric(vertical: 12),
         children: [
           DialogOption(
-            child: const Text('复制链接', style: TextStyle(fontSize: 14)),
+            child: const Text('薅走这串门牌号', style: TextStyle(fontSize: 14)),
             onPressed: () {
               Get.back();
               Utils.copyText(videoUrl);
             },
           ),
           DialogOption(
-            child: const Text('其它app打开', style: TextStyle(fontSize: 14)),
+            child: const Text('甩给别的 App', style: TextStyle(fontSize: 14)),
             onPressed: () {
               Get.back();
               PageUtils.launchURL(videoUrl);
@@ -144,7 +144,7 @@ class PgcIntroController extends CommonIntroController {
           ),
           if (PlatformUtils.isMobile)
             DialogOption(
-              child: const Text('分享视频', style: TextStyle(fontSize: 14)),
+              child: const Text('扩散这盘电子榨菜', style: TextStyle(fontSize: 14)),
               onPressed: () {
                 final item = pgcItem.episodes?.firstWhereOrNull(
                   (item) => item.epId == epId,
@@ -158,7 +158,7 @@ class PgcIntroController extends CommonIntroController {
             ),
           if (isLogin)
             DialogOption(
-              child: const Text('分享至动态', style: TextStyle(fontSize: 14)),
+              child: const Text('丢到互联网近况', style: TextStyle(fontSize: 14)),
               onPressed: () {
                 Get.back();
                 final item = pgcItem.episodes?.firstWhereOrNull(
@@ -198,7 +198,7 @@ class PgcIntroController extends CommonIntroController {
           if (isLogin)
             DialogOption(
               child: const Text(
-                '分享至消息',
+                '塞进赛博小纸条',
                 style: TextStyle(fontSize: 14),
               ),
               onPressed: () {
@@ -220,13 +220,13 @@ class PgcIntroController extends CommonIntroController {
                       "source": 16,
                       "thumb": item.cover,
                       "source_desc": switch (pgcItem.type) {
-                        1 => '番剧',
-                        2 => '电影',
-                        3 => '纪录片',
-                        4 => '国创',
-                        5 => '电视剧',
-                        6 => '漫画',
-                        7 => '综艺',
+                        1 => '纸片人连续剧',
+                        2 => '两小时电子榨菜',
+                        3 => '纪录片，包的',
+                        4 => '国创专区·启动',
+                        5 => '电视剧，包的',
+                        6 => '漫画，不是哥们',
+                        7 => '电子乐子场',
                         _ => null,
                       },
                     },
@@ -386,12 +386,12 @@ class PgcIntroController extends CommonIntroController {
   Future<void> actionTriple() async {
     feedBack();
     if (!isLogin) {
-      SmartDialog.showToast('账号未登录');
+      SmartDialog.showToast('赛博户口没上号');
       return;
     }
     if (hasLike.value && hasCoin && hasFav.value) {
       // 已点赞、投币、收藏
-      SmartDialog.showToast('已三连');
+      SmartDialog.showToast('已三连，不是哥们');
       return;
     }
     final result = await VideoHttp.pgcTriple(epId: epId!, seasonId: seasonId);
@@ -411,9 +411,9 @@ class PgcIntroController extends CommonIntroController {
         hasFav.value = true;
       }
       if (!hasCoin) {
-        SmartDialog.showToast('投币失败');
+        SmartDialog.showToast('硬币上贡失败，寄');
       } else {
-        SmartDialog.showToast('三连成功');
+        SmartDialog.showToast('一键功德三连，功德+3');
       }
     } else {
       result.toast();
@@ -473,7 +473,7 @@ class PgcIntroController extends CommonIntroController {
         : await FavHttp.addFavPugv(seasonId!);
     if (res.isSuccess) {
       this.isFav.value = !isFav;
-      SmartDialog.showToast('${isFav ? '取消' : ''}收藏成功');
+      SmartDialog.showToast('${isFav ? '撤了' : ''}塞进电子小被窝成了，包的');
     } else {
       res.toast();
     }

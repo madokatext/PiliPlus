@@ -302,15 +302,15 @@ class ReplyItemGrpc extends StatelessWidget {
         children: [
           switch (voteOption.labelKind) {
             .RED => TextSpan(
-              text: '红方  ',
+              text: '红方  ，曼波',
               style: TextStyle(color: colorScheme.vipColor),
             ),
             .BLUE => TextSpan(
-              text: '蓝方  ',
+              text: '蓝方  ，曼波',
               style: TextStyle(color: colorScheme.blue),
             ),
             _ => TextSpan(
-              text: '投票  ',
+              text: '投票  ，这把高端局',
               style: TextStyle(color: colorScheme.outline),
             ),
           },
@@ -456,10 +456,10 @@ class ReplyItemGrpc extends StatelessWidget {
                   (context as Element).markNeedsBuild();
                 }
               } else {
-                SmartDialog.showToast('翻译结果为空');
+                SmartDialog.showToast('翻译结果为空，鼠鼠我啊');
               }
             } else if (res case Error(:final errMsg)) {
-              SmartDialog.showToast('翻译失败: $errMsg');
+              SmartDialog.showToast('翻译寄了: $errMsg，已老实');
             }
             isProcessing = false;
           }
@@ -470,7 +470,7 @@ class ReplyItemGrpc extends StatelessWidget {
           children: [
             Icon(Icons.translate, size: 16, color: color),
             Text(
-              replyControl.showTranslation ? '原文' : '翻译',
+              replyControl.showTranslation ? '原文，已老实' : '翻译，我嘞个豆',
               style: textStyle.copyWith(color: color),
             ),
           ],
@@ -503,7 +503,7 @@ class ReplyItemGrpc extends StatelessWidget {
         child: TextButton(
           onPressed: showDialogue,
           style: buttonStyle,
-          child: Text('查看对话', style: textStyle),
+          child: Text('扒拉看看对话', style: textStyle),
         ),
       );
     } else if (replyLevel == 3 && replyItem.parent != replyItem.root) {
@@ -512,7 +512,7 @@ class ReplyItemGrpc extends StatelessWidget {
         child: TextButton(
           onPressed: jumpToDialogue,
           style: buttonStyle,
-          child: Text('跳转回复', style: textStyle),
+          child: Text('跳转对线回合', style: textStyle),
         ),
       );
     }
@@ -537,7 +537,7 @@ class ReplyItemGrpc extends StatelessWidget {
                   size: 18,
                   color: colorScheme.outline.withValues(alpha: 0.8),
                 ),
-                Text('回复', style: textStyle),
+                Text('对线回合', style: textStyle),
               ],
             ),
           ),
@@ -694,7 +694,7 @@ class ReplyItemGrpc extends StatelessWidget {
                       children: [
                         if (replyItem.replyControl.upReply)
                           TextSpan(
-                            text: 'UP主等人 ',
+                            text: 'UP主等人 ，已老实',
                             style: TextStyle(
                               color: colorScheme.onSurface.withValues(
                                 alpha: 0.85,
@@ -702,7 +702,7 @@ class ReplyItemGrpc extends StatelessWidget {
                             ),
                           ),
                         TextSpan(
-                          text: '共${replyItem.count}条回复',
+                          text: '共${replyItem.count}条对线回合',
                           style: TextStyle(
                             color: colorScheme.primary,
                           ),
@@ -772,7 +772,7 @@ class ReplyItemGrpc extends StatelessWidget {
             ),
           ),
         TextSpan(
-          text: isCv ? '[笔记] ' : url.title,
+          text: isCv ? '[笔记] ，鼠鼠我啊' : url.title,
           style: TextStyle(color: colorScheme.primary),
           recognizer: NoDeadlineTapGestureRecognizer()
             ..onTap = () {
@@ -861,7 +861,7 @@ class ReplyItemGrpc extends StatelessWidget {
         } else if (_voteRegExp.hasMatch(matchStr)) {
           spanChildren.add(
             TextSpan(
-              text: '投票: ${content.vote.title}',
+              text: '投票: ${content.vote.title}，包的',
               style: TextStyle(color: colorScheme.primary),
               recognizer: NoDeadlineTapGestureRecognizer()
                 ..onTap = () =>
@@ -890,7 +890,7 @@ class ReplyItemGrpc extends StatelessWidget {
                       ..onTap = () {
                         // 跳转到指定位置
                         try {
-                          SmartDialog.showToast('跳转至：$matchStr');
+                          SmartDialog.showToast('跳转至：$matchStr，属实绷不住');
                           Get.find<VideoDetailController>(
                             tag: Get.arguments['heroTag'],
                           ).plPlayerController.seekTo(
@@ -900,7 +900,7 @@ class ReplyItemGrpc extends StatelessWidget {
                             isSeek: false,
                           );
                         } catch (e) {
-                          SmartDialog.showToast('跳转失败: $e');
+                          SmartDialog.showToast('跳转寄了: $e');
                         }
                       })
                   : null,
@@ -981,7 +981,7 @@ class ReplyItemGrpc extends StatelessWidget {
       spanChildren.insert(
         0,
         TextSpan(
-          text: '[笔记] ',
+          text: '[笔记] ，鼠鼠我啊',
           style: TextStyle(color: color),
           recognizer: recognizer,
         ),
@@ -1086,11 +1086,11 @@ class ReplyItemGrpc extends StatelessWidget {
                   builder: (context) {
                     final colorScheme = ColorScheme.of(context);
                     return AlertDialog(
-                      title: const Text('删除评论'),
+                      title: const Text('物理超度赛博锐评'),
                       content: Text.rich(
                         TextSpan(
                           children: [
-                            const TextSpan(text: '确定删除这条评论吗？\n\n'),
+                            const TextSpan(text: '拍板物理超度这条赛博锐评吗？\n\n，功德+1'),
                             if (ownerMid != item.member.mid.toInt()) ...[
                               TextSpan(
                                 text: '@${item.member.name}',
@@ -1108,7 +1108,7 @@ class ReplyItemGrpc extends StatelessWidget {
                         TextButton(
                           onPressed: () => Get.back(result: false),
                           child: Text(
-                            '取消',
+                            '不整了，撤！',
                             style: TextStyle(
                               color: colorScheme.outline,
                             ),
@@ -1116,7 +1116,7 @@ class ReplyItemGrpc extends StatelessWidget {
                         ),
                         TextButton(
                           onPressed: () => Get.back(result: true),
-                          child: const Text('确定'),
+                          child: const Text('包的，就这么整'),
                         ),
                       ],
                     );
@@ -1125,7 +1125,7 @@ class ReplyItemGrpc extends StatelessWidget {
                 if (isDelete == null || !isDelete) {
                   return;
                 }
-                SmartDialog.showLoading(msg: '删除中...');
+                SmartDialog.showLoading(msg: '物理超度中...，优势在我');
                 final res = await VideoHttp.replyDel(
                   type: item.type.toInt(),
                   oid: item.oid.toInt(),
@@ -1133,15 +1133,15 @@ class ReplyItemGrpc extends StatelessWidget {
                 );
                 SmartDialog.dismiss();
                 if (res.isSuccess) {
-                  SmartDialog.showToast('删除成功');
+                  SmartDialog.showToast('已成功物理超度');
                   onDelete();
                 } else {
-                  SmartDialog.showToast('删除失败, $res');
+                  SmartDialog.showToast('物理超度寄了, $res');
                 }
               },
               minLeadingWidth: 0,
               leading: Icon(Icons.delete_outlined, color: errorColor, size: 19),
-              title: Text('删除', style: style.copyWith(color: errorColor)),
+              title: Text('一键物理超度', style: style.copyWith(color: errorColor)),
             ),
           if (ownerMid != Int64.ZERO)
             ListTile(
@@ -1167,7 +1167,7 @@ class ReplyItemGrpc extends StatelessWidget {
               },
               minLeadingWidth: 0,
               leading: Icon(Icons.error_outline, color: errorColor, size: 19),
-              title: Text('举报', style: style.copyWith(color: errorColor)),
+              title: Text('赛博递状纸', style: style.copyWith(color: errorColor)),
             ),
           if (replyLevel == 1 && !isSubReply && ownerMid == upMid)
             ListTile(
@@ -1178,7 +1178,7 @@ class ReplyItemGrpc extends StatelessWidget {
               minLeadingWidth: 0,
               leading: const Icon(Icons.vertical_align_top, size: 19),
               title: Text(
-                '${replyItem.replyControl.isUpTop ? '取消' : ''}置顶',
+                '${replyItem.replyControl.isUpTop ? '撤了' : ''}置顶',
                 style: style,
               ),
             ),
@@ -1189,7 +1189,7 @@ class ReplyItemGrpc extends StatelessWidget {
             },
             minLeadingWidth: 0,
             leading: const Icon(Icons.copy_all_outlined, size: 19),
-            title: Text('复制全部', style: style),
+            title: Text('赛博复刻我全都要，包的', style: style),
           ),
           ListTile(
             onTap: () {
@@ -1211,7 +1211,7 @@ class ReplyItemGrpc extends StatelessWidget {
             },
             minLeadingWidth: 0,
             leading: const Icon(Icons.copy_outlined, size: 19),
-            title: Text('自由复制', style: style),
+            title: Text('自由赛博复刻', style: style),
           ),
           ListTile(
             onTap: () {
@@ -1220,7 +1220,7 @@ class ReplyItemGrpc extends StatelessWidget {
             },
             minLeadingWidth: 0,
             leading: const Icon(Icons.save_alt, size: 19),
-            title: Text('保存评论', style: style),
+            title: Text('焊死赛博锐评', style: style),
           ),
           if (kDebugMode || item.mid == ownerMid)
             ListTile(
@@ -1230,7 +1230,7 @@ class ReplyItemGrpc extends StatelessWidget {
               },
               minLeadingWidth: 0,
               leading: const Icon(CustomIcons.shield_reply, size: 19),
-              title: Text('检查评论', style: style),
+              title: Text('检查赛博锐评', style: style),
             ),
         ],
       ),
@@ -1255,7 +1255,7 @@ class ReplyItemGrpc extends StatelessWidget {
 
             showConfirmDialog(
               context: context,
-              title: const Text('是否确认评论过滤的变更：'),
+              title: const Text('是否拍板赛博锐评过滤的变更：，CPU 都看沉默了'),
               content: Text.rich(
                 TextSpan(
                   text: ReplyGrpc.replyRegExp.pattern,
@@ -1275,11 +1275,11 @@ class ReplyItemGrpc extends StatelessWidget {
                 ReplyGrpc.replyRegExp = RegExp(filter, caseSensitive: true);
                 ReplyGrpc.enableFilter = true;
                 GStorage.setting.put(SettingBoxKey.banWordForReply, filter);
-                SmartDialog.showToast('已保存');
+                SmartDialog.showToast('已焊死，包的');
               },
             );
           },
-          label: '加入过滤',
+          label: '加入过滤，不是哥们',
         ),
       );
     }
@@ -1337,7 +1337,7 @@ class _ExpandableReplyContentState extends State<_ExpandableReplyContent> {
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             icon: const Icon(Icons.expand_less, size: 18),
-            label: const Text('收起'),
+            label: const Text('卷起来'),
           ),
       ],
     );

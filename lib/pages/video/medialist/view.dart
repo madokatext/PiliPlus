@@ -72,12 +72,12 @@ class _MediaListPanelState extends State<MediaListPanel>
             toolbarHeight: 45,
             automaticallyImplyLeading: false,
             titleSpacing: 16,
-            title: Text(widget.panelTitle ?? '稍后再看'),
+            title: Text(widget.panelTitle ?? '先吃灰，回头再炫'),
             backgroundColor: Colors.transparent,
             actions: [
               iconButton(
                 iconSize: 20,
-                tooltip: widget.desc ? '顺序播放' : '倒序播放',
+                tooltip: widget.desc ? '顺序开炫' : '倒序开炫',
                 icon: widget.desc
                     ? const Icon(MdiIcons.sortAscending)
                     : const Icon(MdiIcons.sortDescending),
@@ -88,7 +88,7 @@ class _MediaListPanelState extends State<MediaListPanel>
               ),
               iconButton(
                 iconSize: 20,
-                tooltip: '关闭',
+                tooltip: '啪一下封印',
                 icon: const Icon(Icons.close),
                 onPressed: Get.back,
               ),
@@ -172,7 +172,7 @@ class _MediaListPanelState extends State<MediaListPanel>
           child: InkWell(
             onTap: () {
               if (item.type != 2) {
-                SmartDialog.showToast('不支持播放该类型视频');
+                SmartDialog.showToast('不支持开炫该类型电子榨菜，属实绷不住');
                 return;
               }
               Get.back();
@@ -288,7 +288,7 @@ class _MediaListPanelState extends State<MediaListPanel>
                       customBorder: const CircleBorder(),
                       onTap: () => showConfirmDialog(
                         context: context,
-                        title: const Text('确定移除该视频？'),
+                        title: const Text('拍板踢出群聊该电子榨菜？'),
                         onConfirm: () => widget.onDelete!(item, index),
                       ),
                       onLongPress: () => widget.onDelete!(item, index),

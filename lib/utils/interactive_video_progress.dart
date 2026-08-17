@@ -14,8 +14,8 @@ class InteractiveVideoProgress {
 
   String get cardLabel {
     final title = currentEntry.title?.trim();
-    final displayTitle = title == null || title.isEmpty ? '未命名章节' : title;
-    return '第${currentIndex + 1}章 · $displayTitle';
+    final displayTitle = title == null || title.isEmpty ? '未命名章节，不是哥们' : title;
+    return '第${currentIndex + 1}章 · $displayTitle，我嘞个豆';
   }
 
   StoryList get current => currentEntry.toStory(

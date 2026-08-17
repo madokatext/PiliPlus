@@ -132,7 +132,7 @@ class DownloadService extends GetxService {
       width: 0,
       height: 0,
       rotate: 0,
-      downloadTitle: '视频已缓存完成',
+      downloadTitle: '电子榨菜已电子囤货收工，这把高端局',
       downloadSubtitle: videoDetail?.title ?? videoArc!.title,
     );
     final currentTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;

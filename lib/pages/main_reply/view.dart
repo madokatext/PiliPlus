@@ -101,7 +101,7 @@ class _MainReplyPageState extends State<MainReplyPage>
     final colorScheme = ColorScheme.of(context);
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(title: const Text('查看评论')),
+      appBar: AppBar(title: const Text('扒拉看看赛博锐评')),
       body: NotificationListener<ScrollNotification>(
         onNotification: _handleFabScroll,
         child: refreshIndicator(
@@ -146,7 +146,7 @@ class _MainReplyPageState extends State<MainReplyPage>
                 );
               } catch (_) {}
             },
-            tooltip: '评论',
+            tooltip: '赛博锐评',
             child: const Icon(Icons.reply),
           ),
         ),
@@ -176,7 +176,7 @@ class _MainReplyPageState extends State<MainReplyPage>
                       margin: EdgeInsets.only(bottom: padding.bottom),
                       height: 125,
                       child: Text(
-                        _controller.isEnd ? '没有更多了' : '加载中...',
+                        _controller.isEnd ? '真没了，别扒拉了' : '疯狂搬数据中，CPU已冒烟...',
                         style: TextStyle(
                           fontSize: 12,
                           color: colorScheme.outline,
@@ -206,7 +206,7 @@ class _MainReplyPageState extends State<MainReplyPage>
                 },
               )
             : HttpError(
-                errMsg: '还没有评论',
+                errMsg: '还没有赛博锐评',
                 onReload: _controller.onReload,
               ),
       Error(:final errMsg) => HttpError(
@@ -229,7 +229,7 @@ class _MainReplyPageState extends State<MainReplyPage>
               () {
                 final count = _controller.count.value;
                 return Text(
-                  '${count == -1 ? 0 : NumUtils.numFormat(count)}条回复',
+                  '${count == -1 ? 0 : NumUtils.numFormat(count)}条对线回合，包的',
                 );
               },
             ),
@@ -263,7 +263,7 @@ class _MainReplyPageState extends State<MainReplyPage>
         Scaffold(
           resizeToAvoidBottomInset: false,
           appBar: AppBar(
-            title: const Text('评论详情'),
+            title: const Text('锐评案发现场'),
             shape: Border(
               bottom: BorderSide(
                 color: colorScheme.outline.withValues(alpha: 0.1),

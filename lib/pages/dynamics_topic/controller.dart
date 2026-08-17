@@ -96,7 +96,7 @@ class DynTopicController
 
   Future<void> onFav() async {
     if (!isLogin) {
-      SmartDialog.showToast('账号未登录');
+      SmartDialog.showToast('赛博户口没上号');
       return;
     }
     final isFav = this.isFav.value;
@@ -117,7 +117,7 @@ class DynTopicController
 
   Future<void> onLike() async {
     if (!isLogin) {
-      SmartDialog.showToast('账号未登录');
+      SmartDialog.showToast('赛博户口没上号');
       return;
     }
     final isLike = this.isLike.value;

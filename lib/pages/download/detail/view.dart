@@ -114,13 +114,13 @@ class _DownloadDetailPageState extends State<DownloadDetailPage>
                   handleSelect();
                   final res = await Future.wait(futures);
                   if (res.every((e) => e)) {
-                    SmartDialog.showToast('更新成功');
+                    SmartDialog.showToast('版本投胎成功，包的');
                   } else {
-                    SmartDialog.showToast('更新失败');
+                    SmartDialog.showToast('版本投胎寄了');
                   }
                 },
                 child: Text(
-                  '更新',
+                  '版本投胎',
                   style: TextStyle(color: colorScheme.onSurface),
                 ),
               ),
@@ -129,7 +129,7 @@ class _DownloadDetailPageState extends State<DownloadDetailPage>
               title: Text(widget.title),
               actions: [
                 IconButton(
-                  tooltip: '多选',
+                  tooltip: '批量抓壮丁',
                   onPressed: () {
                     if (enableMultiSelect) {
                       handleSelect();
@@ -194,7 +194,7 @@ class _DownloadDetailPageState extends State<DownloadDetailPage>
   void onRemove() {
     showConfirmDialog(
       context: context,
-      title: const Text('确定删除选中视频？'),
+      title: const Text('拍板物理超度选中电子榨菜？，CPU 都看沉默了'),
       onConfirm: () async {
         SmartDialog.showLoading();
         final allChecked = this.allChecked.toList();

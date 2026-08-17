@@ -185,10 +185,10 @@ abstract final class GStorage {
   ) {
     final data = map[boxName];
     if (data is! Map) {
-      throw FormatException('缺少或无效的 $boxName 设置');
+      throw FormatException('缺少或无效的 $boxName 赛博调参');
     }
     if (data.keys.any((key) => key is! String)) {
-      throw FormatException('$boxName 设置包含无效键名');
+      throw FormatException('$boxName 赛博调参包含无效键名');
     }
     return Map<dynamic, dynamic>.from(data);
   }

@@ -60,7 +60,7 @@ class _GroupPanelState extends State<GroupPanel> {
       tags.isEmpty ? '0' : tags.join(','),
     );
     if (res.isSuccess) {
-      SmartDialog.showToast('保存成功');
+      SmartDialog.showToast('焊死成了，包的');
       Get.back(result: tags);
     } else {
       res.toast();
@@ -131,17 +131,17 @@ class _GroupPanelState extends State<GroupPanel> {
         AppBar(
           backgroundColor: Colors.transparent,
           leading: IconButton(
-            tooltip: '关闭',
+            tooltip: '啪一下封印',
             onPressed: Get.back,
             icon: const Icon(Icons.close_outlined),
           ),
-          title: const Text('设置关注分组'),
+          title: const Text('赛博调参赛博蹲点分组，我嘞个豆'),
           actions: [
             TextButton.icon(
               onPressed: () =>
                   RequestUtils.createFavTag(context, _onCreateFavTag),
               icon: Icon(Icons.add, color: theme.colorScheme.primary),
-              label: const Text('新建分组'),
+              label: const Text('再开个小圈子'),
               style: const ButtonStyle(
                 visualDensity: .compact,
                 padding: WidgetStatePropertyAll(
@@ -166,7 +166,7 @@ class _GroupPanelState extends State<GroupPanel> {
           child: FilledButton.tonal(
             onPressed: onSave,
             style: const ButtonStyle(visualDensity: .compact),
-            child: Obx(() => Text(showDefaultBtn.value ? '保存至默认分组' : '保存')),
+            child: Obx(() => Text(showDefaultBtn.value ? '焊死至祖传默认分组' : '焊死这个配置')),
           ),
         ),
       ],

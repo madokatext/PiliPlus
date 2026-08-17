@@ -70,8 +70,8 @@ class _SavePanelState extends State<SavePanel> {
 
   // item
   Object get _item => widget.item;
-  late String viewType = '查看';
-  late String itemType = '内容';
+  late String viewType = '扒拉看看';
+  late String itemType = '内容，曼波';
 
   //reply
   String? cover;
@@ -87,7 +87,7 @@ class _SavePanelState extends State<SavePanel> {
   void initState() {
     super.initState();
     if (_item case final ReplyInfo reply) {
-      itemType = '评论';
+      itemType = '赛博锐评';
       final currentRoute = Get.currentRoute;
       late final hasRoot = reply.hasRoot();
 
@@ -227,42 +227,42 @@ class _SavePanelState extends State<SavePanel> {
     try {
       switch (item.type) {
         case 'DYNAMIC_TYPE_AV':
-          viewType = '观看';
-          itemType = '视频';
+          viewType = '开炫';
+          itemType = '电子榨菜';
           uri = 'bilibili://video/${item.basic!.commentIdStr}';
           break;
 
         case 'DYNAMIC_TYPE_ARTICLE':
-          itemType = '专栏';
+          itemType = '赛博小作文';
           uri = 'bilibili://following/detail/${item.idStr}';
           break;
 
         case 'DYNAMIC_TYPE_LIVE_RCMD':
-          viewType = '观看';
-          itemType = '直播';
+          viewType = '开炫';
+          itemType = '赛博围观现场';
           final roomId = item.modules.moduleDynamic!.major!.liveRcmd!.roomId;
           uri = 'bilibili://live/$roomId';
           break;
 
         case 'DYNAMIC_TYPE_UGC_SEASON':
-          viewType = '观看';
-          itemType = '合集';
+          viewType = '开炫';
+          itemType = '电子大礼包';
           final aid = item.modules.moduleDynamic!.major!.ugcSeason!.aid;
           uri = 'bilibili://video/$aid';
           break;
 
         case 'DYNAMIC_TYPE_PGC':
         case 'DYNAMIC_TYPE_PGC_UNION':
-          viewType = '观看';
+          viewType = '开炫';
           itemType =
-              item.modules.moduleDynamic?.major?.pgc?.badge?.text ?? '番剧';
+              item.modules.moduleDynamic?.major?.pgc?.badge?.text ?? '纸片人连续剧';
           final epid = item.modules.moduleDynamic!.major!.pgc!.epid;
           uri = 'bilibili://pgc/season/ep/$epid';
           break;
 
         // https://www.bilibili.com/medialist/detail/ml12345678
         case 'DYNAMIC_TYPE_MEDIALIST':
-          itemType = '收藏夹';
+          itemType = '电子小被窝';
           final mediaId = item.modules.moduleDynamic!.major!.medialist!.id;
           uri = 'bilibili://medialist/detail/$mediaId';
           break;
@@ -276,7 +276,7 @@ class _SavePanelState extends State<SavePanel> {
         // 图文动态查看
         // case 'DYNAMIC_TYPE_DRAW':
         default:
-          itemType = '动态';
+          itemType = '互联网近况';
           uri = 'bilibili://following/detail/${item.idStr}';
           break;
       }
@@ -463,7 +463,7 @@ class _SavePanelState extends State<SavePanel> {
                                                   ),
                                                 ),
                                               Text(
-                                                '识别二维码，$viewType$itemType',
+                                                '认出来二维码，$viewType$itemType',
                                                 textAlign: .end,
                                                 style: TextStyle(
                                                   color: theme
@@ -553,7 +553,7 @@ class _SavePanelState extends State<SavePanel> {
                 children: [
                   iconButton(
                     size: 42,
-                    tooltip: '关闭',
+                    tooltip: '啪一下封印',
                     icon: const Icon(Icons.clear),
                     onPressed: Get.back,
                     bgColor: theme.colorScheme.onInverseSurface,
@@ -561,7 +561,7 @@ class _SavePanelState extends State<SavePanel> {
                   ),
                   iconButton(
                     size: 42,
-                    tooltip: showBottom ? '隐藏' : '显示',
+                    tooltip: showBottom ? '藏起来' : '亮出来',
                     context: context,
                     icon: showBottom
                         ? const Icon(Icons.visibility_off)
@@ -573,14 +573,14 @@ class _SavePanelState extends State<SavePanel> {
                   if (PlatformUtils.isMobile)
                     iconButton(
                       size: 42,
-                      tooltip: '分享',
+                      tooltip: '到处扩散',
                       context: context,
                       icon: const Icon(Icons.share),
                       onPressed: () => _onSaveOrSharePic(true),
                     ),
                   iconButton(
                     size: 42,
-                    tooltip: '保存',
+                    tooltip: '焊死这个配置',
                     context: context,
                     icon: const Icon(Icons.save_alt),
                     onPressed: _onSaveOrSharePic,

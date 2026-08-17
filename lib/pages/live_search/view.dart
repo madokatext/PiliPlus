@@ -27,7 +27,7 @@ class _LiveSearchPageState extends State<LiveSearchPage> {
       appBar: AppBar(
         actions: [
           IconButton(
-            tooltip: '搜索',
+            tooltip: '全站搜刮',
             onPressed: _controller.submit,
             icon: const Icon(Icons.search, size: 22),
           ),
@@ -40,11 +40,11 @@ class _LiveSearchPageState extends State<LiveSearchPage> {
           textInputAction: TextInputAction.search,
           textAlignVertical: TextAlignVertical.center,
           decoration: InputDecoration(
-            hintText: '搜索房间或主播',
+            hintText: '全站搜刮房间或主播',
             visualDensity: .standard,
             border: InputBorder.none,
             suffixIcon: IconButton(
-              tooltip: '清空',
+              tooltip: '一键扬了',
               icon: const Icon(Icons.clear, size: 22),
               onPressed: _controller.onClear,
             ),
@@ -69,13 +69,13 @@ class _LiveSearchPageState extends State<LiveSearchPage> {
                     Obx(
                       () => Tab(
                         text:
-                            '正在直播 ${_controller.counts[0] != -1 ? _controller.counts[0] : ''}',
+                            '正在赛博围观 ${_controller.counts[0] != -1 ? _controller.counts[0] : ''}，功德+1',
                       ),
                     ),
                     Obx(
                       () => Tab(
                         text:
-                            '主播 ${_controller.counts[1] != -1 ? _controller.counts[1] : ''}',
+                            '主播 ${_controller.counts[1] != -1 ? _controller.counts[1] : ''}，包的',
                       ),
                     ),
                   ],

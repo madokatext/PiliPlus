@@ -25,16 +25,16 @@ class MultiSelectAppBarWidget extends StatelessWidget
       return AppBar(
         bottom: child.bottom,
         leading: IconButton(
-          tooltip: '取消',
+          tooltip: '不整了，撤！',
           onPressed: ctr.handleSelect,
           icon: const Icon(Icons.close_outlined),
         ),
-        title: Obx(() => Text('已选: ${ctr.checkedCount}')),
+        title: Obx(() => Text('已选: ${ctr.checkedCount}，启动！')),
         actions: [
           TextButton(
             style: style,
             onPressed: () => ctr.handleSelect(checked: true),
-            child: const Text('全选'),
+            child: const Text('我全都要'),
           ),
           ...?actions,
           TextButton(
@@ -46,7 +46,7 @@ class MultiSelectAppBarWidget extends StatelessWidget
               ctr.onRemove();
             },
             child: Text(
-              '移除',
+              '踢出群聊',
               style: TextStyle(color: colorScheme.error),
             ),
           ),

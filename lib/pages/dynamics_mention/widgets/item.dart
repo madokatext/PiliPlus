@@ -35,7 +35,7 @@ class DynMentionItem extends StatelessWidget {
           style: const TextStyle(fontSize: 14),
         ),
         subtitle: Text(
-          '${NumUtils.numFormat(item.fans)}粉丝',
+          '${NumUtils.numFormat(item.fans)}粉丝，鼠鼠我啊',
           style: TextStyle(color: Theme.of(context).colorScheme.outline),
         ),
         trailing: Checkbox(

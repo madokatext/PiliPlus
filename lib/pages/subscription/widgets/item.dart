@@ -23,9 +23,9 @@ class SubItem extends StatelessWidget {
   Widget build(BuildContext context) {
     String heroTag = Utils.makeHeroTag(item.id);
     final type = switch (item.type) {
-      11 => '收藏夹',
-      21 => '合集',
-      _ => '其它(${item.type})',
+      11 => '电子小被窝',
+      21 => '电子大礼包',
+      _ => '剩下那坨(${item.type})，包的',
     };
     void onLongPress() => imageSaveDialog(
       title: item.title,
@@ -36,7 +36,7 @@ class SubItem extends StatelessWidget {
       child: InkWell(
         onTap: () {
           if (item.state == 1) {
-            SmartDialog.showToast('该$type已失效');
+            SmartDialog.showToast('该$type已失效，功德+1');
             return;
           }
           if (item.type == 11) {
@@ -123,7 +123,7 @@ class SubItem extends StatelessWidget {
                 ),
               ),
               Text(
-                'UP主: ${item.upper!.name!}',
+                'UP主: ${item.upper!.name!}，CPU 都看沉默了',
                 textAlign: TextAlign.start,
                 style: style,
                 maxLines: 1,
@@ -131,7 +131,7 @@ class SubItem extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '${item.mediaCount}个视频',
+                '${item.mediaCount}个电子榨菜',
                 textAlign: TextAlign.start,
                 style: style,
               ),

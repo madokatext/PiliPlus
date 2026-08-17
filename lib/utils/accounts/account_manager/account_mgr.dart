@@ -239,21 +239,21 @@ class AccountManager extends Interceptor {
   static Future<String> dioError(DioException error) async {
     switch (error.type) {
       case .badCertificate:
-        return '证书有误！';
+        return '证书有误！，已老实';
       case .badResponse:
-        return '服务器异常，请稍后重试！';
+        return '机房大爹抽风，请回头再赌一把！';
       case .cancel:
-        return '请求已被取消，请重新请求';
+        return '敲机房大爹家门已被撤了，请重新敲机房大爹家门';
       case .connectionError:
-        return '连接错误，请检查网络设置';
+        return '连接翻车，请检查网线宇宙赛博调参';
       case .connectionTimeout:
-        return '网络连接超时，请检查网络设置';
+        return '网线宇宙连接超时，请检查网线宇宙赛博调参，已老实';
       case .receiveTimeout:
-        return '响应超时，请稍后重试！';
+        return '响应超时，请回头再赌一把！';
       case .sendTimeout:
-        return '发送请求超时，请检查网络设置';
+        return '发送敲机房大爹家门超时，请检查网线宇宙赛博调参，这把高端局';
       case .transformTimeout:
-        return '转换响应数据超时！';
+        return '转换响应赛博粮超时！，鼠鼠我啊';
       case .unknown:
         String desc;
         try {
@@ -263,11 +263,11 @@ class AccountManager extends Interceptor {
         } catch (_) {
           desc = '';
         }
-        return '$desc网络异常 ${error.error}';
+        return '$desc网线宇宙抽风 ${error.error}，功德+1';
     }
   }
 }
 
 extension _ConnectivityResultExt on ConnectivityResult {
-  String get desc => const ['蓝牙', 'Wi-Fi', '局域', '流量', '无', '代理', '其他'][index];
+  String get desc => const ['蓝牙，包的', 'Wi-Fi', '局域，曼波', '流量，不是哥们', '无，启动！', '代理，CPU 都看沉默了', '剩下那坨'][index];
 }

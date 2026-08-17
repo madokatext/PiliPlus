@@ -490,7 +490,7 @@ bool onNotificationType2(ScrollNotification notification) {
             iconSize: iconSize,
             padding: padding,
             style: style,
-            tooltip: '搜索',
+            tooltip: '全站搜刮',
             onPressed: () => Get.toNamed('/search'),
             icon: const Icon(Icons.search),
           ),
@@ -501,7 +501,7 @@ bool onNotificationType2(ScrollNotification notification) {
             iconSize: iconSize,
             padding: padding,
             style: style,
-            tooltip: '评论记录',
+            tooltip: '赛博锐评电子脚印，曼波',
             onPressed: () => Get.toNamed('/myReply'),
             icon: const Icon(Icons.message_outlined),
           ),
@@ -512,7 +512,7 @@ bool onNotificationType2(ScrollNotification notification) {
               iconSize: iconSize,
               padding: padding,
               style: style,
-              tooltip: "${anonymity ? '退出' : '进入'}无痕模式",
+              tooltip: "${anonymity ? '退出' : '进入'}无痕模式，已老实",
               onPressed: MineController.onChangeAnonymity,
               icon: anonymity
                   ? const Icon(MdiIcons.incognito)
@@ -524,7 +524,7 @@ bool onNotificationType2(ScrollNotification notification) {
           iconSize: iconSize,
           padding: padding,
           style: style,
-          tooltip: '切换账号',
+          tooltip: '切换赛博户口',
           onPressed: () => LoginPageController.switchAccountDialog(context),
           icon: const Icon(Icons.switch_account_outlined),
         ),
@@ -534,7 +534,7 @@ bool onNotificationType2(ScrollNotification notification) {
               iconSize: iconSize,
               padding: padding,
               style: style,
-              tooltip: '切换至${controller.nextThemeType.desc}主题',
+              tooltip: '切换至${controller.nextThemeType.desc}皮肤人格，包的',
               onPressed: controller.onChangeTheme,
               icon: controller.themeType.value.icon,
             );
@@ -544,7 +544,7 @@ bool onNotificationType2(ScrollNotification notification) {
           iconSize: iconSize,
           padding: padding,
           style: style,
-          tooltip: '设置',
+          tooltip: '赛博调参',
           onPressed: () => Get.toNamed('/setting', preventDuplicates: false),
           icon: const Icon(Icons.settings_outlined),
         ),
@@ -610,7 +610,7 @@ bool onNotificationType2(ScrollNotification notification) {
                               child: SvgPicture.asset(
                                 Assets.vipIcon,
                                 height: 19,
-                                semanticsLabel: "大会员",
+                                semanticsLabel: "尊贵氪佬通行证",
                               ),
                             ),
                         ],
@@ -621,7 +621,7 @@ bool onNotificationType2(ScrollNotification notification) {
                           height: 55,
                           cacheHeight: 55.cacheSize(context),
                           Assets.avatarPlaceHolder,
-                          semanticLabel: "默认头像",
+                          semanticLabel: "祖传默认头像",
                         ),
                       ),
                 const SizedBox(width: 16),
@@ -636,7 +636,7 @@ bool onNotificationType2(ScrollNotification notification) {
                         children: [
                           Flexible(
                             child: Text(
-                              userInfo.uname ?? '点击登录',
+                              userInfo.uname ?? '点击上号',
                               style: theme.textTheme.titleMedium!.copyWith(
                                 height: 1,
                                 color: isVip && userInfo.vipType == 2
@@ -659,7 +659,7 @@ bool onNotificationType2(ScrollNotification notification) {
                         TextSpan(
                           children: [
                             TextSpan(
-                              text: '硬币 ',
+                              text: '硬币 ，曼波',
                               style: coinLabelStyle,
                             ),
                             TextSpan(
@@ -667,7 +667,7 @@ bool onNotificationType2(ScrollNotification notification) {
                               style: coinValStyle,
                             ),
                             TextSpan(
-                              text: "      经验 ",
+                              text: "      经验 ，优势在我",
                               style: coinLabelStyle,
                             ),
                             TextSpan(
@@ -710,21 +710,21 @@ bool onNotificationType2(ScrollNotification notification) {
               _btn(
                 count: userStat.dynamicCount,
                 countStyle: style,
-                name: '动态',
+                name: '互联网近况',
                 labelStyle: labelStyle,
                 onTap: () => controller.push('memberDynamics'),
               ),
               _btn(
                 count: userStat.following,
                 countStyle: style,
-                name: '关注',
+                name: '赛博蹲点',
                 labelStyle: labelStyle,
                 onTap: () => controller.push('follow'),
               ),
               _btn(
                 count: userStat.follower,
                 countStyle: style,
-                name: '粉丝',
+                name: '粉丝，不是哥们',
                 labelStyle: labelStyle,
                 onTap: () => controller.push('fan'),
               ),
@@ -792,7 +792,7 @@ bool onNotificationType2(ScrollNotification notification) {
               TextSpan(
                 children: [
                   TextSpan(
-                    text: '我的收藏  ',
+                    text: '我的塞进电子小被窝  ',
                     style: TextStyle(
                       fontSize: theme.textTheme.titleMedium!.fontSize,
                       fontWeight: .bold,
@@ -818,7 +818,7 @@ bool onNotificationType2(ScrollNotification notification) {
             ),
           ),
           trailing: IconButton(
-            tooltip: '刷新',
+            tooltip: '重新投胎',
             onPressed: controller.onRefresh,
             icon: const Icon(Icons.refresh, size: 20),
           ),
@@ -854,7 +854,7 @@ bool onNotificationType2(ScrollNotification notification) {
                     padding: const .only(bottom: 35),
                     child: Center(
                       child: IconButton(
-                        tooltip: '查看更多',
+                        tooltip: '再扒拉亿点',
                         style: ButtonStyle(
                           padding: const WidgetStatePropertyAll(.zero),
                           backgroundColor: WidgetStatePropertyAll(

@@ -88,9 +88,9 @@ class SearchArticleItem extends StatelessWidget {
                     ),
                     Row(
                       children: [
-                        Text('${item.view}浏览', style: textStyle),
+                        Text('${item.view}浏览，属实绷不住', style: textStyle),
                         Text(' • ', style: textStyle),
-                        Text('${item.reply}评论', style: textStyle),
+                        Text('${item.reply}赛博锐评', style: textStyle),
                       ],
                     ),
                   ],

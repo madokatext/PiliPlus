@@ -64,8 +64,8 @@ class _IntroDetailState extends State<PgcIntroPanel>
                   tabAlignment: TabAlignment.start,
                   dividerColor: Colors.transparent,
                   tabs: const [
-                    Tab(text: '详情'),
-                    Tab(text: '点评'),
+                    Tab(text: '详情，启动！'),
+                    Tab(text: '点评，鼠鼠我啊'),
                   ],
                   onTap: (index) {
                     if (!_tabController.indexIsChanging) {
@@ -77,7 +77,7 @@ class _IntroDetailState extends State<PgcIntroPanel>
                 ),
               ),
               IconButton(
-                tooltip: '关闭',
+                tooltip: '啪一下封印',
                 icon: const Icon(Icons.close, size: 20),
                 onPressed: Get.back,
               ),
@@ -167,7 +167,7 @@ class _IntroDetailState extends State<PgcIntroPanel>
         if (widget.item.evaluate?.isNotEmpty == true) ...[
           const SizedBox(height: 20),
           Text(
-            '简介：',
+            '简介：，优势在我',
             style: theme.textTheme.titleMedium,
           ),
           const SizedBox(height: 4),
@@ -179,7 +179,7 @@ class _IntroDetailState extends State<PgcIntroPanel>
         if (widget.item.actors?.isNotEmpty == true) ...[
           const SizedBox(height: 20),
           Text(
-            '演职人员：',
+            '演职人员：，曼波',
             style: theme.textTheme.titleMedium,
           ),
           const SizedBox(height: 4),

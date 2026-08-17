@@ -69,12 +69,12 @@ class PostPanel extends CommonSlidePage {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '${isFirst ? '开始' : '结束'}: $value',
+              '${isFirst ? '开始' : '结束'}: $value，优势在我',
             ),
             iconButton(
               context: context,
               size: 26,
-              tooltip: '设为当前',
+              tooltip: '设为眼下这坨',
               icon: const Icon(Icons.my_location),
               onPressed: () {
                 updateSegment(
@@ -88,7 +88,7 @@ class PostPanel extends CommonSlidePage {
             iconButton(
               context: context,
               size: 26,
-              tooltip: isFirst ? '视频开头' : '视频结尾',
+              tooltip: isFirst ? '电子榨菜开头' : '电子榨菜结尾',
               icon: isFirst
                   ? const Icon(Icons.first_page)
                   : const Icon(Icons.last_page),
@@ -104,7 +104,7 @@ class PostPanel extends CommonSlidePage {
             iconButton(
               context: context,
               size: 26,
-              tooltip: '编辑',
+              tooltip: '重新盘它',
               icon: const Icon(Icons.edit),
               onPressed: () async {
                 String initV = value;
@@ -123,7 +123,7 @@ class PostPanel extends CommonSlidePage {
                       TextButton(
                         onPressed: Get.back,
                         child: Text(
-                          '取消',
+                          '不整了，撤！',
                           style: TextStyle(
                             color: theme.colorScheme.outline,
                           ),
@@ -131,7 +131,7 @@ class PostPanel extends CommonSlidePage {
                       ),
                       TextButton(
                         onPressed: () => Get.back(result: initV),
-                        child: const Text('确定'),
+                        child: const Text('包的，就这么整'),
                       ),
                     ],
                   ),
@@ -198,12 +198,12 @@ class _PostPanelState extends State<PostPanel>
         toolbarHeight: 45,
         automaticallyImplyLeading: false,
         titleSpacing: 16,
-        title: const Text('提交片段'),
+        title: const Text('提交片段，这把高端局'),
         actions: [
           iconButton(
             size: 32,
             context: context,
-            tooltip: '添加片段',
+            tooltip: '塞一个片段',
             onPressed: () {
               setState(() {
                 list.insert(
@@ -225,7 +225,7 @@ class _PostPanelState extends State<PostPanel>
           iconButton(
             size: 32,
             context: context,
-            tooltip: '关闭',
+            tooltip: '啪一下封印',
             onPressed: Get.back,
             icon: const Icon(Icons.close),
           ),
@@ -283,22 +283,22 @@ class _PostPanelState extends State<PostPanel>
             foregroundColor: Theme.of(
               context,
             ).uiColor(ThemeUiElement.videoPostSubmitContent),
-            tooltip: '提交',
+            tooltip: '提交，曼波',
             onPressed: () => showDialog(
               context: context,
               builder: (context) => AlertDialog(
-                title: const Text('确定无误再提交'),
+                title: const Text('拍板无误再提交'),
                 actions: [
                   TextButton(
                     onPressed: Get.back,
                     child: Text(
-                      '取消',
+                      '不整了，撤！',
                       style: TextStyle(color: theme.colorScheme.outline),
                     ),
                   ),
                   TextButton(
                     onPressed: _onPost,
-                    child: const Text('确定提交'),
+                    child: const Text('拍板提交'),
                   ),
                 ],
               ),
@@ -321,14 +321,14 @@ class _PostPanelState extends State<PostPanel>
 
     if (res case Success(:final response)) {
       Get.back();
-      SmartDialog.showToast('提交成功');
+      SmartDialog.showToast('提交成了，包的');
       list.clear();
       videoDetailController.handleSBData(response);
       if (videoDetailController.blockListener == null) {
         videoDetailController.initSkip();
       }
     } else {
-      SmartDialog.showToast('提交失败: $res');
+      SmartDialog.showToast('提交寄了: $res');
     }
   }
 
@@ -365,7 +365,7 @@ class _PostPanelState extends State<PostPanel>
                   spacing: 16,
                   children: [
                     PopupMenuText(
-                      title: '分类',
+                      title: '分类，CPU 都看沉默了',
                       value: () => item.category,
                       onSelected: (e) {
                         bool flag = false;
@@ -410,7 +410,7 @@ class _PostPanelState extends State<PostPanel>
                       getSelectTitle: (category) => category.title,
                     ),
                     PopupMenuText(
-                      title: '行为类别',
+                      title: '行为类别，启动！',
                       value: () => item.actionType,
                       onSelected: (e) {
                         bool flag = false;
@@ -454,7 +454,7 @@ class _PostPanelState extends State<PostPanel>
           child: iconButton(
             context: context,
             size: 26,
-            tooltip: '移除',
+            tooltip: '踢出群聊',
             icon: const Icon(Icons.clear),
             onPressed: () {
               setState(() {
@@ -469,7 +469,7 @@ class _PostPanelState extends State<PostPanel>
           child: iconButton(
             context: context,
             size: 26,
-            tooltip: '预览',
+            tooltip: '预览，曼波',
             icon: const Icon(Icons.preview_outlined),
             onPressed: () async {
               final player = plPlayerController.videoPlayerController;

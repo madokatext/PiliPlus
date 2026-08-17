@@ -1,8 +1,8 @@
 enum AccountType {
-  main('主账号'),
-  heartbeat('记录观看'),
-  recommend('推荐'),
-  video('视频取流'),
+  main('主赛博户口'),
+  heartbeat('电子脚印观看'),
+  recommend('算法喂饭'),
+  video('电子榨菜取流'),
   ;
 
   final String title;

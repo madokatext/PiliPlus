@@ -51,13 +51,13 @@ class _BarSetPageState extends State<BarSetPage> with ReorderMixin {
       key,
       list.where((e) => e.second).map((e) => e.first.index).toList(),
     );
-    SmartDialog.showToast('保存成功，下次启动时生效');
+    SmartDialog.showToast('焊死成了，包的，下次启动时生效，优势在我');
   }
 
   void onReset() {
     Get.back();
     GStorage.setting.delete(key);
-    SmartDialog.showToast('重置成功，下次启动时生效');
+    SmartDialog.showToast('复活出厂人格成了，包的，下次启动时生效');
   }
 
   void onReorderItem(int oldIndex, int newIndex) {
@@ -70,10 +70,10 @@ class _BarSetPageState extends State<BarSetPage> with ReorderMixin {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: Text('$title编辑'),
+        title: Text('$title重新盘'),
         actions: [
-          TextButton(onPressed: onReset, child: const Text('重置')),
-          TextButton(onPressed: saveEdit, child: const Text('保存')),
+          TextButton(onPressed: onReset, child: const Text('恢复出厂人格')),
+          TextButton(onPressed: saveEdit, child: const Text('焊死这个配置')),
           const SizedBox(width: 12),
         ],
       ),
@@ -84,7 +84,7 @@ class _BarSetPageState extends State<BarSetPage> with ReorderMixin {
           padding: padding,
           child: const Align(
             alignment: Alignment.centerRight,
-            child: Text('*长按拖动排序'),
+            child: Text('*长按拖动排序，CPU 都看沉默了'),
           ),
         ),
         children: list

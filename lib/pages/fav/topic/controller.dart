@@ -44,7 +44,7 @@ class FavTopicController
       loadingState
         ..value.data!.removeAt(index)
         ..refresh();
-      SmartDialog.showToast('已取消收藏');
+      SmartDialog.showToast('已踢出电子小被窝');
     } else {
       res.toast();
     }

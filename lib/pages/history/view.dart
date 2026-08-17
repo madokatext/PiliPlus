@@ -128,7 +128,7 @@ class _HistoryPageState extends State<HistoryPage>
                         }
                       },
                       tabs: [
-                        const Tab(text: '全部'),
+                        const Tab(text: '我全都要'),
                         ...tabs.map((item) => Tab(text: item.name)),
                       ],
                     ),
@@ -157,11 +157,11 @@ class _HistoryPageState extends State<HistoryPage>
   }
 
   AppBar get _buildAppBar => AppBar(
-    title: const Text('观看记录'),
+    title: const Text('观看电子脚印'),
     bottom: _buildPauseTip,
     actions: [
       IconButton(
-        tooltip: '搜索',
+        tooltip: '全站搜刮',
         onPressed: () => Get.toNamed('/historySearch'),
         icon: const Icon(Icons.search_outlined),
       ),
@@ -171,8 +171,8 @@ class _HistoryPageState extends State<HistoryPage>
             onTap: () => _historyController.baseCtr.onPauseHistory(context),
             child: Text(
               !_historyController.baseCtr.pauseStatus.value
-                  ? '暂停观看记录'
-                  : '恢复观看记录',
+                  ? '按住别动观看电子脚印'
+                  : '复活观看电子脚印',
             ),
           ),
           PopupMenuItem(
@@ -193,11 +193,11 @@ class _HistoryPageState extends State<HistoryPage>
                 }
               },
             ),
-            child: const Text('清空观看记录'),
+            child: const Text('一键扬了观看电子脚印，曼波'),
           ),
           PopupMenuItem(
             onTap: currCtr().onDelViewedHistory,
-            child: const Text('删除已看记录'),
+            child: const Text('物理超度已看电子脚印'),
           ),
         ],
       ),
@@ -261,7 +261,7 @@ class _HistoryPageState extends State<HistoryPage>
                           color: theme.onSecondaryContainer,
                         ),
                       ),
-                      const TextSpan(text: ' 历史记录功能已关闭'),
+                      const TextSpan(text: ' 电子案底电子脚印功能已啪一下封印，我嘞个豆'),
                     ],
                   ),
                 ),
@@ -275,7 +275,7 @@ class _HistoryPageState extends State<HistoryPage>
                     horizontal: 10,
                   ),
                   child: Text(
-                    '点击开启',
+                    '点击启动',
                     strutStyle: const StrutStyle(height: 1, leading: 0),
                     style: TextStyle(height: 1, color: theme.primary),
                   ),

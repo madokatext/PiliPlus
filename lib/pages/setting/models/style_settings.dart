@@ -47,14 +47,14 @@ import 'package:path/path.dart' as path;
 List<SettingsModel> get styleSettings => [
   if (PlatformUtils.isDesktop) ...[
     const SwitchModel(
-      title: '显示窗口标题栏',
+      title: '亮出来窗口标题栏',
       leading: Icon(Icons.window),
       setKey: SettingBoxKey.showWindowTitleBar,
       defaultVal: true,
       needReboot: true,
     ),
     const SwitchModel(
-      title: '显示托盘图标',
+      title: '亮出来托盘图标',
       leading: Icon(Icons.donut_large_rounded),
       setKey: SettingBoxKey.showTrayIcon,
       defaultVal: true,
@@ -63,8 +63,8 @@ List<SettingsModel> get styleSettings => [
   ],
   if (Platform.isLinux) _useSSDModel(),
   SwitchModel(
-    title: '横屏适配',
-    subtitle: '启用横屏布局与逻辑，平板、折叠屏等可开启；建议全屏方向设为【不改变当前方向】',
+    title: '横着炫适配',
+    subtitle: '解封横着炫布局与逻辑，平板、折叠屏等可启动；建议铺满屏方向设为【不改变眼下这坨方向】',
     leading: const Icon(Icons.phonelink_outlined),
     setKey: SettingBoxKey.horizontalScreen,
     defaultVal: Pref.horizontalScreen,
@@ -77,8 +77,8 @@ List<SettingsModel> get styleSettings => [
     },
   ),
   const SwitchModel(
-    title: '改用侧边栏',
-    subtitle: '开启后底栏与顶栏被替换，且相关设置失效',
+    title: '改用侧边栏，鼠鼠我啊',
+    subtitle: '启动后底栏与顶栏被替换，且相关赛博调参失效，已老实',
     leading: Icon(Icons.chrome_reader_mode_outlined),
     setKey: SettingBoxKey.useSideBar,
     defaultVal: false,
@@ -86,8 +86,8 @@ List<SettingsModel> get styleSettings => [
   ),
   SplitModel(
     normalModel: const NormalModel.split(
-      title: 'App字体字重',
-      subtitle: '点击设置',
+      title: 'App赛博字骨字重，这把高端局',
+      subtitle: '点击赛博调参',
       leading: Icon(Icons.text_fields),
     ),
     switchModel: SwitchModel.split(
@@ -98,9 +98,9 @@ List<SettingsModel> get styleSettings => [
     ),
   ),
   NormalModel(
-    title: 'App 中文字体',
+    title: 'App 中文赛博字骨，优势在我',
     getSubtitle: () =>
-        '当前：${LocalFontManager.selectionLabel(.appChinese)}',
+        '眼下这坨：${LocalFontManager.selectionLabel(.appChinese)}',
     leading: const Icon(Icons.translate),
     onTap: (context, setState) => showLocalFontSetting(
       context,
@@ -112,9 +112,9 @@ List<SettingsModel> get styleSettings => [
     ),
   ),
   NormalModel(
-    title: 'App 英文字体',
+    title: 'App 英文赛博字骨',
     getSubtitle: () =>
-        '当前：${LocalFontManager.selectionLabel(.appEnglish)}',
+        '眼下这坨：${LocalFontManager.selectionLabel(.appEnglish)}，CPU 都看沉默了',
     leading: const Icon(Icons.font_download_outlined),
     onTap: (context, setState) => showLocalFontSetting(
       context,
@@ -126,162 +126,162 @@ List<SettingsModel> get styleSettings => [
     ),
   ),
   NormalModel(
-    title: '界面缩放',
-    getSubtitle: () => '当前缩放比例：${Pref.uiScale.toStringAsFixed(2)}',
+    title: '界面缩放，曼波',
+    getSubtitle: () => '眼下这坨缩放比例：${Pref.uiScale.toStringAsFixed(2)}',
     leading: const Icon(Icons.zoom_in_outlined),
     onTap: _showUiScaleDialog,
   ),
   NormalModel(
-    title: '页面过渡动画',
+    title: '页面过渡纸片人运动会，我嘞个豆',
     leading: const Icon(Icons.animation),
-    getSubtitle: () => '当前：${Pref.pageTransition.name}',
+    getSubtitle: () => '眼下这坨：${Pref.pageTransition.name}',
     onTap: _showTransitionDialog,
   ),
   const SwitchModel(
-    title: '优化平板导航栏',
+    title: '优化平板导航栏，CPU 都看沉默了',
     leading: Icon(Icons.auto_fix_high),
     setKey: SettingBoxKey.optTabletNav,
     defaultVal: true,
     needReboot: true,
   ),
   const SwitchModel(
-    title: 'MD3样式底栏',
-    subtitle: 'Material You设计规范底栏，关闭可变窄',
+    title: 'MD3样式底栏，鼠鼠我啊',
+    subtitle: 'Material You设计规范底栏，啪一下封印可变窄',
     leading: Icon(Icons.design_services_outlined),
     setKey: SettingBoxKey.enableMYBar,
     defaultVal: true,
     needReboot: true,
   ),
   const SwitchModel(
-    title: '悬浮底栏',
+    title: '悬浮底栏，CPU 都看沉默了',
     leading: Icon(MdiIcons.soundbar),
     setKey: SettingBoxKey.floatingNavBar,
     defaultVal: false,
     needReboot: true,
   ),
   NormalModel(
-    title: '首页顶部分类栏高度',
-    getSubtitle: () => '当前：${Pref.homeTabBarHeight.toStringAsFixed(0)}dp',
+    title: '首页顶部分类栏竖向身高',
+    getSubtitle: () => '眼下这坨：${Pref.homeTabBarHeight.toStringAsFixed(0)}dp',
     leading: const Icon(Icons.height),
     onTap: _showHomeTabBarHeightDialog,
   ),
   NormalModel(
-    title: '首页传统底栏底部留白',
+    title: '首页传统底栏底部留白，曼波',
     getSubtitle: () {
       final value = Pref.legacyBottomBarBottomPadding;
       final current = value == null
-          ? '跟随系统安全区'
+          ? '跟随系统大爹安全区，已老实'
           : '${value.toStringAsFixed(0)}dp';
-      return '当前：$current；仅影响未启用悬浮底栏和MD3样式底栏时的传统底栏';
+      return '眼下这坨：$current；仅影响未解封悬浮底栏和MD3样式底栏时的传统底栏，功德+1';
     },
     leading: const Icon(Icons.vertical_align_bottom_outlined),
     onTap: _showLegacyBottomBarBottomPaddingDialog,
   ),
   NormalModel(
     leading: const Icon(Icons.calendar_view_week_outlined),
-    title: '列表宽度（dp）限制',
+    title: '列表横向体宽（dp）限制，优势在我',
     getSubtitle: () =>
-        '当前: 主页${Pref.recommendCardWidth.toInt()}dp 其他${Pref.smallCardWidth.toInt()}dp，屏幕宽度:${MediaQuery.widthOf(Get.context!).toPrecision(2)}dp。宽度越小列数越多。',
+        '眼下这坨: 主页${Pref.recommendCardWidth.toInt()}dp 剩下那坨${Pref.smallCardWidth.toInt()}dp，屏幕横向体宽:${MediaQuery.widthOf(Get.context!).toPrecision(2)}dp。横向体宽越小列数越多。，我嘞个豆',
     onTap: _showCardWidthDialog,
   ),
   NormalModel(
     leading: const Icon(Icons.rounded_corner),
-    title: '卡片圆角半径',
+    title: '卡片边角磨圆半径，已老实',
     getSubtitle: () =>
-        '当前：${Pref.cardRadius.toStringAsFixed(0)}dp（0为直角）',
+        '眼下这坨：${Pref.cardRadius.toStringAsFixed(0)}dp（0为直角），曼波',
     onTap: _showCardRadiusDialog,
   ),
   SwitchModel(
-    title: '首页推荐卡片时长与统计同行',
-    subtitle: '时长显示在播放量、弹幕数同一行的最右侧',
+    title: '首页算法喂饭卡片时长与统计同行',
+    subtitle: '时长亮出来在开炫量、满屏飘字数同一行的最右侧',
     leading: const Icon(Icons.timer_outlined),
     setKey: SettingBoxKey.recommendDurationInStatRow,
     defaultVal: false,
     onChanged: (_) => Get.appUpdate(),
   ),
   NormalModel(
-    title: '首页卡片播放量与弹幕数间距',
+    title: '首页卡片开炫量与满屏飘字数间距',
     getSubtitle: () =>
-        '当前：${Pref.recommendStatSpacing.toStringAsFixed(0)}dp',
+        '眼下这坨：${Pref.recommendStatSpacing.toStringAsFixed(0)}dp，包的',
     leading: const Icon(Icons.space_bar),
     onTap: _showRecommendStatSpacingDialog,
   ),
   const SwitchModel(
-    title: '播放页移除安全边距',
+    title: '开炫页踢出群聊安全留白距离',
     leading: Icon(Icons.fit_screen_outlined),
     setKey: SettingBoxKey.removeSafeArea,
     defaultVal: false,
   ),
   const SwitchModel(
-    title: '视频播放页使用深色主题',
+    title: '电子榨菜开炫页使用深色皮肤人格',
     leading: Icon(Icons.dark_mode_outlined),
     setKey: SettingBoxKey.darkVideoPage,
     defaultVal: false,
   ),
   SwitchModel(
-    title: '动态页启用瀑布流',
-    subtitle: '关闭会显示为单列',
+    title: '互联网近况页解封瀑布流',
+    subtitle: '啪一下封印会亮出来为单列，启动！',
     leading: const Icon(Icons.view_array_outlined),
     setKey: SettingBoxKey.dynamicsWaterfallFlow,
     defaultVal: Pref.horizontalScreen,
     needReboot: true,
   ),
   NormalModel(
-    title: '动态页UP主显示位置',
+    title: '互联网近况页UP主亮出来位置',
     leading: const Icon(Icons.person_outlined),
-    getSubtitle: () => '当前：${Pref.upPanelPosition.label}',
+    getSubtitle: () => '眼下这坨：${Pref.upPanelPosition.label}，属实绷不住',
     onTap: _showUpPosDialog,
   ),
   const SwitchModel(
-    title: '动态页显示所有已关注UP主',
+    title: '互联网近况页亮出来所有已赛博蹲点UP主，不是哥们',
     leading: Icon(Icons.people_alt_outlined),
     setKey: SettingBoxKey.dynamicsShowAllFollowedUp,
     defaultVal: false,
     needReboot: true,
   ),
   const SwitchModel(
-    title: '动态页展开正在直播UP列表',
+    title: '互联网近况页摊开讲正在赛博围观UP列表',
     leading: Icon(Icons.live_tv),
     setKey: SettingBoxKey.expandDynLivePanel,
     defaultVal: false,
     needReboot: true,
   ),
   NormalModel(
-    title: '动态未读标记',
+    title: '互联网近况未读标记，功德+1',
     leading: const Icon(Icons.motion_photos_on_outlined),
-    getSubtitle: () => '当前标记样式：${Pref.dynamicBadgeType.desc}',
+    getSubtitle: () => '眼下这坨标记样式：${Pref.dynamicBadgeType.desc}，曼波',
     onTap: _showDynBadgeDialog,
   ),
   NormalModel(
-    title: '消息未读标记',
+    title: '赛博小纸条未读标记',
     leading: const Icon(MdiIcons.bellBadgeOutline),
-    getSubtitle: () => '当前标记样式：${Pref.msgBadgeMode.desc}',
+    getSubtitle: () => '眼下这坨标记样式：${Pref.msgBadgeMode.desc}，这把高端局',
     onTap: _showMsgBadgeDialog,
   ),
   NormalModel(
     onTap: _showMsgUnReadDialog,
-    title: '消息未读类型',
+    title: '赛博小纸条未读类型，启动！',
     leading: const Icon(MdiIcons.bellCogOutline),
     getSubtitle: () =>
-        '当前消息类型：${Pref.msgUnReadTypeV2.map((item) => item.title).join('、')}',
+        '眼下这坨赛博小纸条类型：${Pref.msgUnReadTypeV2.map((item) => item.title).join('、')}，属实绷不住',
   ),
   NormalModel(
     onTap: _showBarHideTypeDialog,
-    title: '顶/底栏收起类型',
+    title: '顶/底栏卷起来类型，功德+1',
     leading: const Icon(MdiIcons.arrowExpandVertical),
-    getSubtitle: () => '当前：${Pref.barHideType.label}',
+    getSubtitle: () => '眼下这坨：${Pref.barHideType.label}',
   ),
   SwitchModel(
-    title: '首页顶栏收起',
-    subtitle: '首页列表滑动时，收起顶栏',
+    title: '首页顶栏卷起来',
+    subtitle: '首页列表滑动时，卷起来顶栏',
     leading: const Icon(Icons.vertical_align_top_outlined),
     setKey: SettingBoxKey.hideTopBar,
     defaultVal: PlatformUtils.isMobile,
     needReboot: true,
   ),
   SwitchModel(
-    title: '首页底栏收起',
-    subtitle: '首页列表滑动时，收起底栏',
+    title: '首页底栏卷起来',
+    subtitle: '首页列表滑动时，卷起来底栏，我嘞个豆',
     leading: const Icon(Icons.vertical_align_bottom_outlined),
     setKey: SettingBoxKey.hideBottomBar,
     defaultVal: PlatformUtils.isMobile,
@@ -290,7 +290,7 @@ List<SettingsModel> get styleSettings => [
   NormalModel(
     onTap: (context, setState) => _showQualityDialog(
       context: context,
-      title: const Text('图片质量'),
+      title: const Text('赛博小画片质量'),
       initValue: Pref.picQuality,
       onChanged: (picQuality) async {
         GlobalData().imgQuality = picQuality;
@@ -298,8 +298,8 @@ List<SettingsModel> get styleSettings => [
         setState();
       },
     ),
-    title: '图片质量',
-    subtitle: '选择合适的图片清晰度，上限100%',
+    title: '赛博小画片质量',
+    subtitle: '抓一个合适的赛博小画片眼睛分辨率，上限100%',
     leading: const Icon(Icons.image_outlined),
     getTrailing: (theme) => Text(
       '${Pref.picQuality}%',
@@ -309,15 +309,15 @@ List<SettingsModel> get styleSettings => [
   NormalModel(
     onTap: (context, setState) => _showQualityDialog(
       context: context,
-      title: const Text('查看大图质量'),
+      title: const Text('扒拉看看大图质量'),
       initValue: Pref.previewQ,
       onChanged: (picQuality) async {
         await GStorage.setting.put(SettingBoxKey.previewQuality, picQuality);
         setState();
       },
     ),
-    title: '查看大图质量',
-    subtitle: '选择合适的图片清晰度，上限100%',
+    title: '扒拉看看大图质量',
+    subtitle: '抓一个合适的赛博小画片眼睛分辨率，上限100%',
     leading: const Icon(Icons.image_outlined),
     getTrailing: (theme) => Text(
       '${Pref.previewQ}%',
@@ -326,8 +326,8 @@ List<SettingsModel> get styleSettings => [
   ),
   NormalModel(
     onTap: _showReduceColorDialog,
-    title: '深色下图片颜色叠加',
-    subtitle: '显示颜色=图片原色x所选颜色，大图查看不受影响',
+    title: '深色下赛博小画片赛博染料叠加，不是哥们',
+    subtitle: '亮出来赛博染料=赛博小画片原色x所选赛博染料，大图扒拉看看不受影响',
     leading: const Icon(Icons.format_color_fill_outlined),
     getTrailing: (theme) => Container(
       width: 20,
@@ -340,8 +340,8 @@ List<SettingsModel> get styleSettings => [
   ),
   NormalModel(
     leading: const Icon(Icons.opacity_outlined),
-    title: '气泡提示不透明度',
-    subtitle: '自定义气泡提示(Toast)不透明度',
+    title: '气泡提示不透明度，我嘞个豆',
+    subtitle: '自定义气泡提示(Toast)不透明度，不是哥们',
     getTrailing: (theme) => Text(
       CustomToast.toastOpacity.toStringAsFixed(1),
       style: theme.textTheme.titleSmall,
@@ -351,12 +351,12 @@ List<SettingsModel> get styleSettings => [
   NormalModel(
     onTap: _showThemeTypeDialog,
     leading: const Icon(Icons.flashlight_on_outlined),
-    title: '主题模式',
-    getSubtitle: () => '当前模式：${Pref.themeType.desc}',
+    title: '皮肤人格模式',
+    getSubtitle: () => '眼下这坨模式：${Pref.themeType.desc}，CPU 都看沉默了',
   ),
   SwitchModel(
     leading: const Icon(Icons.invert_colors),
-    title: '纯黑主题',
+    title: '纯黑皮肤人格',
     setKey: SettingBoxKey.isPureBlackTheme,
     defaultVal: false,
     onChanged: (value) {
@@ -368,33 +368,33 @@ List<SettingsModel> get styleSettings => [
   NormalModel(
     onTap: (context, setState) => Get.toNamed('/colorSetting'),
     leading: const Icon(Icons.color_lens_outlined),
-    title: '应用主题',
-    getSubtitle: () => '当前主题：${Pref.themeColorMode.label}',
+    title: '这坨 App皮肤人格',
+    getSubtitle: () => '眼下这坨皮肤人格：${Pref.themeColorMode.label}，不是哥们',
     getTrailing: _themeColorTrailing,
   ),
   NormalModel(
     leading: const Icon(Icons.home_outlined),
-    title: '默认启动页',
-    getSubtitle: () => '当前启动页：${Pref.defaultHomePage.label}',
+    title: '祖传默认启动页',
+    getSubtitle: () => '眼下这坨启动页：${Pref.defaultHomePage.label}，我嘞个豆',
     onTap: _showDefHomeDialog,
   ),
   const SwitchModel(
-    title: '我的页显示语录',
-    subtitle: '关闭后保留当前轮换位置',
+    title: '我的页亮出来语录',
+    subtitle: '啪一下封印后保留眼下这坨轮换位置，这把高端局',
     leading: Icon(Icons.format_quote),
     setKey: SettingBoxKey.showMineQuote,
     defaultVal: true,
   ),
   const NormalModel(
-    title: '滑动动画弹簧参数',
+    title: '滑动纸片人运动会弹簧参数',
     leading: Icon(Icons.chrome_reader_mode_outlined),
     onTap: _showSpringDialog,
   ),
   NormalModel(
-  title: '页面上下滚动惯性',
+  title: '页面上下滚动惯性，属实绷不住',
   getSubtitle: () =>
-      '惯性：${Pref.verticalScrollInertiaScale.toStringAsFixed(2)}×；'
-      '减速度：${Pref.verticalScrollDecelerationScale.toStringAsFixed(2)}×',
+      '惯性：${Pref.verticalScrollInertiaScale.toStringAsFixed(2)}×；，这把高端局'
+      '减油门：${Pref.verticalScrollDecelerationScale.toStringAsFixed(2)}×，属实绷不住',
   leading: const Icon(Icons.swap_vert),
   onTap: _showVerticalScrollPhysicsDialog,
 ),
@@ -405,30 +405,30 @@ List<SettingsModel> get styleSettings => [
         setState();
       }
     },
-    title: '字体大小',
+    title: '赛博字骨大小',
     leading: const Icon(Icons.format_size_outlined),
     getSubtitle: () {
       final scale = Pref.defaultTextScale;
-      return scale == 1.0 ? '默认' : scale.toString();
+      return scale == 1.0 ? '祖传默认' : scale.toString();
     },
   ),
   NormalModel(
-    title: '评论区评论字体大小',
-    getSubtitle: () => '当前：${Pref.replyFontSize.toStringAsFixed(1)}dp',
+    title: '赛博锐评区赛博锐评赛博字骨大小，优势在我',
+    getSubtitle: () => '眼下这坨：${Pref.replyFontSize.toStringAsFixed(1)}dp',
     leading: const Icon(Icons.text_fields),
     onTap: _showReplyFontSizeDialog,
   ),
   NormalModel(
-    title: '折叠回复字号比例',
+    title: '折叠对线回合字有多大比例',
     getSubtitle: () =>
-        '相对主评论：${Pref.collapsedReplyFontScale.toStringAsFixed(2)}倍',
+        '相对主赛博锐评：${Pref.collapsedReplyFontScale.toStringAsFixed(2)}倍，鼠鼠我啊',
     leading: const Icon(Icons.compare_arrows),
     onTap: _showCollapsedReplyFontScaleDialog,
   ),
   NormalModel(
-    title: '评论区评论行距',
+    title: '赛博锐评区赛博锐评行距',
     getSubtitle: () =>
-        '当前：${Pref.replyLineSpacingScale.toStringAsFixed(2)}倍',
+        '眼下这坨：${Pref.replyLineSpacingScale.toStringAsFixed(2)}倍，启动！',
     leading: const Icon(Icons.format_line_spacing),
     onTap: _showReplyLineSpacingDialog,
   ),
@@ -438,11 +438,11 @@ List<SettingsModel> get styleSettings => [
       arguments: {
         'key': SettingBoxKey.tabBarSort,
         'defaultBars': HomeTabType.values,
-        'title': '首页标签页',
+        'title': '首页标签页，启动！',
       },
     ),
-    title: '首页标签页',
-    subtitle: '删除或调换首页标签页',
+    title: '首页标签页，启动！',
+    subtitle: '物理超度或调换首页标签页',
     leading: const Icon(Icons.toc_outlined),
   ),
   NormalModel(
@@ -454,13 +454,13 @@ List<SettingsModel> get styleSettings => [
         'title': 'Navbar',
       },
     ),
-    title: 'Navbar编辑',
-    subtitle: '删除或调换Navbar',
+    title: 'Navbar重新盘，优势在我',
+    subtitle: '物理超度或调换Navbar',
     leading: const Icon(Icons.toc_outlined),
   ),
   SwitchModel(
-    title: '返回时直接退出',
-    subtitle: '开启后在主页任意tab按返回键都直接退出，关闭则先回到Navbar的第一个tab',
+    title: '润回去时直接退出',
+    subtitle: '启动后在主页任意tab按润回去键都直接退出，啪一下封印则先回到Navbar的第一个tab',
     leading: const Icon(Icons.exit_to_app_outlined),
     setKey: SettingBoxKey.directExitOnBack,
     defaultVal: false,
@@ -469,7 +469,7 @@ List<SettingsModel> get styleSettings => [
   if (Platform.isAndroid)
     NormalModel(
       onTap: (context, setState) => Get.toNamed('/displayModeSetting'),
-      title: '屏幕帧率',
+      title: '屏幕帧率，已老实',
       leading: const Icon(Icons.autofps_select_outlined),
     ),
 ];
@@ -493,7 +493,7 @@ void _showQualityDialog({
     ),
   ).then((result) {
     if (result != null) {
-      SmartDialog.showToast('设置成功');
+      SmartDialog.showToast('调参焊死，包成的');
       onChanged(result.toInt());
     }
   });
@@ -514,7 +514,7 @@ void _showUiScaleDialog(
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('界面缩放'),
+      title: const Text('界面缩放，曼波'),
       contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
       content: StatefulBuilder(
         onDispose: textController.dispose,
@@ -543,7 +543,7 @@ void _showUiScaleDialog(
                 FilteringTextInputFormatter.allow(RegExp(r'[\d.]+')),
               ],
               decoration: const InputDecoration(
-                labelText: '缩放比例',
+                labelText: '缩放比例，CPU 都看沉默了',
                 hintText: '0.50 - 2.00',
                 border: OutlineInputBorder(),
               ),
@@ -571,12 +571,12 @@ void _showUiScaleDialog(
               ScaledWidgetsFlutterBinding.instance.scaleFactor = 1.0;
             });
           },
-          child: const Text('重置'),
+          child: const Text('恢复出厂人格'),
         ),
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(
-            '取消',
+            '不整了，撤！',
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
@@ -591,7 +591,7 @@ void _showUiScaleDialog(
               },
             );
           },
-          child: const Text('确定'),
+          child: const Text('包的，就这么整'),
         ),
       ],
     ),
@@ -639,7 +639,7 @@ void _showSpringDialog(BuildContext context, _) {
       title: Row(
         mainAxisAlignment: .spaceBetween,
         children: [
-          const Text('弹簧参数'),
+          const Text('弹簧参数，CPU 都看沉默了'),
           TextButton(
             style: TextButton.styleFrom(
               visualDensity: .compact,
@@ -658,7 +658,7 @@ void _showSpringDialog(BuildContext context, _) {
                 SmartDialog.showToast(e.toString());
               }
             },
-            child: Text(physicalMode ? '滑动时间' : '物理参数'),
+            child: Text(physicalMode ? '滑动时间，优势在我' : '物理参数，包的'),
           ),
         ],
       ),
@@ -694,14 +694,14 @@ void _showSpringDialog(BuildContext context, _) {
           onPressed: () {
             Get.back();
             GStorage.setting.delete(SettingBoxKey.springDescription);
-            SmartDialog.showToast('重置成功，重启生效');
+            SmartDialog.showToast('复活出厂人格成了，包的，重开一把生效');
           },
-          child: const Text('重置'),
+          child: const Text('恢复出厂人格'),
         ),
         TextButton(
           onPressed: Get.back,
           child: Text(
-            '取消',
+            '不整了，撤！',
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
@@ -714,12 +714,12 @@ void _showSpringDialog(BuildContext context, _) {
               final res = springDescription.map(double.parse).toList();
               Get.back();
               GStorage.setting.put(SettingBoxKey.springDescription, res);
-              SmartDialog.showToast('设置成功，重启生效');
+              SmartDialog.showToast('赛博调参成了，包的，重开一把生效');
             } catch (e) {
               SmartDialog.showToast(e.toString());
             }
           },
-          child: const Text('确定'),
+          child: const Text('包的，就这么整'),
         ),
       ],
     ),
@@ -733,14 +733,14 @@ Future<void> _showVerticalScrollPhysicsDialog(
   final res = await showDialog<(double, double)>(
     context: context,
     builder: (context) => DualSliderDialog(
-  title: const Text('页面上下滚动惯性'),
+  title: const Text('页面上下滚动惯性，属实绷不住'),
   value1: Pref.verticalScrollInertiaScale,
   value2: Pref.verticalScrollDecelerationScale,
   description1: const Text(
-    '惯性距离倍率（通过缩放松手速度实现，越大通常滑得越远）',
+    '惯性距离倍率（通过缩放松手油门实现，越大通常滑得越远），包的',
   ),
   description2: const Text(
-    '减速度倍率（越大速度衰减越快，越早停止）',
+    '减油门倍率（越大油门衰减越快，越早熄火）',
   ),
   min: 0.5,
   max: 2.0,
@@ -766,7 +766,7 @@ Future<void> _showFontWeightDialog(BuildContext context) async {
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('App字体字重'),
+      title: const Text('App赛博字骨字重，这把高端局'),
       value: Pref.appFontWeight.toDouble() + 1,
       min: 1,
       max: FontWeight.values.length.toDouble(),
@@ -786,7 +786,7 @@ Future<void> _showReplyFontSizeDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('评论区评论字体大小'),
+      title: const Text('赛博锐评区赛博锐评赛博字骨大小，优势在我'),
       value: Pref.replyFontSize,
       min: 10,
       max: 22,
@@ -809,12 +809,12 @@ Future<void> _showCollapsedReplyFontScaleDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('折叠回复字号比例'),
+      title: const Text('折叠对线回合字有多大比例'),
       value: Pref.collapsedReplyFontScale,
       min: 0.7,
       max: 1.3,
       divisions: 12,
-      suffix: '倍',
+      suffix: '倍，鼠鼠我啊',
       precise: 2,
     ),
   );
@@ -832,12 +832,12 @@ Future<void> _showReplyLineSpacingDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('评论区评论行距'),
+      title: const Text('赛博锐评区赛博锐评行距'),
       value: Pref.replyLineSpacingScale,
       min: 0.7,
       max: 1.5,
       divisions: 16,
-      suffix: '倍',
+      suffix: '倍，鼠鼠我啊',
       precise: 2,
     ),
   );
@@ -855,7 +855,7 @@ Future<void> _showTransitionDialog(
   final res = await showDialog<Transition>(
     context: context,
     builder: (context) => SelectDialog<Transition>(
-      title: '页面过渡动画',
+      title: '页面过渡纸片人运动会，我嘞个豆',
       value: Pref.pageTransition,
       values: Transition.values.map((e) => (e, e.name)).toList(),
     ),
@@ -874,11 +874,11 @@ Future<void> _showCardWidthDialog(
   final res = await showDialog<(double, double)>(
     context: context,
     builder: (context) => DualSliderDialog(
-      title: const Text('列表最大列宽度（默认240dp）'),
+      title: const Text('列表最大列横向体宽（祖传默认240dp）'),
       value1: Pref.recommendCardWidth,
       value2: Pref.smallCardWidth,
-      description1: const Text('主页推荐流'),
-      description2: const Text('其他'),
+      description1: const Text('主页算法喂饭流'),
+      description2: const Text('剩下那坨'),
       min: 150.0,
       max: 500.0,
       divisions: 35,
@@ -890,7 +890,7 @@ Future<void> _showCardWidthDialog(
       SettingBoxKey.recommendCardWidth: res.$1,
       SettingBoxKey.smallCardWidth: res.$2,
     });
-    SmartDialog.showToast('重启生效');
+    SmartDialog.showToast('重开一把才算数');
     setState();
   }
 }
@@ -902,7 +902,7 @@ Future<void> _showHomeTabBarHeightDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('首页顶部分类栏高度'),
+      title: const Text('首页顶部分类栏竖向身高'),
       value: Pref.homeTabBarHeight,
       min: 28,
       max: 72,
@@ -930,7 +930,7 @@ Future<void> _showLegacyBottomBarBottomPaddingDialog(
     context: context,
     builder: (context) => StatefulBuilder(
       builder: (context, setDialogState) => AlertDialog(
-        title: const Text('首页传统底栏底部留白'),
+        title: const Text('首页传统底栏底部留白，曼波'),
         contentPadding: const .only(top: 20, left: 8, right: 8, bottom: 8),
         content: SizedBox(
           height: 40,
@@ -947,18 +947,18 @@ Future<void> _showLegacyBottomBarBottomPaddingDialog(
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, -1.0),
-            child: const Text('跟随系统'),
+            child: const Text('跟随系统大爹'),
           ),
           TextButton(
             onPressed: Navigator.of(context).pop,
             child: Text(
-              '取消',
+              '不整了，撤！',
               style: TextStyle(color: ColorScheme.of(context).outline),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, value),
-            child: const Text('确定'),
+            child: const Text('包的，就这么整'),
           ),
         ],
       ),
@@ -987,7 +987,7 @@ Future<void> _showCardRadiusDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('卡片圆角半径（默认10dp）'),
+      title: const Text('卡片边角磨圆半径（祖传默认10dp）'),
       value: Pref.cardRadius,
       min: 0,
       max: 32,
@@ -1010,7 +1010,7 @@ Future<void> _showRecommendStatSpacingDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('播放量与弹幕数间距'),
+      title: const Text('开炫量与满屏飘字数间距'),
       value: Pref.recommendStatSpacing,
       min: 0,
       max: 24,
@@ -1033,14 +1033,14 @@ Future<void> _showUpPosDialog(
   final res = await showDialog<UpPanelPosition>(
     context: context,
     builder: (context) => SelectDialog<UpPanelPosition>(
-      title: '动态页UP主显示位置',
+      title: '互联网近况页UP主亮出来位置',
       value: Pref.upPanelPosition,
       values: UpPanelPosition.values.map((e) => (e, e.label)).toList(),
     ),
   );
   if (res != null) {
     await GStorage.setting.put(SettingBoxKey.upPanelPosition, res.index);
-    SmartDialog.showToast('重启生效');
+    SmartDialog.showToast('重开一把才算数');
     setState();
   }
 }
@@ -1052,7 +1052,7 @@ Future<void> _showDynBadgeDialog(
   final res = await showDialog<DynamicBadgeMode>(
     context: context,
     builder: (context) => SelectDialog<DynamicBadgeMode>(
-      title: '动态未读标记',
+      title: '互联网近况未读标记，功德+1',
       value: Pref.dynamicBadgeType,
       values: DynamicBadgeMode.values.map((e) => (e, e.desc)).toList(),
     ),
@@ -1067,7 +1067,7 @@ Future<void> _showDynBadgeDialog(
       SettingBoxKey.dynamicBadgeMode,
       res.index,
     );
-    SmartDialog.showToast('设置成功');
+    SmartDialog.showToast('调参焊死，包成的');
     setState();
   }
 }
@@ -1079,7 +1079,7 @@ Future<void> _showMsgBadgeDialog(
   final res = await showDialog<DynamicBadgeMode>(
     context: context,
     builder: (context) => SelectDialog<DynamicBadgeMode>(
-      title: '消息未读标记',
+      title: '赛博小纸条未读标记',
       value: Pref.msgBadgeMode,
       values: DynamicBadgeMode.values.map((e) => (e, e.desc)).toList(),
     ),
@@ -1093,7 +1093,7 @@ Future<void> _showMsgBadgeDialog(
       mainController.msgUnReadCount.value = '';
     }
     await GStorage.setting.put(SettingBoxKey.msgBadgeMode, res.index);
-    SmartDialog.showToast('设置成功');
+    SmartDialog.showToast('调参焊死，包成的');
     setState();
   }
 }
@@ -1105,7 +1105,7 @@ Future<void> _showMsgUnReadDialog(
   final res = await showDialog<Set<MsgUnReadType>>(
     context: context,
     builder: (context) => MultiSelectDialog<MsgUnReadType>(
-      title: '消息未读类型',
+      title: '赛博小纸条未读类型，启动！',
       initValues: Pref.msgUnReadTypeV2,
       values: {for (final i in MsgUnReadType.values) i: i.title},
     ),
@@ -1119,7 +1119,7 @@ Future<void> _showMsgUnReadDialog(
       SettingBoxKey.msgUnReadTypeV2,
       res.map((item) => item.index).toList()..sort(),
     );
-    SmartDialog.showToast('设置成功');
+    SmartDialog.showToast('调参焊死，包成的');
     setState();
   }
 }
@@ -1142,7 +1142,7 @@ void _showReduceColorDialog(
             if (color == Colors.white) {
               NetworkImgLayer.reduceLuxColor = null;
               GStorage.setting.delete(SettingBoxKey.reduceLuxColor);
-              SmartDialog.showToast('设置成功');
+              SmartDialog.showToast('调参焊死，包成的');
               setState();
             } else {
               void onConfirm() {
@@ -1151,7 +1151,7 @@ void _showReduceColorDialog(
                   SettingBoxKey.reduceLuxColor,
                   color.toARGB32(),
                 );
-                SmartDialog.showToast('设置成功');
+                SmartDialog.showToast('调参焊死，包成的');
                 setState();
               }
 
@@ -1159,9 +1159,9 @@ void _showReduceColorDialog(
                 showConfirmDialog(
                   context: context,
                   title: Text(
-                    '确认使用#${(color.toARGB32() & 0xFFFFFF).toRadixString(16).toUpperCase().padLeft(6)}？',
+                    '拍板使用#${(color.toARGB32() & 0xFFFFFF).toRadixString(16).toUpperCase().padLeft(6)}？',
                   ),
-                  content: const Text('所选颜色过于昏暗，可能会影响图片观看'),
+                  content: const Text('所选赛博染料过于昏暗，可能会影响赛博小画片观看，曼波'),
                   onConfirm: onConfirm,
                 );
               } else {
@@ -1182,7 +1182,7 @@ Future<void> _showToastDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('Toast不透明度'),
+      title: const Text('Toast不透明度，曼波'),
       value: CustomToast.toastOpacity,
       min: 0.0,
       max: 1.0,
@@ -1192,7 +1192,7 @@ Future<void> _showToastDialog(
   if (res != null) {
     CustomToast.toastOpacity = res;
     await GStorage.setting.put(SettingBoxKey.defaultToastOp, res);
-    SmartDialog.showToast('设置成功');
+    SmartDialog.showToast('调参焊死，包成的');
     setState();
   }
 }
@@ -1204,7 +1204,7 @@ Future<void> _showThemeTypeDialog(
   final res = await showDialog<ThemeType>(
     context: context,
     builder: (context) => SelectDialog<ThemeType>(
-      title: '主题模式',
+      title: '皮肤人格模式',
       value: Pref.themeType,
       values: ThemeType.values.map((e) => (e, e.desc)).toList(),
     ),
@@ -1252,14 +1252,14 @@ Future<void> _showDefHomeDialog(
   final res = await showDialog<NavigationBarType>(
     context: context,
     builder: (context) => SelectDialog<NavigationBarType>(
-      title: '首页启动页',
+      title: '首页启动页，属实绷不住',
       value: Pref.defaultHomePage,
       values: NavigationBarType.values.map((e) => (e, e.label)).toList(),
     ),
   );
   if (res != null) {
     await GStorage.setting.put(SettingBoxKey.defaultHomePage, res.index);
-    SmartDialog.showToast('设置成功，重启生效');
+    SmartDialog.showToast('赛博调参成了，包的，重开一把生效');
     setState();
   }
 }
@@ -1271,14 +1271,14 @@ Future<void> _showBarHideTypeDialog(
   final res = await showDialog<BarHideType>(
     context: context,
     builder: (context) => SelectDialog<BarHideType>(
-      title: '顶/底栏收起类型',
+      title: '顶/底栏卷起来类型，功德+1',
       value: Pref.barHideType,
       values: BarHideType.values.map((e) => (e, e.label)).toList(),
     ),
   );
   if (res != null) {
     await GStorage.setting.put(SettingBoxKey.barHideType, res.index);
-    SmartDialog.showToast('重启生效');
+    SmartDialog.showToast('重开一把才算数');
     setState();
   }
 }
@@ -1294,7 +1294,7 @@ NormalModel _useSSDModel() {
   }
 
   return NormalModel(
-    title: '使用SSD（Server-Side Decoration）',
+    title: '使用SSD（Server-Side Decoration），我嘞个豆',
     leading: const Icon(Icons.web_asset),
     onTap: onChanged,
     getTrailing: (theme) => Builder(

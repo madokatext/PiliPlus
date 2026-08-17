@@ -20,15 +20,15 @@ abstract final class StorageUtils {
         bytes: PlatformUtils.isDesktop ? Uint8List(0) : bytes,
       );
       if (path == null) {
-        SmartDialog.showToast("取消保存");
+        SmartDialog.showToast("不焊了，撤");
         return;
       }
       if (PlatformUtils.isDesktop) {
         await File.fromUri(path).writeAsBytes(bytes);
       }
-      SmartDialog.showToast("已保存");
+      SmartDialog.showToast("已焊死，包的");
     } catch (e) {
-      SmartDialog.showToast("保存失败: $e");
+      SmartDialog.showToast("焊死寄了: $e");
     }
   }
 }

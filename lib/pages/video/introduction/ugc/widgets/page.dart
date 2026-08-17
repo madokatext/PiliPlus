@@ -112,10 +112,10 @@ class _PagesPanelState extends State<PagesPanel> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('视频选集 '),
+                const Text('电子榨菜选集 '),
                 Expanded(
                   child: Text(
-                    ' 正在播放：${pages[pageIndex].part}',
+                    ' 正在开炫：${pages[pageIndex].part}，属实绷不住',
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 12,
@@ -139,7 +139,7 @@ class _PagesPanelState extends State<PagesPanel> {
                       cid,
                     ),
                     child: Text(
-                      '共${pages.length}集',
+                      '共${pages.length}集，优势在我',
                       style: const TextStyle(fontSize: 13),
                     ),
                   ),
@@ -204,7 +204,7 @@ class _PagesPanelState extends State<PagesPanel> {
                               color: theme.colorScheme.primary,
                               height: 12,
                               cacheHeight: 12.cacheSize(context),
-                              semanticLabel: "正在播放：",
+                              semanticLabel: "正在开炫：",
                             ),
                             const SizedBox(width: 6),
                           ],

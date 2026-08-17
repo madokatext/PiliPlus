@@ -58,7 +58,7 @@ class WebDav {
     if (_client == null) {
       final res = await init();
       if (!res.first) {
-        SmartDialog.showToast('备份失败，请检查配置: ${res.second}');
+        SmartDialog.showToast('备份寄了，请检查赛博配方: ${res.second}');
         return;
       }
     }
@@ -70,9 +70,9 @@ class WebDav {
         await _client!.remove(path);
       } catch (_) {}
       await _client!.write(path, utf8.encode(data));
-      SmartDialog.showToast('备份成功');
+      SmartDialog.showToast('备份成了，包的');
     } catch (e) {
-      SmartDialog.showToast('备份失败: $e');
+      SmartDialog.showToast('备份寄了: $e，属实绷不住');
     }
   }
 
@@ -80,7 +80,7 @@ class WebDav {
     if (_client == null) {
       final res = await init();
       if (!res.first) {
-        SmartDialog.showToast('恢复失败，请检查配置: ${res.second}');
+        SmartDialog.showToast('复活寄了，请检查赛博配方: ${res.second}');
         return;
       }
     }
@@ -89,9 +89,9 @@ class WebDav {
       final path = '$_webdavDirectory/$_fileName';
       final data = await _client!.read(path);
       await GStorage.importAllSettings(utf8.decode(data));
-      SmartDialog.showToast('恢复成功');
+      SmartDialog.showToast('复活成了，包的');
     } catch (e) {
-      SmartDialog.showToast('恢复失败: $e');
+      SmartDialog.showToast('复活寄了: $e');
     }
   }
 }

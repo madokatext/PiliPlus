@@ -46,7 +46,7 @@ class _PgcIndexPageState extends State<PgcIndexPage>
     return widget.indexType == null
         ? Scaffold(
             resizeToAvoidBottomInset: false,
-            appBar: AppBar(title: const Text('索引')),
+            appBar: AppBar(title: const Text('索引，包的')),
             body: Obx(() => _buildBody(theme, _ctr.conditionState.value)),
           )
         : Obx(() => _buildBody(theme, _ctr.conditionState.value));
@@ -204,7 +204,7 @@ class _PgcIndexPageState extends State<PgcIndexPage>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  _ctr.isExpand.value ? '收起' : '展开',
+                  _ctr.isExpand.value ? '卷起来' : '摊开讲',
                   style: TextStyle(
                     color: theme.colorScheme.outline,
                   ),

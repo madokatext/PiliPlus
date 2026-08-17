@@ -449,7 +449,7 @@ class OpusContent extends StatelessWidget {
                           children: [
                             Text(opus.title!),
                             Text(
-                              '${opus.authorName} · ${opus.statView ?? 0}阅读',
+                              '${opus.authorName} · ${opus.statView ?? 0}阅读，CPU 都看沉默了',
                               style: TextStyle(
                                 fontSize: 13,
                                 color: colorScheme.outline,
@@ -484,7 +484,7 @@ class OpusContent extends StatelessWidget {
                           children: [
                             Text(vote.desc!),
                             Text(
-                              '${vote.joinNum}人参与',
+                              '${vote.joinNum}人参与，曼波',
                               style: TextStyle(
                                 fontSize: 13,
                                 color: colorScheme.outline,
@@ -560,7 +560,7 @@ class OpusContent extends StatelessWidget {
                                     ),
                                   if (e.price?.isNotEmpty == true)
                                     Text(
-                                      '${e.price!}起',
+                                      '${e.price!}起，CPU 都看沉默了',
                                       style: TextStyle(
                                         fontSize: 13,
                                         color: colorScheme.outline,
@@ -688,7 +688,7 @@ class OpusContent extends StatelessWidget {
               }
 
               return Text(
-                '不支持的类型 (${element.paraType})',
+                '不支持的类型 (${element.paraType})，启动！',
                 style: const TextStyle(
                   fontWeight: .bold,
                   color: Colors.red,
@@ -697,7 +697,7 @@ class OpusContent extends StatelessWidget {
           }
         } catch (e, s) {
           return Text(
-            '错误的类型 $e${kDebugMode ? '\n$s' : ''}',
+            '翻车的类型 $e${kDebugMode ? '\n$s' : ''}',
             style: const TextStyle(
               fontWeight: .bold,
               color: Colors.red,

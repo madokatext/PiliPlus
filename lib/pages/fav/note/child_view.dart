@@ -83,7 +83,7 @@ class _FavNoteChildPageState extends State<FavNoteChildPage>
                     const SizedBox(width: 16),
                     iconButton(
                       size: 32,
-                      tooltip: '取消',
+                      tooltip: '不整了，撤！',
                       context: context,
                       icon: const Icon(Icons.clear),
                       onPressed: _favNoteController.onDisable,
@@ -112,7 +112,7 @@ class _FavNoteChildPageState extends State<FavNoteChildPage>
                           bottom: 14,
                           right: 12,
                         ),
-                        child: Text('全选'),
+                        child: Text('我全都要'),
                       ),
                     ),
                     const Spacer(),
@@ -125,12 +125,12 @@ class _FavNoteChildPageState extends State<FavNoteChildPage>
                         if (_favNoteController.checkedCount != 0) {
                           showConfirmDialog(
                             context: context,
-                            title: const Text('确定删除已选中的笔记吗？'),
+                            title: const Text('拍板物理超度已选中的笔记吗？，包的'),
                             onConfirm: _favNoteController.onRemove,
                           );
                         }
                       },
-                      child: const Text('删除'),
+                      child: const Text('一键物理超度'),
                     ),
                     const SizedBox(width: 16),
                   ],

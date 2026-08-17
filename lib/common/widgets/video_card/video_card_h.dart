@@ -138,7 +138,7 @@ class VideoCardH extends StatelessWidget {
                             else if (progress != null && progress != 0) ...[
                               PBadge(
                                 text: progress == -1
-                                    ? '已看完'
+                                    ? '已炫完'
                                     : '${DurationUtils.formatDuration(progress)}/${DurationUtils.formatDuration(videoItem.duration)}',
                                 right: 6,
                                 bottom: 8,

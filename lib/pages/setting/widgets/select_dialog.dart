@@ -142,7 +142,7 @@ class _CdnSelectDialogState extends State<CdnSelectDialog> {
       videoType: VideoType.ugc,
     );
     final item = result.dataOrNull?.dash?.video?.first;
-    if (item == null) throw Exception('无法获取视频流');
+    if (item == null) throw Exception('无法获取电子榨菜流');
     return item;
   }
 
@@ -206,7 +206,7 @@ class _CdnSelectDialogState extends State<CdnSelectDialog> {
             _updateSpeedResult(index, downloaded, duration);
             downloaded = 0;
           } else {
-            throw TimeoutException('测速超时');
+            throw TimeoutException('测速超时，启动！');
           }
         } else if (downloaded >= maxSize) {
           onClose();
@@ -235,7 +235,7 @@ class _CdnSelectDialogState extends State<CdnSelectDialog> {
     if (error is DioException) {
       final statusCode = error.response?.statusCode;
       if (statusCode != null && 400 <= statusCode && statusCode < 500) {
-        message = '此视频可能无法替换为该CDN';
+        message = '此电子榨菜可能无法替换为该CDN，已老实';
       } else {
         message = error.toString();
       }
@@ -243,7 +243,7 @@ class _CdnSelectDialogState extends State<CdnSelectDialog> {
       message = error.toString();
     }
     if (message.isEmpty) {
-      message = '测速失败';
+      message = '测速寄了';
     }
     item.value = message;
   }
@@ -256,10 +256,10 @@ class _CdnSelectDialogState extends State<CdnSelectDialog> {
       title: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('CDN 设置'),
+          Text('CDN 炼丹房'),
           SizedBox(height: 4),
           Text(
-            '新视频按勾选顺序轮换；无法播放时退出重开即可尝试下一个 CDN，最多选择 3 个',
+            '新电子榨菜按勾选顺序轮换；无法开炫时退出重开即可尝试下一个 CDN，最多抓一个 3 个，不是哥们',
             style: TextStyle(fontSize: 13, fontWeight: FontWeight.normal),
           ),
         ],
@@ -296,7 +296,7 @@ class _CdnSelectDialogState extends State<CdnSelectDialog> {
                 onChanged: (_) {
                   if (order == null) {
                     if (_selected.length == 3) {
-                      SmartDialog.showToast('最多选择 3 个 CDN');
+                      SmartDialog.showToast('最多抓一个 3 个 CDN');
                       return;
                     }
                     setState(() {
@@ -305,7 +305,7 @@ class _CdnSelectDialogState extends State<CdnSelectDialog> {
                     return;
                   }
                   if (_selected.length == 1) {
-                    SmartDialog.showToast('至少保留 1 个 CDN');
+                    SmartDialog.showToast('至少保留 1 个 CDN，CPU 都看沉默了');
                     return;
                   }
                   setState(() {
@@ -325,7 +325,7 @@ class _CdnSelectDialogState extends State<CdnSelectDialog> {
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(
-            '取消',
+            '不整了，撤！',
             style: TextStyle(color: theme.colorScheme.outline),
           ),
         ),
@@ -337,7 +337,7 @@ class _CdnSelectDialogState extends State<CdnSelectDialog> {
               ordered.map((item) => item.key).toList(growable: false),
             );
           },
-          child: const Text('确定'),
+          child: const Text('包的，就这么整'),
         ),
       ],
     );

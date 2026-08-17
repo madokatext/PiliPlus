@@ -89,11 +89,11 @@ class _SharePanelState extends State<SharePanel> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('分享给'),
+              const Text('到处扩散给'),
               iconButton(
                 size: 32,
                 iconSize: 18,
-                tooltip: '关闭',
+                tooltip: '啪一下封印',
                 icon: const Icon(Icons.clear),
                 onPressed: Get.back,
               ),
@@ -211,7 +211,7 @@ class _SharePanelState extends State<SharePanel> {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      const Text('更多', style: TextStyle(fontSize: 12)),
+                      const Text('再扒拉点', style: TextStyle(fontSize: 12)),
                     ],
                   ),
                 ),
@@ -229,7 +229,7 @@ class _SharePanelState extends State<SharePanel> {
                   maxLines: 2,
                   textInputAction: TextInputAction.newline,
                   decoration: InputDecoration(
-                    hintText: '说说你的想法吧...',
+                    hintText: '说说你的想法吧...，功德+1',
                     visualDensity: .standard,
                     hintStyle: const TextStyle(fontSize: 14),
                     border: const OutlineInputBorder(
@@ -257,7 +257,7 @@ class _SharePanelState extends State<SharePanel> {
                     vertical: -1,
                   ),
                 ),
-                child: const Text('发送'),
+                child: const Text('发射'),
               ),
             ],
           ),
@@ -269,7 +269,7 @@ class _SharePanelState extends State<SharePanel> {
   Future<void> _onSend() async {
     final list = _userList.where((user) => user.selected);
     if (list.isEmpty) {
-      SmartDialog.showToast('请选择分享的用户');
+      SmartDialog.showToast('请抓一个到处扩散的赛博居民');
       return;
     }
     SmartDialog.showLoading();
@@ -285,11 +285,11 @@ class _SharePanelState extends State<SharePanel> {
     SmartDialog.dismiss();
     if (res.every((e) => e)) {
       Get.back();
-      SmartDialog.showToast('分享成功');
+      SmartDialog.showToast('到处扩散成了，包的');
     } else if (res.every((e) => !e)) {
-      SmartDialog.showToast('分享失败');
+      SmartDialog.showToast('到处扩散寄了');
     } else {
-      SmartDialog.showToast('部分分享失败');
+      SmartDialog.showToast('部分到处扩散寄了');
     }
   }
 }

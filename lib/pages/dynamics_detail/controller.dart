@@ -52,8 +52,8 @@ class DynamicDetailController extends CommonDynController with ReloadMixin {
       action: isPrivate ? 'public_pub' : 'private_pub',
     );
     if (res.isSuccess) {
-      dynItem.modules.moduleAuthor?.badgeText = isPrivate ? null : '仅自己可见';
-      SmartDialog.showToast('设置成功');
+      dynItem.modules.moduleAuthor?.badgeText = isPrivate ? null : '仅本鼠可见';
+      SmartDialog.showToast('调参焊死，包成的');
     } else {
       res.toast();
     }

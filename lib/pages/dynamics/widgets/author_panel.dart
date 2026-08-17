@@ -143,7 +143,7 @@ class AuthorPanel extends StatelessWidget {
             width: 32,
             height: 32,
             child: IconButton(
-              tooltip: '更多',
+              tooltip: '再扒拉点',
               style: const ButtonStyle(
                 padding: WidgetStatePropertyAll(EdgeInsets.zero),
               ),
@@ -299,7 +299,7 @@ class AuthorPanel extends StatelessWidget {
                   minLeadingWidth: 0,
                   leading: const Icon(Icons.watch_later_outlined, size: 19),
                   title: Text(
-                    '稍后再看',
+                    '先吃灰，回头再炫',
                     style: theme.textTheme.titleSmall,
                   ),
                 ),
@@ -310,11 +310,11 @@ class AuthorPanel extends StatelessWidget {
                 },
                 minLeadingWidth: 0,
                 leading: const Icon(Icons.save_alt, size: 19),
-                title: Text('保存动态', style: theme.textTheme.titleSmall!),
+                title: Text('焊死互联网近况', style: theme.textTheme.titleSmall!),
               ),
               ListTile(
                 title: Text(
-                  '分享动态',
+                  '到处扩散互联网近况',
                   style: theme.textTheme.titleSmall,
                 ),
                 leading: const Icon(Icons.share_outlined, size: 19),
@@ -331,7 +331,7 @@ class AuthorPanel extends StatelessWidget {
                   item.modules.moduleDynamic?.major?.blocked == null)
                 ListTile(
                   title: Text(
-                    '分享至消息',
+                    '塞进赛博小纸条',
                     style: theme.textTheme.titleSmall,
                   ),
                   leading: const Icon(Icons.forward_to_inbox, size: 19),
@@ -368,7 +368,7 @@ class AuthorPanel extends StatelessWidget {
                 ),
               ListTile(
                 title: Text(
-                  '临时屏蔽：${moduleAuthor.name}',
+                  '先凑合眼不见为净：${moduleAuthor.name}',
                   style: theme.textTheme.titleSmall,
                 ),
                 leading: const Icon(Icons.visibility_off_outlined, size: 19),
@@ -380,7 +380,7 @@ class AuthorPanel extends StatelessWidget {
                       moduleAuthor.mid!,
                     );
                     SmartDialog.showToast(
-                      '已临时屏蔽${moduleAuthor.name}(${moduleAuthor.mid!})，重启恢复',
+                      '已先凑合眼不见为净${moduleAuthor.name}(${moduleAuthor.mid!})，重开一把复活',
                     );
                   } catch (_) {}
                 },
@@ -397,7 +397,7 @@ class AuthorPanel extends StatelessWidget {
                   },
                   minLeadingWidth: 0,
                   leading: const Icon(CustomIcons.shield_published, size: 19),
-                  title: Text('检查动态', style: theme.textTheme.titleSmall!),
+                  title: Text('检查互联网近况', style: theme.textTheme.titleSmall!),
                 ),
                 if (onSetTop != null)
                   ListTile(
@@ -408,7 +408,7 @@ class AuthorPanel extends StatelessWidget {
                     minLeadingWidth: 0,
                     leading: const Icon(Icons.vertical_align_top, size: 19),
                     title: Text(
-                      '${moduleAuthor.isTop == true ? '取消' : ''}置顶',
+                      '${moduleAuthor.isTop == true ? '撤了' : ''}置顶',
                       style: theme.textTheme.titleSmall!,
                     ),
                   ),
@@ -439,7 +439,7 @@ class AuthorPanel extends StatelessWidget {
                                     dense: true,
                                     enabled: selection.canModify,
                                     title: Text(
-                                      '${enableSelection ? '停止' : '开启'}评论精选',
+                                      '${enableSelection ? '熄火' : '启动'}赛博锐评精选',
                                       style: const TextStyle(fontSize: 14),
                                     ),
                                     onTap: () {
@@ -453,7 +453,7 @@ class AuthorPanel extends StatelessWidget {
                                     dense: true,
                                     enabled: reply.canModify,
                                     title: Text(
-                                      '${enableReply ? '关闭' : '恢复'}评论',
+                                      '${enableReply ? '啪一下封印' : '复活'}赛博锐评',
                                       style: const TextStyle(fontSize: 14),
                                     ),
                                     onTap: () {
@@ -476,7 +476,7 @@ class AuthorPanel extends StatelessWidget {
                       size: 19,
                     ),
                     title: Text(
-                      '互动设置',
+                      '互动赛博调参',
                       style: theme.textTheme.titleSmall!,
                     ),
                   ),
@@ -508,7 +508,7 @@ class AuthorPanel extends StatelessWidget {
                               dense: true,
                               enabled: isPrivate,
                               title: const Text(
-                                '所有用户可见',
+                                '所有赛博居民可见，启动！',
                                 style: TextStyle(fontSize: 14),
                               ),
                               onTap: onTap,
@@ -517,7 +517,7 @@ class AuthorPanel extends StatelessWidget {
                               dense: true,
                               enabled: !isPrivate,
                               title: const Text(
-                                '仅自己可见',
+                                '仅本鼠可见',
                                 style: TextStyle(fontSize: 14),
                               ),
                               onTap: onTap,
@@ -528,7 +528,7 @@ class AuthorPanel extends StatelessWidget {
                     },
                     minLeadingWidth: 0,
                     leading: const Icon(Icons.visibility, size: 19),
-                    title: Text('可见范围', style: theme.textTheme.titleSmall!),
+                    title: Text('可见范围，鼠鼠我啊', style: theme.textTheme.titleSmall!),
                   ),
                 if (onEdit != null)
                   ListTile(
@@ -538,7 +538,7 @@ class AuthorPanel extends StatelessWidget {
                     },
                     minLeadingWidth: 0,
                     leading: const Icon(Icons.edit_note, size: 19),
-                    title: Text('编辑动态', style: theme.textTheme.titleSmall!),
+                    title: Text('重新盘互联网近况，属实绷不住', style: theme.textTheme.titleSmall!),
                   ),
                 if (onRemove != null)
                   ListTile(
@@ -547,12 +547,12 @@ class AuthorPanel extends StatelessWidget {
                       showDialog(
                         context: context,
                         builder: (context) => AlertDialog(
-                          title: const Text('确定删除该动态?'),
+                          title: const Text('拍板物理超度该互联网近况?'),
                           actions: [
                             TextButton(
                               onPressed: Get.back,
                               child: Text(
-                                '取消',
+                                '不整了，撤！',
                                 style: TextStyle(
                                   color: theme.colorScheme.outline,
                                 ),
@@ -563,7 +563,7 @@ class AuthorPanel extends StatelessWidget {
                                 Get.back();
                                 onRemove!(item.idStr);
                               },
-                              child: const Text('确定'),
+                              child: const Text('包的，就这么整'),
                             ),
                           ],
                         ),
@@ -576,7 +576,7 @@ class AuthorPanel extends StatelessWidget {
                       size: 19,
                     ),
                     title: Text(
-                      '删除',
+                      '一键物理超度',
                       style: theme.textTheme.titleSmall!.copyWith(
                         color: theme.colorScheme.error,
                       ),
@@ -586,7 +586,7 @@ class AuthorPanel extends StatelessWidget {
               if (Accounts.main.isLogin)
                 ListTile(
                   title: Text(
-                    '举报',
+                    '赛博递状纸',
                     style: theme.textTheme.titleSmall!.copyWith(
                       color: theme.colorScheme.error,
                     ),
@@ -626,7 +626,7 @@ class AuthorPanel extends StatelessWidget {
                 minLeadingWidth: 0,
                 dense: true,
                 title: Text(
-                  '取消',
+                  '不整了，撤！',
                   style: TextStyle(color: theme.colorScheme.outline),
                   textAlign: TextAlign.center,
                 ),

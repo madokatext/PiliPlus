@@ -90,26 +90,26 @@ final class HistoryArchiveService with WidgetsBindingObserver {
     if (_busy) {
       return const HistoryArchiveRunResult(
         success: false,
-        message: '已有归档或存档维护操作正在进行',
+        message: '已有赛博入土或赛博存档维护操作正在进行',
       );
     }
     if (!_foreground) {
       return const HistoryArchiveRunResult(
         success: false,
-        message: 'App 不在前台，暂不能归档',
+        message: 'App 不在前台，暂不能赛博入土',
       );
     }
     if (!_playerIdle) {
       return const HistoryArchiveRunResult(
         success: false,
-        message: '正在播放或播放器正忙，请稍后再归档',
+        message: '正在开炫或开炫机器正忙，请回头再赛博入土，曼波',
       );
     }
     return _archive();
   }
 
   String exportJson() {
-    if (_busy) throw StateError('已有归档或存档维护操作正在进行');
+    if (_busy) throw StateError('已有赛博入土或赛博存档维护操作正在进行');
     return repository.exportJson();
   }
 
@@ -122,7 +122,7 @@ final class HistoryArchiveService with WidgetsBindingObserver {
   }
 
   Future<void> _maintenance(Future<void> Function() operation) async {
-    if (_busy) throw StateError('已有归档或存档维护操作正在进行');
+    if (_busy) throw StateError('已有赛博入土或赛博存档维护操作正在进行');
     _busy = true;
     try {
       await operation();
@@ -173,7 +173,7 @@ final class HistoryArchiveService with WidgetsBindingObserver {
     if (!account.isLogin) {
       return const HistoryArchiveRunResult(
         success: false,
-        message: '当前没有可归档的登录账号',
+        message: '眼下这坨没有可赛博入土的上号赛博户口',
       );
     }
     final pauseAccountMid = Pref.historyPauseAccountMid;
@@ -181,7 +181,7 @@ final class HistoryArchiveService with WidgetsBindingObserver {
         (pauseAccountMid == null || pauseAccountMid == account.mid)) {
       return const HistoryArchiveRunResult(
         success: false,
-        message: '历史记录功能已关闭，本地归档同步已停止',
+        message: '电子案底电子脚印功能已啪一下封印，自家硬盘赛博入土同步已熄火',
       );
     }
 
@@ -197,20 +197,20 @@ final class HistoryArchiveService with WidgetsBindingObserver {
           if (response) {
             return const HistoryArchiveRunResult(
               success: false,
-              message: '历史记录功能已关闭，本地归档同步已停止',
+              message: '电子案底电子脚印功能已啪一下封印，自家硬盘赛博入土同步已熄火',
               attempted: true,
             );
           }
         case Error(:final errMsg):
           return HistoryArchiveRunResult(
             success: false,
-            message: errMsg ?? '无法确认历史记录开关状态，已取消归档',
+            message: errMsg ?? '无法拍板电子案底电子脚印开关状态，已撤了赛博入土，鼠鼠我啊',
             attempted: true,
           );
         default:
           return const HistoryArchiveRunResult(
             success: false,
-            message: '无法确认历史记录开关状态，已取消归档',
+            message: '无法拍板电子案底电子脚印开关状态，已撤了赛博入土，鼠鼠我啊',
             attempted: true,
           );
       }
@@ -218,14 +218,14 @@ final class HistoryArchiveService with WidgetsBindingObserver {
       if (!identical(account, Accounts.history)) {
         return const HistoryArchiveRunResult(
           success: false,
-          message: '归档期间账号已切换，已取消归档',
+          message: '赛博入土期间赛博户口已切换，已撤了赛博入土',
           attempted: true,
         );
       }
       if (!_archiveCanContinue(account, automatic: automatic)) {
         return const HistoryArchiveRunResult(
           success: false,
-          message: '归档条件已变化，将在下次空闲时重试',
+          message: '赛博入土条件已变化，将在下次空闲时再赌一把',
           attempted: true,
         );
       }
@@ -238,15 +238,15 @@ final class HistoryArchiveService with WidgetsBindingObserver {
       return HistoryArchiveRunResult(
         success: true,
         message: result.changed == 0
-            ? '历史记录归档完成，没有新增记录'
-            : '历史记录归档完成，新增或更新 ${result.changed} 条',
+            ? '电子案底电子脚印赛博入土收工，没有新增电子脚印'
+            : '电子案底电子脚印赛博入土收工，新增或更新 ${result.changed} 条',
         syncResult: result,
         attempted: true,
       );
     } catch (e) {
       return HistoryArchiveRunResult(
         success: false,
-        message: '历史记录归档失败：$e',
+        message: '电子案底电子脚印赛博入土寄了：$e，已老实',
         attempted: true,
       );
     } finally {

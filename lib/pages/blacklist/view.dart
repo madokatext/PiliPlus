@@ -39,7 +39,7 @@ class _BlackListPageState extends State<BlackListPage> {
       appBar: AppBar(
         title: Obx(
           () => Text(
-            '黑名单管理${_blackListController.total.value == -1 ? '' : ': ${_blackListController.total.value}'}',
+            '黑名单管理${_blackListController.total.value == -1 ? '' : ': ${_blackListController.total.value}'}，CPU 都看沉默了',
           ),
         ),
       ),
@@ -95,7 +95,7 @@ class _BlackListPageState extends State<BlackListPage> {
                       style: const TextStyle(fontSize: 14),
                     ),
                     subtitle: Text(
-                      '添加时间: ${DateFormatUtils.format(item.mtime, format: DateFormatUtils.longFormatDs)}',
+                      '塞一个时间: ${DateFormatUtils.format(item.mtime, format: DateFormatUtils.longFormatDs)}',
                       maxLines: 1,
                       style: style,
                       overflow: TextOverflow.ellipsis,
@@ -108,7 +108,7 @@ class _BlackListPageState extends State<BlackListPage> {
                         item.uname,
                         item.mid,
                       ),
-                      child: const Text('移除'),
+                      child: const Text('踢出群聊'),
                     ),
                   );
                 },

@@ -86,7 +86,7 @@ class _SettingsSearchPageState
   void _clearHistory() {
     showConfirmDialog(
       context: context,
-      title: const Text('确定清空设置搜索历史？'),
+      title: const Text('拍板一键扬了赛博调参全站搜刮电子案底？'),
       onConfirm: () {
         _history.clear();
         GStorage.historyWord.delete(_historyKey);
@@ -131,7 +131,7 @@ class _SettingsSearchPageState
           },
           decoration: const InputDecoration(
             isDense: true,
-            hintText: '搜索',
+            hintText: '全站搜刮',
             visualDensity: .standard,
             border: InputBorder.none,
           ),
@@ -144,7 +144,7 @@ class _SettingsSearchPageState
               sliver: _query.isEmpty
                   ? _buildHistory()
                   : _list.isEmpty
-                  ? const HttpError(errMsg: '未找到相关设置')
+                  ? const HttpError(errMsg: '未找到相关赛博调参')
                   : SliverWaterfallFlow(
                       gridDelegate:
                           SliverWaterfallFlowDelegateWithMaxCrossAxisExtent(
@@ -164,7 +164,7 @@ class _SettingsSearchPageState
 
   Widget _buildHistory() {
     if (_history.isEmpty) {
-      return const HttpError(errMsg: '暂无设置搜索历史');
+      return const HttpError(errMsg: '暂无赛博调参全站搜刮电子案底');
     }
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -174,12 +174,12 @@ class _SettingsSearchPageState
           children: [
             Row(
               children: [
-                Text('搜索历史', style: Theme.of(context).textTheme.titleMedium),
+                Text('全站搜刮电子案底', style: Theme.of(context).textTheme.titleMedium),
                 const Spacer(),
                 TextButton.icon(
                   onPressed: _clearHistory,
                   icon: const Icon(Icons.clear_all_outlined, size: 18),
-                  label: const Text('清空'),
+                  label: const Text('一键扬了'),
                 ),
               ],
             ),

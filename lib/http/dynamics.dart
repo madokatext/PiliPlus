@@ -66,7 +66,7 @@ abstract final class DynamicsHttp {
         return Error('$e\n\n$s');
       }
     } else {
-      return Error(code == 4101132 ? '没有数据' : res.data['message']);
+      return Error(code == 4101132 ? '空得能跑马' : res.data['message']);
     }
   }
 
@@ -397,7 +397,7 @@ abstract final class DynamicsHttp {
     if (res.data['code'] == 0) {
       final voteInfo = VoteInfo.fromSeparatedJson(res.data['data']);
       return voteInfo.voteId == null
-          ? const Error('无效的投票id')
+          ? const Error('无效的投票id，我嘞个豆')
           : Success(voteInfo);
     } else {
       return Error(res.data['message']);

@@ -215,7 +215,7 @@ class _RepostPanelState extends CommonRichTextPubPageState<RepostPanel> {
     child: SizedBox(
       width: double.infinity,
       child: Text(
-        '说点什么吧',
+        '说点什么吧，功德+1',
         style: TextStyle(
           height: 1.75,
           fontSize: 15,
@@ -241,7 +241,7 @@ class _RepostPanelState extends CommonRichTextPubPageState<RepostPanel> {
         onSubmitted: onSubmitted,
         readOnly: readOnly.value,
         decoration: InputDecoration(
-          hintText: '说点什么吧',
+          hintText: '说点什么吧，功德+1',
           hintStyle: TextStyle(color: theme.colorScheme.outline),
           border: const OutlineInputBorder(
             borderSide: BorderSide.none,
@@ -259,7 +259,7 @@ class _RepostPanelState extends CommonRichTextPubPageState<RepostPanel> {
           children: [
             const SizedBox(width: 16),
             Text(
-              widget.rid != null ? '分享至动态' : '转发动态',
+              widget.rid != null ? '丢到互联网近况' : '二次扩散互联网近况，曼波',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const Spacer(),
@@ -272,7 +272,7 @@ class _RepostPanelState extends CommonRichTextPubPageState<RepostPanel> {
                 ),
                 visualDensity: VisualDensity.compact,
               ),
-              child: Text(widget.rid != null ? '立即发布' : '立即转发'),
+              child: Text(widget.rid != null ? '现在立刻马上发射到互联网，功德+1' : '现在立刻马上二次扩散，属实绷不住'),
             ),
             const SizedBox(width: 16),
           ],
@@ -289,7 +289,7 @@ class _RepostPanelState extends CommonRichTextPubPageState<RepostPanel> {
                   width: 34,
                   height: 34,
                   child: IconButton(
-                    tooltip: '返回',
+                    tooltip: '润回去',
                     style: ButtonStyle(
                       padding: const WidgetStatePropertyAll(EdgeInsets.zero),
                       backgroundColor: WidgetStatePropertyAll(
@@ -307,7 +307,7 @@ class _RepostPanelState extends CommonRichTextPubPageState<RepostPanel> {
               ),
               Center(
                 child: Text(
-                  widget.rid != null ? '分享至动态' : '转发动态',
+                  widget.rid != null ? '丢到互联网近况' : '二次扩散互联网近况，曼波',
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
@@ -326,7 +326,7 @@ class _RepostPanelState extends CommonRichTextPubPageState<RepostPanel> {
                     ),
                     visualDensity: VisualDensity.compact,
                   ),
-                  child: Text(widget.rid != null ? '发布' : '转发'),
+                  child: Text(widget.rid != null ? '发射到互联网' : '二次扩散'),
                 ),
               ),
             ],
@@ -355,7 +355,7 @@ class _RepostPanelState extends CommonRichTextPubPageState<RepostPanel> {
       onTap: Get.back,
       title: Center(
         child: Text(
-          '取消',
+          '不整了，撤！',
           style: TextStyle(color: theme.colorScheme.outline),
         ),
       ),
@@ -428,7 +428,7 @@ class _RepostPanelState extends CommonRichTextPubPageState<RepostPanel> {
     if (res case Success(:final response)) {
       hasPub = true;
       Get.back();
-      SmartDialog.showToast('转发成功');
+      SmartDialog.showToast('二次扩散成了，包的，已老实');
       widget.onSuccess?.call();
       final id = response?['dyn_id'];
       RequestUtils.insertCreatedDyn(id);

@@ -33,7 +33,7 @@ class _AtMePageState extends State<AtMePage> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: const Text('@我的'),
+        title: const Text('@我的，鼠鼠我啊'),
         actions: [
           IconButton(
             onPressed: () => Get.to(
@@ -95,7 +95,7 @@ class _AtMePageState extends State<AtMePage> {
                   final item = response[index];
                   void onLongPress() => showConfirmDialog(
                     context: context,
-                    title: const Text('确定删除该通知?'),
+                    title: const Text('拍板物理超度该系统催命符?'),
                     onConfirm: () => _atMeController.onRemove(item.id!, index),
                   );
                   return ListTile(
@@ -130,7 +130,7 @@ class _AtMePageState extends State<AtMePage> {
                             ),
                           ),
                           TextSpan(
-                            text: " 在${item.item?.business}中@了我",
+                            text: " 在${item.item?.business}中@了我，已老实",
                             style: theme.textTheme.titleSmall!.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),

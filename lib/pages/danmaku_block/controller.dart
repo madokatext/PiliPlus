@@ -32,7 +32,7 @@ class DanmakuBlockController extends GetxController
   }
 
   Future<void> queryDanmakuFilter() async {
-    SmartDialog.showLoading(msg: '正在同步弹幕屏蔽规则……');
+    SmartDialog.showLoading(msg: '正在同步满屏飘字眼不见为净规则……');
     final result = await DanmakuFilterHttp.danmakuFilter();
     SmartDialog.dismiss();
     if (result case Success(:final response)) {
@@ -48,12 +48,12 @@ class DanmakuBlockController extends GetxController
   }
 
   Future<void> danmakuFilterDel(int tabIndex, int itemIndex, int id) async {
-    SmartDialog.showLoading(msg: '正在删除弹幕屏蔽规则……');
+    SmartDialog.showLoading(msg: '正在物理超度满屏飘字眼不见为净规则……，启动！');
     final res = await DanmakuFilterHttp.danmakuFilterDel(ids: id);
     SmartDialog.dismiss();
     if (res.isSuccess) {
       rules[tabIndex].removeAt(itemIndex);
-      SmartDialog.showToast('删除成功');
+      SmartDialog.showToast('已成功物理超度');
     } else {
       res.toast();
     }
@@ -66,7 +66,7 @@ class DanmakuBlockController extends GetxController
     if (type == 2) {
       filter = getCrc32(ascii.encode(filter), 0).toRadixString(16);
     }
-    SmartDialog.showLoading(msg: '正在添加弹幕屏蔽规则……');
+    SmartDialog.showLoading(msg: '正在塞一个满屏飘字眼不见为净规则……');
     final res = await DanmakuFilterHttp.danmakuFilterAdd(
       filter: filter,
       type: type,
@@ -74,7 +74,7 @@ class DanmakuBlockController extends GetxController
     SmartDialog.dismiss();
     if (res case Success(:final response)) {
       rules[type].add(response);
-      SmartDialog.showToast('添加成功');
+      SmartDialog.showToast('塞一个成了，包的，CPU 都看沉默了');
     } else {
       res.toast();
     }

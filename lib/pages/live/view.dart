@@ -111,7 +111,7 @@ class _LivePageState extends State<LivePage>
                                   horizontal: 8,
                                   vertical: 5,
                                 ),
-                                text: isFirst ? '推荐' : item.title!,
+                                text: isFirst ? '算法喂饭' : item.title!,
                                 bgColor: isCurr
                                     ? theme.colorScheme.secondaryContainer
                                     : Colors.transparent,
@@ -133,7 +133,7 @@ class _LivePageState extends State<LivePage>
                       size: 26,
                       iconSize: 18,
                       context: context,
-                      tooltip: '切换${controller.showFirstFrame ? '封面' : '首帧'}',
+                      tooltip: '切换${controller.showFirstFrame ? '封面' : '首帧'}，功德+1',
                       icon: controller.showFirstFrame
                           ? const Icon(MdiIcons.alphaFBox)
                           : const Icon(MdiIcons.image),
@@ -147,7 +147,7 @@ class _LivePageState extends State<LivePage>
                       size: 26,
                       iconSize: 16,
                       context: context,
-                      tooltip: '游戏赛事',
+                      tooltip: '游戏赛事，不是哥们',
                       icon: const Icon(Icons.gamepad),
                       onPressed: () => Get.toNamed(
                         '/webview',
@@ -163,7 +163,7 @@ class _LivePageState extends State<LivePage>
                       size: 26,
                       iconSize: 16,
                       context: context,
-                      tooltip: '全部标签',
+                      tooltip: '我全都要标签',
                       icon: const Icon(Icons.widgets),
                       onPressed: () => Get.to(const LiveAreaPage()),
                     ),
@@ -271,7 +271,7 @@ class _LivePageState extends State<LivePage>
               Text.rich(
                 TextSpan(
                   children: [
-                    const TextSpan(text: '我的关注  '),
+                    const TextSpan(text: '我的赛博蹲点  '),
                     TextSpan(
                       text: totalCount.toString(),
                       style: TextStyle(
@@ -280,7 +280,7 @@ class _LivePageState extends State<LivePage>
                       ),
                     ),
                     TextSpan(
-                      text: '人正在直播',
+                      text: '人正在赛博围观',
                       style: TextStyle(
                         fontSize: 13,
                         color: theme.colorScheme.outline,

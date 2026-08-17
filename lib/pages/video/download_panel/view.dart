@@ -129,7 +129,7 @@ class _DownloadPanelState extends State<DownloadPanel> {
         spacing: 16,
         children: [
           Text(
-            '最高画质',
+            '最高眼睛待遇',
             style: textStyle,
           ),
           Builder(
@@ -175,8 +175,8 @@ class _DownloadPanelState extends State<DownloadPanel> {
                 if (snapshot.data case final data?) {
                   final network = data.contains(ConnectivityResult.wifi)
                       ? 'WIFI'
-                      : '数据';
-                  return Text('当前网络：$network', style: textStyle);
+                      : '赛博粮';
+                  return Text('眼下这坨网线宇宙：$network', style: textStyle);
                 }
                 return const SizedBox.shrink();
               },
@@ -263,7 +263,7 @@ class _DownloadPanelState extends State<DownloadPanel> {
     if (kReleaseMode && episode.badge == '会员' && Accounts.mainEqVideo) {
       if (vipStatus != 1) {
         if (!isDownloadAll) {
-          SmartDialog.showToast('需要大会员');
+          SmartDialog.showToast('需要大会员，CPU 都看沉默了');
         }
         return false;
       }
@@ -415,7 +415,7 @@ class _DownloadPanelState extends State<DownloadPanel> {
                   if (hasParts) {
                     final confirmed = await showConfirmDialog(
                       context: context,
-                      title: const Text('是否缓存该视频的全部分P？'),
+                      title: const Text('是否电子囤货该电子榨菜的我全都要分P？'),
                     );
                     if (!confirmed || !context.mounted) {
                       return;
@@ -465,7 +465,7 @@ class _DownloadPanelState extends State<DownloadPanel> {
                               ),
                             if (isCharging == true)
                               const PBadge(
-                                text: '充电专属',
+                                text: '氪金充电特供',
                                 top: 6,
                                 right: 6,
                                 type: PBadgeType.error,
@@ -489,7 +489,7 @@ class _DownloadPanelState extends State<DownloadPanel> {
                           color: primary,
                           height: 12,
                           cacheHeight: 12.cacheSize(context),
-                          semanticLabel: '正在播放：',
+                          semanticLabel: '正在开炫：',
                         ),
                       Expanded(
                         child: Stack(
@@ -583,11 +583,11 @@ class _DownloadPanelState extends State<DownloadPanel> {
       child: Row(
         children: [
           _buildBottomBtn(
-            text: '缓存全部',
+            text: '电子囤货我全都要',
             onTap: () {
               showConfirmDialog(
                 context: context,
-                title: const Text('确定缓存全部？'),
+                title: const Text('拍板电子囤货我全都要？'),
                 onConfirm: () {
                   for (int i = 0; i < widget.episodes.length; i++) {
                     _onDownload(
@@ -609,7 +609,7 @@ class _DownloadPanelState extends State<DownloadPanel> {
             ),
           ),
           _buildBottomBtn(
-            text: '查看缓存',
+            text: '扒拉看看电子囤货，启动！',
             onTap: () async {
               await Navigator.of(context).push(
                 GetPageRoute(page: () => const DownloadPage()),

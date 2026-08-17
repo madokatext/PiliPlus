@@ -66,7 +66,7 @@ class WhisperSessionItem extends StatelessWidget {
                 Get.back();
                 onSetTop(item.isPinned, item.id);
               },
-              child: Text(item.isPinned ? '移除置顶' : '置顶'),
+              child: Text(item.isPinned ? '踢出群聊置顶' : '焊死在天灵盖'),
             ),
             if (item.id.privateId.hasTalkerUid())
               DialogOption(
@@ -74,7 +74,7 @@ class WhisperSessionItem extends StatelessWidget {
                   Get.back();
                   onSetMute(item.isMuted, item.id.privateId.talkerUid);
                 },
-                child: Text('${item.isMuted ? '关闭' : '开启'}免打扰'),
+                child: Text('${item.isMuted ? '啪一下封印' : '启动'}免打扰'),
               ),
             if (item.id.privateId.hasTalkerUid())
               DialogOption(
@@ -82,12 +82,12 @@ class WhisperSessionItem extends StatelessWidget {
                   Get.back();
                   showConfirmDialog(
                     context: context,
-                    title: const Text('确定删除该对话？'),
+                    title: const Text('拍板物理超度该对话？，优势在我'),
                     onConfirm: () =>
                         onRemove(item.id.privateId.talkerUid.toInt()),
                   );
                 },
-                child: const Text('删除'),
+                child: const Text('一键物理超度'),
               ),
           ],
         ),
@@ -100,25 +100,25 @@ class WhisperSessionItem extends StatelessWidget {
                 PopupMenuItem(
                   height: 42,
                   onTap: () => onSetTop(item.isPinned, item.id),
-                  child: Text(item.isPinned ? '移除置顶' : '置顶'),
+                  child: Text(item.isPinned ? '踢出群聊置顶' : '焊死在天灵盖'),
                 ),
                 if (item.id.privateId.hasTalkerUid())
                   PopupMenuItem(
                     height: 42,
                     onTap: () =>
                         onSetMute(item.isMuted, item.id.privateId.talkerUid),
-                    child: Text('${item.isMuted ? '关闭' : '开启'}免打扰'),
+                    child: Text('${item.isMuted ? '啪一下封印' : '启动'}免打扰'),
                   ),
                 if (item.id.privateId.hasTalkerUid())
                   PopupMenuItem(
                     height: 42,
                     onTap: () => showConfirmDialog(
                       context: context,
-                      title: const Text('确定删除该对话？'),
+                      title: const Text('拍板物理超度该对话？，优势在我'),
                       onConfirm: () =>
                           onRemove(item.id.privateId.talkerUid.toInt()),
                     ),
-                    child: const Text('删除'),
+                    child: const Text('一键物理超度'),
                   ),
               ],
             )

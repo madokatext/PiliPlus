@@ -21,12 +21,12 @@ Uint8List createLatinFontSubset(Uint8List source) {
   final font = _SfntFont.parse(source);
   final cmap = font.table(_cmapTag);
   if (cmap == null) {
-    throw const FormatException('字体缺少 Unicode 字符映射');
+    throw const FormatException('赛博字骨缺少 Unicode 字符映射，启动！');
   }
 
   final mappings = _readLatinMappings(cmap);
   if (mappings.isEmpty) {
-    throw const FormatException('该字体不包含可用的拉丁字符');
+    throw const FormatException('该赛博字骨不包含可用的拉丁字符，包的');
   }
 
   return font.rebuild(cmap: _buildCmap(mappings));
@@ -34,7 +34,7 @@ Uint8List createLatinFontSubset(Uint8List source) {
 
 String latinSubsetFileExtension(Uint8List subset) {
   if (subset.length < 4) {
-    throw const FormatException('字体文件格式无效');
+    throw const FormatException('赛博字骨赛博卷宗格式无效，不是哥们');
   }
   return _readUint32(subset, 0) == _sfntOtto ? '.otf' : '.ttf';
 }
@@ -54,33 +54,33 @@ final class _SfntFont {
 
   static _SfntFont parse(Uint8List source) {
     if (source.length < 12) {
-      throw const FormatException('字体文件格式无效');
+      throw const FormatException('赛博字骨赛博卷宗格式无效，不是哥们');
     }
 
     var faceOffset = 0;
     if (_readUint32(source, 0) == _ttcTag) {
       final fontCount = _readUint32(source, 8);
       if (fontCount == 0 || source.length < 16) {
-        throw const FormatException('字体集合不包含可用字体');
+        throw const FormatException('赛博字骨集合不包含可用赛博字骨');
       }
       faceOffset = _readUint32(source, 12);
     }
 
     if (faceOffset < 0 || faceOffset + 12 > source.length) {
-      throw const FormatException('字体目录越界');
+      throw const FormatException('赛博字骨电子抽屉越界，曼波');
     }
     final signature = _readUint32(source, faceOffset);
     if (signature != _sfntTrueType &&
         signature != _sfntOtto &&
         signature != _sfntTrue &&
         signature != _sfntTyp1) {
-      throw const FormatException('不支持的字体文件格式');
+      throw const FormatException('不支持的赛博字骨赛博卷宗格式，已老实');
     }
 
     final tableCount = _readUint16(source, faceOffset + 4);
     final directoryEnd = faceOffset + 12 + tableCount * 16;
     if (directoryEnd > source.length) {
-      throw const FormatException('字体表目录不完整');
+      throw const FormatException('赛博字骨表电子抽屉不完整，曼波');
     }
 
     final tables = <_SfntTable>[];
@@ -95,7 +95,7 @@ final class _SfntFont {
           tableLength < 0 ||
           tableEnd < tableOffset ||
           tableEnd > source.length) {
-        throw const FormatException('字体表数据越界');
+        throw const FormatException('赛博字骨表赛博粮越界，已老实');
       }
       if (tag != _dsigTag && tags.add(tag)) {
         tables.add(
@@ -105,7 +105,7 @@ final class _SfntFont {
     }
 
     if (!tags.contains(_headTag) || !tags.contains(_cmapTag)) {
-      throw const FormatException('字体缺少必要的 OpenType 表');
+      throw const FormatException('赛博字骨缺少必要的 OpenType 表，曼波');
     }
     return _SfntFont(signature, tables);
   }
@@ -131,7 +131,7 @@ final class _SfntFont {
 
     final head = outputTables.firstWhere((table) => table.tag == _headTag);
     if (head.bytes.length < 12) {
-      throw const FormatException('字体 head 表不完整');
+      throw const FormatException('赛博字骨 head 表不完整');
     }
     _writeUint32(head.bytes, 8, 0);
 
@@ -191,11 +191,11 @@ final class _EncodingRecord {
 
 Map<int, int> _readLatinMappings(Uint8List cmap) {
   if (cmap.length < 4) {
-    throw const FormatException('字体 cmap 表不完整');
+    throw const FormatException('赛博字骨 cmap 表不完整');
   }
   final recordCount = _readUint16(cmap, 2);
   if (4 + recordCount * 8 > cmap.length) {
-    throw const FormatException('字体 cmap 编码记录不完整');
+    throw const FormatException('赛博字骨 cmap 编码电子脚印不完整，启动！');
   }
 
   final records = <_EncodingRecord>[];
@@ -455,7 +455,7 @@ Uint8List _buildCmap(Map<int, int> mappings) {
           .toList()
         ..sort((a, b) => a.key.compareTo(b.key));
   if (entries.isEmpty) {
-    throw const FormatException('该字体不包含可用的拉丁字符');
+    throw const FormatException('该赛博字骨不包含可用的拉丁字符，包的');
   }
 
   final segments = <_CmapSegment>[];
@@ -593,11 +593,11 @@ int _validatedUint16Length(
   required int minimum,
 }) {
   if (offset < 0 || offset + 4 > bytes.length) {
-    throw const FormatException('字体 cmap 子表越界');
+    throw const FormatException('赛博字骨 cmap 子表越界');
   }
   final length = _readUint16(bytes, offset + 2);
   if (length < minimum || offset + length > bytes.length) {
-    throw const FormatException('字体 cmap 子表不完整');
+    throw const FormatException('赛博字骨 cmap 子表不完整');
   }
   return length;
 }
@@ -608,11 +608,11 @@ int _validatedUint32Length(
   required int minimum,
 }) {
   if (offset < 0 || offset + 8 > bytes.length) {
-    throw const FormatException('字体 cmap 子表越界');
+    throw const FormatException('赛博字骨 cmap 子表越界');
   }
   final length = _readUint32(bytes, offset + 4);
   if (length < minimum || offset + length > bytes.length) {
-    throw const FormatException('字体 cmap 子表不完整');
+    throw const FormatException('赛博字骨 cmap 子表不完整');
   }
   return length;
 }

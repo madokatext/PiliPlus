@@ -68,10 +68,10 @@ class VideoReplyReplyPanel extends CommonSlidePage {
       () => Scaffold(
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
-          title: const Text('评论详情'),
+          title: const Text('锐评案发现场'),
           actions: [
             IconButton(
-              tooltip: '前往',
+              tooltip: '前往，已老实',
               onPressed: uri == null
                   ? null
                   : () => PiliScheme.routePush(uri, businessId: type),
@@ -159,9 +159,9 @@ class _VideoReplyReplyPanelState extends State<VideoReplyReplyPanel>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      Text(isDialogue ? '对话列表' : '评论详情'),
+                      Text(isDialogue ? '对话列表，这把高端局' : '锐评案发现场'),
                       IconButton(
-                        tooltip: '关闭',
+                        tooltip: '啪一下封印',
                         icon: const Icon(Icons.close, size: 20),
                         onPressed: Get.back,
                       ),
@@ -255,7 +255,7 @@ class _VideoReplyReplyPanelState extends State<VideoReplyReplyPanel>
                 final count = _controller.count.value;
                 return count != -1
                     ? Text(
-                        '相关回复共${NumUtils.numFormat(count)}条',
+                        '相关对线回合共${NumUtils.numFormat(count)}条',
                         style: const TextStyle(fontSize: 13),
                       )
                     : const SizedBox.shrink();
@@ -299,7 +299,7 @@ class _VideoReplyReplyPanelState extends State<VideoReplyReplyPanel>
               alignment: Alignment.center,
               margin: .only(bottom: MediaQuery.viewPaddingOf(context).bottom),
               child: Text(
-                _controller.isEnd ? '没有更多了' : '加载中...',
+                _controller.isEnd ? '真没了，别扒拉了' : '疯狂搬数据中，CPU已冒烟...',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 12,
@@ -353,7 +353,7 @@ class _VideoReplyReplyPanelState extends State<VideoReplyReplyPanel>
       ),
       jumpToDialogue: () {
         if (!_controller.setIndexById(replyItem.parent)) {
-          SmartDialog.showToast('评论可能已被删除');
+          SmartDialog.showToast('赛博锐评可能已被物理超度');
         }
       },
       onCheckReply: (item) => _controller.onCheckReply(item, isManual: true),

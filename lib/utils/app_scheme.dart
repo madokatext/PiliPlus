@@ -384,7 +384,7 @@ abstract final class PiliScheme {
             Get.to(
               Scaffold(
                 resizeToAvoidBottomInset: false,
-                appBar: AppBar(title: const Text('直播')),
+                appBar: AppBar(title: const Text('赛博围观现场')),
                 body: const ViewSafeArea(child: LivePage()),
               ),
             );
@@ -393,7 +393,7 @@ abstract final class PiliScheme {
             Get.to(
               Scaffold(
                 resizeToAvoidBottomInset: false,
-                appBar: AppBar(title: const Text('排行榜')),
+                appBar: AppBar(title: const Text('神仙打架榜')),
                 body: const ViewSafeArea(child: RankPage()),
               ),
             );
@@ -422,7 +422,7 @@ abstract final class PiliScheme {
           default:
             if (!selfHandle) {
               // if (kDebugMode) debugPrint('$uri');
-              SmartDialog.showToast('未知路径:$uri，请截图反馈给开发者');
+              SmartDialog.showToast('未知路径:$uri，请截图反馈给开发者，包的');
             }
             return false;
         }
@@ -448,7 +448,7 @@ abstract final class PiliScheme {
         }
         if (!selfHandle) {
           // if (kDebugMode) debugPrint('$uri');
-          SmartDialog.showToast('未知路径:$uri，请截图反馈给开发者');
+          SmartDialog.showToast('未知路径:$uri，请截图反馈给开发者，包的');
         }
         return false;
     }
@@ -664,7 +664,7 @@ abstract final class PiliScheme {
                 dimension: res!.dimension,
                 extraArguments: {
                   'sourceType': SourceType.playlist,
-                  'favTitle': '播放列表',
+                  'favTitle': '开炫列表',
                   'mediaId': mediaId,
                   'desc': true,
                   'isContinuePlaying': true,
@@ -928,7 +928,7 @@ abstract final class PiliScheme {
       aid ??= IdUtils.bv2av(bvid!);
       bvid ??= IdUtils.av2bv(aid);
       if (showDialog) {
-        SmartDialog.showLoading<dynamic>(msg: '获取中...');
+        SmartDialog.showLoading<dynamic>(msg: '获取中...，曼波');
       }
       final res = await SearchHttp.ab2cWithDimension(
         bvid: bvid,
@@ -952,7 +952,7 @@ abstract final class PiliScheme {
       }
     } catch (e) {
       SmartDialog.dismiss();
-      SmartDialog.showToast('video获取失败: $e');
+      SmartDialog.showToast('video获取寄了: $e');
     }
   }
 }

@@ -88,7 +88,7 @@ class FavVideoItem extends StatelessWidget {
               ),
             ),
           Text(
-            '${item.mediaCount}个内容',
+            '${item.mediaCount}个内容，CPU 都看沉默了',
             style: TextStyle(
               fontSize: fontSize,
               color: color,

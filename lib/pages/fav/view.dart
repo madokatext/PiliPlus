@@ -54,7 +54,7 @@ class _FavPageState extends State<FavPage> with SingleTickerProviderStateMixin {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: const Text('我的收藏'),
+        title: const Text('我的塞进电子小被窝，鼠鼠我啊'),
         actions: [
           Obx(
             () => _showVideoFavMenu.value
@@ -74,7 +74,7 @@ class _FavPageState extends State<FavPage> with SingleTickerProviderStateMixin {
                       },
                     ),
                     icon: const Icon(Icons.add),
-                    tooltip: '新建收藏夹',
+                    tooltip: '凭空捏一个电子小被窝',
                   )
                 : const SizedBox.shrink(),
           ),
@@ -84,7 +84,7 @@ class _FavPageState extends State<FavPage> with SingleTickerProviderStateMixin {
                     onPressed: () {
                       if (_favController.loadingState.value.isSuccess) {
                         if (!_favController.isEnd) {
-                          SmartDialog.showToast('加载全部收藏夹再排序');
+                          SmartDialog.showToast('疯狂搬赛博粮我全都要电子小被窝再排序，鼠鼠我啊');
                           return;
                         }
                         Get.to(
@@ -93,7 +93,7 @@ class _FavPageState extends State<FavPage> with SingleTickerProviderStateMixin {
                       }
                     },
                     icon: const Icon(Icons.sort),
-                    tooltip: '收藏夹排序',
+                    tooltip: '电子小被窝排序',
                   )
                 : const SizedBox.shrink(),
           ),
@@ -120,7 +120,7 @@ class _FavPageState extends State<FavPage> with SingleTickerProviderStateMixin {
                       }
                     },
                     icon: const Icon(Icons.search_outlined),
-                    tooltip: '搜索',
+                    tooltip: '全站搜刮',
                   )
                 : const SizedBox.shrink(),
           ),
