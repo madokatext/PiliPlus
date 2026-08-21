@@ -31,11 +31,9 @@ class HistoryController
 
   int? max;
   int? viewAt;
-  static const _localPageSize = 20;
   final _repository = HistoryArchiveRepository.instance;
   final Set<String> _cloudKeys = {};
   List<HistoryItemModel>? _localItems;
-  int _localOffset = 0;
   bool _usingLocal = false;
   bool _lastResponseWasLocal = false;
 
@@ -58,7 +56,6 @@ class HistoryController
     viewAt = null;
     _cloudKeys.clear();
     _localItems = null;
-    _localOffset = 0;
     _usingLocal = false;
     _lastResponseWasLocal = false;
     return super.onRefresh();
@@ -73,7 +70,18 @@ class HistoryController
   bool customHandleResponse(bool isRefresh, Success<HistoryData> response) {
     HistoryData data = response.response;
     if (_lastResponseWasLocal) {
-      isEnd = _localOffset >= (_localItems?.length ?? 0);
+      isEnd = true;
+      final localItems = data.list;
+      final currentItems = loadingState.value.dataOrNull;
+      if (!isRefresh &&
+          localItems?.isNotEmpty == true &&
+          currentItems != null) {
+        currentItems
+          ..addAll(localItems!)
+          ..sort(_compareByViewAt);
+        loadingState.refresh();
+        return true;
+      }
       return false;
     }
     isEnd = data.list.isNullOrEmpty;
@@ -167,7 +175,7 @@ class HistoryController
 
   @override
   Future<LoadingState<HistoryData>> customGetData() async {
-    if (_usingLocal) return Success(HistoryData(list: _nextLocalPage()));
+    if (_usingLocal) return Success(HistoryData(list: const []));
 
     final cloudResult = await UserHttp.historyList(
       type: type ?? 'all',
@@ -188,8 +196,8 @@ class HistoryController
       );
     }
 
-    final localPage = _beginLocalSupplement();
-    if (localPage.isNotEmpty) return Success(HistoryData(list: localPage));
+    final localItems = _beginLocalSupplement();
+    if (localItems.isNotEmpty) return Success(HistoryData(list: localItems));
     _usingLocal = false;
     _lastResponseWasLocal = false;
     return cloudResult;
@@ -202,21 +210,11 @@ class HistoryController
       type: type,
       excludeKeys: _cloudKeys,
     );
-    _localOffset = 0;
-    return _nextLocalPage();
+    return _localItems!;
   }
 
-  List<HistoryItemModel> _nextLocalPage() {
-    _lastResponseWasLocal = true;
-    final items = _localItems ?? const <HistoryItemModel>[];
-    if (_localOffset >= items.length) return const [];
-    final end = (_localOffset + _localPageSize)
-        .clamp(0, items.length)
-        .toInt();
-    final page = items.sublist(_localOffset, end);
-    _localOffset = end;
-    return page;
-  }
+  int _compareByViewAt(HistoryItemModel a, HistoryItemModel b) =>
+      (b.viewAt ?? 0).compareTo(a.viewAt ?? 0);
 
   @override
   void onClose() {

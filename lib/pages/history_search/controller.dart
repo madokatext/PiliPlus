@@ -14,16 +14,15 @@ import 'package:get/get.dart';
 class HistorySearchController
     extends CommonSearchController<HistoryData, HistoryItemModel>
     with CommonMultiSelectMixin<HistoryItemModel>, DeleteItemMixin {
-  static const _localPageSize = 20;
   final _repository = HistoryArchiveRepository.instance;
   final Set<String> _cloudKeys = {};
   List<HistoryItemModel>? _localItems;
-  int _localOffset = 0;
   bool _usingLocal = false;
+  bool _lastResponseWasLocal = false;
 
   @override
   Future<LoadingState<HistoryData>> customGetData() async {
-    if (_usingLocal) return Success(HistoryData(list: _nextLocalPage()));
+    if (_usingLocal) return Success(HistoryData(list: const []));
 
     final result = await UserHttp.searchHistory(
       pn: page,
@@ -33,6 +32,7 @@ class HistorySearchController
     if (result case Success(:final response)) {
       final cloudItems = response.list ?? const <HistoryItemModel>[];
       if (cloudItems.isNotEmpty) {
+        _lastResponseWasLocal = false;
         _repository.markCloudItems(cloudItems);
         _cloudKeys.addAll(cloudItems.map(_repository.recordKeyForItem));
         return Success(response);
@@ -40,9 +40,10 @@ class HistorySearchController
       return Success(HistoryData(list: _beginLocalSupplement()));
     }
 
-    final localPage = _beginLocalSupplement();
-    if (localPage.isNotEmpty) return Success(HistoryData(list: localPage));
+    final localItems = _beginLocalSupplement();
+    if (localItems.isNotEmpty) return Success(HistoryData(list: localItems));
     _usingLocal = false;
+    _lastResponseWasLocal = false;
     return result;
   }
 
@@ -50,14 +51,33 @@ class HistorySearchController
   Future<void> onRefresh() {
     _cloudKeys.clear();
     _localItems = null;
-    _localOffset = 0;
     _usingLocal = false;
+    _lastResponseWasLocal = false;
     return super.onRefresh();
   }
 
   @override
   List<HistoryItemModel>? getDataList(HistoryData response) {
     return response.list;
+  }
+
+  @override
+  bool customHandleResponse(bool isRefresh, Success<HistoryData> response) {
+    if (_lastResponseWasLocal) {
+      isEnd = true;
+      final localItems = response.response.list;
+      final currentItems = loadingState.value.dataOrNull;
+      if (!isRefresh &&
+          localItems?.isNotEmpty == true &&
+          currentItems != null) {
+        currentItems
+          ..addAll(localItems!)
+          ..sort(_compareByViewAt);
+        loadingState.refresh();
+        return true;
+      }
+    }
+    return false;
   }
 
   final account = Accounts.history;
@@ -121,23 +141,14 @@ class HistorySearchController
 
   List<HistoryItemModel> _beginLocalSupplement() {
     _usingLocal = true;
+    _lastResponseWasLocal = true;
     _localItems = _repository.localItems(
       keyword: editController.value.text,
       excludeKeys: _cloudKeys,
     );
-    _localOffset = 0;
-    return _nextLocalPage();
+    return _localItems!;
   }
 
-  List<HistoryItemModel> _nextLocalPage() {
-    final items = _localItems ?? const <HistoryItemModel>[];
-    if (_localOffset >= items.length) return const [];
-    final end = (_localOffset + _localPageSize)
-        .clamp(0, items.length)
-        .toInt();
-    final localPage = items.sublist(_localOffset, end);
-    _localOffset = end;
-    isEnd = end >= items.length;
-    return localPage;
-  }
+  int _compareByViewAt(HistoryItemModel a, HistoryItemModel b) =>
+      (b.viewAt ?? 0).compareTo(a.viewAt ?? 0);
 }
