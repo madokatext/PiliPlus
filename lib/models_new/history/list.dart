@@ -55,7 +55,9 @@ class HistoryItemModel with MultiSelectData {
         uri: json['uri'] as String?,
         history: json['history'] == null
             ? History()
-            : History.fromJson(json['history'] as Map<String, dynamic>),
+            : History.fromJson(
+                Map<String, dynamic>.from(json['history'] as Map),
+              ),
         videos: json['videos'] as int?,
         authorName: json['author_name'] as String?,
         authorMid: json['author_mid'] as int?,
