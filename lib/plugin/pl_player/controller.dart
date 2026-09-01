@@ -170,6 +170,7 @@ class _StandbyPlayerGateDiagnostics {
 class PlPlayerController with BlockConfigMixin {
   Player? _videoPlayerController;
   VideoController? _videoController;
+  SubtitleTrack _subtitleTrack = SubtitleTrack.no();
   Future<Player>? _playerInitTask;
   _InitialPlayGate? _initialPlayGate;
   _InitialPlayGate? _lastInitialPlayGate;
@@ -416,6 +417,19 @@ final RxInt seekStartPosition = 0.obs;
 
   /// [videoController] instance of Player
   VideoController? get videoController => _videoController;
+
+  Future<void> setSubtitleTrack(SubtitleTrack track) async {
+    _subtitleTrack = track;
+    final players = <Player?>[
+      _videoPlayerController,
+      _standbyVideoPlayerController,
+    ];
+    for (final player in players) {
+      if (player != null && player.current.isNotEmpty) {
+        await player.setSubtitleTrack(track);
+      }
+    }
+  }
 
   /// 预缓冲中的备用视频输出。界面通常将它绘制在当前输出下方；正式
   /// 交接时会先提升到顶层，并在 Flutter 确认该 Texture 已呈现后再切音频。
@@ -2618,6 +2632,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         ),
         play: false,
       );
+      await standbyPlayer.setSubtitleTrack(_subtitleTrack);
       _bumpVideoOutputRevision();
       if (!isCurrentSwitch()) {
         return false;

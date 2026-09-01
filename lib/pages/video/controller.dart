@@ -1234,7 +1234,7 @@ class VideoDetailController extends GetxController
   // 设定字幕轨道
   Future<void> setSubtitle(int index) async {
     if (index <= 0) {
-      await plPlayerController.videoPlayerController?.setSubtitleTrack(.no());
+      await plPlayerController.setSubtitleTrack(.no());
       vttSubtitlesIndex.value = index;
       return;
     }
@@ -1246,7 +1246,7 @@ class VideoDetailController extends GetxController
       if (subtitle.isData) {
         subUri = 'memory://$subUri';
       }
-      await plPlayerController.videoPlayerController?.setSubtitleTrack(
+      await plPlayerController.setSubtitleTrack(
         SubtitleTrack(subUri, sub.lanDoc, sub.lan, uri: true),
       );
       vttSubtitlesIndex.value = index;
