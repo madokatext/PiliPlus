@@ -269,11 +269,17 @@ mixin FavMixin on TripleMixin {
       return;
     }
 
+    final originalFavIds = favIds;
+    final folders = favFolderData.value.list;
+    if (originalFavIds == null || folders == null) {
+      return;
+    }
+
     List<int?> addMediaIdsNew = [];
     List<int?> delMediaIdsNew = [];
     try {
-      for (final i in favFolderData.value.list!) {
-        bool isFaved = favIds?.contains(i.id) == true;
+      for (final i in folders) {
+        bool isFaved = originalFavIds.contains(i.id);
         if (i.favState == 1) {
           if (!isFaved) {
             addMediaIdsNew.add(i.id);
@@ -286,6 +292,17 @@ mixin FavMixin on TripleMixin {
       }
     } catch (e) {
       if (kDebugMode) debugPrint(e.toString());
+      return;
+    }
+    if (addMediaIdsNew.isEmpty && delMediaIdsNew.isEmpty) {
+      Get.back();
+      final newVal = originalFavIds.isNotEmpty;
+      if (hasFav.value != newVal) {
+        updateFavCount(newVal ? 1 : -1);
+        hasFav.value = newVal;
+      }
+      SmartDialog.showToast(newVal ? '已在选定收藏夹中' : '未收藏');
+      return;
     }
     SmartDialog.showLoading(msg: '请求中');
     final result = await FavHttp.favVideo(
