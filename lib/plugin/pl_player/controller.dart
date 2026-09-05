@@ -1,5 +1,5 @@
 import 'dart:async' show Completer, StreamSubscription, Timer, unawaited;
-import 'dart:convert' show ascii, jsonEncode;
+import 'dart:convert' show ascii;
 import 'dart:io' show Platform;
 import 'dart:math' show max, min;
 import 'dart:ui' as ui;
@@ -50,13 +50,14 @@ import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/playback_history_tracker.dart';
 import 'package:PiliPlus/utils/recommend_history.dart';
+import 'package:PiliPlus/utils/startup_log.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:archive/archive.dart' show getCrc32;
 import 'package:canvas_danmaku/canvas_danmaku.dart';
-import 'package:flutter/foundation.dart' show kDebugMode, debugPrintSynchronously;
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback, DeviceOrientation;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -980,17 +981,34 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     return _instance != null;
   }
 
-  static void setPlayCallBack(PlayCallback? playCallBack) {
+  static void setPlayCallBack(PlayCallback? playCallBack, {String? ownerTag}) {
     _playCallBack = playCallBack;
+    _playCallbackOwnerTag = ownerTag;
     _instance?._logStartup('play_callback.set', details: {
       'present': playCallBack != null,
+      'callers': StartupLog.callers(),
     });
   }
 
   static PlayCallback? _playCallBack;
+  static String? _playCallbackOwnerTag;
 
   static Future<void>? playIfExists() {
-    return _playCallBack?.call();
+    _instance?._logStartup('play_callback.invoke', details: {
+      'callers': StartupLog.callers(),
+    });
+    try {
+      final result = _playCallBack?.call();
+      _instance?._logStartup('play_callback.return', details: {
+        'futurePresent': result != null,
+      });
+      return result;
+    } catch (error) {
+      _instance?._logStartup('play_callback.error', details: {
+        'errorType': error.runtimeType.toString(),
+      });
+      rethrow;
+    }
   }
 
   // try to get PlayerStatus
@@ -1148,6 +1166,10 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
 
   // Keep startup diagnostics in release logcat as well. Do not log media URLs,
   // headers or exception messages: play URLs contain account/signature data.
+  void logPageStartup(String event, Map<String, Object?> details) {
+    _logStartup('page.$event', gate: _initialPlayGate, details: details);
+  }
+
   void _logStartup(
     String event, {
     Player? player,
@@ -1196,9 +1218,8 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         }
       }
       final record = <String, Object?>{
-        'layer': 'app',
-        'event': event,
-        'time': DateTime.now().toIso8601String(),
+        'controllerId': identityHashCode(this),
+        'playerId': target == null ? null : identityHashCode(target),
         'generation': generation ?? gate?.generation ?? _dataSourceGeneration,
         'currentGeneration': _dataSourceGeneration,
         'handle': target?.handle.toString(),
@@ -1210,6 +1231,16 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         'waiting': isWaitingForInitialPlay.value,
         'releaseGeneration': _initialPlayReleaseGeneration,
         'playCallbackPresent': _playCallBack != null,
+        'playCallbackId': _playCallBack == null
+            ? null
+            : identityHashCode(_playCallBack!),
+        'callbackOwnerId': _playCallbackOwnerTag?.hashCode,
+        'activePageId': _activeVideoPageTag?.hashCode,
+        'loadedPageId': _loadedVideoPageTag?.hashCode,
+        'playerStatus': playerStatus.value.name,
+        'dataStatus': dataStatus.value.name,
+        'appBuffering': isBuffering.value,
+        'bufferOverlay': shouldShowBufferingOverlay,
         'switching': videoPlayerSwitching.value,
         'networkFailed': _videoNetworkFailed,
         'recovering': _mediaRecoveryRunning,
@@ -1239,11 +1270,18 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
           'fallbackAttempted': gate.fallbackReleaseAttempted,
         },
         'mpv': properties,
+        if (event == 'play.request' || event == 'pause.request')
+          'callers': StartupLog.callers(),
         ...details,
       };
-      debugPrintSynchronously('[PiliPlusStartup] ${jsonEncode(record)}');
-    } catch (_) {
+      StartupLog.write('app', event, record);
+    } catch (error) {
       // Diagnostics must never prevent opening, canceling or releasing a player.
+      StartupLog.write('app', 'snapshot.error', {
+        'requestedEvent': event,
+        'controllerId': identityHashCode(this),
+        'errorType': error.runtimeType.toString(),
+      });
     }
   }
 
@@ -3507,7 +3545,11 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
     bool Function() isCurrentDataSource,
     _InitialPlayGate? initialPlayGate,
   ) async {
-    if (_instance == null || !isCurrentDataSource()) return;
+    _logStartup('initialize.enter', gate: initialPlayGate);
+    if (_instance == null || !isCurrentDataSource()) {
+      _logStartup('initialize.skip.context', gate: initialPlayGate);
+      return;
+    }
     // 设置倍速
     if (isLive) {
       await setPlaybackSpeed(1.0);
@@ -3516,7 +3558,10 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
         await setPlaybackSpeed(_playbackSpeed.value);
       }
     }
-    if (!isCurrentDataSource()) return;
+    if (!isCurrentDataSource()) {
+      _logStartup('initialize.skip.stale', gate: initialPlayGate);
+      return;
+    }
     _initVideoFit();
     // if (_looping) {
     //   await setLooping(_looping);
@@ -3529,6 +3574,7 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
 
     // 自动播放
     if (_autoPlay && isCurrentDataSource()) {
+      _logStartup('initialize.autoplay', gate: initialPlayGate);
       final gate = initialPlayGate;
       final player = _videoPlayerController;
       if (gate == null ||
@@ -3538,6 +3584,9 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
         return;
       }
       await _releaseInitialPlayGate(gate, isCurrentDataSource);
+    } else {
+      _logStartup('initialize.skip.autoplay', gate: initialPlayGate,
+          details: {'sourceCurrent': isCurrentDataSource()});
     }
   }
 
@@ -4101,6 +4150,9 @@ void onSeekStart({bool fromGesture = false}) {
 
   // 双击播放、暂停
   Future<void> onDoubleTapCenter() async {
+    _logStartup('toggle.request', gate: _initialPlayGate, details: {
+      'callers': StartupLog.callers(),
+    });
     if (_pausedForVideoStall) {
       if (_resumeAfterVideoRecovery) {
         await pause();
@@ -4111,9 +4163,11 @@ void onSeekStart({bool fromGesture = false}) {
     }
 
     if (!isLive && isCompleted) {
+      _logStartup('toggle.native.replay', gate: _initialPlayGate);
       await videoPlayerController!.seek(Duration.zero);
       videoPlayerController!.play();
     } else {
+      _logStartup('toggle.native.play_or_pause', gate: _initialPlayGate);
       videoPlayerController!.playOrPause();
     }
   }
