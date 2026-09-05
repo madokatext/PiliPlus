@@ -119,6 +119,8 @@ class _InitialPlayGate {
   final Future<void> firstFrameRendered;
   final bool Function() isCurrentDataSource;
   final Completer<void> canceled = Completer<void>();
+  final Completer<void> mediaOpenCompleted = Completer<void>();
+  Future<void>? releaseFuture;
   bool active = true;
   bool firstFrameReady = false;
   bool firstFrameFailed = false;
@@ -1227,6 +1229,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
           'elapsedMs': gate.diagnosticClock.elapsedMilliseconds,
           'gateCurrent': identical(gate, _initialPlayGate),
           'gateActive': gate.active,
+          'mediaOpenCompleted': gate.mediaOpenCompleted.isCompleted,
           'releaseRequested': gate.releaseRequested,
           'released': gate.released,
           'firstFrameReady': gate.firstFrameReady,
@@ -1573,6 +1576,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     if (!gate.active ||
         gate.fallbackReleaseAttempted ||
         !gate.releaseRequested ||
+        !gate.mediaOpenCompleted.isCompleted ||
         !identical(_initialPlayGate, gate) ||
         gate.generation != _dataSourceGeneration ||
         !gate.isCurrentDataSource() ||
@@ -1590,6 +1594,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
           if (!gate.active) 'gate_inactive',
           if (gate.fallbackReleaseAttempted) 'already_attempted',
           if (!gate.releaseRequested) 'release_not_requested',
+          if (!gate.mediaOpenCompleted.isCompleted) 'media_open_pending',
           if (!identical(_initialPlayGate, gate)) 'gate_replaced',
           if (gate.generation != _dataSourceGeneration) 'generation_changed',
           if (!gate.isCurrentDataSource()) 'source_stale',
@@ -1696,17 +1701,51 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
   Future<void> _releaseInitialPlayGate(
     _InitialPlayGate gate,
     bool Function() isCurrentDataSource,
-  ) async {
+  ) {
     _logStartup('gate.release.enter', gate: gate);
     final player = _videoPlayerController;
     if (!gate.active ||
         player == null ||
         !identical(gate.player, player)) {
       _logStartup('gate.release.skip', gate: gate);
-      return;
+      return Future<void>.value();
     }
     gate.releaseRequested = true;
     isWaitingForInitialPlay.value = true;
+    // A tap and autoplay can request the same release while open is pending.
+    // Share one release operation so neither can re-pause the other's play.
+    return gate.releaseFuture ??= _releaseInitialPlayGateOnce(
+      gate,
+      player,
+      isCurrentDataSource,
+    ).whenComplete(() {
+      gate.releaseFuture = null;
+    });
+  }
+
+  Future<void> _releaseInitialPlayGateOnce(
+    _InitialPlayGate gate,
+    NativePlayer player,
+    bool Function() isCurrentDataSource,
+  ) async {
+    // open(play: false) and its caller both write pause. Finish ALL of those
+    // writes before honoring even an already-completed Surface notification.
+    _logStartup('gate.open.wait', gate: gate);
+    final openReady = await Future.any<bool>([
+      gate.mediaOpenCompleted.future.then((_) => true),
+      gate.canceled.future.then((_) => false),
+    ]);
+    if (!openReady ||
+        !gate.active ||
+        !gate.releaseRequested ||
+        !isCurrentDataSource() ||
+        !gate.isCurrentDataSource() ||
+        gate.generation != _dataSourceGeneration ||
+        !identical(player, _videoPlayerController)) {
+      if (gate.active) await _cancelInitialPlayGate(gate);
+      return;
+    }
+    _logStartup('gate.open.ready', gate: gate);
 
     final readyDeadline = DateTime.now().add(const Duration(seconds: 15));
     final firstFrameReady = await Future.any<bool>([
@@ -1742,6 +1781,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         !gate.active ||
         !gate.releaseRequested ||
         !isCurrentDataSource() ||
+        !gate.isCurrentDataSource() ||
         gate.generation != _dataSourceGeneration ||
         !identical(player, _videoPlayerController)) {
       if (gate.active) {
@@ -1758,10 +1798,19 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       await playIfExists();
       _logStartup('gate.play_callback.after', gate: gate);
       if (gate.active &&
+          gate.releaseRequested &&
           isCurrentDataSource() &&
+          gate.isCurrentDataSource() &&
           gate.generation == _dataSourceGeneration &&
           identical(player, _videoPlayerController)) {
-        _finishInitialPlayGate(gate);
+        // state.playing is set optimistically by NativePlayer.play(). Only
+        // report a successful release when mpv itself is no longer paused.
+        if (player.getProperty('pause') == 'no') {
+          _finishInitialPlayGate(gate);
+        } else {
+          _logStartup('gate.release.still_paused', gate: gate);
+          await _cancelInitialPlayGate(gate);
+        }
       }
     } finally {
       if (_initialPlayReleaseGeneration == gate.generation) {
@@ -2090,6 +2139,8 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         // open 及逐文件参数可能再次改写 pause。真正 Surface 帧确认前
         // 始终保持暂停。
         _holdInitialPlay(gate);
+        gate.mediaOpenCompleted.complete();
+        _logStartup('gate.open.completed', gate: gate);
       }
       return gate;
     } catch (_) {
