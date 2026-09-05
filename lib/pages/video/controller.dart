@@ -174,6 +174,8 @@ class VideoDetailController extends GetxController
         'outputPresent': plPlayerController.videoController != null,
         'sourceLoadedForPage':
             plPlayerController.isVideoPageDataSourceLoaded(heroTag),
+        'sourceLoadingForPage':
+            plPlayerController.isVideoPageDataSourceLoading(heroTag),
         'savedPlayerStatus': playerStatus?.name,
         ...details,
       });

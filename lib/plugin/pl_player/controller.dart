@@ -107,6 +107,28 @@ class PlayerInstanceGateStatus {
   final List<PlayerGateConditionStatus> conditions;
 }
 
+// Exists before the first await in setDataSource, including player creation.
+// A preload setting does not imply that a native player is ready to play.
+class _MediaLoadSession {
+  _MediaLoadSession(this.generation, this.pageTag, this.playRequested);
+
+  final int generation;
+  final String? pageTag;
+  bool playRequested;
+  bool loading = true;
+  bool readyForPlay = false;
+  bool canceled = false;
+  bool repeat = false;
+  bool hideControls = true;
+  Completer<void>? pendingPlay;
+
+  void completePendingPlay() {
+    final pending = pendingPlay;
+    pendingPlay = null;
+    if (pending != null && !pending.isCompleted) pending.complete();
+  }
+}
+
 class _InitialPlayGate {
   _InitialPlayGate({
     required this.generation,
@@ -177,6 +199,7 @@ class PlPlayerController with BlockConfigMixin {
   VideoController? _videoController;
   SubtitleTrack _subtitleTrack = SubtitleTrack.no();
   Future<Player>? _playerInitTask;
+  _MediaLoadSession? _mediaLoad;
   _InitialPlayGate? _initialPlayGate;
   _InitialPlayGate? _lastInitialPlayGate;
   _StandbyPlayerGateDiagnostics? _promotedPlayerGateDiagnostics;
@@ -265,6 +288,12 @@ final RxInt seekStartPosition = 0.obs;
     } else if (_activeVideoPageTag == pageTag) {
       _activeVideoPageTag = null;
     }
+    final load = _mediaLoad;
+    if (load != null &&
+        load.pageTag != null &&
+        load.pageTag != _activeVideoPageTag) {
+      _cancelMediaLoad('page_inactive');
+    }
   }
 
   bool isVideoPageActive(String pageTag) => _activeVideoPageTag == pageTag;
@@ -274,6 +303,39 @@ final RxInt seekStartPosition = 0.obs;
       _videoPlayerController != null &&
       _videoController != null &&
       _videoPlayerController!.current.isNotEmpty;
+
+  bool isVideoPageDataSourceLoading(String pageTag) {
+    final load = _mediaLoad;
+    return load != null &&
+        !load.canceled &&
+        load.loading &&
+        load.pageTag == pageTag &&
+        load.generation == _dataSourceGeneration &&
+        isVideoPageActive(pageTag);
+  }
+
+  void _cancelMediaLoad(String reason) {
+    final load = _mediaLoad;
+    if (load == null) return;
+    _logStartup('load.cancel', details: {
+      'reason': reason,
+      'loadGeneration': load.generation,
+      'pendingPlay': load.pendingPlay != null,
+    });
+    final gate = _initialPlayGate;
+    if (load.loading || (gate != null && gate.active)) {
+      // Returning to an unfinished source must rebuild its startup gate.
+      if (_loadedVideoPageTag == load.pageTag) _loadedVideoPageTag = null;
+    }
+    load.canceled = true;
+    load.playRequested = false;
+    load.completePendingPlay();
+    _mediaLoad = null;
+    isWaitingForInitialPlay.value = false;
+    if (gate != null && gate.generation == load.generation) {
+      unawaited(_cancelInitialPlayGate(gate));
+    }
+  }
 
   String _buildMpvLogMediaKey(
     DataSource dataSource, {
@@ -1228,6 +1290,10 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         'lifecycle': WidgetsBinding.instance.lifecycleState?.name,
         'autoplay': _autoPlay,
         'processing': _processing,
+        'loadSessionGeneration': _mediaLoad?.generation,
+        'loadReadyForPlay': _mediaLoad?.readyForPlay,
+        'loadPlayRequested': _mediaLoad?.playRequested,
+        'deferredPlay': _mediaLoad?.pendingPlay != null,
         'waiting': isWaitingForInitialPlay.value,
         'releaseGeneration': _initialPlayReleaseGeneration,
         'playCallbackPresent': _playCallBack != null,
@@ -1338,29 +1404,35 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     cancelVideoPlayerSwitch();
     _resetMediaOpenRetry();
 
+    _cancelMediaLoad('source_replaced');
     final dataSourceGeneration = ++_dataSourceGeneration;
+    final load = _MediaLoadSession(dataSourceGeneration, videoPageTag, autoplay);
+    _mediaLoad = load;
     _logStartup('load.begin', generation: dataSourceGeneration);
-    await _cancelInitialPlayGate();
-    _lastInitialPlayGate = null;
-    _promotedPlayerGateDiagnostics = null;
     bool isCurrentDataSource() =>
+        !load.canceled &&
+        identical(_mediaLoad, load) &&
         dataSourceGeneration == _dataSourceGeneration &&
         (videoPageTag == null || isVideoPageActive(videoPageTag));
 
-    if (!await _ensureMpvLogSession(
-      dataSource,
-      isLive: isLive,
-      videoPageTag: videoPageTag,
-      bvid: bvid,
-      cid: cid,
-      epid: epid,
-      isCurrentDataSource: isCurrentDataSource,
-    )) {
-      return;
-    }
-
     _InitialPlayGate? initialPlayGate;
+    var loadSucceeded = false;
     try {
+      await _cancelInitialPlayGate();
+      if (!isCurrentDataSource()) return;
+      _lastInitialPlayGate = null;
+      _promotedPlayerGateDiagnostics = null;
+      if (!await _ensureMpvLogSession(
+        dataSource,
+        isLive: isLive,
+        videoPageTag: videoPageTag,
+        bvid: bvid,
+        cid: cid,
+        epid: epid,
+        isCurrentDataSource: isCurrentDataSource,
+      )) {
+        return;
+      }
       if (!isCurrentDataSource()) return;
       _processing = true;
       _loadedVideoPageTag = null;
@@ -1373,7 +1445,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       this.height = height;
       this.dataSource = dataSource;
       _mainNetworkSource = dataSource is NetworkSource ? dataSource : null;
-      _autoPlay = autoplay;
+      _autoPlay = load.playRequested;
       // 初始化视频倍速
       // _playbackSpeed.value = speed;
       // 初始化数据加载状态
@@ -1400,7 +1472,9 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       cancelLongPressTimer();
       if (_videoPlayerController != null &&
           _videoPlayerController!.state.playing) {
-        await pause(notify: false);
+        _logStartup('load.pause_previous');
+        await _videoPlayerController!.pause();
+        if (isCurrentDataSource()) audioSessionHandler?.setActive(false);
       }
 
       if (_playerCount == 0 || !isCurrentDataSource()) {
@@ -1418,7 +1492,9 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
           generation: dataSourceGeneration);
 
       if (_playerCount == 0 || !isCurrentDataSource()) {
-        await _cancelInitialPlayGate(initialPlayGate);
+        if (initialPlayGate != null) {
+          await _cancelInitialPlayGate(initialPlayGate);
+        }
         if (_playerCount == 0) {
           await _removeListeners();
           _videoPlayerController?.dispose();
@@ -1432,6 +1508,9 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       updateDuration(duration ?? _videoPlayerController!.state.duration);
       position.value = buffered.value = seekTo?.inSeconds ?? 0;
 
+      // Publish ownership before play emits its status: the page listener
+      // must be able to reveal the cover for a tap queued during preload.
+      _loadedVideoPageTag = videoPageTag;
       dataStatus.value = .loaded;
 
       if (isCurrentDataSource()) {
@@ -1451,16 +1530,20 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       await _initializePlayer(
         isCurrentDataSource,
         initialPlayGate,
+        load,
       );
       if (isCurrentDataSource()) {
         _loadedVideoPageTag = videoPageTag;
         onInit?.call();
+        loadSucceeded = true;
       }
     } catch (err, stackTrace) {
       _logStartup('load.error', gate: initialPlayGate,
           generation: dataSourceGeneration,
           details: {'errorType': err.runtimeType.toString()});
-      await _cancelInitialPlayGate(initialPlayGate);
+      if (initialPlayGate != null) {
+        await _cancelInitialPlayGate(initialPlayGate);
+      }
       if (isCurrentDataSource()) {
         dataStatus.value = DataStatus.error;
         if (kDebugMode) {
@@ -1472,6 +1555,11 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       _logStartup('load.end', gate: initialPlayGate,
           generation: dataSourceGeneration,
           details: {'sourceCurrent': isCurrentDataSource()});
+      if (identical(_mediaLoad, load) && !loadSucceeded) {
+        _cancelMediaLoad('load_incomplete');
+      }
+      load.loading = false;
+      load.completePendingPlay();
       if (dataSourceGeneration == _dataSourceGeneration) {
         _processing = false;
       }
@@ -1555,7 +1643,10 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
 
     _initialPlayGate = gate;
     _lastInitialPlayGate = null;
-    gate.releaseRequested = _autoPlay;
+    final load = _mediaLoad;
+    gate.releaseRequested = load != null && load.generation == generation
+        ? load.playRequested
+        : _autoPlay;
     _logStartup('gate.begin', gate: gate);
     if (Platform.isAndroid) {
       gate.diagnosticTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -1614,6 +1705,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     if (!gate.active ||
         gate.fallbackReleaseAttempted ||
         !gate.releaseRequested ||
+        _mediaLoad?.readyForPlay == false ||
         !gate.mediaOpenCompleted.isCompleted ||
         !identical(_initialPlayGate, gate) ||
         gate.generation != _dataSourceGeneration ||
@@ -1632,6 +1724,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
           if (!gate.active) 'gate_inactive',
           if (gate.fallbackReleaseAttempted) 'already_attempted',
           if (!gate.releaseRequested) 'release_not_requested',
+          if (_mediaLoad?.readyForPlay == false) 'load_not_ready',
           if (!gate.mediaOpenCompleted.isCompleted) 'media_open_pending',
           if (!identical(_initialPlayGate, gate)) 'gate_replaced',
           if (gate.generation != _dataSourceGeneration) 'generation_changed',
@@ -1911,7 +2004,9 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     } catch (_) {
       // 数据源替换只需尽力阻止静音中的旧起播继续推进。
     }
-    if (paused) {
+    if (paused &&
+        identical(gate.player, _videoPlayerController) &&
+        gate.generation == _dataSourceGeneration) {
       audioSessionHandler?.setActive(false);
     }
   }
@@ -2013,8 +2108,17 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     assert(_videoController == null);
     final logSession = _mpvLogSession;
     final pair = await _createPlayerPair(logSession: logSession);
-    _videoController = pair.videoController;
     await pair.initializationLogSubscription?.cancel();
+    if (_playerCount == 0) {
+      // A page can be disposed while Player/VideoController.create is pending.
+      // Do not install listeners or resurrect output on the disposed owner.
+      if (logSession != null) {
+        MpvLogService.detachPlayer(pair.player, session: logSession);
+      }
+      await pair.player.dispose();
+      throw StateError('Player initialization canceled');
+    }
+    _videoController = pair.videoController;
     if (logSession != null) {
       MpvLogService.attachPlayer(pair.player, session: logSession);
     }
@@ -3544,6 +3648,7 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
   Future<void> _initializePlayer(
     bool Function() isCurrentDataSource,
     _InitialPlayGate? initialPlayGate,
+    _MediaLoadSession load,
   ) async {
     _logStartup('initialize.enter', gate: initialPlayGate);
     if (_instance == null || !isCurrentDataSource()) {
@@ -3572,8 +3677,11 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
     //   await this.seekTo(seekTo);
     // }
 
-    // 自动播放
-    if (_autoPlay && isCurrentDataSource()) {
+    // Open and output mounting are complete. The callback may now reenter
+    // play() without waiting for the load operation that invoked it.
+    load.readyForPlay = true;
+    _autoPlay = load.playRequested;
+    if (load.playRequested && isCurrentDataSource()) {
       _logStartup('initialize.autoplay', gate: initialPlayGate);
       final gate = initialPlayGate;
       final player = _videoPlayerController;
@@ -3929,9 +4037,42 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
   }
 
   /// 播放视频
-  Future<void> play({bool repeat = false, bool hideControls = true}) async {
+  Future<void> play({
+    bool repeat = false,
+    bool hideControls = true,
+    String? videoPageTag,
+  }) async {
     _logStartup('play.request', gate: _initialPlayGate);
     if (_playerCount == 0) return;
+    final load = _mediaLoad;
+    if (videoPageTag != null &&
+        (!isVideoPageActive(videoPageTag) ||
+            (load != null
+                ? load.pageTag != videoPageTag
+                : _loadedVideoPageTag != videoPageTag))) {
+      _logStartup('play.skip.stale_page');
+      return;
+    }
+    if (load != null && !load.readyForPlay) {
+      if (load.canceled ||
+          load.generation != _dataSourceGeneration ||
+          (load.pageTag != null && !isVideoPageActive(load.pageTag!))) {
+        _logStartup('play.skip.stale_load');
+        return;
+      }
+      load.playRequested = true;
+      load.repeat = repeat;
+      load.hideControls = hideControls;
+      final pending = load.pendingPlay ??= Completer<void>();
+      isWaitingForInitialPlay.value = true;
+      _logStartup('play.deferred', gate: _initialPlayGate);
+      await pending.future;
+      return;
+    }
+    if (load != null && load.pendingPlay != null) {
+      repeat = load.repeat;
+      hideControls = load.hideControls;
+    }
     final initialGate = _initialPlayGate;
     if (initialGate != null &&
         initialGate.active &&
@@ -3958,16 +4099,31 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
       return;
     }
 
+    final player = _videoPlayerController;
+    if (player == null) {
+      _logStartup('play.skip.no_player');
+      return;
+    }
+    final generation = _dataSourceGeneration;
+    bool isCurrentPlay() =>
+        generation == _dataSourceGeneration &&
+        identical(player, _videoPlayerController) &&
+        _playerCount > 0 &&
+        (load == null || (!load.canceled && identical(_mediaLoad, load))) &&
+        (videoPageTag == null || isVideoPageActive(videoPageTag));
+
     // 播放时自动隐藏控制条
     controls = !hideControls;
     // repeat为true，将从头播放
     if (repeat) {
       // await seekTo(Duration.zero);
       await seekTo(Duration.zero, isSeek: false);
+      if (!isCurrentPlay()) return;
     }
 
     _logStartup('play.native.before', gate: _initialPlayGate);
-    await _videoPlayerController?.play();
+    await player.play();
+    if (!isCurrentPlay()) return;
     _logStartup('play.native.after', gate: _initialPlayGate);
 
     audioSessionHandler?.setActive(true);
@@ -3980,6 +4136,13 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
   Future<void> pause({bool notify = true, bool isInterrupt = false}) async {
     _logStartup('pause.request', gate: _initialPlayGate,
         details: {'interrupt': isInterrupt, 'notify': notify});
+    final load = _mediaLoad;
+    if (load != null) {
+      load.playRequested = false;
+      load.completePendingPlay();
+      if (load.loading) _autoPlay = false;
+    }
+    isWaitingForInitialPlay.value = false;
     final initialGate = _initialPlayGate;
     if (initialGate != null && initialGate.active) {
       initialGate.releaseRequested = false;
@@ -3998,7 +4161,14 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
       return;
     }
 
-    await _videoPlayerController?.pause();
+    final player = _videoPlayerController;
+    final generation = _dataSourceGeneration;
+    await player?.pause();
+    if (generation != _dataSourceGeneration ||
+        !identical(player, _videoPlayerController) ||
+        _playerCount == 0) {
+      return;
+    }
     playerStatus.value = PlayerStatus.paused;
 
     // 主动暂停时让出音频焦点
@@ -4446,6 +4616,7 @@ void onSeekStart({bool fromGesture = false}) {
     }
 
     _playerCount = 0;
+    _cancelMediaLoad('dispose');
     _historySessionStarted = false;
     unawaited(PlaybackHistoryTracker.instance.end());
     _activeVideoPageTag = null;

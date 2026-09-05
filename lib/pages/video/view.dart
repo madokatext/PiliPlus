@@ -329,7 +329,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     } else {
       _logStartup('callback.forward');
     }
-    return plPlayerController?.play();
+    return plPlayerController?.play(videoPageTag: heroTag);
   }
 
   Future<void> _resumeAfterPlayerWidgetRebuild() async {
@@ -344,7 +344,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       return;
     }
     _logStartup('resume.forward');
-    await videoDetailController.plPlayerController.play();
+    await videoDetailController.plPlayerController.play(videoPageTag: heroTag);
   }
 
   // 播放器状态监听
@@ -447,6 +447,10 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   Future<void>? handlePlay({String origin = 'direct'}) {
     final attempt = videoDetailController.recordStartupPlayIntent(origin);
     _logStartup('handle_play.enter', {'origin': origin});
+    if (!mounted || !isShowing || !videoDetailController.isPageActive) {
+      _logStartup('handle_play.skip.inactive');
+      return null;
+    }
     _startStartupSnapshots();
     try {
       final plPlayerController = this.plPlayerController =
@@ -471,12 +475,18 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
           );
         }
       }
-      if (plPlayerController.preInitPlayer) {
+      // Reuse the current page's actual load, including an unfinished one.
+      // play() retains the request until its native player and output exist.
+      if (plPlayerController.isVideoPageDataSourceLoaded(heroTag) ||
+          plPlayerController.isVideoPageDataSourceLoading(heroTag)) {
         _logStartup('handle_play.reuse_preload');
         if (plPlayerController.autoEnterFullScreen) {
           plPlayerController.triggerFullScreen();
         }
-        return _tracePlayResult(plPlayerController.play(), attempt);
+        return _tracePlayResult(
+          plPlayerController.play(videoPageTag: heroTag),
+          attempt,
+        );
       } else {
         _logStartup('handle_play.initialize');
         return _tracePlayResult(
