@@ -1,5 +1,5 @@
 import 'dart:async' show Completer, StreamSubscription, Timer, unawaited;
-import 'dart:convert' show ascii;
+import 'dart:convert' show ascii, jsonEncode;
 import 'dart:io' show Platform;
 import 'dart:math' show max, min;
 import 'dart:ui' as ui;
@@ -56,7 +56,7 @@ import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:archive/archive.dart' show getCrc32;
 import 'package:canvas_danmaku/canvas_danmaku.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show kDebugMode, debugPrintSynchronously;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback, DeviceOrientation;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -131,6 +131,8 @@ class _InitialPlayGate {
   bool dataSourceCurrent = true;
   bool generationCurrent = true;
   bool mainInstanceCurrent = true;
+  final Stopwatch diagnosticClock = Stopwatch()..start();
+  Timer? diagnosticTimer;
 }
 
 class _StandbyPlayerGateDiagnostics {
@@ -978,6 +980,9 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
 
   static void setPlayCallBack(PlayCallback? playCallBack) {
     _playCallBack = playCallBack;
+    _instance?._logStartup('play_callback.set', details: {
+      'present': playCallBack != null,
+    });
   }
 
   static PlayCallback? _playCallBack;
@@ -1139,6 +1144,106 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
   bool _processing = false;
   bool get processing => _processing;
 
+  // Keep startup diagnostics in release logcat as well. Do not log media URLs,
+  // headers or exception messages: play URLs contain account/signature data.
+  void _logStartup(
+    String event, {
+    Player? player,
+    _InitialPlayGate? gate,
+    int? generation,
+    Map<String, Object?> details = const {},
+  }) {
+    if (!Platform.isAndroid) return;
+    try {
+      final target = player ?? gate?.player ?? _videoPlayerController;
+      final state = target?.state;
+      final properties = <String, String>{};
+      // Read native properties only at decision points, not for every trace.
+      final snapshot = const {
+        'open.after',
+        'load.end',
+        'gate.begin',
+        'gate.snapshot',
+        'gate.fallback.check',
+        'gate.fallback.skip.player_state',
+        'gate.fallback.unpause.after',
+        'gate.release.conditions',
+        'gate.play_callback.after',
+        'gate.finish',
+        'gate.cancel',
+        'play.native.after',
+      }.contains(event);
+      if (target != null && snapshot) {
+        for (final name in const [
+          'pause',
+          'paused-for-cache',
+          'core-idle',
+          'idle-active',
+          'current-vo',
+          'time-pos',
+          'demuxer-cache-time',
+          'demuxer-cache-duration',
+          'cache-buffering-state',
+          'seeking',
+        ]) {
+          try {
+            properties[name] = target.getProperty(name);
+          } catch (_) {
+            properties[name] = '<unavailable>';
+          }
+        }
+      }
+      final record = <String, Object?>{
+        'layer': 'app',
+        'event': event,
+        'time': DateTime.now().toIso8601String(),
+        'generation': generation ?? gate?.generation ?? _dataSourceGeneration,
+        'currentGeneration': _dataSourceGeneration,
+        'handle': target?.handle.toString(),
+        'main': identical(target, _videoPlayerController),
+        'playerCount': _playerCount,
+        'lifecycle': WidgetsBinding.instance.lifecycleState?.name,
+        'autoplay': _autoPlay,
+        'processing': _processing,
+        'waiting': isWaitingForInitialPlay.value,
+        'releaseGeneration': _initialPlayReleaseGeneration,
+        'playCallbackPresent': _playCallBack != null,
+        'switching': videoPlayerSwitching.value,
+        'networkFailed': _videoNetworkFailed,
+        'recovering': _mediaRecoveryRunning,
+        'recoveryScheduled': _mediaRecoveryTimer != null,
+        'videoStall': _pausedForVideoStall,
+        'playing': state?.playing,
+        'buffering': state?.buffering,
+        'completed': state?.completed,
+        'width': state?.width,
+        'height': state?.height,
+        'positionMs': state?.position.inMilliseconds,
+        'bufferMs': state?.buffer.inMilliseconds,
+        'mediaPresent': target?.current.isNotEmpty,
+        if (gate != null) ...{
+          'gateId': identityHashCode(gate),
+          'firstFrameFutureId': identityHashCode(gate.firstFrameRendered),
+          'elapsedMs': gate.diagnosticClock.elapsedMilliseconds,
+          'gateCurrent': identical(gate, _initialPlayGate),
+          'gateActive': gate.active,
+          'releaseRequested': gate.releaseRequested,
+          'released': gate.released,
+          'firstFrameReady': gate.firstFrameReady,
+          'firstFrameFailed': gate.firstFrameFailed,
+          'sourceCurrent': gate.isCurrentDataSource(),
+          'gateRequired': _shouldGateInitialPlay,
+          'fallbackAttempted': gate.fallbackReleaseAttempted,
+        },
+        'mpv': properties,
+        ...details,
+      };
+      debugPrintSynchronously('[PiliPlusStartup] ${jsonEncode(record)}');
+    } catch (_) {
+      // Diagnostics must never prevent opening, canceling or releasing a player.
+    }
+  }
+
   // offline
   bool get isFileSource => dataSource is FileSource;
 
@@ -1176,7 +1281,15 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     bool autoFullScreenFlag = false,
     String? videoPageTag,
   }) async {
+    _logStartup('load.request', details: {
+      'requestedAutoplay': autoplay,
+      'live': isLive,
+      'fileSource': dataSource is FileSource,
+      'seekMs': seekTo?.inMilliseconds,
+      'pageActive': videoPageTag == null || isVideoPageActive(videoPageTag),
+    });
     if (videoPageTag != null && !isVideoPageActive(videoPageTag)) {
+      _logStartup('load.skip.inactive_page');
       return;
     }
     unawaited(PlaybackHistoryTracker.instance.end());
@@ -1185,6 +1298,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     _resetMediaOpenRetry();
 
     final dataSourceGeneration = ++_dataSourceGeneration;
+    _logStartup('load.begin', generation: dataSourceGeneration);
     await _cancelInitialPlayGate();
     _lastInitialPlayGate = null;
     _promotedPlayerGateDiagnostics = null;
@@ -1259,6 +1373,8 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         dataSourceGeneration: dataSourceGeneration,
         isCurrentDataSource: isCurrentDataSource,
       );
+      _logStartup('load.controller_ready', gate: initialPlayGate,
+          generation: dataSourceGeneration);
 
       if (_playerCount == 0 || !isCurrentDataSource()) {
         await _cancelInitialPlayGate(initialPlayGate);
@@ -1282,6 +1398,9 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         // video output before waiting, otherwise a nested video page can wait
         // for a frame while its output widget is still unmounted.
         onVideoOutputReady?.call();
+        _logStartup('load.output_mounted', gate: initialPlayGate, details: {
+          'mountCallbackPresent': onVideoOutputReady != null,
+        });
       }
 
       if (autoFullScreenFlag && autoEnterFullScreen) {
@@ -1297,6 +1416,9 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         onInit?.call();
       }
     } catch (err, stackTrace) {
+      _logStartup('load.error', gate: initialPlayGate,
+          generation: dataSourceGeneration,
+          details: {'errorType': err.runtimeType.toString()});
       await _cancelInitialPlayGate(initialPlayGate);
       if (isCurrentDataSource()) {
         dataStatus.value = DataStatus.error;
@@ -1306,6 +1428,9 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         }
       }
     } finally {
+      _logStartup('load.end', gate: initialPlayGate,
+          generation: dataSourceGeneration,
+          details: {'sourceCurrent': isCurrentDataSource()});
       if (dataSourceGeneration == _dataSourceGeneration) {
         _processing = false;
       }
@@ -1390,11 +1515,31 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     _initialPlayGate = gate;
     _lastInitialPlayGate = null;
     gate.releaseRequested = _autoPlay;
+    _logStartup('gate.begin', gate: gate);
+    if (Platform.isAndroid) {
+      gate.diagnosticTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (!gate.active || timer.tick > 20) {
+          timer.cancel();
+          gate.diagnosticTimer = null;
+          return;
+        }
+        if (const [1, 3, 5, 10, 15, 20].contains(timer.tick)) {
+          _logStartup('gate.snapshot', gate: gate);
+        }
+      });
+    }
     _scheduleInitialPlayFallbackCheck(gate);
     unawaited(
       firstFrameRendered.then<void>(
-        (_) => gate.firstFrameReady = true,
-        onError: (_) => gate.firstFrameFailed = true,
+        (_) {
+          gate.firstFrameReady = true;
+          _logStartup('gate.first_frame.future_completed', gate: gate);
+        },
+        onError: (Object error) {
+          gate.firstFrameFailed = true;
+          _logStartup('gate.first_frame.future_error', gate: gate,
+              details: {'errorType': error.runtimeType.toString()});
+        },
       ),
     );
     try {
@@ -1408,12 +1553,15 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
 
   void _holdInitialPlay(_InitialPlayGate gate) {
     if (!gate.active) return;
+    _logStartup('gate.pause.hold', gate: gate);
     gate.player.setProperty('pause', 'yes');
   }
 
   void _scheduleInitialPlayFallbackCheck(_InitialPlayGate gate) {
     if (gate.fallbackCheckScheduled) return;
     gate.fallbackCheckScheduled = true;
+    _logStartup('gate.fallback.scheduled', gate: gate,
+        details: {'delayMs': 5000});
     gate.fallbackReleaseTimer = Timer(const Duration(seconds: 5), () {
       gate.fallbackReleaseTimer = null;
       _tryInitialPlayFallbackRelease(gate);
@@ -1421,6 +1569,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
   }
 
   void _tryInitialPlayFallbackRelease(_InitialPlayGate gate) {
+    _logStartup('gate.fallback.check', gate: gate);
     if (!gate.active ||
         gate.fallbackReleaseAttempted ||
         !gate.releaseRequested ||
@@ -1436,6 +1585,26 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         _mediaRecoveryTimer != null ||
         _pausedForVideoStall ||
         WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+      _logStartup('gate.fallback.skip.context', gate: gate, details: {
+        'blockers': [
+          if (!gate.active) 'gate_inactive',
+          if (gate.fallbackReleaseAttempted) 'already_attempted',
+          if (!gate.releaseRequested) 'release_not_requested',
+          if (!identical(_initialPlayGate, gate)) 'gate_replaced',
+          if (gate.generation != _dataSourceGeneration) 'generation_changed',
+          if (!gate.isCurrentDataSource()) 'source_stale',
+          if (!identical(gate.player, _videoPlayerController)) 'player_replaced',
+          if (_playerCount == 0) 'no_player_users',
+          if (!_shouldGateInitialPlay) 'gate_not_required',
+          if (videoPlayerSwitching.value) 'switching',
+          if (_videoNetworkFailed) 'network_failed',
+          if (_mediaRecoveryRunning) 'recovering',
+          if (_mediaRecoveryTimer != null) 'recovery_scheduled',
+          if (_pausedForVideoStall) 'video_stall',
+          if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed)
+            'app_not_resumed',
+        ],
+      });
       return;
     }
 
@@ -1457,6 +1626,17 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
           state.height <= 0 ||
           !gate.outputReady ||
           !pauseHeld) {
+        _logStartup('gate.fallback.skip.player_state', gate: gate, details: {
+          'blockers': [
+            if (player.current.isEmpty) 'media_empty',
+            if (state.completed) 'completed',
+            if (state.buffering) 'state_buffering',
+            if (pausedForCache) 'paused_for_cache',
+            if (state.width <= 0 || state.height <= 0) 'dimensions_missing',
+            if (!gate.outputReady) 'output_missing',
+            if (!pauseHeld) 'pause_not_held',
+          ],
+        });
         return;
       }
 
@@ -1464,12 +1644,16 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       // 就绪。直接解除 mpv pause，绕过可能卡住的正常回调链；每个门控最多
       // 只执行一次这条额外放行路径。
       gate.fallbackReleaseAttempted = true;
+      _logStartup('gate.fallback.unpause.before', gate: gate);
       player.setProperty('pause', 'no');
+      _logStartup('gate.fallback.unpause.after', gate: gate);
       audioSessionHandler?.setActive(true);
       playerStatus.value = PlayerStatus.playing;
       _finishInitialPlayGate(gate);
-    } catch (_) {
+    } catch (error) {
       // 播放器可能恰好被替换或释放；一次性检查不追赶新的数据源。
+      _logStartup('gate.fallback.error', gate: gate,
+          details: {'errorType': error.runtimeType.toString()});
     }
   }
 
@@ -1479,11 +1663,13 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     bool Function() isCurrentDataSource,
     DateTime deadline,
   ) async {
+    _logStartup('gate.output.wait', gate: gate);
     while (DateTime.now().isBefore(deadline)) {
       if (!gate.active ||
           !isCurrentDataSource() ||
           gate.generation != _dataSourceGeneration ||
           !identical(player, _videoPlayerController)) {
+        _logStartup('gate.output.stale', gate: gate);
         return false;
       }
 
@@ -1493,6 +1679,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
           .toLowerCase();
       gate.outputReady = currentVo.isNotEmpty && currentVo != 'null';
       if (gate.outputReady) {
+        _logStartup('gate.output.ready', gate: gate);
         return true;
       }
 
@@ -1502,6 +1689,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       ]);
       if (canceled) return false;
     }
+    _logStartup('gate.output.timeout', gate: gate);
     return false;
   }
 
@@ -1509,10 +1697,12 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     _InitialPlayGate gate,
     bool Function() isCurrentDataSource,
   ) async {
+    _logStartup('gate.release.enter', gate: gate);
     final player = _videoPlayerController;
     if (!gate.active ||
         player == null ||
         !identical(gate.player, player)) {
+      _logStartup('gate.release.skip', gate: gate);
       return;
     }
     gate.releaseRequested = true;
@@ -1533,6 +1723,11 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       gate.canceled.future.then((_) => false),
       Future<bool>.delayed(const Duration(seconds: 15), () => false),
     ]);
+    _logStartup('gate.first_frame.wait_result', gate: gate, details: {
+      'ready': firstFrameReady,
+      'canceled': gate.canceled.isCompleted,
+      'deadlineReached': !DateTime.now().isBefore(readyDeadline),
+    });
     final outputReady =
         firstFrameReady &&
         await _waitForInitialPlayOutput(
@@ -1541,6 +1736,8 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
           isCurrentDataSource,
           readyDeadline,
         );
+    _logStartup('gate.release.conditions', gate: gate,
+        details: {'outputReady': outputReady});
     if (!outputReady ||
         !gate.active ||
         !gate.releaseRequested ||
@@ -1557,7 +1754,9 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       // Surface 已以最终封面视口尺寸出帧；从这里开始只解除一次暂停。
       _holdInitialPlay(gate);
       _initialPlayReleaseGeneration = gate.generation;
+      _logStartup('gate.play_callback.before', gate: gate);
       await playIfExists();
+      _logStartup('gate.play_callback.after', gate: gate);
       if (gate.active &&
           isCurrentDataSource() &&
           gate.generation == _dataSourceGeneration &&
@@ -1578,6 +1777,8 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     if (!gate.active) return;
     gate.active = false;
     gate.released = released;
+    gate.diagnosticTimer?.cancel();
+    _logStartup('gate.finish', gate: gate);
     gate.fallbackReleaseTimer?.cancel();
     gate.fallbackReleaseTimer = null;
     if (!gate.canceled.isCompleted) {
@@ -1599,6 +1800,9 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         (expected != null && !identical(_initialPlayGate, expected))) {
       return;
     }
+
+    _logStartup('gate.cancel', gate: gate);
+    gate.diagnosticTimer?.cancel();
 
     if (identical(_initialPlayGate, gate)) {
       _initialPlayGate = null;
@@ -1627,6 +1831,10 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
 
   void _discardInitialPlayGate() {
     final gate = _initialPlayGate;
+    if (gate != null) {
+      _logStartup('gate.discard', gate: gate);
+      gate.diagnosticTimer?.cancel();
+    }
     _initialPlayGate = null;
     _lastInitialPlayGate = null;
     isWaitingForInitialPlay.value = false;
@@ -1899,12 +2107,25 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     bool Function()? isCurrentDataSource,
     VoidCallback? beforeOpen,
   }) async {
-    if (isCurrentDataSource?.call() == false) return;
+    final generation = _dataSourceGeneration;
+    if (isCurrentDataSource?.call() == false) {
+      _logStartup('open.skip.stale', player: player, generation: generation);
+      return;
+    }
     // player.open 会先卸载旧媒体；手动刷新与直播错误重试前重新应用用户
     // 参数，避免这些原地打开路径绕过自定义设置。
     MpvUtils.applyRuntimeOverrides(player);
     beforeOpen?.call();
-    await player.open(media, play: play);
+    _logStartup('open.before', player: player, generation: generation,
+        details: {'play': play});
+    try {
+      await player.open(media, play: play);
+      _logStartup('open.after', player: player, generation: generation);
+    } catch (error) {
+      _logStartup('open.error', player: player, generation: generation,
+          details: {'errorType': error.runtimeType.toString()});
+      rethrow;
+    }
   }
 
   Future<void>? refreshPlayer() {
@@ -3609,6 +3830,7 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
 
   /// 播放视频
   Future<void> play({bool repeat = false, bool hideControls = true}) async {
+    _logStartup('play.request', gate: _initialPlayGate);
     if (_playerCount == 0) return;
     final initialGate = _initialPlayGate;
     if (initialGate != null &&
@@ -3644,7 +3866,9 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
       await seekTo(Duration.zero, isSeek: false);
     }
 
+    _logStartup('play.native.before', gate: _initialPlayGate);
     await _videoPlayerController?.play();
+    _logStartup('play.native.after', gate: _initialPlayGate);
 
     audioSessionHandler?.setActive(true);
 
@@ -3654,6 +3878,8 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
 
   /// 暂停播放
   Future<void> pause({bool notify = true, bool isInterrupt = false}) async {
+    _logStartup('pause.request', gate: _initialPlayGate,
+        details: {'interrupt': isInterrupt, 'notify': notify});
     final initialGate = _initialPlayGate;
     if (initialGate != null && initialGate.active) {
       initialGate.releaseRequested = false;
