@@ -2673,10 +2673,22 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
 
     final generation = _dataSourceGeneration;
     final activePlayer = _videoPlayerController;
+    final load = _mediaLoad;
 
     if (activePlayer == null || activePlayer.current.isEmpty) {
       return;
     }
+
+    bool isCurrentRecovery() =>
+        _playerCount > 0 &&
+        generation == _dataSourceGeneration &&
+        identical(activePlayer, _videoPlayerController) &&
+        (load == null ||
+            (identical(load, _mediaLoad) &&
+                !load.canceled &&
+                (load.pageTag == null || isVideoPageActive(load.pageTag!))));
+
+    if (!isCurrentRecovery()) return;
 
     final delayIndex = min(
       _mediaRecoveryAttempt,
@@ -2687,11 +2699,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     _mediaRecoveryTimer = Timer(delay, () async {
       _mediaRecoveryTimer = null;
 
-      if (_playerCount == 0 ||
-          generation != _dataSourceGeneration ||
-          !identical(activePlayer, _videoPlayerController)) {
-        return;
-      }
+      if (!isCurrentRecovery()) return;
 
       // 用户此时可能正在主动切换画质。网络恢复不能取消画质切换。
       if (_videoPlayerSwitchCancellation != null) {
@@ -2725,11 +2733,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
           strictTimeout: const Duration(seconds: 8),
         );
 
-        if (!success &&
-            (generation != _dataSourceGeneration ||
-                !identical(activePlayer, _videoPlayerController))) {
-          return;
-        }
+        if (!success && !isCurrentRecovery()) return;
 
         if (success) {
           _mediaRecoveryAttempt = 0;
@@ -2738,10 +2742,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
           shouldRetry = true;
         }
       } catch (err, stackTrace) {
-        if (generation != _dataSourceGeneration ||
-            !identical(activePlayer, _videoPlayerController)) {
-          return;
-        }
+        if (!isCurrentRecovery()) return;
 
         _mediaRecoveryAttempt++;
         shouldRetry = true;
@@ -2753,10 +2754,7 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
       } finally {
         _mediaRecoveryRunning = false;
 
-        if (shouldRetry &&
-            _playerCount > 0 &&
-            generation == _dataSourceGeneration &&
-            identical(activePlayer, _videoPlayerController)) {
+        if (shouldRetry && isCurrentRecovery()) {
           _scheduleSeamlessMediaRecovery();
         }
       }
@@ -2944,14 +2942,30 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
     }
 
     final activeStateAtSwitchStart = activePlayer.state;
-    // A failed initial open has no valid frame, output geometry, or playback
-    // clock to align against. This exception is limited to recovery reloads;
-    // normal quality switches and recoveries from an already rendered player
-    // continue to use the strict two-player handoff.
+    final activeOutputRect = activeController.rect.value;
+    final activeIdle = activePlayer.getProperty('idle-active') == 'yes';
+    final loadAtSwitchStart = _mediaLoad;
+    // Width/height may already contain queued video parameters even when the
+    // initial network open fails. Only a real output rect and a loaded mpv can
+    // provide the geometry and clock required by a normal two-player handoff.
     final activeMediaNeverLoaded =
         reloadSameSource &&
-        (activeStateAtSwitchStart.width <= 0 ||
+        (activeIdle ||
+            activeOutputRect == null ||
+            activeOutputRect.width <= 1 ||
+            activeOutputRect.height <= 1 ||
+            activeStateAtSwitchStart.width <= 0 ||
             activeStateAtSwitchStart.height <= 0);
+
+    bool initialRecoveryWantsPlay() {
+      final load = loadAtSwitchStart;
+      if (load != null) {
+        return identical(load, _mediaLoad) &&
+            !load.canceled &&
+            load.playRequested;
+      }
+      return _initialPlayGate?.releaseRequested ?? _autoPlay;
+    }
 
     cancelVideoPlayerSwitch();
     final generation = ++_videoPlayerSwitchGeneration;
@@ -2966,8 +2980,21 @@ ValueChanged<bool>? onDanmakuMergeSettingsChanged;
         dataSourceGeneration == _dataSourceGeneration &&
         identical(activePlayer, _videoPlayerController) &&
         _playerCount > 0 &&
+        (loadAtSwitchStart == null ||
+            (identical(loadAtSwitchStart, _mediaLoad) &&
+                !loadAtSwitchStart.canceled &&
+                (loadAtSwitchStart.pageTag == null ||
+                    isVideoPageActive(loadAtSwitchStart.pageTag!)))) &&
         !onlyPlayAudio.value &&
         !cancellation.isCompleted;
+
+    _logStartup('switch.begin', details: {
+      'reloadSameSource': reloadSameSource,
+      'activeMediaNeverLoaded': activeMediaNeverLoaded,
+      'activeIdle': activeIdle,
+      'activeOutputWidth': activeOutputRect?.width,
+      'activeOutputHeight': activeOutputRect?.height,
+    });
 
     Duration activeHandoffPosition() {
       final position =
@@ -3273,6 +3300,17 @@ while (isCurrentSwitch()) {
 
 if ((!bufferReady && !forceHandoff) ||
     !isCurrentSwitch()) {
+  _logStartup('switch.prebuffer.failed', details: {
+    'switchCurrent': isCurrentSwitch(),
+    'activeMediaNeverLoaded': activeMediaNeverLoaded,
+    'standbyHandle': standbyPlayer.handle.toString(),
+    'firstFrameRendered': firstFrameRendered,
+    'firstFrameFailed': firstFrameFailed,
+    'outputRectMatched': gateDiagnostics.outputRectMatched,
+    'renderedAfterOutputConfiguration': renderedAfterOutputConfiguration,
+    'prebufferReady': gateDiagnostics.prebufferReady,
+    'standbyBuffering': standbyPlayer.state.buffering,
+  });
   return false;
 }
 
@@ -3281,7 +3319,7 @@ if ((!bufferReady && !forceHandoff) ||
       // AV1/HEVC 连续 seek 会反复清空解码与缓存队列，导致备用实例
       // 一直处于 buffering，最终无法完成交接。
       final shouldPlay = activeMediaNeverLoaded
-          ? _autoPlay
+          ? initialRecoveryWantsPlay()
           : activePlayer.state.playing;
       final targetRate = activePlayer.state.rate;
 
@@ -3393,8 +3431,8 @@ if (!aligned &&
         return false;
       }
 
-      final handoffPlaying = activeMediaNeverLoaded
-          ? _autoPlay
+      var handoffPlaying = activeMediaNeverLoaded
+          ? initialRecoveryWantsPlay()
           : _pausedForVideoStall
           ? _resumeAfterVideoRecovery
           : activePlayer.state.playing;
@@ -3454,7 +3492,7 @@ if (!isCurrentSwitch() ||
       // 备用实例始终静音运行。先停止旧实例，再把已经挂载的备用 Texture
       // 提升到顶层；只有 Flutter 在帧后确认该实例确实成为可见输出，才切换
       // 播放控制并恢复同一实例的音频，避免画面与音频落在不同播放器上。
-      resumeActiveOnFailure = handoffPlaying;
+      resumeActiveOnFailure = handoffPlaying && !activeMediaNeverLoaded;
       await _removeListeners();
       activeListenersDetached = true;
       await activePlayer.pause();
@@ -3493,6 +3531,28 @@ if (!isCurrentSwitch() ||
         throw StateError('committed Texture was not presented');
       }
 
+      await standbyInitializationLogSubscription?.cancel();
+      standbyInitializationLogSubscription = null;
+      if (!isCurrentSwitch()) {
+        throw StateError('video player handoff canceled');
+      }
+
+      if (activeMediaNeverLoaded) {
+        // A play/pause request can arrive while Flutter presents the standby
+        // Texture. Apply the latest intent before exposing this muted player.
+        while (standbyPlayer.state.playing != initialRecoveryWantsPlay()) {
+          if (initialRecoveryWantsPlay()) {
+            await standbyPlayer.play();
+          } else {
+            await standbyPlayer.pause();
+          }
+          if (!isCurrentSwitch()) {
+            throw StateError('initial recovery handoff canceled');
+          }
+        }
+        handoffPlaying = initialRecoveryWantsPlay();
+      }
+
       _standbyVideoPlayerController = null;
       _standbyVideoController = null;
       _standbyNetworkSource = null;
@@ -3502,6 +3562,15 @@ if (!isCurrentSwitch() ||
       _standbyVideoOnly = false;
       _videoPlayerController = standbyPlayer;
       _videoController = standbyController;
+      final initialGate = _initialPlayGate;
+      if (initialGate != null &&
+          identical(initialGate.player, activePlayer) &&
+          initialGate.generation == dataSourceGeneration) {
+        // This gate waits for the failed player's frame, not the standby's.
+        // Finish it synchronously so its waiter cannot outlive the handoff.
+        _finishInitialPlayGate(initialGate, released: false);
+      }
+      if (activeMediaNeverLoaded) isWaitingForInitialPlay.value = false;
       dataSource = targetSource;
       _mainNetworkSource = targetSource;
       _bumpVideoOutputRevision();
@@ -3515,8 +3584,6 @@ if (!isCurrentSwitch() ||
       position.value = standbyPlayer.state.position.inSeconds;
       buffered.value = standbyPlayer.state.buffer.inSeconds;
       updateDuration(standbyPlayer.state.duration);
-      await standbyInitializationLogSubscription?.cancel();
-      standbyInitializationLogSubscription = null;
       if (mpvLogSession != null) {
         MpvLogService.attachPlayer(
           standbyPlayer,
@@ -3538,6 +3605,21 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
       videoPlayerServiceHandler
         ?..onPositionChange(standbyPlayer.state.position)
         ..onStatusChange(playerStatus.value, isBuffering.value, isLive);
+
+      if (activeMediaNeverLoaded) {
+        // Notify the page even when native play happened before subscribing:
+        // its status listener reveals the cover and restores normal playback.
+        _publishLogicalPlayingState(standbyPlayer, handoffPlaying);
+        if (handoffPlaying) {
+          audioSessionHandler?.setActive(true);
+          controls = !(loadAtSwitchStart?.hideControls ?? true);
+        }
+      }
+      _logStartup('switch.committed', details: {
+        'activeMediaNeverLoaded': activeMediaNeverLoaded,
+        'previousHandle': activePlayer.handle.toString(),
+        'handoffPlaying': handoffPlaying,
+      });
 
       // Flutter 已确认显示的是 standbyController 后，才恢复同一 mpv
       // 实例的真实音量。旧实例保持暂停，因而不存在跨实例音画组合。
@@ -4053,25 +4135,29 @@ playerStatus.value = handoffPlaying ? .playing : .paused;
       _logStartup('play.skip.stale_page');
       return;
     }
-    if (load != null && !load.readyForPlay) {
+    if (load != null) {
       if (load.canceled ||
           load.generation != _dataSourceGeneration ||
           (load.pageTag != null && !isVideoPageActive(load.pageTag!))) {
         _logStartup('play.skip.stale_load');
         return;
       }
+      if (load.readyForPlay && load.pendingPlay != null) {
+        repeat = load.repeat;
+        hideControls = load.hideControls;
+      }
+      // Keep intent after preload too: the old mpv can be paused by the
+      // initial gate or already idle while a replacement is being prepared.
       load.playRequested = true;
       load.repeat = repeat;
       load.hideControls = hideControls;
-      final pending = load.pendingPlay ??= Completer<void>();
-      isWaitingForInitialPlay.value = true;
-      _logStartup('play.deferred', gate: _initialPlayGate);
-      await pending.future;
-      return;
-    }
-    if (load != null && load.pendingPlay != null) {
-      repeat = load.repeat;
-      hideControls = load.hideControls;
+      if (!load.readyForPlay) {
+        final pending = load.pendingPlay ??= Completer<void>();
+        isWaitingForInitialPlay.value = true;
+        _logStartup('play.deferred', gate: _initialPlayGate);
+        await pending.future;
+        return;
+      }
     }
     final initialGate = _initialPlayGate;
     if (initialGate != null &&
